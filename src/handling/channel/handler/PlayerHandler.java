@@ -7,9 +7,10 @@ import database.DBConPool;
 import java.awt.geom.Point2D;
 
 import scripting.NPCConversationManager;
+import server.*;
 import tools.packet.UIPacket;
 import constants.MapConstants;
-import server.MaplePortal;
+
 import java.util.List;
 import server.maps.MapleMap;
 import server.maps.AnimatedMapleMapObject;
@@ -17,14 +18,13 @@ import java.util.Collection;
 import server.movement.LifeMovementFragment;
 import server.maps.MapleMapObject;
 import gui.CongMS;
-import server.MapleInventoryManipulator;
+
 import java.lang.ref.WeakReference;
 import server.Timer.CloneTimer;
 import server.events.MapleSnowball.MapleSnowballs;
 import client.anticheat.CheatingOffense;
 import java.awt.Point;
-import server.MapleStatEffect;
-import server.MapleItemInformationProvider;
+
 import client.ISkill;
 import server.life.MobSkill;
 import server.life.MobAttackInfo;
@@ -32,8 +32,6 @@ import client.PlayerStats;
 import server.life.MapleMonster;
 import client.SkillFactory;
 import tools.packet.MobPacket;
-import server.Randomizer;
-import server.AutobanManager;
 import server.life.MobSkillFactory;
 import server.life.MobAttackInfoFactory;
 import java.util.ArrayList;
@@ -1036,7 +1034,7 @@ public class PlayerHandler
     }
     
     public static final void DropMeso(final int meso, final MapleCharacter chr) {
-        final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
+        final int 丢出金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出金币开关"));
         if (丢出金币开关 > 0) {
             chr.dropMessage(1, "管理员已经从后台禁止丢出金币");
             chr.getClient().sendPacket(MaplePacketCreator.enableActions());

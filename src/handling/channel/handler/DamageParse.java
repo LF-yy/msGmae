@@ -307,10 +307,10 @@ public class DamageParse
                 if (attack.skill != 1221011) {
                    // monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
 
-                    long newDamage = 0L;
-                    newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
-                    newtotDamageToOneMonster += newDamage;
-                    newtotDamageToOneMonster = 伤害减伤(monster.getId(), newtotDamageToOneMonster);
+//                    long newDamage = 0L;
+//                    newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
+//                    newtotDamageToOneMonster += newDamage;
+//                    newtotDamageToOneMonster = 伤害减伤(monster.getId(), newtotDamageToOneMonster);
                     monster.damage(player, newtotDamageToOneMonster, true, attack.skill);
                 }
                 else {
@@ -568,6 +568,7 @@ public class DamageParse
             if (monster != null) {
                 final boolean Tempest = monster.getStatusSourceID(MonsterStatus.FREEZE) == 21120006 && !monster.getStats().isBoss();
                 int totDamageToOneMonster = 0;
+               long newtotDamageToOneMonster = 0L;
                 final MapleMonsterStats monsterstats = monster.getStats();
                 final int fixeddmg = monsterstats.getFixedDamage();
                 MaxDamagePerHit = calculateMaxMagicDamagePerHit(player, theSkill, monster, monsterstats, stats, element, Integer.valueOf(CriticalDamage), maxDamagePerHit);
@@ -614,6 +615,7 @@ public class DamageParse
                         eachd = Integer.valueOf(199999 + X * 10000);
                     }
                     totDamageToOneMonster += (int)eachd;
+                    newtotDamageToOneMonster += (long)eachd;
                 }
                 totDamage += totDamageToOneMonster;
                 player.checkMonsterAggro(monster);
@@ -632,22 +634,28 @@ public class DamageParse
                 if (player.getStatForBuff(MapleBuffStat.SHADOWPARTNER) != null) {
                     if ((player.getJob() >= 410 && player.getJob() <= 413) || (player.getJob() >= 1410 && player.getJob() <= 1413)) {
                         if (player.getItemQuantity(3994720, false) > 0) {
-                            totDamageToOneMonster *= 2;
-                            final long 剩余血量 = monster.getHp() - (long)totDamageToOneMonster;
-                            player.dropTopMsg("[影分身] 实际造成" + totDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
+                            newtotDamageToOneMonster *= 2;
+                            final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
+                            player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
                         }
                     }
                     else {
-                        totDamageToOneMonster *= 2;
-                        final long 剩余血量 = monster.getHp() - (long)totDamageToOneMonster;
-                        player.dropTopMsg("[影分身] 实际造成" + totDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
+                        newtotDamageToOneMonster *= 2;
+                        final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
+                        player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
                     }
                 }
-                if (totDamageToOneMonster <= 0) {
+                if (newtotDamageToOneMonster <= 0) {
                     continue;
                 }
+                tzjc t = new tzjc();
+//                long newDamage = 0L;
+//                newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
+//                newtotDamageToOneMonster += newDamage;
+                newtotDamageToOneMonster = t.star_damage(player, newtotDamageToOneMonster, monster);
+//                newtotDamageToOneMonster = 伤害减伤(monster.getId(), newtotDamageToOneMonster);
                 
-                monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
+                monster.damage(player, newtotDamageToOneMonster, true, attack.skill);
                 if (monster.isBuffed(MonsterStatus.MAGIC_DAMAGE_REFLECT)) {
                     player.addHP(-(7000 + Randomizer.nextInt(8000)));
                 }

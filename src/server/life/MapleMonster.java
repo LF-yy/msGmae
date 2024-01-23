@@ -8,6 +8,8 @@ import client.inventory.Equip;
 import client.inventory.MapleInventoryType;
 import server.Randomizer;
 import java.util.Collections;
+
+import server.Start;
 import tools.Pair;
 import server.Timer.MobTimer;
 import client.ISkill;
@@ -407,7 +409,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
             }
         }
         if (exp > 0) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"越级打怪开关")) == 0) {
+            if (Start.ConfigValuesMap.get("越级打怪开关") == 0) {
                 final int 怪物 = this.getMobLevel();
                 final int 玩家 = attacker.getLevel();
                 if (玩家 < 怪物) {
@@ -450,11 +452,10 @@ public class MapleMonster extends AbstractLoadedMapleLife
                         exp /= 2;
                     }
                 }
-                final double lastexp = (attacker.getStat().realExpBuff - 100.0 <= 0.0) ? 100.0 : (attacker.getStat().realExpBuff - 100.0);
-                exp *= attacker.getEXPMod() * (int)(attacker.getStat().expBuff / 100.0);
-//                if ("情怀冒险岛".equals((Object)ServerConfig.SERVERNAME) || "枫之谷".equals((Object)ServerConfig.SERVERNAME)) {
+                //final double lastexp = (attacker.getStat().realExpBuff - 100.0 <= 0.0) ? 100.0 : (attacker.getStat().realExpBuff - 100.0);
+                    exp *= attacker.getEXPMod() * (int)(attacker.getStat().expBuff / 100.0);
                     if (attacker.getLevel() < 10) {
-                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
                     else if (attacker.getLevel() >= 10 && attacker.getLevel() < 30) {
                         exp = 5 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
@@ -471,17 +472,13 @@ public class MapleMonster extends AbstractLoadedMapleLife
                     else {
                         exp *= ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
-//                }
-//                else {
-//                    exp *= ChannelServer.getInstance(this.map.getChannel()).getExpRate();
-//                }
                 int classBonusExp = 0;
                 if (classBounsExpPercent > 0) {
                     classBonusExp = (int)((double)exp / 100.0 * (double)classBounsExpPercent);
                 }
                 int Premium_Bonus_EXP = 0;
-                if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"网吧经验加成")) != 0) {
-                    final int 网吧经验加成 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"网吧经验加成"));
+                if (Start.ConfigValuesMap.get("网吧经验加成") != 0) {
+                    final int 网吧经验加成 = Start.ConfigValuesMap.get("网吧经验加成");
                     Premium_Bonus_EXP += (int)((double)exp / 100.0 * (double)网吧经验加成);
                 }
                 int Equipment_Bonus_EXP = (int)((double)exp / 100.0 * (double)attacker.getStat().equipmentBonusExp);
@@ -489,11 +486,11 @@ public class MapleMonster extends AbstractLoadedMapleLife
                     Equipment_Bonus_EXP += (int)((double)exp / 100.0 * (double)attacker.getFairyExp());
                 }
                 int wedding_EXP = 0;
-                if (attacker.getMarriageId() > 0 && attacker.getMap().getCharacterById_InMap(attacker.getMarriageId()) != null && (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"结婚经验加成")) != 0) {
-                    final int 结婚经验加成 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"结婚经验加成"));
+                if (attacker.getMarriageId() > 0 && attacker.getMap().getCharacterById_InMap(attacker.getMarriageId()) != null && Start.ConfigValuesMap.get("结婚经验加成") != 0) {
+                    final int 结婚经验加成 = Start.ConfigValuesMap.get("结婚经验加成");
                     wedding_EXP = (int)((double)wedding_EXP + (double)exp / 100.0 * (double)结婚经验加成);
                 }
-                if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"人气经验加成")) > 0 && attacker.getFame() > 0) {
+                if (Start.ConfigValuesMap.get("人气经验加成") > 0 && attacker.getFame() > 0) {
                     attacker.人气经验加成();
                 }
                 int premiumBonusExp = 0;
@@ -904,7 +901,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         if (!this.isAlive()) {
             return;
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"怪物状态开关")) <= 0 && from.hasGmLevel(5)) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"怪物状态开关")) <= 0 && from.hasGmLevel(5)) {
             String 状态 = "";
             if (status.getStatus() != null) {
                 final String name = status.getStati().name();

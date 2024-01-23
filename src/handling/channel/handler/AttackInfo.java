@@ -42,6 +42,9 @@ public class AttackInfo
         else if (skillLevel <= 0) {
             return null;
         }
+        if(this.skill == 5121002 || this.skill == 5121004){
+            return skill_.getEffect(skillLevel);
+        }
         if (GameConstants.isLinkedSkill(this.skill)) {
             final ISkill skillLink = SkillFactory.getSkill(this.skill);
             if (this.display > 80 && !skillLink.hasAction()) {

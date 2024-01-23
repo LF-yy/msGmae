@@ -1,5 +1,7 @@
 package tools.wztosql;
 
+import gui.CongMS;
+import server.Start;
 import tools.Pair;
 import server.life.Element;
 import client.inventory.EquipAdditions;
@@ -180,11 +182,11 @@ public class DumpItems
                 ret = 1;
             }
             else {
-                ret = 9999;
+                ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
             }
         } else {
 //            ret = (short)MapleDataTool.getIntConvert(smEntry, -1);
-            ret = (short)9999;
+            ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
         }
         ps.setInt(5, (int)ret);
         double pEntry = 0.0;

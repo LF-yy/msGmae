@@ -992,7 +992,7 @@ public class MapleInventoryManipulator
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
             }
-        final int 丢出物品开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出物品开关"));
+        final int 丢出物品开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出物品开关"));
         if (丢出物品开关 > 0) {
             c.getPlayer().dropMessage(1, "管理员从后台关闭了物品丢出功能。");
             c.sendPacket(MaplePacketCreator.enableActions());

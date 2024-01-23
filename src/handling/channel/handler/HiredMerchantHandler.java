@@ -2,6 +2,8 @@ package handling.channel.handler;
 
 import java.util.Map;
 import java.util.ArrayList;
+
+import server.Start;
 import tools.Pair;
 import java.util.List;
 import client.inventory.ItemLoader;
@@ -36,7 +38,7 @@ public class HiredMerchantHandler
             }
             return;
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"雇佣商人开关")) <= 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"雇佣商人开关")) <= 0) {
             if (c.getPlayer().getMap().allowPersonalShop()) {
                 final byte state = checkExistance(c.getPlayer().getAccountID(), c.getPlayer().getId());
                 final int HMCH = MapleMap.getMerchantChannel(c.getPlayer());

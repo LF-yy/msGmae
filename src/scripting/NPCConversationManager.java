@@ -1,17 +1,23 @@
 package scripting;
 // 汉化方法库
+import bean.UserAttraction;
+import constants.tzjc;
 import merchant.merchant_main;
 import gui.CongMS;
 import client.inventory.MaplePet;
+
+import java.sql.*;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Calendar;
-import server.MaplePortal;
-import java.util.LinkedHashSet;
+
+import server.*;
+
 import constants.ServerConfig;
 import database.DatabaseConnection;
 import handling.channel.handler.InterServerHandler;
 import client.inventory.Item;
+import server.Timer;
 import server.gashapon.GashaponFactory;
 import server.gashapon.Gashapon;
 import server.shops.HiredMerchant;
@@ -23,66 +29,52 @@ import tools.SearchGenerator;
 import server.Timer.EventTimer;
 import handling.world.World.Family;
 import server.Timer.CloneTimer;
-import server.StructPotentialItem;
-import java.util.Collection;
-import java.util.ArrayList;
+
 import handling.world.guild.MapleGuild;
 import handling.world.MapleParty;
 import handling.world.World.Alliance;
-import server.MapleStatEffect;
+
 import java.awt.Point;
 import client.inventory.ItemFlag;
-import java.util.HashMap;
-import server.SpeedRunner;
+
 import server.maps.SpeedRunType;
 import tools.Pair;
-import java.util.EnumMap;
-import server.MapleCarnivalChallenge;
-import server.MapleCarnivalParty;
+
 import server.maps.AramiaFireWorks;
 import server.maps.Event_PyramidSubway;
 import server.maps.Event_DojoAgent;
+import tools.packet.MobPacket;
 import tools.packet.PlayerShopPacket;
-import server.MapleDueyActions;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
+
 import tools.FileoutputUtil;
 import database.DBConPool;
 import server.life.MapleMonster;
 import server.maps.MapleMapObject;
-import java.util.Arrays;
 import server.maps.MapleMapObjectType;
 import server.life.MapleMonsterInformationProvider;
 import client.inventory.Equip;
 import handling.channel.MapleGuildRanking;
 import handling.world.World.Guild;
 import tools.StringUtil;
-import server.MapleSquad;
 import server.maps.MapleMap;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import client.MapleCharacter;
 import client.SkillFactory;
-import java.util.Map;
 import client.SkillEntry;
 import client.ISkill;
 import java.util.Map.Entry;
-import java.util.Iterator;
-import java.util.List;
+
 import client.inventory.MapleInventory;
-import java.util.LinkedList;
+
+import java.util.stream.Collectors;
+
 import client.inventory.MapleInventoryType;
 import server.quest.MapleQuest;
 import client.inventory.IItem;
 import handling.world.World.Broadcast;
 import constants.GameConstants;
-import server.MapleInventoryManipulator;
-import server.MapleItemInformationProvider;
-import server.MapleShopFactory;
 import handling.world.World;
-import server.Randomizer;
 import client.MapleStat;
 import tools.MaplePacketCreator;
 import javax.script.Invocable;
@@ -101,7 +93,12 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public boolean pendingDisposal;
     private final Invocable iv;
     public int p;
-    
+    private static List<String> 特殊宠物吸物无法使用地图;
+    private final static Map<Integer, UserAttraction> 吸怪集合 = new HashMap<>();
+
+    static {
+        NPCConversationManager.特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("CongMS.吸怪无法使用地图").split(","));
+    }
     public NPCConversationManager(final MapleClient c, final int npc, final int questid, final int mode, final String npcscript, final byte type, final Invocable iv) {
         super(c);
         this.lastMsg = -1;
@@ -115,7 +112,190 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.iv = iv;
         this.script = npcscript;
     }
-    
+
+    public int 获取配置(final String param) {
+        return Start.ConfigValuesMap.get(param);
+    }
+
+    public int 查装备赋能(final IItem item,final String name){
+        String names = "赋能"+item.getItemId()+name;
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int numbOld = 0;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT numb FROM suitdamtable where name = ? ");
+            ps.setString(1, names);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                numbOld = rs.getInt("numb");
+            }
+            ps.execute();
+            ps.close();
+
+        } catch (SQLException ex) {
+            System.out.println("查询赋能装备加成表出错：" + ex.getMessage());
+        }
+        return numbOld;
+    }
+    public int 装备赋能(final IItem item,final Integer numb,final String name){
+        String names = "赋能"+item.getItemId()+name;
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int numbOld = 0;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT numb FROM suitdamtable where name = ? ");
+            ps.setString(1, names);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                numbOld = rs.getInt("numb");
+            }
+            ps.execute();
+            ps.close();
+            if(numbOld>0){
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("update suitdamtable set numb = ? where name = ? ");
+                ps1.setInt(1, numbOld+numb);
+                ps1.setString(2, names);
+                ps1.execute();
+                ps1.close();
+            }else{
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("INSERT INTO suitdamtable (name,numb,proportion,proname) VALUES(?,?,?,?)");
+                ps1.setString(1, names);
+                ps1.setInt(2, numbOld+numb);
+                ps1.setInt(3, 9999);
+                ps1.setString(4, name);
+                ps1.execute();
+                ps1.close();
+            }
+
+            tzjc.tzMap.put(names,numbOld+numb);
+        } catch (SQLException ex) {
+            System.out.println("赋能装备加成表出错：" + ex.getMessage());
+        }
+        return numbOld+numb;
+    }
+    public static UserAttraction getAttractList(int id){
+        return 吸怪集合.get(id);
+    }
+
+    public static UserAttraction getAttractList(int channel,int mapId){
+        List<Entry<Integer, UserAttraction>> collect = 吸怪集合.entrySet().stream().filter(ua ->
+                ua.getValue().getPinDao() == channel && ua.getValue().getMapId() == mapId).collect(Collectors.toList());
+        return collect.size()>0 ? collect.get(0).getValue() : null;
+    }
+
+    public  void gain开启吸怪(final MapleCharacter player){
+        int mapId = player.getMapId();
+        if (特殊宠物吸物无法使用地图.stream().anyMatch(s-> {return mapId == Integer.parseInt(s);})){
+            c.getPlayer().dropMessage(1, "该地图不允许吸怪.");
+        }else {
+
+            boolean b = 吸怪集合.entrySet().stream().anyMatch(ua -> {
+                return ua.getValue().getPinDao() == c.getChannel() && ua.getValue().getMapId() == player.getMapId();
+            });
+            if (b) {
+                c.getPlayer().dropMessage(1, "该地图已经有人在吸怪了.");
+            } else {
+                //先清除地图所有怪物
+                //c.getPlayer().setLastRes(null);
+                c.getPlayer().getMap().killAllMonsters(true);
+                UserAttraction userAttraction = new UserAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
+                this.吸怪集合.put(player.getId(), userAttraction);
+                c.getPlayer().startMobVac(userAttraction);
+                开启吸怪();
+            }
+        }
+
+    }
+    public void gain关闭吸怪(final MapleCharacter player){
+        c.getPlayer().getMap().killAllMonsters(true);
+        this.吸怪集合.remove(player.getId());
+
+
+    }
+    public static void gain关闭吸怪(int id){
+        吸怪集合.remove(id);
+    }
+
+    public  void gain开启BOSS击杀统计(final MapleCharacter player,int mobId,String mobName,String adress,String value, long hp){
+        UserAttraction userAttraction = new UserAttraction(c.getChannel(), player.getMapId(), player.getPosition());
+        c.getPlayer().startMobMapVac(userAttraction,mobId,mobName, adress, value,hp);
+
+    }
+
+    public static void setBossLog统计用(final int id,final String boss, final int type, final int count) {
+        final int bossCount = getBossLog1统计用(id,boss, type);
+        try {
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+            ps.setInt(1, bossCount + count);
+            ps.setInt(2, type);
+            ps.setInt(3, id);
+            ps.setString(4, boss);
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+        }
+    }
+
+    public static int getBossLog1统计用(final int id, final String boss, final int type) {
+        try {
+            int count = 0;
+            final Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ?");
+            ps.setInt(1, id);
+            ps.setString(2, boss);
+            final ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt("count");
+                if (count < 0) {
+                    return count;
+                }
+                final Timestamp bossTime = rs.getTimestamp("time");
+                rs.close();
+                ps.close();
+                if (type == 0) {
+                    final Calendar sqlcal = Calendar.getInstance();
+                    if (bossTime != null) {
+                        sqlcal.setTimeInMillis(bossTime.getTime());
+                    }
+                    if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
+                        count = 0;
+                        ps = con.prepareStatement("UPDATE bosslog2 SET count = 0, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+                        ps.setInt(1, id);
+                        ps.setString(2, boss);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+            else {
+                final PreparedStatement psu = con.prepareStatement("INSERT INTO bosslog2 (characterid, bossid, count, type) VALUES (?, ?, ?, ?)");
+                psu.setInt(1, id);
+                psu.setString(2, boss);
+                psu.setInt(3, 0);
+                psu.setInt(4, type);
+                psu.executeUpdate();
+                psu.close();
+            }
+            rs.close();
+            ps.close();
+            return count;
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            return -1;
+        }
+    }
     public Invocable getIv() {
         return this.iv;
     }
@@ -2811,7 +2991,27 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public void gainyb(final int gain) {
         this.getPlayer().gainyb(gain);
     }
-    
+    public void gainybZ(final int gain) {
+        if (gain < 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            this.getPlayer().ban("刷元宝", true, true, false);
+        }else {
+            this.getPlayer().gainyb(gain);
+        }
+    }
+    public void gainybF(final int gain) {
+        if (gain > 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            this.getPlayer().ban("刷元宝", true, true, false);
+        }else {
+            this.getPlayer().gainyb(gain);
+        }
+    }
+
     public int getplayerPoints() {
         return this.getPlayer().getplayerPoints();
     }
@@ -4503,7 +4703,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") < (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限")) && rs.getInt("level") > 30) {
+                if (rs.getInt("level") < (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限")) && rs.getInt("level") > 30) {
                     if (名次 < 10) {
                         final String 玩家名字 = rs.getString("name");
                         final String 职业 = this.职业(rs.getInt("job"));
@@ -4568,7 +4768,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") == (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
+                if (rs.getInt("level") == (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
                     final String 玩家名字 = rs.getString("name");
                     final String 职业 = this.职业(rs.getInt("job"));
                     final int 家族编号 = rs.getInt("guildid");
@@ -4598,7 +4798,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM monsterbook   order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") == (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
+                if (rs.getInt("level") == (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
                     final String 玩家名字 = rs.getString("name");
                     final String 职业 = this.职业(rs.getInt("job"));
                     final int 家族编号 = rs.getInt("guildid");
@@ -5214,5 +5414,83 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public void spawnZakum(final int x, final int y) {
         final MapleMap mapp = this.c.getChannelServer().getMapFactory().getMap(this.c.getPlayer().getMapId());
         mapp.spawnZakum(x, y);
+    }
+
+
+
+    int temp;
+    class xiguai extends Thread{
+        long time = Start.ConfigValuesMap.get("吸怪延迟").longValue();
+        public void run()
+        {
+            int mapId  = c.getPlayer().getMapId();
+            Point point =c.getPlayer().getPosition();
+            int id=c.getPlayer().getId();
+            while(Objects.nonNull(NPCConversationManager.getAttractList(id))  && c.getPlayer()!=null && mapId == c.getPlayer().getMapId()){
+                MapleMap map = c.getPlayer().getMap();
+                if (map.getMonsterSpawnner().right != null) {
+                    if (map.getMonsterSpawnner().left != c.getPlayer().getId()) {
+                        c.getPlayer().getClient().sendPacket(MaplePacketCreator.serverNotice(1, "已经有人在这个地图吸怪了！\r\n请换个地图再试！"));
+                        return;
+                    }
+                }
+                for (final MapleMonster monster : map.getAllMonstersThreadsafe()) {
+                    if (!monster.getStats().isBoss() && c.getPlayer().getLastRes() !=null) {
+                        map.setMonsterspawn(point,id );
+                        c.getPlayer().吸怪特权 = 1;
+                        monster.setPosition(point);
+
+                        //MapleCharacter mc=new MapleCharacter(true);
+                        c.getPlayer().set吸怪Res(c.getPlayer().getLastRes());
+
+                        c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(), monster.getPosition(), map.getMonsterSpawnner().right, c.getPlayer().get吸怪Res()));
+
+                    }
+
+                }
+                try{
+                    sleep(time);
+                }catch(Exception e){
+
+                }
+            }
+            stop();
+        }
+
+
+    }
+    public void 开启吸怪() {
+        xiguai xiguai =new xiguai();
+        xiguai.start();
+    }
+    public static void 关闭吸怪(MapleCharacter user) {
+
+        MapleMap map = user.getMap();
+        if (map.getMonsterSpawnner().right != null) {
+            if (map.getMonsterSpawnner().left == user.getId()) {
+                user.吸怪特权 = 0;
+                map.setMonsterspawn(null, -1);
+            } else {
+                user.getClient().sendPacket(MaplePacketCreator.serverNotice(1, "已经有人在这个地图吸怪了！\r\n不是本人无法关闭！"));
+                return;
+            }
+        }
+    }
+
+    public String 查询吸怪信息() {
+        MapleMap map = c.getPlayer().getMap();
+        int num = 0;
+        final StringBuilder name = new StringBuilder();
+        if (num == 0) {
+            name.append("当前角色:" + c.getPlayer().getName() + "\r\n");
+            name.append("\t\t\t吸怪地图:" + map.getId() + "[" + map.getMapName() + "]\r\n");
+            name.append("\t\t\t吸怪坐标:" + map.getMonsterSpawnner().right + "\r\n");
+            name.append("\t\t\t人物坐标:" + c.getPlayer().getPosition() + "\r\n");
+        }
+        if (name.length() > 0) {
+            return name.toString();
+        } else {
+            return "暂无吸怪信息！";
+        }
     }
 }

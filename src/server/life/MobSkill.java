@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.Map;
 import constants.GameConstants;
+import server.Start;
 import server.maps.MapleMist;
 import client.MapleDisease;
 import server.maps.MapleMapObject;
@@ -135,7 +136,7 @@ public class MobSkill
         MapleDisease disease = null;
         final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
         final List<Integer> reflection = new LinkedList<Integer>();
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"怪物状态开关")) <= 0) {
+        if (Start.ConfigValuesMap.get("怪物状态开关") <= 0) {
             switch (this.skillId) {
                 case 102:
                 case 112:

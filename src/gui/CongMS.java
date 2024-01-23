@@ -113,7 +113,7 @@ public class CongMS extends JFrame
     private static long starttime;
     private ImageIcon bgImg;
     private JLabel imgLabel;
-    public static Map<String, Integer> ConfigValuesMap;
+    //public static Map<String, Integer> ConfigValuesMap;
     private static CongMS instance;
     private Map<Windows, JFrame> windows;
     boolean 调试模式;
@@ -950,7 +950,7 @@ public class CongMS extends JFrame
     
     private void 刷新魔族突袭开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族突袭开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"魔族突袭开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -962,7 +962,7 @@ public class CongMS extends JFrame
     
     private void 刷新魔族攻城开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族攻城开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"魔族攻城开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -974,7 +974,7 @@ public class CongMS extends JFrame
     
     private void 刷新幸运职业开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"幸运职业开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"幸运职业开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -986,7 +986,7 @@ public class CongMS extends JFrame
     
     private void 刷新神秘商人开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"神秘商人开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"神秘商人开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -1220,7 +1220,7 @@ public class CongMS extends JFrame
                 while (rs.next()) {
                     final String name = rs.getString("name");
                     final int val = rs.getInt("val");
-                    CongMS.ConfigValuesMap.put(name, Integer.valueOf(val));
+                    Start.ConfigValuesMap.put(name, Integer.valueOf(val));
                 }
             }
             ps.close();
@@ -2804,7 +2804,7 @@ public class CongMS extends JFrame
         this.jTextArea1.setColumns(20);
         this.jTextArea1.setFont(new Font("新宋体", 0, 12));
         this.jTextArea1.setRows(5);
-        this.jTextArea1.setText("感谢使用AsMs079商业服务端\nby远古天际工作室 QQ: 849340706");
+        this.jTextArea1.setText("感谢使用Ms079商业服务端\nby远古天际工作室 QQ: 849340706");
         this.jScrollPane5.setViewportView((Component)this.jTextArea1);
         final GroupLayout jPanel5Layout = new GroupLayout((Container)this.jPanel5);
         this.jPanel5.setLayout((LayoutManager)jPanel5Layout);
@@ -8780,7 +8780,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点豆豆开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+        final int 泡点豆豆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆开关"));
         if (泡点豆豆开关 <= 0) {
             this.按键开关("泡点豆豆开关", 711);
             this.刷新泡点豆豆开关();
@@ -8792,7 +8792,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点抵用开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
+        final int 泡点抵用开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用开关"));
         if (泡点抵用开关 <= 0) {
             this.按键开关("泡点抵用开关", 707);
             this.刷新泡点抵用开关();
@@ -8804,7 +8804,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点点券开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
+        final int 泡点点券开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券开关"));
         if (泡点点券开关 <= 0) {
             this.按键开关("泡点点券开关", 703);
             this.刷新泡点点券开关();
@@ -8816,7 +8816,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点经验开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
+        final int 泡点经验开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验开关"));
         if (泡点经验开关 <= 0) {
             this.按键开关("泡点经验开关", 705);
             this.刷新泡点经验开关();
@@ -8828,7 +8828,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点金币开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
+        final int 泡点金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币开关"));
         if (泡点金币开关 <= 0) {
             this.按键开关("泡点金币开关", 701);
             this.刷新泡点金币开关();
@@ -11856,7 +11856,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点金币开关() {
         String 泡点金币开关显示 = "";
-        final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
+        final int 泡点金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币开关"));
         if (泡点金币开关 <= 0) {
             泡点金币开关显示 = "泡点金币:开启";
         }
@@ -11868,7 +11868,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点点券开关() {
         String 泡点点券开关显示 = "";
-        final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
+        final int 泡点点券开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券开关"));
         if (泡点点券开关 <= 0) {
             泡点点券开关显示 = "泡点点券:开启";
         }
@@ -11880,7 +11880,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点经验开关() {
         String 泡点经验开关显示 = "";
-        final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
+        final int 泡点经验开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验开关"));
         if (泡点经验开关 <= 0) {
             泡点经验开关显示 = "泡点经验:开启";
         }
@@ -11892,7 +11892,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点抵用开关() {
         String 泡点抵用开关显示 = "";
-        final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
+        final int 泡点抵用开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用开关"));
         if (泡点抵用开关 <= 0) {
             泡点抵用开关显示 = "泡点抵用:开启";
         }
@@ -11904,7 +11904,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点豆豆开关() {
         String 泡点豆豆开关显示 = "";
-        final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+        final int 泡点豆豆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆开关"));
         if (泡点豆豆开关 <= 0) {
             泡点豆豆开关显示 = "泡点豆豆:开启";
         }
@@ -12012,7 +12012,7 @@ public class CongMS extends JFrame
     
     private void 刷新花蘑菇开关() {
         String 花蘑菇显示 = "";
-        final int 花蘑菇 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"花蘑菇开关"));
+        final int 花蘑菇 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"花蘑菇开关"));
         if (花蘑菇 <= 0) {
             花蘑菇显示 = "重载刷新怪物技能";
         }
@@ -12024,7 +12024,7 @@ public class CongMS extends JFrame
     
     private void 刷新火野猪开关() {
         String 火野猪显示 = "";
-        final int 火野猪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"火野猪开关"));
+        final int 火野猪 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"火野猪开关"));
         if (火野猪 <= 0) {
             火野猪显示 = "重载修改怪物技能:开";
         }
@@ -12036,7 +12036,7 @@ public class CongMS extends JFrame
     
     private void 刷新青鳄鱼开关() {
         String 青鳄鱼显示 = "";
-        final int 青鳄鱼 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"青鳄鱼开关"));
+        final int 青鳄鱼 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"青鳄鱼开关"));
         if (青鳄鱼 <= 0) {
             青鳄鱼显示 = "重置ETC";
         }
@@ -12048,7 +12048,7 @@ public class CongMS extends JFrame
     
     private void 刷新喷火龙开关() {
         String 喷火龙显示 = "";
-        final int 喷火龙 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"喷火龙开关"));
+        final int 喷火龙 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"喷火龙开关"));
         if (喷火龙 <= 0) {
             喷火龙显示 = "重载修改item:开";
         }
@@ -12060,7 +12060,7 @@ public class CongMS extends JFrame
     
     private void 刷新小白兔开关() {
         String 小白兔显示 = "";
-        final int 小白兔 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"小白兔开关"));
+        final int 小白兔 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"小白兔开关"));
         if (小白兔 <= 0) {
             小白兔显示 = "重载新增item:开";
         }
@@ -12072,7 +12072,7 @@ public class CongMS extends JFrame
     
     private void 刷新大灰狼开关() {
         String 大灰狼显示 = "";
-        final int 大灰狼 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大灰狼开关"));
+        final int 大灰狼 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"大灰狼开关"));
         if (大灰狼 <= 0) {
             大灰狼显示 = "重载修改任务:开";
         }
@@ -12084,7 +12084,7 @@ public class CongMS extends JFrame
     
     private void 刷新紫色猫开关() {
         String 紫色猫显示 = "";
-        final int 紫色猫 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"紫色猫开关"));
+        final int 紫色猫 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"紫色猫开关"));
         if (紫色猫 <= 0) {
             紫色猫显示 = "重载任务:开";
         }
@@ -12100,7 +12100,7 @@ public class CongMS extends JFrame
     
     private void 刷新石头人开关() {
         String 石头人显示 = "";
-        final int 石头人 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"石头人开关"));
+        final int 石头人 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"石头人开关"));
         if (石头人 <= 0) {
             石头人显示 = "重载怪物掉落:开";
         }
@@ -12112,7 +12112,7 @@ public class CongMS extends JFrame
     
     private void 刷新白雪人开关() {
         String 白雪人显示 = "";
-        final int 白雪人 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"白雪人开关"));
+        final int 白雪人 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"白雪人开关"));
         if (白雪人 <= 0) {
             白雪人显示 = "白雪人:开";
         }
@@ -12124,7 +12124,7 @@ public class CongMS extends JFrame
     
     private void 刷新胖企鹅开关() {
         String 胖企鹅显示 = "";
-        final int 胖企鹅 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"胖企鹅开关"));
+        final int 胖企鹅 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"胖企鹅开关"));
         if (胖企鹅 <= 0) {
             胖企鹅显示 = "胖企鹅:开";
         }
@@ -12136,7 +12136,7 @@ public class CongMS extends JFrame
     
     private void 刷新星精灵开关() {
         String 星精灵显示 = "";
-        final int 星精灵 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"星精灵开关"));
+        final int 星精灵 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"星精灵开关"));
         if (星精灵 <= 0) {
             星精灵显示 = "星精灵:开";
         }
@@ -12148,7 +12148,7 @@ public class CongMS extends JFrame
     
     private void 刷新顽皮猴开关() {
         String 顽皮猴显示 = "";
-        final int 顽皮猴 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"顽皮猴开关"));
+        final int 顽皮猴 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"顽皮猴开关"));
         if (顽皮猴 <= 0) {
             顽皮猴显示 = "顽皮猴:开";
         }
@@ -12160,7 +12160,7 @@ public class CongMS extends JFrame
     
     private void 刷新章鱼怪开关() {
         String 章鱼怪显示 = "";
-        final int 章鱼怪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"章鱼怪开关"));
+        final int 章鱼怪 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"章鱼怪开关"));
         if (章鱼怪 <= 0) {
             章鱼怪显示 = "重置发型脸:开";
         }
@@ -12172,7 +12172,7 @@ public class CongMS extends JFrame
     
     private void 刷新大海龟开关() {
         String 大海龟显示 = "";
-        final int 大海龟 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大海龟开关"));
+        final int 大海龟 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"大海龟开关"));
         if (大海龟 <= 0) {
             大海龟显示 = "大海龟:开";
         }
@@ -12184,7 +12184,7 @@ public class CongMS extends JFrame
     
     private void 刷新红螃蟹开关() {
         String 红螃蟹显示 = "";
-        final int 红螃蟹 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"红螃蟹开关"));
+        final int 红螃蟹 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"红螃蟹开关"));
         if (红螃蟹 <= 0) {
             红螃蟹显示 = "提取WZ文件内容:开";
         }
@@ -12196,7 +12196,7 @@ public class CongMS extends JFrame
     
     private void 刷新小青蛇开关() {
         String 小青蛇显示 = "";
-        final int 小青蛇 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战力修正"));
+        final int 小青蛇 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"战力修正"));
         if (小青蛇 <= 0) {
             小青蛇显示 = "战力修正:开";
         }
@@ -12208,7 +12208,7 @@ public class CongMS extends JFrame
     
     private void 刷新蓝蜗牛开关() {
         String 蓝蜗牛显示 = "";
-        final int 蓝蜗牛 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蓝蜗牛开关"));
+        final int 蓝蜗牛 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"蓝蜗牛开关"));
         if (蓝蜗牛 <= 0) {
             蓝蜗牛显示 = "蓝蜗牛:开";
         }
@@ -12220,7 +12220,7 @@ public class CongMS extends JFrame
     
     private void 刷新漂漂猪开关() {
         String 漂漂猪显示 = "";
-        final int 漂漂猪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"漂漂猪开关"));
+        final int 漂漂猪 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"漂漂猪开关"));
         if (漂漂猪 <= 0) {
             漂漂猪显示 = "漂漂猪:开";
         }
@@ -12232,7 +12232,7 @@ public class CongMS extends JFrame
     
     private void 刷新绿水灵开关() {
         String 绿水灵显示 = "";
-        final int 绿水灵 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"绿水灵开关"));
+        final int 绿水灵 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"绿水灵开关"));
         if (绿水灵 <= 0) {
             绿水灵显示 = "绿水灵:开";
         }
@@ -12244,7 +12244,7 @@ public class CongMS extends JFrame
     
     private void 刷新蘑菇仔开关() {
         String 蘑菇仔显示 = "";
-        final int 蘑菇仔 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蘑菇仔开关"));
+        final int 蘑菇仔 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"蘑菇仔开关"));
         if (蘑菇仔 <= 0) {
             蘑菇仔显示 = "蘑菇仔:开";
         }
@@ -12256,7 +12256,7 @@ public class CongMS extends JFrame
     
     private void 刷新指令通知开关() {
         String 刷新指令通知开关显示 = "";
-        final int 指令通知开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关"));
+        final int 指令通知开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关"));
         if (指令通知开关 <= 0) {
             刷新指令通知开关显示 = "指令通知:开启";
         }
@@ -12268,7 +12268,7 @@ public class CongMS extends JFrame
     
     private void 刷新玩家聊天开关() {
         String 刷新玩家聊天开关显示 = "";
-        final int 玩家聊天开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家聊天开关"));
+        final int 玩家聊天开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"玩家聊天开关"));
         if (玩家聊天开关 <= 0) {
             刷新玩家聊天开关显示 = "玩家聊天:开启";
         }
@@ -12280,7 +12280,7 @@ public class CongMS extends JFrame
     
     private void 刷新禁止登陆开关() {
         String 刷新禁止登陆开关显示 = "";
-        final int 禁止登陆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"禁止登陆开关"));
+        final int 禁止登陆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"禁止登陆开关"));
         if (禁止登陆开关 <= 0) {
             刷新禁止登陆开关显示 = "游戏登陆:禁止";
         }
@@ -12292,7 +12292,7 @@ public class CongMS extends JFrame
     
     private void 刷新升级快讯() {
         String 升级快讯显示 = "";
-        final int 升级快讯 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"升级快讯开关"));
+        final int 升级快讯 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"升级快讯开关"));
         if (升级快讯 <= 0) {
             升级快讯显示 = "升级快讯:开启";
         }
@@ -12304,7 +12304,7 @@ public class CongMS extends JFrame
     
     private void 刷新丢出金币开关() {
         String 刷新丢出金币开关显示 = "";
-        final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
+        final int 丢出金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出金币开关"));
         if (丢出金币开关 <= 0) {
             刷新丢出金币开关显示 = "丢出金币:开启";
         }
@@ -12316,7 +12316,7 @@ public class CongMS extends JFrame
     
     private void 刷新玩家交易开关() {
         String 刷新玩家交易开关显示 = "";
-        final int 玩家交易开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家交易开关"));
+        final int 玩家交易开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"玩家交易开关"));
         if (玩家交易开关 <= 0) {
             刷新玩家交易开关显示 = "玩家交易:开启";
         }
@@ -12328,7 +12328,7 @@ public class CongMS extends JFrame
     
     private void 刷新丢出物品开关() {
         String 刷新丢出物品开关显示 = "";
-        final int 丢出物品开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出物品开关"));
+        final int 丢出物品开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出物品开关"));
         if (丢出物品开关 <= 0) {
             刷新丢出物品开关显示 = "丢出物品:开启";
         }
@@ -12340,7 +12340,7 @@ public class CongMS extends JFrame
     
     private void 刷新游戏指令开关() {
         String 刷新游戏指令开关显示 = "";
-        final int 游戏指令开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏指令开关"));
+        final int 游戏指令开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"游戏指令开关"));
         if (游戏指令开关 <= 0) {
             刷新游戏指令开关显示 = "游戏指令:关闭";
         }
@@ -12352,7 +12352,7 @@ public class CongMS extends JFrame
     
     private void 刷新上线提醒开关() {
         String 刷新上线提醒开关显示 = "";
-        final int 上线提醒开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"上线提醒开关"));
+        final int 上线提醒开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"上线提醒开关"));
         if (上线提醒开关 <= 0) {
             刷新上线提醒开关显示 = "登录公告:开启";
         }
@@ -12364,7 +12364,7 @@ public class CongMS extends JFrame
     
     private void 刷新回收地图开关() {
         String 刷新回收地图开关显示 = "";
-        final int 回收地图开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"回收地图开关"));
+        final int 回收地图开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"回收地图开关"));
         if (回收地图开关 <= 0) {
             刷新回收地图开关显示 = "回收地图:开启";
         }
@@ -12376,7 +12376,7 @@ public class CongMS extends JFrame
     
     private void 刷新管理隐身开关() {
         String 刷新管理隐身开关显示 = "";
-        final int 管理隐身开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理隐身开关"));
+        final int 管理隐身开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"管理隐身开关"));
         if (管理隐身开关 <= 0) {
             刷新管理隐身开关显示 = "管理隐身:开启";
         }
@@ -12388,7 +12388,7 @@ public class CongMS extends JFrame
     
     private void 刷新管理加速开关() {
         String 刷新管理加速开关显示 = "";
-        final int 管理加速开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理加速开关"));
+        final int 管理加速开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"管理加速开关"));
         if (管理加速开关 <= 0) {
             刷新管理加速开关显示 = "管理加速:开启";
         }
@@ -12400,7 +12400,7 @@ public class CongMS extends JFrame
     
     private void 刷新雇佣商人开关() {
         String 刷新雇佣商人开关显示 = "";
-        final int 雇佣商人开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"雇佣商人开关"));
+        final int 雇佣商人开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"雇佣商人开关"));
         if (雇佣商人开关 <= 0) {
             刷新雇佣商人开关显示 = "雇佣商人:开启";
         }
@@ -12412,7 +12412,7 @@ public class CongMS extends JFrame
     
     private void 刷新欢迎弹窗开关() {
         String 刷新欢迎弹窗开关显示 = "";
-        final int 欢迎弹窗开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"欢迎弹窗开关"));
+        final int 欢迎弹窗开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"欢迎弹窗开关"));
         if (欢迎弹窗开关 <= 0) {
             刷新欢迎弹窗开关显示 = "欢迎弹窗:开启";
         }
@@ -12424,7 +12424,7 @@ public class CongMS extends JFrame
     
     private void 刷新滚动公告开关() {
         String 刷新滚动公告开关显示 = "";
-        final int 滚动公告开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"滚动公告开关"));
+        final int 滚动公告开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"滚动公告开关"));
         if (滚动公告开关 <= 0) {
             刷新滚动公告开关显示 = "滚动公告:开启";
         }
@@ -12436,7 +12436,7 @@ public class CongMS extends JFrame
     
     private void 刷新游戏喇叭开关() {
         String 刷新游戏喇叭开关显示 = "";
-        final int 游戏喇叭开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+        final int 游戏喇叭开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"游戏喇叭开关"));
         if (游戏喇叭开关 <= 0) {
             刷新游戏喇叭开关显示 = "游戏喇叭:开启";
         }
@@ -12536,7 +12536,7 @@ public class CongMS extends JFrame
     
     private void 刷新登陆帮助() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"登陆帮助开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"登陆帮助开关"));
         if (S <= 0) {
             显示 = "登陆帮助:开启";
         }
@@ -12548,7 +12548,7 @@ public class CongMS extends JFrame
     
     private void 刷新怪物状态开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"怪物状态开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"怪物状态开关"));
         if (S <= 0) {
             显示 = "怪物状态:开启";
         }
@@ -12560,7 +12560,7 @@ public class CongMS extends JFrame
     
     private void 刷新越级打怪开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"越级打怪开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"越级打怪开关"));
         if (S <= 0) {
             显示 = "越级打怪:开启";
         }
@@ -12572,7 +12572,7 @@ public class CongMS extends JFrame
     
     private void 刷新地图名称开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"地图名称开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"地图名称开关"));
         if (S <= 0) {
             显示 = "地图名称:显示";
         }
@@ -12584,7 +12584,7 @@ public class CongMS extends JFrame
     
     private void 刷新过图存档时间() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"过图存档开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"过图存档开关"));
         if (S <= 0) {
             显示 = "过图存档:开启";
         }
@@ -12596,7 +12596,7 @@ public class CongMS extends JFrame
     
     private void 刷新吸怪检测开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"吸怪检测开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"吸怪检测开关"));
         if (S <= 0) {
             显示 = "吸怪检测:开启";
         }
@@ -12608,21 +12608,21 @@ public class CongMS extends JFrame
     
     private void 刷新冒险家等级上限() {
         String 冒险家等级上限显示 = "";
-        final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
+        final int 冒险家等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"));
         冒险家等级上限显示 = "" + 冒险家等级上限;
         this.冒险家等级上限(冒险家等级上限显示);
     }
     
     private void 刷新骑士团等级上限() {
         String 骑士团等级上限显示 = "";
-        final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
+        final int 骑士团等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团等级上限"));
         骑士团等级上限显示 = "" + 骑士团等级上限;
         this.骑士团等级上限(骑士团等级上限显示);
     }
     
     private void 刷新冒险家职业开关() {
         String 冒险家职业开关显示 = "";
-        final int 冒险家职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家职业开关"));
+        final int 冒险家职业开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家职业开关"));
         if (冒险家职业开关 <= 0) {
             冒险家职业开关显示 = "冒险家:开启";
         }
@@ -12634,7 +12634,7 @@ public class CongMS extends JFrame
     
     private void 刷新骑士团职业开关() {
         String 骑士团职业开关显示 = "";
-        final int 骑士团职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团职业开关"));
+        final int 骑士团职业开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团职业开关"));
         if (骑士团职业开关 <= 0) {
             骑士团职业开关显示 = "骑士团:开启";
         }
@@ -12646,7 +12646,7 @@ public class CongMS extends JFrame
     
     private void 刷新战神职业开关() {
         String 战神职业开关显示 = "";
-        final int 战神职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战神职业开关"));
+        final int 战神职业开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"战神职业开关"));
         if (战神职业开关 <= 0) {
             战神职业开关显示 = "战   神:开启";
         }
@@ -12658,7 +12658,7 @@ public class CongMS extends JFrame
     
     private void 刷新屠令广播开关() {
         String 屠令广播显示 = "";
-        final int 屠令广播 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关"));
+        final int 屠令广播 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关"));
         if (屠令广播 <= 0) {
             屠令广播显示 = "屠令广播:开启";
         }
@@ -12698,7 +12698,7 @@ public class CongMS extends JFrame
     }
     
     public void 按键开关(final String a, final int b) {
-        final int 检测开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)a));
+        final int 检测开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)a));
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         ResultSet rs = null;
@@ -12929,7 +12929,7 @@ public class CongMS extends JFrame
  
     
     static {
-        CongMS.ConfigValuesMap = new HashMap<String, Integer>();
+        Start.ConfigValuesMap = new HashMap<String, Integer>();
         CongMS.instance = new CongMS();
         CongMS.DEFAULT_FONT = new String[] { "Table.font", "TableHeader.font", "CheckBox.font", "Tree.font", "Viewport.font", "ProgressBar.font", "RadioButtonMenuItem.font", "ToolBar.font", "ColorChooser.font", "ToggleButton.font", "Panel.font", "TextArea.font", "Menu.font", "TableHeader.font", "OptionPane.font", "MenuBar.font", "Button.font", "Label.font", "PasswordField.font", "ScrollPane.font", "MenuItem.font", "ToolTip.font", "List.font", "EditorPane.font", "Table.font", "TabbedPane.font", "RadioButton.font", "CheckBoxMenuItem.font", "TextPane.font", "PopupMenu.font", "TitledBorder.font", "ComboBox.font" };
         CongMS.ts = null;

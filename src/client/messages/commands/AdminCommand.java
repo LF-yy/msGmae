@@ -3,6 +3,8 @@ package client.messages.commands;
 import constants.ServerConstants;
 import java.util.List;
 import java.util.Arrays;
+
+import server.Start;
 import server.maps.MapleMapObjectType;
 import java.awt.Point;
 import gui.CongMS;
@@ -3074,7 +3076,7 @@ public class AdminCommand
                 item.setOwner(c.getPlayer().getName());
                 item.setGMLog(c.getPlayer().getName());
                 MapleInventoryManipulator.addbyItem(c, item);
-                if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+                if (Start.ConfigValuesMap.get("指令通知开关") <= 0) {
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]刷出了物品: " + MapleItemInformationProvider.getInstance().getName(Integer.parseInt(splitted[1])) + " [" + splitted[1] + "]"));
                 }
             }
@@ -3096,7 +3098,7 @@ public class AdminCommand
             }
             final Point pos = c.getPlayer().getPosition();
             c.getPlayer().dropMessage(6, "X: " + pos.x + " | Y: " + pos.y + " | RX0: " + (pos.x + 50) + " | RX1: " + (pos.x - 50) + " | FH: " + c.getPlayer().getFH() + "| CY:" + pos.y);
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]使用了我的位置指令"));
             }
             return true;
@@ -3118,7 +3120,7 @@ public class AdminCommand
             c.getPlayer().dropMessage(5, "坐标: " + String.valueOf(c.getPlayer().getPosition().x) + " , " + String.valueOf(c.getPlayer().getPosition().y) + "");
             c.getPlayer().dropMessage(5, "使用 !传送+<空格>+<地图ID> 可直接传送到目标地图");
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]使用了查询当前地图代码功能"));
             }
             return true;
@@ -3160,7 +3162,7 @@ public class AdminCommand
                     targetPortal = target.getPortal(0);
                 }
                 c.getPlayer().changeMap(target, targetPortal);
-                if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+                if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]传送到地图[" + splitted[1] + "]"));
                 }
             }

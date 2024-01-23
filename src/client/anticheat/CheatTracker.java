@@ -2,6 +2,9 @@ package client.anticheat;
 
 import java.util.Iterator;
 import java.util.List;
+
+import gui.CongMS;
+import server.Start;
 import tools.StringUtil;
 import java.util.Comparator;
 import java.util.ArrayList;
@@ -59,7 +62,8 @@ public class CheatTracker
     private long lastSaveTime;
     private long lastLieDetectorTime;
     private long lastLieTime;
-    
+    private long error;
+    private long noError;
     public CheatTracker(final MapleCharacter chr) {
         this.lock = new ReentrantReadWriteLock();
         this.rL = this.lock.readLock();
@@ -90,11 +94,13 @@ public class CheatTracker
         this.lastSaveTime = 0L;
         this.lastLieDetectorTime = 0L;
         this.lastLieTime = 0L;
+        this.error= 0L;
+        this.noError= 0L;
         this.chr = new WeakReference<MapleCharacter>(chr);
         this.invalidationTask = CheatTimer.getInstance().register((Runnable)new InvalidationTask(), 60000L);
         this.takingDamageSince = System.currentTimeMillis();
     }
-    
+
     public final void checkAttack(final int skillId, final int tickcount) {
         short AtkDelay = GameConstants.getAttackDelay(skillId);
         if (((MapleCharacter)this.chr.get()).getBuffedValue(MapleBuffStat.BODY_PRESSURE) != null) {
@@ -115,26 +121,47 @@ public class CheatTracker
         if (skillId == 21101003 || skillId == 5110001) {
             AtkDelay = 0;
         }
-        if (tickcount - this.lastAttackTickCount < AtkDelay) {
+        if (tickcount - this.lastAttackTickCount >0  && tickcount - this.lastAttackTickCount < AtkDelay) {
             if (((MapleCharacter)this.chr.get()).get打怪() >= 100) {
                 if (!((MapleCharacter)this.chr.get()).hasGmLevel(1)) {
-                    ((MapleCharacter)this.chr.get()).ban(((MapleCharacter)this.chr.get()).getName() + "攻击速度异常，技能：" + skillId, true, true, false);
-                    ((MapleCharacter)this.chr.get()).getClient().getSession().close();
+                    ((MapleCharacter)this.chr.get()).ban(((MapleCharacter)this.chr.get()).getName() + "攻击速度异常攻速为"+(tickcount - this.lastAttackTickCount)+"，技能：" + skillId, true, true, false);
+                    //((MapleCharacter)this.chr.get()).getClient().getSession().close();
                     final String reason = "使用违法程式练功";
                     Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "而被管理員永久停封。"));
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + ((MapleCharacter)this.chr.get()).getName() + " 攻击无延续自动封锁! "));
-                }
-                else {
+                    if ((Start.ConfigValuesMap.get("开启封锁"))> 0) {
+                        if ((Start.ConfigValuesMap.get("封停账号")) > 0) {
+                            this.chr.get().ban("攻击速度异常攻", true, true, false);
+                            return;
+                        }
+                    }
+                }else {
                     ((MapleCharacter)this.chr.get()).dropMessage("触发攻击速度封锁");
+
                 }
                 FileoutputUtil.logToFile("logs/Hack/Ban/攻击速度.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + " 技能: " + skillId + " check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
                 return;
             }
-            if (GameConstants.getWuYanChi(skillId)) {
+            if (tickcount - this.lastAttackTickCount >0  &&  GameConstants.getWuYanChi(skillId)) {
                 FileoutputUtil.logToFile("logs/Hack/攻击速度异常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + "\u3000技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ") check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
                 if (WorldConstants.WUYANCHI) {
-                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语开加速]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
+                    this.noError = 0;
+                    this.error = this.error+1;
+                    if(this.error > Start.ConfigValuesMap.get("攻速异常次数")) {
+                        if (Start.ConfigValuesMap.get("开启封锁") > 0) {
+                            if (Start.ConfigValuesMap.get("封停账号") > 0) {
+                                this.chr.get().ban("攻击速度异常攻", true, true, false);
+                                return;
+                            }
+                        }
+                    }
                 }
+            }
+        }else{
+            this.noError = this.noError+1;
+            if(this.noError>10){
+                this.error =0;
             }
         }
         if (((MapleCharacter)this.chr.get()).getDebugMessage()) {
@@ -159,7 +186,11 @@ public class CheatTracker
         }
         final long STime_TC = System.currentTimeMillis() - (long)tickcount;
         if (this.Server_ClientAtkTickDiff - STime_TC > 1000L && GameConstants.getWuYanChi(skillId) && WorldConstants.WUYANCHI) {
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
+//            try {
+//                Thread.sleep(1000);
+//            } catch (Exception e) {
+//            }
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语延迟]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
         }
         this.Server_ClientAtkTickDiff = STime_TC;
         ((MapleCharacter)this.chr.get()).updateTick(tickcount);

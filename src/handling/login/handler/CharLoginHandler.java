@@ -9,6 +9,7 @@ import handling.cashshop.CashShopServer;
 import client.inventory.IItem;
 import client.inventory.MapleInventory;
 import client.inventory.Item;
+import server.Start;
 import server.quest.MapleQuest;
 import server.MapleItemInformationProvider;
 import client.inventory.MapleInventoryType;
@@ -201,64 +202,64 @@ public class CharLoginHandler
             return;
         }
         LoginServer.forceRemoveClient(c, false);
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蓝蜗牛开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"蓝蜗牛开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(0, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蘑菇仔开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"蘑菇仔开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(1, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"绿水灵开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"绿水灵开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(2, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"漂漂猪开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"漂漂猪开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(3, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"小青蛇开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"小青蛇开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(4, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"红螃蟹开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"红螃蟹开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(5, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大海龟开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"大海龟开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(6, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"章鱼怪开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"章鱼怪开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(7, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"顽皮猴开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"顽皮猴开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(8, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"星精灵开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"星精灵开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(9, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"胖企鹅开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"胖企鹅开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(10, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"白雪人开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"白雪人开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(11, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"石头人开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"石头人开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(12, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"紫色猫开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"紫色猫开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(13, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大灰狼开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"大灰狼开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(14, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"小白兔开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"小白兔开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(15, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"喷火龙开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"喷火龙开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(16, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"火野猪开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"火野猪开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(17, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"青鳄鱼开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"青鳄鱼开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(18, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"花蘑菇开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"花蘑菇开关")) == 0) {
             c.sendPacket(LoginPacket.getServerList(19, LoginServer.getServerName(), LoginServer.getLoad(), Integer.parseInt(ServerProperties.getProperty("CongMS.flag"))));
         }
         c.sendPacket(LoginPacket.getEndOfServerList());
@@ -325,9 +326,9 @@ public class CharLoginHandler
     }
     
     public static final void handleCreateCharacter(final LittleEndianAccessor slea, final MapleClient c) {
-        final int 冒险家 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家职业开关"));
-        final int 战神 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战神职业开关"));
-        final int 骑士团 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团职业开关"));
+        final int 冒险家 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家职业开关"));
+        final int 战神 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"战神职业开关"));
+        final int 骑士团 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团职业开关"));
         final String name = slea.readMapleAsciiString();
         final int JobType = slea.readInt();
         if (骑士团 == 1 && JobType == 0) {

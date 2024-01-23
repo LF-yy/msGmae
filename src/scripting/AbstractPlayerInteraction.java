@@ -139,10 +139,19 @@ public abstract class AbstractPlayerInteraction
         this.c.getPlayer().添加破功(pg);
     }
     
+
+    public int getBossLog1(final String bossid) {
+        return this.c.getPlayer().getBossLog1(bossid);
+    }
+    public void setBossLog1(final String bossid) {
+        this.c.getPlayer().setBossLog1(bossid);
+    }
+    public void setBossLog1(final String bossid, final int type, final int count) {
+        this.c.getPlayer().setBossLog1(bossid, type, count);
+    }
     public int getBossLog(final String bossid) {
         return this.c.getPlayer().getBossLog(bossid);
     }
-    
     public int getBossLog(final String bossid, final int type) {
         return this.c.getPlayer().getBossLog(bossid, type);
     }
@@ -605,7 +614,26 @@ public abstract class AbstractPlayerInteraction
     public final void gainNX(final int amount) {
         this.gainPotion(1, amount);
     }
-    
+    public final void gainNXZ(final int amount) {
+        if (amount <0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
+            this.getPlayer().ban("刷点劵", true, true, false);
+        }else {
+            this.gainPotion(1, amount);
+        }
+    }
+    public final void gainNXF(final int amount) {
+        if (amount > 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
+            this.getPlayer().ban("刷点劵", true, true, false);
+        }else {
+            this.gainPotion(1, amount);
+        }
+    }
     public final int getNX() {
         return this.getPotion(1);
     }
@@ -629,7 +657,22 @@ public abstract class AbstractPlayerInteraction
     public final void gainItem(final int id, final short quantity) {
         this.gainItem(id, quantity, false, 0L, -1, "");
     }
-    
+    public final void gainItemF(final int id, final short quantity) {
+        if (quantity >0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
+            this.getPlayer().ban("刷物品", true, true, false);
+        }else {
+            this.gainItem(id, quantity, false, 0L, -1, "");
+        }
+    }
+    public final void gainItemZ(final int id, final short quantity) {
+        if (quantity<=0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
+            this.getPlayer().ban("刷物品", true, true, false);
+        }else {
+            this.gainItem(id, quantity, false, 0L, -1, "");
+        }
+    }
     public final void gainItem(final int id, final short quantity, final boolean randomStats) {
         this.gainItem(id, quantity, randomStats, 0L, -1, "");
     }
@@ -1050,7 +1093,26 @@ public abstract class AbstractPlayerInteraction
     public void gainMeso(final int gain) {
         this.getClient().getPlayer().gainMeso(gain, true, false, true);
     }
-    
+    public void gainMesoZ(final int gain) {
+        if (gain < 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷金币而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷金币而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷金币而被管理員永久停封。"));
+            this.getPlayer().ban("刷金币", true, true, false);
+        }else {
+            this.getClient().getPlayer().gainMeso(gain, true, false, true);
+        }
+    }
+    public void gainMesoF(final int gain) {
+        if (gain > 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷金币而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷金币而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷金币而被管理員永久停封。"));
+            this.getPlayer().ban("刷金币", true, true, false);
+        }else {
+            this.getClient().getPlayer().gainMeso(gain, true, false, true);
+        }
+    }
     public void gainExp(final int gain) {
         this.getClient().getPlayer().gainExp(gain, true, true, true);
     }
@@ -2252,7 +2314,15 @@ public abstract class AbstractPlayerInteraction
             }
         }
     }
-    
+
+    public void resetBossLog1(final String bossid) {
+        this.c.getPlayer().resetBossLog1(bossid);
+    }
+
+    public void resetBossLog1(final String bossid, final int type) {
+        this.c.getPlayer().resetBossLog1(bossid, type);
+    }
+
     public final void 给团队经验(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainExp(amount);
@@ -2372,7 +2442,19 @@ public abstract class AbstractPlayerInteraction
         }
         return Guild.getGP(this.getPlayer().getGuildId());
     }
-    
+
+    public final void 给团队永久(final String bossid) {
+        if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
+            this.setBossLog1(bossid);
+            return;
+        }
+        for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            final MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                curChar.setBossLog1(bossid);
+            }
+        }
+    }
     public final void 给团队每日(final String bossid) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.setBossLog(bossid);
@@ -3588,6 +3670,46 @@ public abstract class AbstractPlayerInteraction
             System.err.println("setmoneyb" + (Object)ex);
             FileoutputUtil.outputFileError("logs/数据库异常.txt", (Throwable)ex);
             ex.getStackTrace();
+        }
+    }
+
+    public void setmoneybF(final int slot) {
+        if (slot > 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            this.getPlayer().ban("刷元宝", true, true, false);
+        }else {
+            try (final Connection con = DatabaseConnection.getConnection()) {
+                final int cid = this.getPlayer().getAccountID();
+                try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb =moneyb+ " + slot + " WHERE id = " + cid + "")) {
+                    ps.executeUpdate();
+                }
+            } catch (SQLException ex) {
+                System.err.println("setmoneyb" + (Object) ex);
+                FileoutputUtil.outputFileError("logs/数据库异常.txt", (Throwable) ex);
+                ex.getStackTrace();
+            }
+        }
+    }
+
+    public void setmoneybZ(final int slot) {
+        if (slot < 0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            this.getPlayer().ban("刷元宝", true, true, false);
+        }else {
+            try (final Connection con = DatabaseConnection.getConnection()) {
+                final int cid = this.getPlayer().getAccountID();
+                try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb =moneyb+ " + slot + " WHERE id = " + cid + "")) {
+                    ps.executeUpdate();
+                }
+            } catch (SQLException ex) {
+                System.err.println("setmoneyb" + (Object) ex);
+                FileoutputUtil.outputFileError("logs/数据库异常.txt", (Throwable) ex);
+                ex.getStackTrace();
+            }
         }
     }
 

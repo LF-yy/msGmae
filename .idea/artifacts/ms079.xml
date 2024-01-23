@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ms079">
+    <output-path>$PROJECT_DIR$/out/artifacts/ms079</output-path>
+    <root id="archive" name="ms079.jar">
+      <element id="module-output" name="ms079" />
+    </root>
+  </artifact>
+</component>

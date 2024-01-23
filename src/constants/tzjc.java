@@ -1,18 +1,21 @@
 package constants;
 
 import client.MapleCharacter;
+import client.inventory.IItem;
+import gui.CongMS;
 import server.Start;
 import server.life.MapleMonster;
 import tools.FileoutputUtil;
 import tools.packet.MobPacket;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class tzjc {
     private static List<tz_model> tz_list;
-
+    public static Map<String,Integer> tzMap;
+    public static Map<Integer, Map<String, Integer>> sbMap;
     public long star_damage(MapleCharacter player, long totDamageToOneMonster, MapleMonster monster) {
         try {
             if (player.get套装伤害加成() > 0.0) {
@@ -38,7 +41,6 @@ public class tzjc {
                 tz.setJc((double) ((Integer) (((Start.套装加成表.get(i)).getRight()).getRight()).getRight()).intValue() / 100.0);
                 int[] list = {Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()};
                 tz.setList(list);
-                System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][套装]:[" + tz.getName() + "] 添加成功 加成伤害：" + tz.getJc() * 100.0 + "%");
                 tzjc.tz_list.add(tz);
             }
         }
@@ -61,14 +63,44 @@ public class tzjc {
                 list2[k] = ((Integer) 套装.get(k)).intValue();
             }
             tz2.setList(list2);
-            System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][套装]:[" + tz2.getName() + "] 添加成功 加成伤害：" + tz2.getJc() * 100.0 + "%");
             tzjc.tz_list.add(tz2);
         }
+        tzMap.putAll(Start.新套装加成表);
+        sbMap.putAll(Start.双爆加成);
     }
 
     public static double check_tz(MapleCharacter chr) {
+        Collection<IItem> hasEquipped = chr.getHasEquipped();
+        AtomicInteger drop = new AtomicInteger(0);
+        AtomicInteger exp = new AtomicInteger(0);
+        try {
+            hasEquipped.forEach(it->{
+                Map<String, Integer> stringIntegerMap = sbMap.get(it.getItemId());
+                if (Objects.nonNull(stringIntegerMap) && stringIntegerMap.size()>0){
+                    drop.addAndGet(stringIntegerMap.get("drop"));
+                    exp.addAndGet(stringIntegerMap.get("exp"));
+                    if ( drop.get()>0) {
+                        chr.dropMessage(5, "检测到佩戴双爆装备,物品掉落概率加：" + drop.get() + "%");
+                    }
+                    if (exp.get()>0) {
+                        chr.dropMessage(5, "检测到佩戴双爆装备,经验倍率加：" + exp.get() + "%");
+                    }
+                }
+            });
+            if (exp.get()>0) {
+                chr.setItemExpm(exp.get());
+                chr.dropMessage(5, "佩戴双爆装备,物品掉落概率总计加成：" + exp.get() + "%");
+            }
+            if (drop.get()>0) {
+                chr.setItemDropm(drop.get());
+                chr.dropMessage(5, "佩戴双爆装备,经验倍率总计加成：" + drop.get() + "%");
+            }
+        } catch (Exception e) {
+            System.out.println("双爆装备装备加载异常");
+        }
+        AtomicReference<Double> number = new AtomicReference<>(0.0);
+
         if (((Integer) Start.ConfigValuesMap.get("套装属性加成开关")).intValue() > 0) {
-            double number = 0.0;
             for (tz_model tz : tzjc.tz_list) {
                 int[] list = tz.getList();
                 boolean is_tz = true;
@@ -77,17 +109,36 @@ public class tzjc {
                         is_tz = false;
                     }
                 }
-                if (is_tz) {
+                if (is_tz && tz.getJc() >0) {
+                    number.updateAndGet(v -> (double) v + tz.getJc());
                     chr.dropMessage(5, "检测到佩戴了 [" + tz.getName() + "] 套装  加成伤害：" + tz.getJc() * 100.0 + "%");
-                    number += tz.getJc();
                 }
             }
-            return number;
+            if (((Integer) Start.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
+                List<String> list = new ArrayList<>();
+                hasEquipped.forEach(iItem -> {
+                    Integer integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                    if (Objects.nonNull(integer)) {
+                        if (!list.contains("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "")) {
+                            if (integer > 0) {
+                                list.add("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                                number.updateAndGet(v -> (double) (v + (integer / 100.0)));
+                                chr.dropMessage(5, "检测到佩戴赋能装备加成伤害：" + integer + "%");
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        if (number.get() > 0) {
+            chr.dropMessage(5, "赋能/套装伤害加成总计：" + number.get() * 100 + "%");
         }
         return 0.0;
     }
 
     static {
         tz_list = (List<tz_model>) new LinkedList();
+        tzjc.tzMap = new Hashtable<>();
+        tzjc.sbMap = new Hashtable<>();
     }
 }

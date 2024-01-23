@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import gui.CongMS;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import client.inventory.MaplePet.PetFlag;
@@ -384,12 +386,12 @@ public class MapleItemInformationProvider
                     ret = 1;
                 }
                 else {
-                    ret = 100;
+                    ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
                 }
             }
             else {
 //                ret = (short)MapleDataTool.getInt(smEntry);
-                ret = (short)9999;
+                ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
             }
         }
         this.slotMaxCache.put(Integer.valueOf(itemId), Short.valueOf(ret));

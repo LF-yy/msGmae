@@ -2,6 +2,7 @@ package handling.channel.handler;
 
 import constants.tzjc;
 import server.ServerProperties;
+import server.Start;
 import server.maps.FieldLimitType;
 import tools.data.LittleEndianAccessor;
 import handling.world.guild.MapleGuild;
@@ -229,10 +230,10 @@ public class InterServerHandler
             c.getSession().close();
             return;
         }
-        final int 管理隐身 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理隐身开关"));
+        final int 管理隐身 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"管理隐身开关"));
         if (管理隐身 <= 0 && player.isGM()) {
             SkillFactory.getSkill(9001004).getEffect(1).applyTo(player);
-            final int 管理加速 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理加速开关"));
+            final int 管理加速 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"管理加速开关"));
             if (管理加速 <= 0) {
                 SkillFactory.getSkill(9001001).getEffect(1).applyTo(player);
                 if (GameConstants.isKOC((int)player.getJob())) {
@@ -347,7 +348,7 @@ public class InterServerHandler
         if (c.getPlayer().hasEquipped(1122017)) {
             player.dropMessage(5, "您装备了精灵吊坠！打怪时可以额外获得道具佩戴经验奖励！");
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"上线提醒开关")) <= 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"上线提醒开关")) <= 0) {
             if (player.getGender() == 0) {
                 Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(11, c.getChannel(), "[登录公告] 【帅哥】" + player.getName() + " : 进入游戏，大家热烈欢迎他吧！！！"));
             }
@@ -356,16 +357,16 @@ public class InterServerHandler
             }
         }
         player.updatePetAuto();
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"登陆帮助开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"登陆帮助开关")) == 0) {
             if (player.getGMLevel() > 0 && player.getBossLog("管理上线提示") == 0) {
-                player.dropMessage(5, "指令: [AsMs079服务端] 查看管理员指令文本");
+                player.dropMessage(5, "指令: [Ms079服务端] 查看管理员指令文本");
                 player.dropMessage(5, "指令: [@帮助] 查看玩家指令");
             }
             else if (player.getGMLevel() <= 0 && player.getBossLog("玩家上线提示") == 0) {
                 player.dropMessage(5, "指令: [@帮助] 查看玩家指令");
             }
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"幸运职业开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"幸运职业开关")) == 0) {
             final int 职业 = player.getJob();
             final int 职业2 = MapleParty.幸运职业;
             if (职业 == 职业2 || 职业 - 职业2 == 1 || 职业2 - 职业 == -1) {

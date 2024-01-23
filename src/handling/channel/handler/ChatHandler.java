@@ -10,6 +10,8 @@ import handling.world.World.Guild;
 import handling.world.World.Party;
 import handling.world.World.Buddy;
 import java.util.Arrays;
+
+import server.Start;
 import tools.data.LittleEndianAccessor;
 import java.util.Iterator;
 import server.maps.MapleMap;
@@ -29,7 +31,7 @@ public class ChatHandler
 {
     public static final void GeneralChat(final String text, final byte unk, final MapleClient c, final MapleCharacter chr) {
         if (chr != null && !CommandProcessor.processCommand(c, text, CommandType.NORMAL)) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家聊天开关")) > 0) {
+            if (Start.ConfigValuesMap.get("玩家聊天开关") > 0) {
                 c.sendPacket(MaplePacketCreator.serverNotice(1, "管理员从后台关闭了聊天功能"));
                 return;
             }

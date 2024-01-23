@@ -614,7 +614,7 @@ public class MonsterDropCreator
             case 2060001:
             case 2061000:
             case 2061001:
-              return 25000;
+                 return 25000;
             case 2070000:
             case 2070001:
             case 2070002:
@@ -623,18 +623,30 @@ public class MonsterDropCreator
             case 2070008:
             case 2070009:
             case 2070010:
-              return 500;
-            case 2070005:
-              return 400;
+                  return 500;
+              case 2070005:
+                 return 400;
             case 2070006:
             case 2070007:
-              return 200;
-            case 2070012:
-            case 2070013:
-              return 1500;
-            case 2070019:
-              return 100;
-            case 2210006:
+                 return 200;
+              case 2070011:
+              case 2070012:
+              case 2070013:
+              case 2070014:
+              case 2070015:
+              case 2070016:
+              case 2070017:
+              case 2070018:
+              case 2070019:
+              case 2070020:
+              case 2070021:
+              case 2070022:
+              case 2070023:
+              case 2070024:
+              case 2070025:
+              case 2070026:
+                  return 1500;
+              case 2210006:
               return 999999;
           } 
           return 20000;

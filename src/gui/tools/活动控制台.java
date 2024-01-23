@@ -682,7 +682,7 @@ public class 活动控制台 extends JFrame
     
     private void 刷新周末倍率开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"周末倍率开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"周末倍率开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -702,7 +702,7 @@ public class 活动控制台 extends JFrame
     
     private void 刷新神秘商人开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"神秘商人开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"神秘商人开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -714,7 +714,7 @@ public class 活动控制台 extends JFrame
     
     private void 刷新幸运职业开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"幸运职业开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"幸运职业开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -726,7 +726,7 @@ public class 活动控制台 extends JFrame
     
     private void 刷新野外通缉开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"野外通缉开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"野外通缉开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -738,7 +738,7 @@ public class 活动控制台 extends JFrame
     
     private void 刷新魔族突袭开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族突袭开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"魔族突袭开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -750,7 +750,7 @@ public class 活动控制台 extends JFrame
     
     private void 刷新魔族攻城开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族攻城开关"));
+        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"魔族攻城开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -823,7 +823,7 @@ public class 活动控制台 extends JFrame
     }
     
     public void 按键开关(final String a, final int b) {
-        final int 检测开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)a));
+        final int 检测开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)a));
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         ResultSet rs = null;

@@ -2,6 +2,9 @@ package client.messages.commands;
 
 import client.MapleCharacter;
 import client.inventory.IItem;
+import gui.CongMS;
+import handling.world.MaplePartyCharacter;
+import server.Start;
 import server.gashapon.GashaponFactory;
 import client.inventory.MapleInventory;
 import server.MapleInventoryManipulator;
@@ -10,12 +13,16 @@ import tools.FileoutputUtil;
 import handling.world.World.Broadcast;
 import constants.PiPiConfig;
 import tools.StringUtil;
+
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import server.life.MapleMonster;
 import server.maps.MapleMapObject;
 import java.util.Arrays;
 import server.maps.MapleMapObjectType;
 import java.util.Calendar;
+import java.util.Objects;
+
 import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import client.MapleStat;
@@ -271,7 +278,48 @@ public class PlayerCommand
             c.removeClickedNPC();
             NPCScriptManager.getInstance().dispose(c);
             c.sendPacket(MaplePacketCreator.enableActions());
-            c.sendPacket(MaplePacketCreator.sendHint("解卡完毕..\r\n当前系统时间" + FilePrinter.getLocalDateString() + " 星期" + getDayOfWeek() + "\r\n目前剩余: 点卷 " + c.getPlayer().getCSPoints(1) + "  抵用卷 " + c.getPlayer().getCSPoints(2) + "  \r\n当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒", 350, 5));
+            //4人组队爆率加成机制
+            boolean rand = false;
+            double coefficient = 1;
+            final int cMap = c.getPlayer().getMapId();
+            if (Objects.nonNull(c.getPlayer().getParty()) && c.getPlayer().getParty().getMembers().size()>=4) {
+                for (final MaplePartyCharacter cc : c.getPlayer().getParty().getMembers()) {
+                    if (cMap == cc.getMapid()) {
+                        rand = true;
+                    } else {
+                        rand = false;
+                    }
+                }
+            }
+            if (rand){
+                coefficient = Start.ConfigValuesMap.get("4人组队爆率加成") / 100;
+            }
+            double jiac = 1;
+            if (Start.ConfigValuesMap.get("开启破功爆率加成")>0) {
+                //破功爆率加成机制
+                int 获得破功 = c.getPlayer().取破攻等级();
+                jiac = 获得破功 / Start.ConfigValuesMap.get("破功爆率加成计算");
+            }
+            //if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+            System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
+            System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
+            //}
+            double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
+            DecimalFormat df = new DecimalFormat("#.00");
+            String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
+            String formatDrop = df.format(coefficient *  c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm() + jiac);
+            String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate());
+
+            c.sendPacket(MaplePacketCreator.sendHint(
+                    "解卡完毕..\r\n"
+                            + "当前系统时间" + FilePrinter.getLocalDateString() + " 星期" + getDayOfWeek() + "\r\n"
+                            + "经验值倍率 " + formatExp
+                            + "%, 怪物爆率 " + formatDrop
+                            + "%, 金币倍率 " + speciesDrop /*+ "% VIP经验加成：" + c.getPlayer().getVipExpRate()*/ + "%\r\n"
+                            + "当前剩余 " + c.getPlayer().getCSPoints(1) + " 点券 " + c.getPlayer().getCSPoints(2) + " 抵用券\r\n"
+                            + "当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒\r\n"
+                            + "角色坐标 " + "X:"+c.getPlayer().getPosition().x+"-Y:"+c.getPlayer().getPosition().y
+                            + "", 350, 5));
             return true;
         }
         

@@ -1,21 +1,21 @@
 package constants;
 
+import gui.CongMS;
 import handling.login.LoginServer;
-import java.util.Collections;
-import java.util.Arrays;
+
+import java.util.*;
+
 import server.ServerProperties;
 import server.MapleStatEffect;
 import client.inventory.IItem;
 import client.MapleCharacter;
 import handling.channel.handler.AttackInfo;
-import java.util.Calendar;
 import server.Randomizer;
-import java.util.Random;
 import client.status.MonsterStatus;
 import client.inventory.MapleWeaponType;
 import client.inventory.MapleInventoryType;
+import server.Start;
 import server.maps.MapleMapObjectType;
-import java.util.List;
 
 public class GameConstants
 {
@@ -628,195 +628,378 @@ public class GameConstants
             }
         }
     }
-    
+
     public static short getAttackDelay(final int id) {
         switch (id) {
+
             case 5201001: {
-                return 200;
+                return getaShort(id + "攻击延迟", 200);
             }
             case 3110001: {
-                return 120;
+                return getaShort(id + "攻击延迟", 120);
             }
             case 5001002: {
-                return 30;
+                return getaShort(id + "攻击延迟", 30);
             }
             case 4321001: {
-                return 40;
+                return getaShort(id + "攻击延迟", 40);
             }
-            case 3121004:
-            case 4221001:
-            case 5201006:
-            case 5221004:
-            case 13111002:
+            case 3121004:{
+                return getaShort(id + "攻击延迟", 120);
+            }
+            case 4221001:{
+                return getaShort(id + "攻击延迟", 120);
+            }
+            case 5201006:{
+                return getaShort(id + "攻击延迟", 120);
+            }
+            case 5221004:{
+                return getaShort(id + "攻击延迟", 120);
+            }
+            case 13111002:{
+                return getaShort(id + "攻击延迟", 120);
+            }
             case 33121009: {
-                return 120;
+                return getaShort(id + "攻击延迟", 120);
             }
             case 13101005: {
-                return 360;
+                return getaShort(id + "攻击延迟", 360);
             }
             case 5001003: {
-                return 390;
+                return getaShort(id + "攻击延迟", 390);
             }
-            case 1121006:
-            case 1221007:
-            case 1321003:
-            case 5001001:
+            case 1121006:{
+                return getaShort(id + "攻击延迟", 450);
+            }
+            case 1221007:{
+                return getaShort(id + "攻击延迟", 450);
+            }
+            case 1321003:{
+                return getaShort(id + "攻击延迟", 450);
+            }
+            case 5001001:{
+                return getaShort(id + "攻击延迟", 450);
+            }
             case 15001001: {
-                return 450;
+                return getaShort(id + "攻击延迟", 450);
             }
-            case 4201005:
-            case 5211004:
+            case 4201005:{
+                return getaShort(id + "攻击延迟", 480);
+            }
+            case 5211004:{
+                return getaShort(id + "攻击延迟", 480);
+            }
             case 5211005: {
-                return 480;
+                return getaShort(id + "攻击延迟", 480);
             }
-            case 0:
-            case 1001004:
-            case 1001005:
-            case 1311005:
-            case 5111002:
-            case 11001002:
-            case 11001003:
+            case 0:{
+                return getaShort(id + "攻击延迟", 570);
+            }
+            case 1001004:{
+                return getaShort(id + "攻击延迟", 570);
+            }
+            case 1001005:{
+                return getaShort(id + "攻击延迟", 570);
+            }
+            case 1311005:{
+                return getaShort(id + "攻击延迟", 570);
+            }
+            case 5111002:{
+                return getaShort(id + "攻击延迟", 570);
+            }
+            case 11001002:{
+                return getaShort(id + "攻击延迟", 570);
+            }
+            case 11001003:{
+                return getaShort(id + "攻击延迟", 570);
+            }
             case 15101005: {
-                return 570;
+                return getaShort(id + "攻击延迟", 570);
             }
-            case 311004:
-            case 1121008:
-            case 1211002:
-            case 1221009:
-            case 1311003:
-            case 1311004:
-            case 2001005:
-            case 2101005:
-            case 2121003:
-            case 2121006:
-            case 2221003:
-            case 2301002:
-            case 3101005:
-            case 3111003:
-            case 3111006:
-            case 3201005:
-            case 3211003:
-            case 3211004:
-            case 3211006:
-            case 3221001:
-            case 4001334:
-            case 4001344:
-            case 4101005:
-            case 4111004:
-            case 4111005:
-            case 4121007:
-            case 4201004:
-            case 4211004:
-            case 5101004:
-            case 5221007:
-            case 11111004:
-            case 12101002:
-            case 13111000:
-            case 14001004:
-            case 14111002:
-            case 14111005:
+            case 311004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 1121008:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 1211002:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 1221009:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 1311003:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 1311004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 2001005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 2101005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 2121003:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 2121006:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 2221003:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 2301002:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3101005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3111003:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3111006:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3201005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3211003:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3211004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3211006:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 3221001:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4001334:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4001344:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4101005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4111004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4111005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4121007:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4201004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 4211004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 5101004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 5221007:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 11111004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 12101002:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 13111000:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 14001004:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 14111002:{
+                return getaShort(id + "攻击延迟", 600);
+            }
+            case 14111005:{
+                return getaShort(id + "攻击延迟", 600);
+            }
             case 15101003: {
-                return 600;
+                return getaShort(id + "攻击延迟", 600);
             }
-            case 1311001:
-            case 1311002:
-            case 2221006:
-            case 4221007:
-            case 5201004:
-            case 5211000:
+            case 1311001:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 1311002:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 2221006:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 4221007:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 5201004:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 5211000:{
+                return getaShort(id + "攻击延迟", 660);
+            }
             case 15001002: {
-                return 660;
+                return getaShort(id + "攻击延迟", 660);
             }
-            case 2001004:
-            case 2121001:
-            case 2201004:
-            case 2201005:
-            case 2211002:
-            case 2221001:
-            case 2301005:
-            case 2321001:
-            case 2321007:
-            case 4121008:
-            case 4211006:
-            case 5101002:
-            case 5121005:
-            case 5211006:
-            case 5221008:
-            case 11101004:
-            case 12001003:
+            case 2001004:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 2121001:{
+                return getaShort(id + "攻击延迟", 660);
+            }
+            case 2201004:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 2201005:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 2211002:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 2221001:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 2301005:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 2321001:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 2321007:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 4121008:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 4211006:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 5101002:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 5121005:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 5211006:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 5221008:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 11101004:{
+                return getaShort(id + "攻击延迟", 750);
+            }
+            case 12001003:{
+                return getaShort(id + "攻击延迟", 750);
+            }
             case 12111006: {
-                return 750;
+                return getaShort(id + "攻击延迟", 750);
             }
-            case 2111006:
-            case 2211006:
+            case 2111006:{
+                return getaShort(id + "攻击延迟", 810);
+            }
+            case 2211006:{
+                return getaShort(id + "攻击延迟", 810);
+            }
             case 15111007: {
-                return 810;
+                return getaShort(id + "攻击延迟", 810);
             }
-            case 2111002:
-            case 4211002:
-            case 5101003:
+            case 2111002:{
+                return getaShort(id + "攻击延迟", 900);
+            }
+            case 4211002:{
+                return getaShort(id + "攻击延迟", 900);
+            }
+            case 5101003:{
+                return getaShort(id + "攻击延迟", 900);
+            }
             case 13111006: {
-                return 900;
+                return getaShort(id + "攻击延迟", 900);
             }
             case 2311004: {
-                return 500;
+                return getaShort(id + "攻击延迟", 500);
             }
             case 5121003: {
-                return 930;
+                return getaShort(id + "攻击延迟", 930);
             }
             case 13111007: {
-                return 960;
+                return getaShort(id + "攻击延迟", 960);
             }
-            case 4121003:
-            case 4221003:
+            case 4121003:{
+                return getaShort(id + "攻击延迟", 1020);
+            }
+            case 4221003:{
+                return getaShort(id + "攻击延迟", 1020);
+            }
             case 14101006: {
-                return 1020;
+                return getaShort(id + "攻击延迟", 1020);
             }
             case 12101006: {
-                return 1050;
+                return getaShort(id + "攻击延迟", 1050);
             }
             case 5121001: {
-                return 1060;
+                return getaShort(id + "攻击延迟", 1060);
             }
-            case 1311006:
+            case 1311006:{
+                return getaShort(id + "攻击延迟", 1140);
+            }
             case 2211003: {
-                return 1140;
+                return getaShort(id + "攻击延迟", 1140);
             }
             case 11111006: {
-                return 1230;
+                return getaShort(id + "攻击延迟", 1230);
             }
             case 12111005: {
-                return 1260;
+                return getaShort(id + "攻击延迟", 1260);
             }
             case 2111003: {
-                return 800;
+                return getaShort(id + "攻击延迟", 800);
             }
-            case 5111006:
+            case 5111006:{
+                return getaShort(id + "攻击延迟", 1500);
+            }
             case 15111003: {
-                return 1500;
+                return getaShort(id + "攻击延迟", 1500);
             }
-            case 5121007:
+            case 5121007:{
+                return getaShort(id + "攻击延迟", 1830);
+            }
             case 15111004: {
-                return 1830;
+                return getaShort(id + "攻击延迟", 1830);
             }
-            case 5121004:
+            case 5121004:{
+                return getaShort(id + "攻击延迟", 2160);
+            }
             case 5221003: {
-                return 2160;
+                return getaShort(id + "攻击延迟", 2160);
             }
-            case 2121007:
-            case 2221007:
+            case 2121007:{
+                return getaShort(id + "攻击延迟", 700);
+            }
+            case 2221007:{
+                return getaShort(id + "攻击延迟", 700);
+            }
             case 2321008: {
-                return 700;
+                return getaShort(id + "攻击延迟", 700);
             }
             case 10001011: {
-                return 3060;
+                return getaShort(id + "攻击延迟", 3060);
             }
             default: {
-                return 330;
+                return getaShort("默认攻击延迟", 330);
             }
         }
     }
-    
+    private static short getaShort(String id, int x) {
+        return Objects.isNull(Start.ConfigValuesMap.get(id)) ? Short.parseShort(x+"") : Short.parseShort(Start.ConfigValuesMap.get(id) + "");
+    }
     public static boolean getWuYanChi(final int id) {
         switch (id) {
             case 15001002:

@@ -66,7 +66,7 @@ public class WorldConstants
         WorldConstants.SCROLL_MESSAGE = ServerProperties.getProperty("CongMS.serverMessage", WorldConstants.SCROLL_MESSAGE);
         WorldConstants.CHANNEL_COUNT = ServerProperties.getProperty("CongMS.channel.count", WorldConstants.CHANNEL_COUNT);
         WorldConstants.USER_LIMIT = ServerProperties.getProperty("CongMS.userlimit", WorldConstants.USER_LIMIT);
-//        WorldConstants.USER_LIMIT = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"服务端最大人数"));
+//        WorldConstants.USER_LIMIT = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"服务端最大人数"));
         WorldConstants.MAX_CHAR_VIEW = ServerProperties.getProperty("CongMS.maxCharView", WorldConstants.MAX_CHAR_VIEW);
         WorldConstants.GMITEMS = ServerProperties.getProperty("CongMS.gmitems", WorldConstants.GMITEMS);
         WorldConstants.CS_ENABLE = ServerProperties.getProperty("CongMS.cashshop.enable", WorldConstants.CS_ENABLE);

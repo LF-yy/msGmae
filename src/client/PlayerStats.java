@@ -45,20 +45,20 @@ public class PlayerStats implements Serializable
     public short maxhp;
     public short mp;
     public short maxmp;
-    private transient short passive_sharpeye_percent;
+    private transient short passive_sharpeye_percent;  //爆击最大伤害倍率
     private transient short localmaxhp;
     private transient short localmaxmp;
-    private transient byte passive_mastery;
-    private transient byte passive_sharpeye_rate;
-    private transient int localstr;
-    private transient int localdex;
-    private transient int localluk;
-    private transient int localint_;
-    private transient int magic;
-    private transient int watk;
+    private transient byte passive_mastery;  ///武器数量度
+    private transient byte passive_sharpeye_rate; //爆击概率
+    private transient int localstr;//力量
+    private transient int localdex;//敏捷
+    private transient int localluk;//运气
+    private transient int localint_;//智力
+    private transient int magic;//魔法防御
+    private transient int watk;//物理防御
     private transient int hands;
-    private transient int accuracy;
-    public transient boolean equippedWelcomeBackRing;
+    private transient int accuracy;//攻速
+    public transient boolean equippedWelcomeBackRing; //以前是1112127 盛大修改 回归戒指 - 热烈欢迎玩家回归的特别戒指，附带特殊福利。佩戴本戒指时，在组队状态下，#c全队队员可享受额外80%的召回经验奖励#。归来的朋友，快去和其他玩家组队一起战斗吧！
     public transient boolean equippedFairy;
     public transient boolean hasMeso;
     public transient boolean hasItem;
@@ -82,10 +82,12 @@ public class PlayerStats implements Serializable
     public transient double realDropBuff;
     public transient double realMesoBuff;
     public transient double realCashBuff;
-    public transient double dam_r;
-    public transient double bossdam_r;
+    public transient double dam_r;//伤害
+    public transient double bossdam_r;//BOSS伤害
     public transient double dropm;
     public transient double expm;
+    public transient int itemExpm;
+    public transient int itemDropm;
     public transient int recoverHP;
     public transient int recoverMP;
     public transient int mpconReduce;
@@ -104,9 +106,9 @@ public class PlayerStats implements Serializable
     private transient float jumpMod;
     private transient float localmaxbasedamage;
     public transient int def;
-    public transient int element_ice;
-    public transient int element_fire;
-    public transient int element_light;
+    public transient int element_ice;//element_ice  冰
+    public transient int element_fire;//element_fire 火
+    public transient int element_light;//element_light  光
     public transient int element_psn;
     public static final short maxStr = 999;
     public ReentrantLock lock;
@@ -114,7 +116,11 @@ public class PlayerStats implements Serializable
     public int defRange;
     public transient int dotTime;
     public transient boolean 精灵吊坠;
-    
+
+    {
+            itemExpm = 100;
+            itemDropm = 0;
+    }
     public PlayerStats(final MapleCharacter chr) {
         this.equipLevelHandling = new ArrayList<Equip>();
         this.Berserk = false;

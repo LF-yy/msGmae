@@ -185,7 +185,7 @@ public class Skill implements ISkill
                 ret.effects.add(MapleStatEffect.loadSkillEffectFromData(level, id, isBuff, Byte.parseByte(level.getName())));
             }
         } catch (Exception e) {
-            System.out.println(id);
+            //System.out.println(id);
         }
         final MapleData reqDataRoot = data.getChildByPath("req");
         if (reqDataRoot != null) {

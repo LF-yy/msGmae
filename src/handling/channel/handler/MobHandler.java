@@ -1,5 +1,7 @@
 package handling.channel.handler;
 
+import bean.UserAttraction;
+import scripting.NPCConversationManager;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
 import server.maps.MapleNodes.MapleNodeInfo;
@@ -9,6 +11,8 @@ import client.inventory.MapleInventoryType;
 import server.maps.MapleMap;
 import java.util.List;
 import java.awt.Point;
+import java.util.Objects;
+
 import server.life.MobSkill;
 import server.life.MapleMonster;
 import server.maps.AnimatedMapleMapObject;
@@ -35,6 +39,8 @@ public class MobHandler
         if (chr == null || chr.getMap() == null) {
             return;
         }
+        //如开启吸怪直接返回
+        UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
         final int objectId = slea.readInt();
         final MapleMonster monster = chr.getMap().getMonsterByOid(objectId);
         if (monster == null) {
@@ -86,7 +92,8 @@ public class MobHandler
         final Point startPos = slea.readPos();
         List<LifeMovementFragment> res;
         try {
-            res = MovementParse.parseMovement(slea, 2);
+                res = MovementParse.parseMovement(slea, 2);
+            c.getPlayer().setLastRes(res);
         }
         catch (ArrayIndexOutOfBoundsException e) {
             if (chr.isShowErr()) {

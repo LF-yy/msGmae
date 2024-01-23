@@ -1,6 +1,8 @@
 package server.maps;
 
 import java.awt.Point;
+
+import server.*;
 import server.maps.MobConstants;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
@@ -8,19 +10,7 @@ import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,17 +45,8 @@ import handling.world.World.Broadcast;
 import handling.world.World.Find;
 import io.netty.channel.Channel;
 import scripting.EventManager;
-import server.MapleCarnivalFactory;
 import server.MapleCarnivalFactory.MCSkill;
-import server.MapleInventoryManipulator;
-import server.MapleItemInformationProvider;
-import server.MaplePortal;
-import server.MapleSquad;
 import server.MapleSquad.MapleSquadType;
-import server.MapleStatEffect;
-import server.Randomizer;
-import server.ServerProperties;
-import server.SpeedRunner;
 import server.Timer.MapTimer;
 import server.Timer.WorldTimer;
 import server.custom.bossrank.BossRankManager;
@@ -160,7 +141,16 @@ public final class MapleMap
     private short bottom;
     private short left;
     private short right;
-    
+
+    private Point monsterSpawnPos;
+    private int spawnCharId = -1;
+    public void setMonsterspawn(Point position, int chrId) {
+        monsterSpawnPos = position;
+        spawnCharId = chrId;
+    }
+    public Pair<Integer, Point> getMonsterSpawnner() {
+        return new Pair<Integer, Point>(spawnCharId, monsterSpawnPos);
+    }
     public MapleMap(final int mapid, final int channel, final int returnMapId, final float monsterRate) {
         this.characters = new LinkedList<MapleCharacter>();
         this.charactersLock = new ReentrantReadWriteLock();
@@ -740,12 +730,46 @@ public final class MapleMap
         }
         Collections.shuffle(dropEntry);
         boolean mesoDropped = false;
+        boolean rand = false;
+        int coefficient = 1;
         for (final MonsterDropEntry de2 : dropEntry) {
             if (de2.itemId == mob.getStolen()) {
                 continue;
             }
+            //4人组队爆率加成机制
+            final int cMap = chr.getMapId();
+            if (Objects.nonNull(chr.getClient().getPlayer().getParty()) && chr.getClient().getPlayer().getParty().getMembers().size()>=4) {
+                for (final MaplePartyCharacter cc : chr.getClient().getPlayer().getParty().getMembers()) {
+                    if (cMap == cc.getMapid()) {
+                        rand = true;
+                    } else {
+                        rand = false;
+                    }
+                }
+            }
+            if (rand){
+                coefficient = 2;
+            }
+            double jiac = 1  ;
+            if (Start.ConfigValuesMap.get("开启破功爆率加成")>0) {
+                //破功爆率加成机制
+                int 获得破功 = chr.getClient().getPlayer().取破攻等级();
+                jiac = 获得破功 >= 100 ? (获得破功 / Start.ConfigValuesMap.get("破功爆率加成计算")) * 0.01 + 1 : 1;
+            }
+
+            int itemDropm = chr.getItemDropm()/100;
+
             final double lastDrop = (chr.getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (chr.getStat().realDropBuff - 100.0);
-            if (Randomizer.nextInt(999999) >= ((de2.itemId == 1012168 || de2.itemId == 1012169 || de2.itemId == 1012170 || de2.itemId == 1012171) ? de2.chance : ((int)((double)(de2.chance * chServerrate * chr.getDropMod()) * chr.getDropm() * ((double)(chr.getVipExpRate() / 100) + 1.0) * lastDrop / 100.0 * (showdown / 100.0))))) {
+            int drop =  (int)(de2.chance * (chServerrate *  chr.getDropMod() * coefficient * jiac
+                    * chr.getDropm()
+                    * (showdown/100)
+                    // * ((double)(chr.getVipExpRate() / 100) + 1.0)
+                    *  lastDrop / 100.0 + itemDropm ));//* (showdown / 100.0)
+//            int  drop =   (int)((double)((long)(de2.chance * chServerrate) * Math.round((double)chr.getDropMod() * chr.getStat().dropBuff / 100.0)) * (showdown / 100.0) / (double)(CongMS.ConfigValuesMap.get("砍爆率")).intValue());
+            if(Start.ConfigValuesMap.get("开启封包调试") >0){
+                System.out.println("爆率:"+drop+"-------"+de2.chance+"-"+chServerrate+"-"+chr.getDropMod()+"-"+coefficient+"-"+jiac+"-"+chr.getDropm()+"-"+showdown+"-"+(lastDrop / 100.0)+"-"+itemDropm);
+            }
+            if (Randomizer.nextInt(999999) >= ((de2.itemId == 1012168 || de2.itemId == 1012169 || de2.itemId == 1012170 || de2.itemId == 1012171) ? de2.chance : drop )) {
                 continue;
             }
             if (mesoDropped && droptype != 3 && de2.itemId == 0) {
@@ -862,7 +886,7 @@ public final class MapleMap
             进阶BOSS线程.关闭进阶BOSS线程();
         }
         else if (mobid == 2220000 && this.mapid == 104000400) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[红蜗牛王屠杀令]: " + chr.getName() + " 在海岸草丛III击杀了红蜗牛王"));
             }
             chr.击杀野外BOSS特效();
@@ -880,7 +904,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀红蜗牛王", (byte)2, 1);
         }
         else if (mobid == 3220000 && this.mapid == 101030404) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[树妖王屠杀令]: " + chr.getName() + " 在东部岩山Ⅴ击杀了树妖王"));
             }
             chr.击杀野外BOSS特效();
@@ -890,7 +914,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀树妖王", (byte)2, 1);
         }
         else if (mobid == 5220001 && this.mapid == 110040000) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[巨居蟹屠杀令]: " + chr.getName() + " 在阳光沙滩击杀了巨居蟹"));
             }
             chr.击杀野外BOSS特效();
@@ -900,7 +924,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀巨居蟹", (byte)2, 1);
         }
         else if (mobid == 7220000 && this.mapid == 250010304) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[肯德熊屠杀令]: " + chr.getName() + " 在流浪熊的地盘击杀了肯德熊"));
             }
             chr.击杀野外BOSS特效();
@@ -910,7 +934,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀肯德熊", (byte)2, 1);
         }
         else if (mobid == 8220000 && this.mapid == 200010300) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[艾利杰屠杀令]: " + chr.getName() + " 在天空楼梯Ⅱ击杀了艾利杰"));
             }
             chr.击杀野外BOSS特效();
@@ -920,7 +944,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀艾利杰", (byte)2, 1);
         }
         else if (mobid == 7220002 && this.mapid == 250010503) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[妖怪禅师屠杀令]: " + chr.getName() + " 在妖怪森林击杀了妖怪禅师"));
             }
             chr.击杀野外BOSS特效();
@@ -930,7 +954,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀妖怪禅师", (byte)2, 1);
         }
         else if (mobid == 7220001 && this.mapid == 222010310) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[九尾狐屠杀令]: " + chr.getName() + " 在月岭击杀了九尾狐"));
             }
             chr.击杀野外BOSS特效();
@@ -940,7 +964,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀九尾狐", (byte)2, 1);
         }
         else if (mobid == 6220000 && this.mapid == 107000300) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[多尔屠杀令]: " + chr.getName() + " 在鳄鱼潭Ⅰ击杀了多尔"));
             }
             chr.击杀野外BOSS特效();
@@ -950,7 +974,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀多尔", (byte)2, 1);
         }
         else if (mobid == 5220002 && this.mapid == 100040105) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[浮士德屠杀令]: " + chr.getName() + " 在巫婆森林Ⅰ击杀了浮士德"));
             }
             chr.击杀野外BOSS特效();
@@ -960,7 +984,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀浮士德", (byte)2, 1);
         }
         else if (mobid == 5220003 && this.mapid == 220050100) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[提莫屠杀令]: " + chr.getName() + " 在时间漩涡击杀了提莫"));
             }
             chr.击杀野外BOSS特效();
@@ -970,7 +994,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀提莫", (byte)2, 1);
         }
         else if (mobid == 6220001 && this.mapid == 221040301) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[朱诺屠杀令]: " + chr.getName() + " 在哥雷草原击杀了朱诺"));
             }
             chr.击杀野外BOSS特效();
@@ -980,7 +1004,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀朱诺", (byte)2, 1);
         }
         else if (mobid == 8220003 && this.mapid == 240040401) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[大海兽屠杀令]: " + chr.getName() + " 在大海兽 峡谷击杀了大海兽"));
             }
             chr.击杀野外BOSS特效();
@@ -990,7 +1014,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀大海兽", (byte)2, 1);
         }
         else if (mobid == 3220001 && this.mapid == 260010201) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[大宇屠杀令]: " + chr.getName() + " 在仙人掌爸爸沙漠击杀了大宇"));
             }
             chr.击杀野外BOSS特效();
@@ -1000,7 +1024,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀大宇", (byte)2, 1);
         }
         else if (mobid == 8220002 && this.mapid == 261030000) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[吉米拉屠杀令]: " + chr.getName() + " 在研究所地下秘密通道击杀了吉米拉"));
             }
             chr.击杀野外BOSS特效();
@@ -1010,7 +1034,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀吉米拉", (byte)2, 1);
         }
         else if (mobid == 4220000 && this.mapid == 230020100) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[歇尔夫屠杀令]: " + chr.getName() + " 在海草之塔击杀了歇尔夫"));
             }
             chr.击杀野外BOSS特效();
@@ -1020,7 +1044,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀歇尔夫", (byte)2, 1);
         }
         else if (mobid == 6130101 && this.mapid == 100000005) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[蘑菇王屠杀令]: " + chr.getName() + " 在铁甲猪公园3击杀了蘑菇王"));
             }
             chr.击杀野外BOSS特效();
@@ -1030,7 +1054,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀蘑菇王", (byte)2, 1);
         }
         else if (mobid == 6300005 && this.mapid == 105070002) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[僵尸蘑菇王屠杀令]: " + chr.getName() + " 在蘑菇王之墓击杀了僵尸蘑菇王"));
             }
             chr.击杀野外BOSS特效();
@@ -1040,7 +1064,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀僵尸蘑菇王", (byte)2, 1);
         }
         else if (mobid == 8130100 && this.mapid == 105090900) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[蝙蝠怪屠杀令]: " + chr.getName() + " 在被诅咒的寺院击杀了蝙蝠怪"));
             }
             chr.击杀野外BOSS特效();
@@ -1050,7 +1074,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀蝙蝠怪", (byte)2, 1);
         }
         else if (mobid == 9400205 && this.mapid == 800010100) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[蓝蘑菇王屠杀令]: " + chr.getName() + " 在天皇殿堂击杀了蓝蘑菇王"));
             }
             chr.击杀野外BOSS特效();
@@ -1060,7 +1084,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀蓝蘑菇王", (byte)2, 1);
         }
         else if (mobid == 9400120 && this.mapid == 801030000) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[老板屠杀令]: " + chr.getName() + " 在昭和内部街道3击杀了老板"));
             }
             chr.击杀野外BOSS特效();
@@ -1070,7 +1094,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀老板", (byte)2, 1);
         }
         else if (mobid == 8220001 && this.mapid == 211040101) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[驮狼雪人屠杀令]: " + chr.getName() + " 在雪人谷击杀了驮狼雪人"));
             }
             chr.击杀野外BOSS特效();
@@ -1080,7 +1104,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀驮狼雪人", (byte)2, 1);
         }
         else if (mobid == 8180000 && this.mapid == 240020401) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[火焰龙屠杀令]: " + chr.getName() + " 在喷火龙栖息地击杀了火焰龙"));
             }
             chr.击杀野外BOSS特效();
@@ -1090,7 +1114,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀火焰龙", (byte)2, 1);
         }
         else if (mobid == 8180001 && this.mapid == 240020101) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[天鹰屠杀令]: " + chr.getName() + " 在格瑞芬多森林击杀了天鹰"));
             }
             chr.击杀野外BOSS特效();
@@ -1100,7 +1124,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀天鹰", (byte)2, 1);
         }
         else if (mobid == 8220006 && this.mapid == 270030500) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[雷卡屠杀令]: " + chr.getName() + " 在忘却之路5击杀了雷卡"));
             }
             chr.击杀野外BOSS特效();
@@ -1110,7 +1134,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀雷卡", (byte)2, 1);
         }
         else if (mobid == 8220005 && this.mapid == 270020500) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[玄冰独角兽屠杀令]: " + chr.getName() + " 在后悔之路5击杀了玄冰独角兽"));
             }
             chr.击杀野外BOSS特效();
@@ -1120,7 +1144,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "个人击杀玄冰独角兽", (byte)2, 1);
         }
         else if (mobid == 8220004 && this.mapid == 270010500) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[多多屠杀令]: " + chr.getName() + " 在追忆之路5击杀了多多"));
             }
             chr.击杀野外BOSS特效();
@@ -1135,7 +1159,7 @@ public final class MapleMap
             BossRankManager.getInstance().setLog(chr.getId(), chr.getName(), "蜈蚣", (byte)2, 1);
         }
         else if (mobid == 8500002 && this.mapid == 220080001) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
+            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关")) <= 0) {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(4, "[帕普拉图斯屠杀令]: " + chr.getName() + " 在时间塔的本源击杀了帕普拉图斯"));
             }
             chr.setBossLog("击杀高级怪物");
@@ -2690,7 +2714,7 @@ public final class MapleMap
             chr.updatePartyMemberHP();
             chr.receivePartyMemberHP();
         }
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"地图名称开关")) == 0) {
+        if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"地图名称开关")) == 0) {
             chr.startMapEffect(chr.getMap().getMapName(), 5120023, 5000);
         }
         final MapleStatEffect stat = chr.getStatForBuff(MapleBuffStat.SUMMON);

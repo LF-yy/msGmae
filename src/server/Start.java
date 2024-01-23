@@ -49,6 +49,7 @@ import server.Timer.PingTimer;
 import server.Timer.WorldTimer;
 import server.events.MapleOxQuizFactory;
 import server.life.MapleLifeFactory;
+import server.life.MapleMonsterInformationProvider;
 import server.life.PlayerNPC;
 import server.maps.MapleMap;
 import server.maps.MapleMapFactory;
@@ -82,7 +83,8 @@ public class Start
     private static int 回收内存;
 
     public static List<Pair<Integer, Pair<String, Pair<String, Integer>>>> 套装加成表;
-
+    public static Map<String, Integer>   新套装加成表;
+    public static Map<Integer, Map<String, Integer>> 双爆加成;
 
     public static final void main(final String[] args) {
         if (Start.是否控制台启动) {
@@ -99,7 +101,7 @@ public class Start
                 throw new RuntimeException("【错误】 请确认数据库是否正常链接");
             }
             GetConfigValues();
-            System.out.println("◇ -> 正在启动AsMs079");
+            System.out.println("◇ -> 正在启动Ms079");
             System.out.println("◇ -> 版本信息:ver0.1");
             System.out.println("◇ -> 正在读取授权码请稍后");
             int 授权 = 进行授权校验();
@@ -210,13 +212,14 @@ public class Start
             回收地图(480);
             在线统计(30);
             记录在线时间(1);
+            定时重载爆率(60);
             World.isShutDown = false;
             OnlyID.getInstance();
             //加载套装伤害信息
             tzjc.sr_tz();
             CongMS.配置同步到界面();
             System.out.println("[所有游戏数据加载完毕] ");
-            System.out.println("[AsMs079服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
+            System.out.println("[Ms079服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
             System.out.println("[温馨提示]运行中请勿直接关闭本控制台，使用下方关闭服务器按钮来关闭服务端，否则回档自负\r\n");
             }
             else
@@ -310,7 +313,19 @@ public class Start
         }
         return result.trim();
     }
-    
+    public static void 定时重载爆率(final int time) {
+
+        WorldTimer.getInstance().register((Runnable)new Runnable() {
+            @Override
+            public void run() {
+                if (Start.ConfigValuesMap.get("定时重载爆率") == 1) {
+                    MapleMonsterInformationProvider.getInstance().clearDrops();
+                }
+
+            }
+
+        }, (long)(60000 * time));
+    }
     public static void GetConfigValues() {
         final Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT name, val FROM ConfigValues")) {
@@ -421,7 +436,7 @@ public class Start
                             }
                         }
                     }
-                    if ((int)Integer.valueOf(ConfigValuesMap.get((Object)"神秘商人开关")) == 0) {
+                    if (ConfigValuesMap.get("神秘商人开关") == 0) {
                         if (MapleParty.神秘商人线程 == 0) {
                             活动神秘商人.启动神秘商人();
                             ++MapleParty.神秘商人线程;
@@ -430,7 +445,7 @@ public class Start
                             活动神秘商人.召唤神秘商人();
                         }
                     }
-                    if ((int)Integer.valueOf(ConfigValuesMap.get((Object)"野外通缉开关")) == 0) {
+                    if (ConfigValuesMap.get("野外通缉开关") == 0) {
                         if (初始通缉令 == 30) {
                             活动野外通缉.随机通缉();
                             初始通缉令++;
@@ -616,35 +631,35 @@ public class Start
                                 int 金币 = 0;
                                 int 抵用 = 0;
                                 int 豆豆 = 0;
-                                final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+                                final int 泡点豆豆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆开关"));
                                 if (泡点豆豆开关 <= 0) {
-                                    final int 泡点豆豆 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆"));
+                                    final int 泡点豆豆 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆"));
                                     豆豆 += 泡点豆豆;
                                     chr.gainBeans(豆豆);
                                 }
-                                final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
+                                final int 泡点金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币开关"));
                                 if (泡点金币开关 <= 0) {
-                                    final int 泡点金币 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币"));
+                                    final int 泡点金币 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币"));
                                     金币 += chr.getLevel() * 泡点金币;
                                     chr.gainMeso(chr.getLevel() * 泡点金币, true);
                                 }
-                                final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
+                                final int 泡点点券开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券开关"));
                                 if (泡点点券开关 <= 0) {
-                                    final int 泡点点券 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券"));
+                                    final int 泡点点券 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券"));
                                     chr.modifyCSPoints(1, 泡点点券, true);
                                     点券 += 泡点点券;
                                 }
-                                final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
+                                final int 泡点抵用开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用开关"));
                                 if (泡点抵用开关 <= 0) {
-                                    final int 泡点抵用 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用"));
+                                    final int 泡点抵用 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用"));
                                     chr.modifyCSPoints(2, 泡点抵用, true);
                                     抵用 += 泡点抵用;
                                 }
-                                final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
+                                final int 泡点经验开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验开关"));
                                 if (泡点经验开关 > 0) {
                                     continue;
                                 }
-                                final int 泡点经验 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验"));
+                                final int 泡点经验 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验"));
                                 经验 += chr.getLevel() * 泡点经验;
                                 chr.gainExp(chr.getLevel() * 经验, false, false, false);
                             }
@@ -685,33 +700,33 @@ public class Start
                     int 金币 = 0;
                     int 抵用 = 0;
                     int 豆豆 = 0;
-                    final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+                    final int 泡点豆豆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆开关"));
                     if (泡点豆豆开关 <= 0) {
-                        final int 泡点豆豆 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆"));
+                        final int 泡点豆豆 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆"));
                         豆豆 += 泡点豆豆;
                         chr.gainBeans(豆豆);
                     }
-                    final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
+                    final int 泡点金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币开关"));
                     if (泡点金币开关 <= 0) {
-                        final int 泡点金币 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币"));
+                        final int 泡点金币 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币"));
                         金币 += chr.getLevel() * 泡点金币;
                         chr.gainMeso(chr.getLevel() * 泡点金币, true);
                     }
-                    final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
+                    final int 泡点点券开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券开关"));
                     if (泡点点券开关 <= 0) {
-                        final int 泡点点券 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券"));
+                        final int 泡点点券 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券"));
                         chr.modifyCSPoints(1, 泡点点券, true);
                         点券 += 泡点点券;
                     }
-                    final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
+                    final int 泡点抵用开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用开关"));
                     if (泡点抵用开关 <= 0) {
-                        final int 泡点抵用 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用"));
+                        final int 泡点抵用 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用"));
                         chr.modifyCSPoints(2, 泡点抵用, true);
                         抵用 += 泡点抵用;
                     }
-                    final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
+                    final int 泡点经验开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验开关"));
                     if (泡点经验开关 <= 0) {
-                        final int 泡点经验 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验"));
+                        final int 泡点经验 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验"));
                         经验 += chr.getLevel() * 泡点经验;
                         chr.gainExp(chr.getLevel() * 泡点经验, true, true, false);
                     }
@@ -947,7 +962,7 @@ public class Start
     }
     
     public static void 在线统计(final int time) {
-        System.out.println("[AsMs079服务端启用在线统计." + time + "分钟统计一次在线的人数信息]");
+        System.out.println("[Ms079服务端启用在线统计." + time + "分钟统计一次在线的人数信息]");
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
             public void run() {
@@ -1055,6 +1070,8 @@ public class Start
         Start.srvPort = 6350;
         Start.startTime = System.currentTimeMillis();
         套装加成表 = (List<Pair<Integer, Pair<String, Pair<String, Integer>>>>) new ArrayList();
+        新套装加成表 = new HashMap<>();
+        双爆加成 = new Hashtable<>();
         instance = new Start();
         Start.maxUsers = 0;
         Start.是否控制台启动 = false;
@@ -1082,6 +1099,8 @@ public class Start
     }
 
     public static void GetSuitDamTable() {
+        //Start.新套装加成表.clear();
+        Start.套装加成表.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try  {
@@ -1094,11 +1113,32 @@ public class Start
                 int val = rs.getInt("numb");
                 int vol = rs.getInt("proportion");
                 Start.套装加成表.add(new Pair(Integer.valueOf(vol), new Pair(name2, new Pair(name, Integer.valueOf(val)))));
+                Start.新套装加成表.put(name,val);
             }
             rs.close();
             ps.close();
         } catch (SQLException ex) {
             System.out.println("套装加成表出错：" + ex.getMessage());
+        }
+        ps = null;
+        rs = null;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT  item_id,exp_multiplier,drop_rate FROM ltt_item_explosion_markup");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                int itemId = rs.getInt("item_id");
+                int exp = rs.getInt("exp_multiplier");
+                int drop = rs.getInt("drop_rate");
+                Map<String,Integer> map= new HashMap<>();
+                map.put("exp",exp);
+                map.put("drop",drop);
+                Start.双爆加成.put(itemId,map);
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException ex) {
+            System.out.println("双爆装备加载失败：" + ex.getMessage());
         }
 
     }

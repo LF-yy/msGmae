@@ -5,6 +5,7 @@ import java.sql.Connection;
 import database.DatabaseConnection;
 import handling.cashshop.CashShopServer;
 import client.MapleClient;
+import server.Start;
 import tools.FileoutputUtil;
 import tools.CollectionUtil;
 import handling.world.CheaterData;
@@ -180,7 +181,7 @@ public class ChannelServer implements Serializable
     
     public final void addPlayer(final MapleCharacter chr) {
         this.getPlayerStorage().registerPlayer(chr);
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"滚动公告开关")) <= 0) {
+        if (Start.ConfigValuesMap.get("滚动公告开关") <= 0) {
             chr.getClient().sendPacket(MaplePacketCreator.serverMessage(this.getServerMessage()));
         }
     }
