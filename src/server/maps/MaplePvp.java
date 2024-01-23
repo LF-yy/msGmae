@@ -87,7 +87,7 @@ public class MaplePvp
             }
         }
     }
-    
+    //设置是否AOE技能
     private static boolean isAoeAttack(final AttackInfo attack) {
         switch (attack.skill) {
             case 1111005:
@@ -143,17 +143,17 @@ public class MaplePvp
                 MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 70.0 + 5.0);
             }
             else if (attack.skill == 1121008) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 140.0 + 180.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 50.0);
                 MaplePvp.maxHeight = 50;
             }
             else if (attack.skill == 4221001) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 150.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 50.0);
             }
             else if (attack.skill == 1121006 || attack.skill == 1221007 || attack.skill == 1321003) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 120.0 + 80.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 50.0);
             }
             else {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 350.0 + 250.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 100.0 + 100.0);
             }
         }
         else if (isRangeAttack(attack)) {
@@ -161,26 +161,26 @@ public class MaplePvp
             MaplePvp.maxHeight = 40;
             MaplePvp.isAoe = false;
             if (attack.skill == 4201005) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 70.0 + 5.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 5.0);
             }
             else if (attack.skill == 4121007) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 45.0 + 15.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 15.0);
             }
             else if (attack.skill == 4001344 || attack.skill == 2001005) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 105.0 + 90.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 10.0);
             }
             else if (attack.skill == 4221007) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 170.0 + 180.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 30.0);
             }
             else if (attack.skill == 3121004 || attack.skill == 3111006 || attack.skill == 3211006) {
                 MaplePvp.maxDis = 450;
                 MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 30.0 + 20.0);
             }
             else if (attack.skill == 2121003 || attack.skill == 2221003) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 300.0 + 300.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 30.0 + 30.0);
             }
             else {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 150.0 + 250.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 20.0 + 20.0);
             }
         }
         else if (isAoeAttack(attack)) {
@@ -190,10 +190,10 @@ public class MaplePvp
             if (attack.skill == 2121001 || attack.skill == 2221001 || attack.skill == 2321001 || attack.skill == 2121006) {
                 MaplePvp.maxDis = 175;
                 MaplePvp.maxHeight = 175;
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 170.0 + 180.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 25.0);
             }
             else {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 400.0 + 300.0);
+                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 10.0);
             }
         }
     }
@@ -213,12 +213,12 @@ public class MaplePvp
         }
         final Integer mguard = attackedPlayers.getBuffedValue(MapleBuffStat.MAGIC_GUARD);
         final Integer mesoguard = attackedPlayers.getBuffedValue(MapleBuffStat.MESOGUARD);
-        final int magicattack = (player.getDex() + player.getInt() + player.getLuk() + player.getStr()) / 300;
+        final int magicattack = (player.getDex() + player.getInt() + player.getLuk() + player.getStr()) / 2000;
         MaplePvp.pvpDamage += magicattack;
-        final int magicat = (player.getStat().getTotalMagic() + player.getStat().getTotalWatk()) / 100;
+        final int magicat = (player.getStat().getTotalMagic() + player.getStat().getTotalWatk()) / 1000;
         MaplePvp.pvpDamage += magicat;
-        if (MaplePvp.pvpDamage > 99999) {
-            MaplePvp.pvpDamage = 99999;
+        if (MaplePvp.pvpDamage > 500) {//pvp限制伤害
+            MaplePvp.pvpDamage = 500;
         }
         if (mguard != null) {
             final int mploss = (int)((double)MaplePvp.pvpDamage / 0.5);
@@ -270,9 +270,11 @@ public class MaplePvp
             if ((double)player.getLevel() * 0.25 >= (double)player.getLevel()) {
                 expReward *= 20;
             }
-            player.getClient().sendPacket(MaplePacketCreator.getErrorNotice("你殺了 " + attackedPlayers.getName() + "!! !"));
+            attackedPlayers.getClient().getPlayer().setBossLog1("pvp积分");
+            int pvp积分 = attackedPlayers.getClient().getPlayer().getBossLog1("pvp积分");
+            player.getClient().sendPacket(MaplePacketCreator.getErrorNotice("你殺了 " + attackedPlayers.getName() + "!!获得了1点决斗积分,当前积分为"+pvp积分+"点"));
             attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("無情的" + player.getName() + "殺了你"));
-            final int random = (int)Math.floor(Math.random() * 3000.0);
+            final int random = (int)Math.floor(Math.random() * 100000.0);
             if (attackedPlayers.getMeso() >= random) {
                 attackedPlayers.getMap().spawnMesoDrop(random, attackedPlayers.getPosition(), (MapleMapObject)attackedPlayers, attackedPlayers, false, (byte)0);
                 attackedPlayers.gainMeso(-random, true);
@@ -284,7 +286,9 @@ public class MaplePvp
             }
         }
     }
-    
+
+
+    //pvp对战
     public static void doPvP(final MapleCharacter player, final MapleMap map, final AttackInfo attack) {
         DamageBalancer(attack);
         getDirection(attack);

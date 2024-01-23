@@ -42,4 +42,5 @@ public abstract class AbstractLifeMovement implements LifeMovement
     public Point getPosition() {
         return this.position;
     }
+
 }

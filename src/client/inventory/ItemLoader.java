@@ -269,7 +269,7 @@ public enum ItemLoader
             ps.close();
         }
         catch (SQLException ex) {
-           // System.out.println((Object)ex);
+            System.out.println((Object)ex);
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
     }

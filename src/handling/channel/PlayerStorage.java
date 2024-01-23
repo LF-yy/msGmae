@@ -420,4 +420,21 @@ public class PlayerStorage
             }
         }
     }
+
+    public final void 断所有人(final boolean checkGM) {
+        this.readLock.lock();
+        try {
+            final Iterator<MapleCharacter> itr = this.idToChar.values().iterator();
+            while (itr.hasNext()) {
+                final MapleCharacter chr = (MapleCharacter)itr.next();
+                chr.getClient().disconnect(false, false, true);
+                chr.getClient().getSession().close();
+                Find.forceDeregister(chr.getId(), chr.getName());
+                itr.remove();
+            }
+        }
+        finally {
+            this.readLock.unlock();
+        }
+    }
 }

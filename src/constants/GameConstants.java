@@ -5,6 +5,7 @@ import handling.login.LoginServer;
 
 import java.util.*;
 
+import handling.world.MapleParty;
 import server.ServerProperties;
 import server.MapleStatEffect;
 import client.inventory.IItem;
@@ -107,7 +108,21 @@ public class GameConstants
             }
         }
     }
-    
+    public static int getExpRate_Below10(final int job, final MapleCharacter c) {
+        int 实际经验 = 0;
+        if (((Integer) CongMS.ConfigValuesMap.get("阶段经验开关")).intValue() > 0) {
+            for (int i = 0; i < Start.exptable.size(); ++i) {
+                if (c.getLevel() <= Integer.valueOf((String)(Start.exptable.get(i)).getLeft()).intValue()) {
+                    实际经验 = ((Integer)(Start.exptable.get(i)).getRight()).intValue();
+                    break;
+                }
+            }
+        }
+        else {
+            实际经验 = Integer.parseInt(ServerProperties.getProperty("Guai.expRate"));
+        }
+        return 实际经验 * MapleParty.活动经验倍率;
+    }
     public static int getExpNeededForLevel(final int level) {
         if (level < 0 || level >= GameConstants.ExpTable.length) {
             return Integer.MAX_VALUE;
@@ -429,15 +444,18 @@ public class GameConstants
     }
     
     public static boolean isChaosScroll(final int itemId) {
-        return (itemId < 2049105 || itemId > 2049110) && itemId / 100 == 20491;
+        return (itemId < 2049105 || itemId > 2049110) && itemId / 100 == 20491 && itemId != 2049122 && itemId != 2049124;
     }
-    
+    public static boolean isForwardScroll(final int itemId) {
+        return  itemId == 2049122 || itemId == 2049124 || itemId == 2049116 || itemId == 2049156;
+    }
     public static int getChaosNumber(final int itemId) {
-        return (itemId == 2049116) ? 10 : 5;
+
+        return (itemId == 2049116) ? 15 : (itemId == 2049156) ? 30 : 5;
     }
     
     public static boolean isEquipScroll(final int scrollId) {
-        return scrollId / 100 == 20493;
+        return scrollId / 100 == 20493 ;//|| ( scrollId != 2049122 && scrollId != 2049124)
     }
     
     public static boolean isPotentialScroll(final int scrollId) {
@@ -605,13 +623,11 @@ public class GameConstants
             case 12001004:
             case 13001004:
             case 14001005:
-            case 15001004: {
-                return 3030;
-            }
+            case 15001004: //原3000
             case 5211001:
             case 5211002:
             case 5220002: {
-                return 1230;
+                return 1000;
             }
             case 1321007:
             case 3111002:
@@ -628,7 +644,7 @@ public class GameConstants
             }
         }
     }
-
+    
     public static short getAttackDelay(final int id) {
         switch (id) {
 
@@ -997,9 +1013,11 @@ public class GameConstants
             }
         }
     }
+
     private static short getaShort(String id, int x) {
-        return Objects.isNull(Start.ConfigValuesMap.get(id)) ? Short.parseShort(x+"") : Short.parseShort(Start.ConfigValuesMap.get(id) + "");
+        return Objects.isNull(CongMS.ConfigValuesMap.get(id)) ? Short.parseShort(x+"") : Short.parseShort(CongMS.ConfigValuesMap.get(id) + "");
     }
+
     public static boolean getWuYanChi(final int id) {
         switch (id) {
             case 15001002:

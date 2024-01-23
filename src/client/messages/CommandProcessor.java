@@ -14,8 +14,6 @@ import client.messages.commands.PlayerCommand;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import server.Start;
 import tools.FilePrinter;
 import database.DBConPool;
 import client.MapleCharacter;
@@ -111,7 +109,7 @@ public class CommandProcessor
                 return true;
             }
             else {
-                final int 游戏指令开关 = Start.ConfigValuesMap.get("游戏指令开关");
+                final int 游戏指令开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏指令开关"));
                 if (游戏指令开关 > 0) {
                     if (c.getPlayer().getGMLevel() > PlayerGMRank.普通玩家.getLevel()) {
                         final String[] splitted2 = line.split(" ");

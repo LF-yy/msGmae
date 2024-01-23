@@ -1,13 +1,16 @@
 package scripting;
 // 汉化方法库
 import bean.UserAttraction;
+import com.alibaba.druid.util.StringUtils;
 import constants.tzjc;
 import merchant.merchant_main;
 import gui.CongMS;
-import client.inventory.MaplePet;
 
+import java.awt.*;
+import java.io.*;
 import java.sql.*;
 import java.util.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,15 +20,13 @@ import constants.ServerConfig;
 import database.DatabaseConnection;
 import handling.channel.handler.InterServerHandler;
 import client.inventory.Item;
-import server.Timer;
 import server.gashapon.GashaponFactory;
 import server.gashapon.Gashapon;
 import server.shops.HiredMerchant;
 import server.life.MonsterDropEntry;
 import client.MapleJob;
 import handling.channel.MapleGuildRanking.JobRankingInfo;
-import tools.FilePrinter;
-import tools.SearchGenerator;
+import tools.*;
 import server.Timer.EventTimer;
 import handling.world.World.Family;
 import server.Timer.CloneTimer;
@@ -33,20 +34,17 @@ import server.Timer.CloneTimer;
 import handling.world.guild.MapleGuild;
 import handling.world.MapleParty;
 import handling.world.World.Alliance;
-
-import java.awt.Point;
 import client.inventory.ItemFlag;
 
 import server.maps.SpeedRunType;
-import tools.Pair;
 
 import server.maps.AramiaFireWorks;
 import server.maps.Event_PyramidSubway;
 import server.maps.Event_DojoAgent;
 import tools.packet.MobPacket;
+import tools.packet.PacketHelper;
 import tools.packet.PlayerShopPacket;
 
-import tools.FileoutputUtil;
 import database.DBConPool;
 import server.life.MapleMonster;
 import server.maps.MapleMapObject;
@@ -55,7 +53,6 @@ import server.life.MapleMonsterInformationProvider;
 import client.inventory.Equip;
 import handling.channel.MapleGuildRanking;
 import handling.world.World.Guild;
-import tools.StringUtil;
 import server.maps.MapleMap;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
@@ -76,12 +73,13 @@ import handling.world.World.Broadcast;
 import constants.GameConstants;
 import handling.world.World;
 import client.MapleStat;
-import tools.MaplePacketCreator;
+
 import javax.script.Invocable;
 import client.MapleClient;
 
 public class NPCConversationManager extends AbstractPlayerInteraction
 {
+    private final static Map<Integer, UserAttraction> 吸怪集合 = new HashMap<>();
     private final MapleClient c;
     private final int npc;
     private final int questid;
@@ -93,8 +91,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public boolean pendingDisposal;
     private final Invocable iv;
     public int p;
+
     private static List<String> 特殊宠物吸物无法使用地图;
-    private final static Map<Integer, UserAttraction> 吸怪集合 = new HashMap<>();
 
     static {
         NPCConversationManager.特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("CongMS.吸怪无法使用地图").split(","));
@@ -113,8 +111,13 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.script = npcscript;
     }
 
+
+    public void setDamageSkin( int param) {
+        PacketHelper.showDamageSkin(c.getPlayer().getId(),param);
+    }
+
     public int 获取配置(final String param) {
-        return Start.ConfigValuesMap.get(param);
+        return CongMS.ConfigValuesMap.get(param);
     }
 
     public int 查装备赋能(final IItem item,final String name){
@@ -139,7 +142,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         return numbOld;
     }
-    public int 装备赋能(final IItem item,final Integer numb,final String name){
+        public int 装备赋能(final IItem item,final Integer numb,final String name){
         String names = "赋能"+item.getItemId()+name;
 
         PreparedStatement ps = null;
@@ -183,8 +186,11 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         return numbOld+numb;
     }
+    /**
+     * 获取吸怪
+     */
     public static UserAttraction getAttractList(int id){
-        return 吸怪集合.get(id);
+       return 吸怪集合.get(id);
     }
 
     public static UserAttraction getAttractList(int channel,int mapId){
@@ -206,7 +212,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                 c.getPlayer().dropMessage(1, "该地图已经有人在吸怪了.");
             } else {
                 //先清除地图所有怪物
-                //c.getPlayer().setLastRes(null);
+                c.getPlayer().setLastRes(null);
                 c.getPlayer().getMap().killAllMonsters(true);
                 UserAttraction userAttraction = new UserAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
                 this.吸怪集合.put(player.getId(), userAttraction);
@@ -219,7 +225,6 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public void gain关闭吸怪(final MapleCharacter player){
         c.getPlayer().getMap().killAllMonsters(true);
         this.吸怪集合.remove(player.getId());
-
 
     }
     public static void gain关闭吸怪(int id){
@@ -296,6 +301,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             return -1;
         }
     }
+
+
     public Invocable getIv() {
         return this.iv;
     }
@@ -559,9 +566,10 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     }
     
     public void sendGetText(final String text) {
-        if (this.lastMsg > -1) {
+        if (this.lastMsg > -1 || StringUtils.isEmpty(text)) {
             return;
         }
+
         if (text.contains((CharSequence)"#L")) {
             this.sendSimple(text);
             return;
@@ -1137,7 +1145,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public void cleardrops() {
         MapleMonsterInformationProvider.getInstance().clearDrops();
     }
-    
+
     public void killAllMonsters() {
         final MapleMap map = this.c.getPlayer().getMap();
         final double range = Double.POSITIVE_INFINITY;
@@ -1570,7 +1578,15 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public final List<Integer> getAllPotentialInfo() {
         return new ArrayList<Integer>((Collection<? extends Integer>)MapleItemInformationProvider.getInstance().getAllPotentialInfo().keySet());
     }
-    
+    //潜能附加
+    public final Equip 潜能附加(final Item equip) {
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        Item item1 = ii.scrollPotential( equip);
+        final Equip toScroll = (Equip)item1;
+        c.getPlayer().equipChanged();
+        return  toScroll;
+    }
+    //获取潜能信息
     public final String getPotentialInfo(final int id) {
         final List<StructPotentialItem> potInfo = MapleItemInformationProvider.getInstance().getPotentialInfo(id);
         final StringBuilder builder = new StringBuilder("#b#ePOTENTIAL INFO FOR ID: ");
@@ -1845,8 +1861,46 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         return getFace;
     }
-    
+
+
+    //获取怪物爆率信息
     public String checkDrop(final int mobId) {
+        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+
+        if (ranks != null && ranks.size() > 0) {
+            int num = 0;
+            int itemId = 0;
+            int ch = 0;
+            final StringBuilder name = new StringBuilder();
+            for (int i = 0; i < ranks.size(); ++i) {
+                final MonsterDropEntry de = (MonsterDropEntry)ranks.get(i);
+                if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0))) {
+                    itemId = de.itemId;
+                    if (num == 0) {
+                        name.append("當前怪物 #o" + mobId + "# 的爆率為:\r\n");
+                        name.append("--------------------------------------\r\n");
+                    }
+                    if (ii.itemExists(itemId)) {
+                        String namez = "#z" + itemId + "#";
+                        if (itemId == 0) {
+                            itemId = 4031041;
+                            namez = de.Minimum * this.getClient().getChannelServer().getMesoRate() + " 到 " + de.Maximum * this.getClient().getChannelServer().getMesoRate() + " 金币";
+                        }
+                        ch = de.chance * this.getClient().getChannelServer().getDropRate();
+                        name.append(num + 1 + ") #v" + itemId + "#" + namez + ((de.questid > 0 && MapleQuest.getInstance((int) de.questid).getName().length() > 0) ? ("需要接受任務 " + MapleQuest.getInstance((int) de.questid).getName() + "") : "") + "\r\n");
+                        ++num;
+                    }
+                }
+            }
+            if (name.length() > 0) {
+                return name.toString();
+            }
+        }
+        return "沒有當前怪物的爆率数据。";
+    }
+
+    public String dropList(final int mobId) {
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
         if (ranks != null && ranks.size() > 0) {
             int num = 0;
@@ -1877,7 +1931,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         return "沒有當前怪物的爆率数据。";
     }
-    
+
+
     public String checkDrop(final MapleCharacter chr, final int mobId, final boolean GM) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
@@ -2002,7 +2057,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         this.sendOk(msg);
     }
-    
+    //查物品怪物掉落
     public void getMobs(final int itemid) {
         final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
         final List<Integer> mobs = MapleMonsterInformationProvider.getInstance().getMobByItem(itemid);
@@ -2017,6 +2072,22 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         this.sendNext(text);
     }
+    //根据怪物id查地图
+//    public void getMobMaps(final int mobId) {
+//
+//        final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
+//        final List<Integer> mobs = MapleMonsterInformationProvider.getInstance().getMobByItem(itemid);
+//        String text = "#d這些怪物会掉落您查詢的物品#k: \r\n\r\n";
+//        for (int i = 0; i < mobs.size(); ++i) {
+//            int quest = 0;
+//            if (mi.getDropQuest((int)Integer.valueOf(mobs.get(i))) > 0) {
+//                quest = mi.getDropQuest((int)Integer.valueOf(mobs.get(i)));
+//            }
+//            final int chance = mi.getDropChance((int)Integer.valueOf(mobs.get(i))) * this.getClient().getChannelServer().getDropRate();
+//            text = text + "#r#o" + (Object)mobs.get(i) + "##k " + ((quest > 0 && MapleQuest.getInstance(quest).getName().length() > 0) ? ("#b需要進行 " + MapleQuest.getInstance(quest).getName() + " 任務來取得#k") : "") + "\r\n";
+//        }
+//        this.sendNext(text);
+//    }
     
     public Gashapon getGashapon() {
         return GashaponFactory.getInstance().getGashaponByNpcId(this.getNpc());
@@ -2144,9 +2215,35 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     }
     
     public String 显示物品(final int a) {
-        String data = "";
-        data = "#v" + a + "# #b#z" + a + "##k";
-        return data;
+            String data = "";
+            data = "#v" + a + "# #b#z" + a + "##k";
+            return data;
+    }
+    public String 检查物品(final List<Object> a) {
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        StringBuilder sb = new StringBuilder();
+        try {
+            final String strings = new File("").getCanonicalPath();
+            final File outputDir = new File(strings);
+            final File itemTxt = new File(strings + "\\Cash.txt");
+            outputDir.mkdir();
+            itemTxt.createNewFile();
+            PrintWriter writer = new PrintWriter((OutputStream)new FileOutputStream(itemTxt));
+
+            a.forEach(ss-> {
+                if (ii.itemExists(Integer.parseInt(ss.toString()))) {
+                    sb.append(a).append("\\r\\n");
+                    writer.println(ss);
+                } else {
+                    sb.append(ss).append("物品不存在 \\r\\n");
+                }
+            });
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+
+        }
+        return sb.toString();
     }
     
     public void 刷新状态() {
@@ -3011,7 +3108,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             this.getPlayer().gainyb(gain);
         }
     }
-
+    
     public int getplayerPoints() {
         return this.getPlayer().getplayerPoints();
     }
@@ -3196,6 +3293,14 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.c.getPlayer().changeSkillLevel(skill, level, skill.getMaxLevel());
         this.c.getPlayer().changeKeybinding(key, (byte)type, action);
         this.c.sendPacket(MaplePacketCreator.getKeymap(this.c.getPlayer().getKeyLayout()));
+    }
+    public void 键盘摆放技能(final int id, final int key, final int type, final int action) {
+        final ISkill skill = SkillFactory.getSkill(action);
+        int skillLevel = this.c.getPlayer().getSkillLevel(action);
+        if (Objects.nonNull(skill) && skill.getId()>0 && skillLevel>0) {
+            this.c.getPlayer().changeKeybinding(key, (byte) type, action);
+            this.c.sendPacket(MaplePacketCreator.getKeymap(this.c.getPlayer().getKeyLayout()));
+        }
     }
     
     public void 键盘上技能(final int id, final int key, final int type, final int action, final byte level) throws SQLException {
@@ -4703,7 +4808,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") < (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限")) && rs.getInt("level") > 30) {
+                if (rs.getInt("level") < (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限")) && rs.getInt("level") > 30) {
                     if (名次 < 10) {
                         final String 玩家名字 = rs.getString("name");
                         final String 职业 = this.职业(rs.getInt("job"));
@@ -4768,7 +4873,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") == (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
+                if (rs.getInt("level") == (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
                     final String 玩家名字 = rs.getString("name");
                     final String 职业 = this.职业(rs.getInt("job"));
                     final int 家族编号 = rs.getInt("guildid");
@@ -4798,7 +4903,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM monsterbook   order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") == (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
+                if (rs.getInt("level") == (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
                     final String 玩家名字 = rs.getString("name");
                     final String 职业 = this.职业(rs.getInt("job"));
                     final int 家族编号 = rs.getInt("guildid");
@@ -5310,8 +5415,49 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             }
         }
     }
-    
-    public int 取限制等级() {
+    public static int getMRJF(final int id) {
+        int jf = 0;
+        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            final PreparedStatement ps = con.prepareStatement("select * from paymoney1 where characterid =?");
+            ps.setInt(1, id);
+            final ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                jf = rs.getInt("mrjf");
+            }
+            else {
+                final PreparedStatement psu = con.prepareStatement("insert into paymoney1 (characterid,mrjf) VALUES (?,?)");
+                psu.setInt(1, id);
+                psu.setInt(2, 0);
+                psu.executeUpdate();
+                psu.close();
+            }
+            ps.close();
+            rs.close();
+        }
+        catch (SQLException ex) {
+            System.err.println("每日积分读取发生错误: " + ex);
+        }
+        return jf;
+    }
+    public static int 角色名字取Id(final String name) {
+        int data = 0;
+        try (final Connection con = DatabaseConnection.getConnection()) {
+            final PreparedStatement ps = con.prepareStatement("SELECT id as DATA FROM characters WHERE name = ?");
+            ps.setString(1, name);
+            try (final ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    data = rs.getInt("DATA");
+                }
+                rs.close();
+            }
+            ps.close();
+        }
+        catch (SQLException Ex) {
+            System.err.println("获取角色ID取名字出错 - 数据库查询失败：" + Ex);
+        }
+        return data;
+    }
+    public static int 取限制等级() {
         int 限制等级 = 0;
         try {
             final int cid = 4001128;
@@ -5394,7 +5540,16 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         catch (SQLException ex) {}
     }
-    
+    public static void 写入世界等级(final int slot) {
+        try {
+            final int cid = 4001128;
+            final Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET xianzhidengji =" + slot + " WHERE huoyaotongid = " + cid + "");
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (SQLException ex) {}
+    }
     public void 扣除火药桶数量(final int slot) {
         try {
             final int cid = 4001128;
@@ -5416,81 +5571,69 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         mapp.spawnZakum(x, y);
     }
 
-
+    public void 清除地图所有(final int mapId) {
+        MapleMap mapleMap =this.getMap(mapId);
+        mapleMap.resetFully();
+        mapleMap.killAllMonsters(true);
+        mapleMap.respawn(true);
+    }
 
     int temp;
     class xiguai extends Thread{
-        long time = Start.ConfigValuesMap.get("吸怪延迟").longValue();
+        long time = CongMS.ConfigValuesMap.get("吸怪延迟").longValue();
         public void run()
         {
-            int mapId  = c.getPlayer().getMapId();
-            Point point =c.getPlayer().getPosition();
-            int id=c.getPlayer().getId();
-            while(Objects.nonNull(NPCConversationManager.getAttractList(id))  && c.getPlayer()!=null && mapId == c.getPlayer().getMapId()){
-                MapleMap map = c.getPlayer().getMap();
-                if (map.getMonsterSpawnner().right != null) {
-                    if (map.getMonsterSpawnner().left != c.getPlayer().getId()) {
-                        c.getPlayer().getClient().sendPacket(MaplePacketCreator.serverNotice(1, "已经有人在这个地图吸怪了！\r\n请换个地图再试！"));
-                        return;
-                    }
+
+        int mapId  = c.getPlayer().getMapId();
+            if ( c.getPlayer()!=null) {
+                int id=c.getPlayer().getId();
+                UserAttraction attractList = NPCConversationManager.getAttractList(id);
+                if (attractList==null){
+                    return;
                 }
-                for (final MapleMonster monster : map.getAllMonstersThreadsafe()) {
-                    if (!monster.getStats().isBoss() && c.getPlayer().getLastRes() !=null) {
-                        map.setMonsterspawn(point,id );
-                        c.getPlayer().吸怪特权 = 1;
-                        monster.setPosition(point);
-
-                        //MapleCharacter mc=new MapleCharacter(true);
-                        c.getPlayer().set吸怪Res(c.getPlayer().getLastRes());
-
-                        c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(), monster.getPosition(), map.getMonsterSpawnner().right, c.getPlayer().get吸怪Res()));
-
+                Point position = attractList.getPosition();
+                while(Objects.nonNull(NPCConversationManager.getAttractList(id)) && c.getPlayer()!=null && mapId == c.getPlayer().getMapId()){
+                    MapleMap map = c.getPlayer().getMap();
+                    for (final MapleMonster mmo : map.getAllMonstersThreadsafe()) {//mmo.getPosition()
+                        if (!mmo.getStats().isBoss() && c.getPlayer().getLastRes() !=null) {
+                            map.broadcastMessage(MobPacket.moveMonster(false, 0, 0, mmo.getObjectId(), position, position, c.getPlayer().getLastRes()));
+                            mmo.setPosition(position);
+                        }
+                        // }
                     }
 
-                }
-                try{
-                    sleep(time);
-                }catch(Exception e){
+                    try{
+                        sleep(time);
+                    }catch(Exception e){
 
+                    }
                 }
             }
             stop();
         }
-
-
     }
+
     public void 开启吸怪() {
         xiguai xiguai =new xiguai();
+        temp=1;
         xiguai.start();
     }
-    public static void 关闭吸怪(MapleCharacter user) {
 
-        MapleMap map = user.getMap();
-        if (map.getMonsterSpawnner().right != null) {
-            if (map.getMonsterSpawnner().left == user.getId()) {
-                user.吸怪特权 = 0;
-                map.setMonsterspawn(null, -1);
-            } else {
-                user.getClient().sendPacket(MaplePacketCreator.serverNotice(1, "已经有人在这个地图吸怪了！\r\n不是本人无法关闭！"));
-                return;
-            }
-        }
-    }
+//    public String 查询吸怪信息() {
+//        MapleMap map = c.getPlayer().getMap();
+//        int num = 0;
+//        final StringBuilder name = new StringBuilder();
+//        if (num == 0) {
+//            name.append("当前角色:" + c.getPlayer().getName() + "\r\n");
+//            name.append("\t\t\t吸怪地图:" + map.getId() + "[" + map.getMapName() + "]\r\n");
+//            name.append("\t\t\t吸怪坐标:" + map.getMonsterSpawnner().right + "\r\n");
+//            name.append("\t\t\t人物坐标:" + c.getPlayer().getPosition() + "\r\n");
+//        }
+//        if (name.length() > 0) {
+//            return name.toString();
+//        } else {
+//            return "暂无吸怪信息！";
+//        }
+//    }
 
-    public String 查询吸怪信息() {
-        MapleMap map = c.getPlayer().getMap();
-        int num = 0;
-        final StringBuilder name = new StringBuilder();
-        if (num == 0) {
-            name.append("当前角色:" + c.getPlayer().getName() + "\r\n");
-            name.append("\t\t\t吸怪地图:" + map.getId() + "[" + map.getMapName() + "]\r\n");
-            name.append("\t\t\t吸怪坐标:" + map.getMonsterSpawnner().right + "\r\n");
-            name.append("\t\t\t人物坐标:" + c.getPlayer().getPosition() + "\r\n");
-        }
-        if (name.length() > 0) {
-            return name.toString();
-        } else {
-            return "暂无吸怪信息！";
-        }
-    }
 }

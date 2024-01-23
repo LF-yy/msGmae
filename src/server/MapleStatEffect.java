@@ -161,7 +161,7 @@ public class MapleStatEffect implements Serializable
         ret.morphId = MapleDataTool.getInt("morph", source, 0);
         ret.cp = MapleDataTool.getInt("cp", source, 0);
         ret.nuffSkill = MapleDataTool.getInt("nuffSkill", source, 0);
-        ret.mobCount = (byte)MapleDataTool.getInt("mobCount", source, 1);
+        ret.mobCount = (byte)MapleDataTool.getInt("mobCount", source, 1);//打击怪物数量
         ret.fatigue = MapleDataTool.getInt("Fatigue", source, 0);
         ret.thaw = (short)MapleDataTool.getInt("thaw", source, 0);
         ret.dotTime = (short)MapleDataTool.getInt("dotTime", source, 0);
@@ -239,8 +239,8 @@ public class MapleStatEffect implements Serializable
         ret.x = MapleDataTool.getInt("x", source, 0);
         ret.y = MapleDataTool.getInt("y", source, 0);
         ret.z = MapleDataTool.getInt("z", source, 0);
-        ret.damage = (short)MapleDataTool.getIntConvert("damage", source, 100);
-        ret.attackCount = (byte)MapleDataTool.getIntConvert("attackCount", source, 1);
+        ret.damage = (short)MapleDataTool.getIntConvert("damage", source, 100);//伤害
+        ret.attackCount = (byte)MapleDataTool.getIntConvert("attackCount", source, 1);//打击数量
         ret.bulletCount = (byte)MapleDataTool.getIntConvert("bulletCount", source, 1);
         ret.bulletConsume = MapleDataTool.getIntConvert("bulletConsume", source, 0);
         ret.moneyCon = MapleDataTool.getIntConvert("moneyCon", source, 0);
@@ -268,6 +268,7 @@ public class MapleStatEffect implements Serializable
             addBuffStatPairToListIfNotZero((List<Pair<MapleBuffStat, Integer>>)statups, MapleBuffStat.HP_LOSS_GUARD, Integer.valueOf((int)ret.thaw));
             addBuffStatPairToListIfNotZero((List<Pair<MapleBuffStat, Integer>>)statups, MapleBuffStat.ILLUSION, Integer.valueOf(ret.illusion));
         }
+        //技能属性补充
         if (skill) {
             switch (sourceid) {
                 case 2001002:
@@ -386,18 +387,20 @@ public class MapleStatEffect implements Serializable
                 case 35001003:
                 case 35101006: {
                     ret.duration = 1800000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, Integer.valueOf(ret.x)));//设置攻击速度
+                   //int i =  Integer.valueOf(ret.x)*10;
+                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER,Integer.valueOf(ret.x)));//设置攻击速度
                     break;
                 }
                 case 5121009:
                 case 15111005: {
                     ret.duration = 1800000;//MapleBuffStat.SPEED_INFUSION
+                    //int i =  Integer.valueOf(ret.x)*10;
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SPEED_INFUSION, Integer.valueOf(ret.x)));//设置攻击速度
                     break;
                 }
                 case 4321000: {
                     ret.duration = 1000;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DASH_SPEED, Integer.valueOf(100 + ret.x)));
+                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DASH_SPEED, Integer.valueOf(ret.x)));
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DASH_JUMP, Integer.valueOf(ret.y)));
                     break;
                 }
@@ -431,6 +434,7 @@ public class MapleStatEffect implements Serializable
                 }
                 case 1111002:
                 case 11111001: {
+                    ret.duration = 86400000;
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.COMBO, Integer.valueOf(1)));
                     break;
                 }
@@ -502,7 +506,8 @@ public class MapleStatEffect implements Serializable
                     break;
                 }
                 case 5121003: {
-                    ret.duration = 1800000;
+                    //statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, -100));//设置攻击速度
+                    ret.duration = 86400000;
                     break;
                 }
                 case 15111006: {
@@ -682,7 +687,7 @@ public class MapleStatEffect implements Serializable
                 case 1221002:
                 case 1321002:
                 case 21121003: {
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.STANCE, Integer.valueOf((int)ret.prop)));
+                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.STANCE, Integer.valueOf((int)ret.prop < 100 ? 100 : (int)ret.prop)));//稳如泰山概率
                     break;
                 }
                 case 1005:
@@ -2016,7 +2021,9 @@ public class MapleStatEffect implements Serializable
         final int maxY = Math.max(Math.abs((this.lt == null) ? 0 : this.lt.y), Math.abs((this.rb == null) ? 0 : this.rb.y));
         return (double)(maxX * maxX + maxY * maxY);
     }
-    
+    public final short getMpCon() {
+        return this.mpCon;
+    }
     public final int getRange() {
         return this.range;
     }

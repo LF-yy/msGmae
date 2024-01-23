@@ -161,12 +161,41 @@ public class ItemConstants
             }
         }
     }
-    
+    public static boolean isPotentialAddScroll(int scrollId) {
+        switch (scrollId) {
+            case 2048305: //附加潜能附加卷轴 - 不减少可升级次数，为装备增加附加潜能。\n#c只能用于没有附加潜能的道具#
+            case 2048306: //特殊附加潜能附加古卷 - 不减少可升级次数，为装备增加附加潜能#c3个#。\n#c只能用于没有附加潜能的道具#
+            case 2048307: //特殊附加潜能附加卷轴 - 不减少可升级次数，为装备增加附加潜能。 \n#c只能用于没有附加潜能的道具#
+            case 2048308: //附加潜能附加卷轴 - 不减少可升级次数，为装备增加附加潜能。 \n#c只能用于没有附加潜能的道具#
+            case 2048309: //附加潜能附加卷轴 - 不减少可升级次数，为装备增加附加潜能。 \n#c只能用于没有附加潜能的道具#
+            case 2048310: //附加潜能附加卷轴 - 不减少可升级次数，为装备增加附加潜能。 \n#c只能用于没有附加潜能的道具#
+            case 2048314: //附加潜能附加卷轴 - 可以在不扣减升级次数的情况下，在装备道具上增加附加潜能。\n#c只能在拥有带有潜能，但没有附加潜能的道具上使用#
+            case 2048315: //特殊附加潜能卷轴 - 可以在不扣减升级次数的情况下，在装备道具上增加附加潜能。\n#c只能在拥有带有潜能，但没有附加潜能的道具上使用#
+                return true;
+        }
+        return false;
+    }
     public static boolean isOverPoweredEquip(final MapleClient c, final int itemId, final short slot) {
         final Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(slot);
         return source.getAcc() > 1000 || source.getAvoid() > 1000 || source.getStr() > 500 || source.getDex() > 500 || source.getInt() > 500 || source.getLuk() > 500 || source.getEnhance() > 25 || source.getHands() > 100 || source.getHp() > 5000 || source.getMp() > 5000 || source.getJump() > 100 || source.getSpeed() > 100 || source.getMatk() > 1000 || source.getMdef() > 1500 || source.getUpgradeSlots() > 32 || source.getViciousHammer() > 1 || source.getWatk() > 1000 || source.getWdef() > 1500;
     }
-    
+    public static boolean isEquipScroll(int scrollId) {
+        return scrollId / 100 == 20493;
+    }
+    public static boolean isAdvancedEquipScroll(int scrollId) {
+        return scrollId == 2049323;
+    }
+
+    /*
+     * 还原卷轴
+     */
+    public static boolean isResetScroll(int scrollId) {
+        return scrollId / 100 == 20496;
+    }
+
+    public static boolean isPotentialScroll(int scrollId) {
+        return scrollId / 100 == 20494 || scrollId / 100 == 20497 || scrollId == 5534000;
+    }
     public static boolean isForGM(final int itemid) {
         return (itemid >= 2049335 && itemid <= 2049349) || itemid == 2430011 || itemid == 2430012 || itemid == 2430124 || itemid == 2002085;
     }

@@ -61,9 +61,9 @@ public class PiPiConfig
     
     static {
         PiPiConfig.Start_Check = false;
-        PiPiConfig.autoban = true;
+        PiPiConfig.autoban = false;
         PiPiConfig.CommandLock = false;
-        PiPiConfig.商店一次拍賣获得最大金币 = 1500000;
+        PiPiConfig.商店一次拍賣获得最大金币 = 100000000;
         PiPiConfig.acc = "7c4a8d09ca3762af61e59520943dc26494f8941b";
         PiPiConfig.banText = new String[] { "幹", "靠", "屎", "糞", "淦", "靠" };
         PiPiConfig.BlackList = (Map<Integer, String>)new HashMap() {

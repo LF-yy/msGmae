@@ -5,6 +5,8 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import gui.CongMS;
 import tools.FileoutputUtil;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -230,17 +232,32 @@ public class MapleShop
     public int getId() {
         return this.id;
     }
-    
+    public static void 重载商店() {
+        MapleShop.rechargeableItems.clear();
+        for (int i = 2070000; i <= 2070013; ++i) {
+            MapleShop.rechargeableItems.add(Integer.valueOf(i));
+        }
+        for (int i = 2330000; i <= 2330005; ++i) {
+            MapleShop.rechargeableItems.add(Integer.valueOf(i));
+        }
+        if (((Integer) CongMS.ConfigValuesMap.get("子弹扩充开关")).intValue() > 0) {
+            for (int a = 0; a < Start.子弹列表.size(); ++a) {
+                MapleShop.rechargeableItems.add(Integer.valueOf(Integer.parseInt((String)Start.子弹列表.get(a))));
+            }
+        }
+    }
+
     static {
         rechargeableItems = new LinkedHashSet<Integer>();
-        for (int i = 2070000; i <= 2070018; ++i) {
+        for (int i = 2070000; i <= 2070026; ++i) {
             MapleShop.rechargeableItems.add(Integer.valueOf(i));
         }
         MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070014));
-        MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070015));
-        MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070016));
+        //MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070015));
+        //MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070016));
         MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070017));
         MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070018));
+        MapleShop.rechargeableItems.remove((Object)Integer.valueOf(2070022));
         for (int i = 2330000; i <= 2330005; ++i) {
             MapleShop.rechargeableItems.add(Integer.valueOf(i));
         }

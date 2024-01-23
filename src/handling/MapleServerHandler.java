@@ -2,6 +2,8 @@ package handling;
 
 import java.util.Collection;
 import java.util.Arrays;
+
+import gui.CongMS;
 import handling.channel.handler.BeanGame;
 import handling.channel.handler.FamilyHandler;
 import handling.channel.handler.HiredMerchantHandler;
@@ -195,7 +197,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 }
                 catch (RejectedExecutionException ex) {}
                 catch (Exception e) {
-                    if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
+                     if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
                         c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
                     }
                     FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", (Throwable)e, false);
@@ -228,8 +230,19 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
         }
         super.userEventTriggered(ctx, status);
     }
-    
+
+    /**
+     * 封包处理入口
+     * @param header
+     * @param slea
+     * @param c
+     * @param cs
+     * @throws Exception
+     */
     public static final void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea, final MapleClient c, final boolean cs) throws Exception {
+        if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+            System.out.println("封包编码:"+ header );
+        }
         switch (header) {
             case PONG: {
                 c.pongReceived();
@@ -246,7 +259,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 }
                 break;
             }
-            case LOGIN_PASSWORD: {
+            case LOGIN_PASSWORD: {//登陆
                 CharLoginHandler.handleLogin(slea, c);
                 break;
             }
@@ -266,11 +279,11 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 CharLoginHandler.checkCharName(slea.readMapleAsciiString(), c);
                 break;
             }
-            case CREATE_CHAR: {
+            case CREATE_CHAR: {//创建角色
                 CharLoginHandler.handleCreateCharacter(slea, c);
                 break;
             }
-            case DELETE_CHAR: {
+            case DELETE_CHAR: {//删除角色
                 CharLoginHandler.handleDeleteCharacter(slea, c);
                 break;
             }
@@ -429,7 +442,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             case LIE_DETECTOR_RESPONSE: {
                 PlayersHandler.LieDetectorResponse(slea, c);
             }
-            case ARAN_COMBO: {
+            case ARAN_COMBO: { //增加战神连击点数
                 PlayerHandler.AranCombo(c, c.getPlayer(), 1);
                 break;
             }
@@ -931,6 +944,10 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 CharLoginHandler.LicenseRequest(slea, c);
                 break;
             }
+            default:
+                if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+                    System.out.println("未知封包封包编码:"+ header );
+                }
         }
     }
     

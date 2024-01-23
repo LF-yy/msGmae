@@ -144,7 +144,15 @@ public class MobPacket
             move.serialize(lew);
         }
     }
-    
+
+    /**
+     * 地图自动刷怪逻辑
+     * @param life
+     * @param spawnType
+     * @param effect
+     * @param link
+     * @return
+     */
     public static byte[] spawnMonster(final MapleMonster life, final int spawnType, final int effect, final int link) {
         UserAttraction userAttraction = NPCConversationManager.getAttractList(life.getMap().getChannel(), life.getMap().getId());
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();

@@ -1,5 +1,6 @@
 package client.messages.commands;
 
+import handling.world.MapleParty;
 import merchant.merchant_main;
 import abc.Game;
 import tools.LoadPacket;
@@ -92,7 +93,92 @@ public class GMCommand
     public static PlayerGMRank getPlayerLevelRequired() {
         return PlayerGMRank.领导者;
     }
-    
+
+    public static class 经验倍率 extends ExpRate {
+    }
+
+    public static class ExpRate extends CommandExecute {
+
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            if (splitted.length > 1) {
+                final int rate = Integer.parseInt(splitted[1]);
+                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                        cserv.setExpRate(rate);
+                        MapleParty.活动经验倍率 = rate;
+                    }
+                } else {
+                    c.getChannelServer().setExpRate(rate);
+                    MapleParty.活动经验倍率 = rate;
+                }
+                c.getPlayer().dropMessage(6, "Exprate has been changed to " + rate + "x");
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("!exprate <倍率> - 更改经验备率").toString();
+        }
+    }
+
+    public static class 掉宝倍率 extends DropRate {
+    }
+
+    public static class DropRate extends CommandExecute {
+
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            if (splitted.length > 1) {
+                final int rate = Integer.parseInt(splitted[1]);
+                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                        cserv.setDropRate(rate);
+                    }
+                } else {
+                    c.getChannelServer().setDropRate(rate);
+                }
+                c.getPlayer().dropMessage(6, "物品爆率已经变更为 " + rate + "x");
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("!droprate <倍率> - 更改掉落备率").toString();
+        }
+    }
+
+    public static class 金币倍率 extends MesoRate {
+    }
+
+    public static class MesoRate extends CommandExecute {
+
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            if (splitted.length > 1) {
+                final int rate = Integer.parseInt(splitted[1]);
+                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                        cserv.setMesoRate(rate);
+                    }
+                } else {
+                    c.getChannelServer().setMesoRate(rate);
+                }
+                c.getPlayer().dropMessage(6, "金币爆率已经变更为 " + rate + "x");
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("!mesorate <倍率> - 更改金币倍率").toString();
+        }
+    }
     public static class 修改人气商品 extends CommandExecute
     {
         @Override
@@ -1498,7 +1584,7 @@ public class GMCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("!copyall 玩家名称 - 复制玩家").toString();
+            return new StringBuilder().append(" 玩家名称 - 复制玩家").toString();
         }
     }
     
@@ -3427,96 +3513,153 @@ public class GMCommand
             return new StringBuilder().append("!高级检索 - 各种功能检索功能").toString();
         }
     }
-    
-    public static class 经验倍率 extends ExpRate
-    {
-    }
-    
-    public static class ExpRate extends CommandExecute
-    {
+    public abstract static class setRate extends CommandExecute {
+
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length > 1) {
-                final int rate = Integer.parseInt(splitted[1]);
-                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
-                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                        cserv.setExpRate(rate);
+            final MapleCharacter mc;
+            final MapleCharacter player = mc = c.getPlayer();
+            if (splitted.length > 2) {
+                final int arg = Integer.parseInt(splitted[2]);
+                final int seconds = Integer.parseInt(splitted[3]);
+                final int mins = Integer.parseInt(splitted[4]);
+                final int hours = Integer.parseInt(splitted[5]);
+                final int time = seconds + mins * 60 + hours * 60 * 60;
+                boolean bOk = true;
+                if (splitted[1].equals("经验")) {
+                    if (arg <= 50) {
+                        for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+                            cservs.setExpRate(arg);
+                            MapleParty.活动经验倍率 = arg;
+                            cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "经验倍率已经成功修改为 " + arg + "倍。祝大家游戏开心.经验倍率将在时间到后自动更正！"));
+                        }
+                    } else {
+                        mc.dropMessage("操作已被系统限制。");
+                    }
+                } else if (splitted[1].equals("爆率")) {
+                    if (arg <= 5) {
+                        for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+                            cservs.setDropRate(arg);
+                            cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "爆率倍率已经成功修改为 " + arg + "倍。祝大家游戏开心.经验倍率将在时间到后自动更正！！"));
+                        }
+                    } else {
+                        mc.dropMessage("操作已被系统限制。");
+                    }
+                } else if (splitted[1].equals("金币")) {
+                    if (arg <= 5) {
+                        for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+                            cservs.setMesoRate(arg);
+                            cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "金币倍率已经成功修改为 " + arg + "倍。祝大家游戏开心.经验倍率将在时间到后自动更正！！"));
+                        }
+                    } else {
+                        mc.dropMessage("操作已被系统限制。");
+                    }
+                } else if (!splitted[1].equalsIgnoreCase("boss爆率")) {
+                    if (!splitted[1].equals("宠物经验")) {
+                        bOk = false;
                     }
                 }
-                else {
-                    c.getChannelServer().setExpRate(rate);
+                if (bOk) {
+                    final String rate = splitted[1];
+                    World.scheduleRateDelay(rate, (long) time);
+                } else {
+                    mc.dropMessage("使用方法: !倍率设置 <exp经验|drop爆率|meso金币|bossboss爆率|pet> <类> <秒> <分> <时>");
                 }
-                c.getPlayer().dropMessage(6, "Exprate has been changed to " + rate + "x");
-                return true;
+            } else {
+                mc.dropMessage("使用方法: !倍率设置 <exp经验|drop爆率|meso金币|bossboss爆率|pet> <类> <秒> <分> <时>");
             }
-            return false;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!exprate <倍率> - 更改经验备率").toString();
+            return true;
         }
     }
-    
-    public static class 物品倍率 extends DropRate
-    {
-    }
-    
-    public static class DropRate extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length > 1) {
-                final int rate = Integer.parseInt(splitted[1]);
-                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
-                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                        cserv.setDropRate(rate);
-                    }
-                }
-                else {
-                    c.getChannelServer().setDropRate(rate);
-                }
-                c.getPlayer().dropMessage(6, "Drop Rate has been changed to " + rate + "x");
-                return true;
-            }
-            return false;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!droprate <倍率> - 更改掉落备率").toString();
-        }
-    }
-    
-    public static class 金币倍率 extends MesoRate
-    {
-    }
-    
-    public static class MesoRate extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length > 1) {
-                final int rate = Integer.parseInt(splitted[1]);
-                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
-                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                        cserv.setMesoRate(rate);
-                    }
-                }
-                else {
-                    c.getChannelServer().setMesoRate(rate);
-                }
-                c.getPlayer().dropMessage(6, "Meso Rate has been changed to " + rate + "x");
-                return true;
-            }
-            return false;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!mesorate <倍率> - 更改金钱备率").toString();
-        }
-    }
+//    public static class 经验倍率 extends ExpRate
+//    {
+//    }
+//
+//    public static class ExpRate extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length > 1) {
+//                final int rate = Integer.parseInt(splitted[1]);
+//                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+//                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                        cserv.setExpRate(rate);
+//                    }
+//                }
+//                else {
+//                    c.getChannelServer().setExpRate(rate);
+//                }
+//                c.getPlayer().dropMessage(6, "Exprate has been changed to " + rate + "x");
+//                return true;
+//            }
+//            return false;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!exprate <倍率> - 更改经验备率").toString();
+//        }
+//    }
+//
+//    public static class 物品倍率 extends DropRate
+//    {
+//    }
+//
+//    public static class DropRate extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length > 1) {
+//                final int rate = Integer.parseInt(splitted[1]);
+//                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+//                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                        cserv.setDropRate(rate);
+//                    }
+//                }
+//                else {
+//                    c.getChannelServer().setDropRate(rate);
+//                }
+//                c.getPlayer().dropMessage(6, "Drop Rate has been changed to " + rate + "x");
+//                return true;
+//            }
+//            return false;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!droprate <倍率> - 更改掉落备率").toString();
+//        }
+//    }
+//
+//    public static class 金币倍率 extends MesoRate
+//    {
+//    }
+//
+//    public static class MesoRate extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length > 1) {
+//                final int rate = Integer.parseInt(splitted[1]);
+//                if (splitted.length > 2 && splitted[2].equalsIgnoreCase("all")) {
+//                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                        cserv.setMesoRate(rate);
+//                    }
+//                }
+//                else {
+//                    c.getChannelServer().setMesoRate(rate);
+//                }
+//                c.getPlayer().dropMessage(6, "Meso Rate has been changed to " + rate + "x");
+//                return true;
+//            }
+//            return false;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!mesorate <倍率> - 更改金钱备率").toString();
+//        }
+//    }
     
     public static class KillAll extends CommandExecute
     {

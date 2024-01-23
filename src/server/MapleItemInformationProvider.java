@@ -1,35 +1,34 @@
 package server;
 
-import client.inventory.MapleInventoryIdentifier;
-import client.inventory.MaplePet;
+import client.inventory.*;
+
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import constants.ItemConstants;
 import gui.CongMS;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import client.inventory.MaplePet.PetFlag;
 import tools.StringUtil;
-import client.inventory.ItemFlag;
 import client.MapleCharacter;
-import client.inventory.IItem;
+
 import java.util.Map.Entry;
 import java.util.LinkedHashMap;
 import constants.GameConstants;
 import client.MapleClient;
 import provider.MapleDataFileEntry;
 import provider.MapleDataDirectoryEntry;
-import client.inventory.MapleWeaponType;
+
 import java.util.Iterator;
 import provider.MapleDataTool;
 import java.util.ArrayList;
 import java.util.HashMap;
 import provider.MapleDataProviderFactory;
-import client.inventory.MapleInventoryType;
 import tools.Pair;
-import client.inventory.Equip;
+
 import java.util.List;
 import java.util.Map;
 import provider.MapleData;
@@ -92,7 +91,7 @@ public class MapleItemInformationProvider
     public static final Map<Integer, String> hairList;
     protected Map<Integer, MapleInventoryType> inventoryTypeCache;
     protected final Map<Integer, Integer> chairMountId;
-    
+    protected Map<Integer, Boolean> floatCashItem = new HashMap<>(); //拥有漂浮效果的道具
     protected MapleItemInformationProvider() {
         this.etcData = MapleDataProviderFactory.getDataProvider("Etc.wz");
         this.itemData = MapleDataProviderFactory.getDataProvider("Item.wz");
@@ -386,12 +385,12 @@ public class MapleItemInformationProvider
                     ret = 1;
                 }
                 else {
-                    ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+                    ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
                 }
             }
             else {
 //                ret = (short)MapleDataTool.getInt(smEntry);
-                ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+                ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
             }
         }
         this.slotMaxCache.put(Integer.valueOf(itemId), Short.valueOf(ret));
@@ -827,15 +826,32 @@ public class MapleItemInformationProvider
         this.scrollReqCache.put(Integer.valueOf(itemId), ret);
         return ret;
     }
-    
+
+    //给装备上卷轴
     public final IItem scrollEquipWithId(final IItem equip, final IItem scrollId, final boolean ws, final MapleCharacter chr, final int vegas) {
         if (equip.getType() == 1) {
             final Equip nEquip = (Equip)equip;
+           // int scroll = scrollId.getItemId();
             final Map<String, Integer> stats = this.getEquipStats(scrollId.getItemId());
             final Map<String, Integer> eqstats = this.getEquipStats(equip.getItemId());
             final int succ = GameConstants.isTablet(scrollId.getItemId()) ? GameConstants.getSuccessTablet(scrollId.getItemId(), (int)nEquip.getLevel()) : ((GameConstants.isEquipScroll(scrollId.getItemId()) || GameConstants.isPotentialScroll(scrollId.getItemId())) ? 0 : ((int)Integer.valueOf(stats.get((Object)"success"))));
             final int curse = GameConstants.isTablet(scrollId.getItemId()) ? GameConstants.getCurseTablet(scrollId.getItemId(), (int)nEquip.getLevel()) : ((GameConstants.isEquipScroll(scrollId.getItemId()) || GameConstants.isPotentialScroll(scrollId.getItemId())) ? 0 : ((int)Integer.valueOf(stats.get((Object)"cursed"))));
             final int success = succ + ((vegas == 5610000 && succ == 10) ? 20 : ((vegas == 5610001 && succ == 60) ? 30 : 0));
+//            if (ItemConstants.isEquipScroll(scroll)) { //装备强化卷轴
+//                return scrollEnhance(equip, scroll, chr);
+//            } else
+//                if (ItemConstants.isPotentialScroll(scroll)) { //潜能附加
+//                return scrollPotential((Item)equip, (Item)scrollId, chr);
+//                }
+//            else if (ItemConstants.isPotentialAddScroll(scroll)) { //附加潜能
+//                return scrollPotentialAdd(equip, scroll, chr);
+//            } else if (ItemConstants.isLimitBreakScroll(scroll)) { //突破攻击上限石头
+//                return scrollLimitBreak(equip, scroll, chr);
+//            } else if (ItemConstants.isResetScroll(scroll)) { //还原卷轴
+//                return scrollResetEquip(equip, scroll, chr);
+//            } else if (ItemConstants.isSealedScroll(scroll)) {
+//                return scrollSealedEquip(equip, scroll, chr);
+//            }
             if (GameConstants.isPotentialScroll(scrollId.getItemId()) || GameConstants.isEquipScroll(scrollId.getItemId()) || Randomizer.nextInt(100) <= success) {
                 switch (scrollId.getItemId()) {
                     case 2049000:
@@ -872,7 +888,55 @@ public class MapleItemInformationProvider
                         break;
                     }
                     default: {
-                        if (GameConstants.isChaosScroll(scrollId.getItemId())) {
+                        //正向混沌卷轴，强化混沌,惊人正义混沌
+                        if (GameConstants.isForwardScroll(scrollId.getItemId())) {
+                            final int z = GameConstants.getChaosNumber(scrollId.getItemId());
+                            if (nEquip.getStr() > 0) {
+                                nEquip.setStr((short)(nEquip.getStr() + Randomizer.nextInt(z)));
+                            }
+                            if (nEquip.getDex() > 0) {
+                                nEquip.setDex((short)(nEquip.getDex() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getInt() > 0) {
+                                nEquip.setInt((short)(nEquip.getInt() + Randomizer.nextInt(z)));
+                            }
+                            if (nEquip.getLuk() > 0) {
+                                nEquip.setLuk((short)(nEquip.getLuk() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getWatk() > 0) {
+                                nEquip.setWatk((short)(nEquip.getWatk() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getWdef() > 0) {
+                                nEquip.setWdef((short)(nEquip.getWdef() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getMatk() > 0) {
+                                nEquip.setMatk((short)(nEquip.getMatk() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getMdef() > 0) {
+                                nEquip.setMdef((short)(nEquip.getMdef() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getAcc() > 0) {
+                                nEquip.setAcc((short)(nEquip.getAcc() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getAvoid() > 0) {
+                                nEquip.setAvoid((short)(nEquip.getAvoid() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getSpeed() > 0) {
+                                nEquip.setSpeed((short)(nEquip.getSpeed() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getJump() > 0) {
+                                nEquip.setJump((short)(nEquip.getJump() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getHp() > 0) {
+                                nEquip.setHp((short)(nEquip.getHp() + Randomizer.nextInt(z) ));
+                            }
+                            if (nEquip.getMp() > 0) {
+                                nEquip.setMp((short)(nEquip.getMp() + Randomizer.nextInt(z) ));
+                                break;
+                            }
+                            break;
+                        }
+                        else if (GameConstants.isChaosScroll(scrollId.getItemId())) {
                             final int z = GameConstants.getChaosNumber(scrollId.getItemId());
                             if (nEquip.getStr() > 0) {
                                 nEquip.setStr((short)(nEquip.getStr() + Randomizer.nextInt(z) * (Randomizer.nextBoolean() ? 1 : -1)));
@@ -1719,6 +1783,9 @@ public class MapleItemInformationProvider
     }
     
     public final boolean cantSell(final int itemId) {
+        if(itemId == 2022578){
+            return false;
+        }
         if (this.notSaleCache.containsKey((Object)Integer.valueOf(itemId))) {
             return (boolean)Boolean.valueOf(this.notSaleCache.get((Object)Integer.valueOf(itemId)));
         }
@@ -2106,10 +2173,166 @@ public class MapleItemInformationProvider
         pEntry = MapleDataTool.getInt(pData);
         return pEntry;
     }
-    
+    /*
+     * 拥有漂浮效果的道具
+     */
+    public boolean isFloatCashItem(int itemId) {
+        if (floatCashItem.containsKey(itemId)) {
+            return floatCashItem.get(itemId);
+        }
+        if ((itemId / 10000) != 512) {
+            return false;
+        }
+        boolean floatType = MapleDataTool.getIntConvert("info/floatType", getItemData(itemId), 0) > 0;
+        floatCashItem.put(itemId, floatType);
+        return floatType;
+    }
     static {
         instance = new MapleItemInformationProvider();
         faceLists = new HashMap<Integer, String>();
         hairList = new HashMap<Integer, String>();
     }
+
+
+    /*
+     * 卷轴失败不装备不损坏的卷轴
+     */
+    protected Map<Integer, Boolean> noCursedScroll = new HashMap<>(); //上卷失败不消失的卷轴
+    public boolean isNoCursedScroll(int itemId) {
+        if (noCursedScroll.containsKey(itemId)) {
+            return noCursedScroll.get(itemId);
+        }
+        if (itemId / 10000 != 204) {
+            return false;
+        }
+        boolean noCursed = MapleDataTool.getIntConvert("info/noCursed", getItemData(itemId), 0) > 0;
+        noCursedScroll.put(itemId, noCursed);
+        return noCursed;
+    }
+    /*
+     * 潜能附加卷轴
+     */
+    public Item scrollPotential(Item equip) {
+        if (equip.getType() != 1) { //检测必须需要砸卷的道具为装备
+            return equip;
+        }
+        Equip nEquip = (Equip) equip;
+                if (nEquip.getState() == 0) {
+                    nEquip.resetPotential();
+                }
+                if (nEquip.getState() < 18) { //装备为A级以下装备
+                    nEquip.renewPotential();
+                }
+                if (nEquip.getState() < 19) { //装备为S级以下装备
+                    nEquip.renewPotential();
+                }
+        return nEquip;
+    }
+
+//    public Item scrollEnhance(Item equip, Item scroll, MapleCharacter chr) {
+//        if (equip.getType() != 1) { //检测必须需要砸卷的道具为装备
+//            return equip;
+//        }
+//        Equip nEquip = (Equip) equip;
+//        int scrollId = scroll.getItemId();
+//        Map<String, Integer> scrollStats = getEquipStats(scrollId);
+//        boolean noCursed = isNoCursedScroll(scrollId);
+//        int scrollForceUpgrade = getForceUpgrade(scrollId);
+//        int succ = scrollStats == null || !scrollStats.containsKey("success") ? 0 : scrollStats.get("success"); //成功几率
+//        int curse = noCursed ? 0 : scrollStats == null || !scrollStats.containsKey("cursed") ? 100 : scrollStats.get("cursed"); //失败几率 没有就代表100%消失
+//        int craft = chr.getTrait(MapleTraitType.craft).getLevel() / 10; //倾向系统的砸卷加成
+//        if (scrollForceUpgrade == 1 && succ == 0) {
+//            succ = Math.max((scroll.getItemId() == 2049301 || scroll.getItemId() == 2049307 ? 80 : 100) - (nEquip.getEnhance() * 10), 5);
+//        }
+//        int success = succ + craft; //最终的成功几率
+//        if (chr.isAdmin()) {
+//            chr.dropSpouseMessage(0x0B, "装备强化卷轴 - 默认几率: " + succ + "% 倾向加成: " + craft + "% 最终几率: " + success + "% 失败消失几率: " + curse + "%" + " 卷轴是否失败不消失装备: " + noCursed);
+//        }
+//        if (Randomizer.nextInt(100) > success) {
+//            return Randomizer.nextInt(99) < curse ? null : nEquip;
+//        }
+//        if (ItemConstants.isSuperiorEqp(equip.getItemId())) {
+//            for (int i = 0; i < scrollForceUpgrade; i++) {
+//                int xjlevel = nEquip.getEnhance() + 1;
+//                if (xjlevel <= 5) {
+//                    final int val[] = {9, 10, 19, 29, 48};
+//                    nEquip.setStr((short) (nEquip.getStr() + val[xjlevel -1]));
+//                    nEquip.setDex((short) (nEquip.getDex() + val[xjlevel -1]));
+//                    nEquip.setLuk((short) (nEquip.getLuk() + val[xjlevel -1]));
+//                    nEquip.setInt((short) (nEquip.getInt() + val[xjlevel -1]));
+//                } else {
+//                    int val = xjlevel + 3;
+//                    nEquip.setWatk((short) (nEquip.getWatk() + val));
+//                    nEquip.setMatk((short) (nEquip.getMatk() + val));
+//                }
+//                nEquip.setEnhance((byte) (nEquip.getEnhance() + 1));
+//            }
+//        } else {
+//            int mixStats = isSuperiorEquip(nEquip.getItemId()) ? 3 : 0;
+//            int maxStats = isSuperiorEquip(nEquip.getItemId()) ? 8 : 5;
+//            for (int i = 0; i < scrollForceUpgrade; i++) {
+//                if (nEquip.getStr() > 0 || Randomizer.nextInt(50) == 1) { //力量 1/50
+//                    nEquip.setStr((short) (nEquip.getStr() + Randomizer.rand(mixStats, maxStats)));
+//                }
+//                if (nEquip.getDex() > 0 || Randomizer.nextInt(50) == 1) { //敏捷 1/50
+//                    nEquip.setDex((short) (nEquip.getDex() + Randomizer.rand(mixStats, maxStats)));
+//                }
+//                if (nEquip.getInt() > 0 || Randomizer.nextInt(50) == 1) { //智力 1/50
+//                    nEquip.setInt((short) (nEquip.getInt() + Randomizer.rand(mixStats, maxStats)));
+//                }
+//                if (nEquip.getLuk() > 0 || Randomizer.nextInt(50) == 1) { //运气 1/50
+//                    nEquip.setLuk((short) (nEquip.getLuk() + Randomizer.rand(mixStats, maxStats)));
+//                }
+//                if (nEquip.getWatk() > 0 && ItemConstants.isWeapon(nEquip.getItemId())) { //物理攻击
+//                    if (nEquip.getWatk() < 150) {
+//                        nEquip.setWatk((short) (nEquip.getWatk() + 3)); //攻击在   1-149之间固定 3点
+//                    } else if (nEquip.getWatk() < 200) {
+//                        nEquip.setWatk((short) (nEquip.getWatk() + 4)); //攻击在 150-199之间固定 4点
+//                    } else if (nEquip.getWatk() < 250) {
+//                        nEquip.setWatk((short) (nEquip.getWatk() + 5)); //攻击在 200-249之间固定 5点
+//                    } else {
+//                        nEquip.setWatk((short) (nEquip.getWatk() + 5 + (Randomizer.nextBoolean() ? 1 : 0))); //攻击在 250 以上固定 5点 + 50% 的几率多加1点
+//                    }
+//                }
+//                if (nEquip.getWdef() > 0 || Randomizer.nextInt(40) == 1) { //物理防御 1/40
+//                    nEquip.setWdef((short) (nEquip.getWdef() + Randomizer.nextInt(5)));
+//                }
+//                if (nEquip.getMatk() > 0 && ItemConstants.isWeapon(nEquip.getItemId())) { //魔法攻击
+//                    if (nEquip.getMatk() < 150) {
+//                        nEquip.setMatk((short) (nEquip.getMatk() + 3)); //攻击在   1-149之间固定 3点
+//                    } else if (nEquip.getMatk() < 200) {
+//                        nEquip.setMatk((short) (nEquip.getMatk() + 4)); //攻击在 150-199之间固定 4点
+//                    } else if (nEquip.getMatk() < 250) {
+//                        nEquip.setMatk((short) (nEquip.getMatk() + 5)); //攻击在 200-249之间固定 5点
+//                    } else {
+//                        nEquip.setMatk((short) (nEquip.getMatk() + 5 + (Randomizer.nextBoolean() ? 1 : 0))); //攻击在 250 以上固定 5点 + 50% 的几率多加1点
+//                    }
+//                }
+//                if (nEquip.getMdef() > 0 || Randomizer.nextInt(40) == 1) { //魔法防御 1/40
+//                    nEquip.setMdef((short) (nEquip.getMdef() + Randomizer.nextInt(5)));
+//                }
+//                if (nEquip.getAcc() > 0 || Randomizer.nextInt(20) == 1) { //命中率 1/20
+//                    nEquip.setAcc((short) (nEquip.getAcc() + Randomizer.nextInt(5)));
+//                }
+//                if (nEquip.getAvoid() > 0 || Randomizer.nextInt(20) == 1) { //回避率 1/20
+//                    nEquip.setAvoid((short) (nEquip.getAvoid() + Randomizer.nextInt(5)));
+//                }
+//                if (nEquip.getSpeed() > 0 || Randomizer.nextInt(10) == 1) { //移动速度 1/10
+//                    nEquip.setSpeed((short) (nEquip.getSpeed() + Randomizer.nextInt(5)));
+//                }
+//                if (nEquip.getJump() > 0 || Randomizer.nextInt(10) == 1) { //跳跃力 1/10
+//                    nEquip.setJump((short) (nEquip.getJump() + Randomizer.nextInt(5)));
+//                }
+//                if (nEquip.getHp() > 0 || Randomizer.nextInt(5) == 1) { //HP 1/5
+//                    nEquip.setHp((short) (nEquip.getHp() + Randomizer.rand(mixStats, maxStats)));
+//                }
+//                if (nEquip.getMp() > 0 || Randomizer.nextInt(5) == 1) { //MP 1/5
+//                    nEquip.setMp((short) (nEquip.getMp() + Randomizer.rand(mixStats, maxStats)));
+//                }
+//                nEquip.setEnhance((byte) (nEquip.getEnhance() + 1));
+//            }
+//        }
+//        return nEquip;
+//    }
+
 }

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import database.DBConPool;
+import gui.CongMS;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -181,7 +182,7 @@ public class MapleMapFactory
                     }
                 }
                 this.addAreaBossSpawn(map);
-                map.setCreateMobInterval((short)MapleDataTool.getInt(mapData.getChildByPath("info/createMobInterval"), this.怪物刷新时间 * 2));
+                map.setCreateMobInterval((short)MapleDataTool.getInt(mapData.getChildByPath("info/createMobInterval"), this.怪物刷新时间 * 1));
                 map.loadMonsterRate(true);
                 map.setNodes(this.loadNodes(mapid, mapData));
                 if (reactors && mapData.getChildByPath("reactor") != null) {
@@ -344,7 +345,7 @@ public class MapleMapFactory
             }
         }
         this.addAreaBossSpawn(map);
-        map.setCreateMobInterval((short)MapleDataTool.getInt(mapData.getChildByPath("info/createMobInterval"), this.怪物刷新时间 * 2));
+        map.setCreateMobInterval((short)MapleDataTool.getInt(mapData.getChildByPath("info/createMobInterval"), this.怪物刷新时间 * 1));
         map.loadMonsterRate(true);
         map.setNodes(this.loadNodes(mapid, mapData));
         if (reactors && mapData.getChildByPath("reactor") != null) {
@@ -516,33 +517,35 @@ public class MapleMapFactory
     }
     
     private void addAreaBossSpawn(final MapleMap map) {
+        //野外boss刷新
         int monsterid = -1;
         int mobtime = -1;
+        int dfTime = 3000;
         String msg = null;
         Point pos1 = null;
         Point pos2 = null;
         Point pos3 = null;
         switch (map.getId()) {
             case 104000400: {
-                mobtime = 2700;
+                mobtime = CongMS.ConfigValuesMap.get("红蜗牛王刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("红蜗牛王刷新时间")*60;
                 monsterid = 2220000;
-                msg = "紅寶王出現了！";
+                msg = "红蜗牛王出現了！";
                 pos1 = new Point(439, 185);
                 pos2 = new Point(301, -85);
                 pos3 = new Point(107, -355);
                 break;
             }
             case 101030404: {
-                mobtime = 2700;
+                mobtime = CongMS.ConfigValuesMap.get("树妖王刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("树妖王刷新时间")*60;
                 monsterid = 3220000;
-                msg = "樹妖王出現了！";
+                msg = "树妖王出現了！";
                 pos1 = new Point(867, 1282);
                 pos2 = new Point(810, 1570);
                 pos3 = new Point(838, 2197);
                 break;
             }
             case 110040000: {
-                mobtime = 1200;
+                mobtime = CongMS.ConfigValuesMap.get("巨居蟹刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("巨居蟹刷新时间")*60;
                 monsterid = 5220001;
                 msg = "巨居蟹出現了！";
                 pos1 = new Point(-355, 179);
@@ -551,7 +554,7 @@ public class MapleMapFactory
                 break;
             }
             case 250010304: {
-                mobtime = 2100;
+                mobtime = CongMS.ConfigValuesMap.get("肯德熊刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("肯德熊刷新时间")*60;
                 monsterid = 7220000;
                 msg = "流浪熊出現了！";
                 pos1 = new Point(-210, 33);
@@ -560,7 +563,7 @@ public class MapleMapFactory
                 break;
             }
             case 200010300: {
-                mobtime = 1200;
+                mobtime = CongMS.ConfigValuesMap.get("艾利杰刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("艾利杰刷新时间")*60;
                 monsterid = 8220000;
                 msg = "艾莉傑出現了！";
                 pos1 = new Point(665, 83);
@@ -569,7 +572,7 @@ public class MapleMapFactory
                 break;
             }
             case 250010503: {
-                mobtime = 1800;
+                mobtime = CongMS.ConfigValuesMap.get("妖怪禅师刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("妖怪禅师刷新时间")*60;
                 monsterid = 7220002;
                 msg = "喵仙怪人出現了！";
                 pos1 = new Point(-303, 543);
@@ -578,7 +581,7 @@ public class MapleMapFactory
                 break;
             }
             case 222010310: {
-                mobtime = 2700;
+                mobtime = CongMS.ConfigValuesMap.get("九尾狐刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("九尾狐刷新时间")*60;
                 monsterid = 7220001;
                 msg = "九尾妖狐出現了！";
                 pos1 = new Point(-169, -147);
@@ -586,8 +589,8 @@ public class MapleMapFactory
                 pos3 = new Point(247, 93);
                 break;
             }
-            case 107000300: {
-                mobtime = 1800;
+                case 107000300: {
+                mobtime = CongMS.ConfigValuesMap.get("沼泽巨鳄鱼刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("沼泽巨鳄鱼刷新时间")*60;
                 monsterid = 6220000;
                 msg = "沼澤巨鱷出現了！";
                 pos1 = new Point(710, 118);
@@ -596,7 +599,7 @@ public class MapleMapFactory
                 break;
             }
             case 100040105: {
-                mobtime = 1800;
+                mobtime = CongMS.ConfigValuesMap.get("浮士德刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("浮士德刷新时间")*60;
                 monsterid = 5220002;
                 msg = "殭屍猴出現了！";
                 pos1 = new Point(1000, 278);
@@ -605,7 +608,7 @@ public class MapleMapFactory
                 break;
             }
             case 100040106: {
-                mobtime = 1800;
+                mobtime = CongMS.ConfigValuesMap.get("浮士德刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("浮士德刷新时间")*60;
                 monsterid = 5220002;
                 msg = "藍色的霧氣變得更暗時出現了殭屍猴王";
                 pos1 = new Point(1000, 278);
@@ -614,7 +617,7 @@ public class MapleMapFactory
                 break;
             }
             case 220050100: {
-                mobtime = 1500;
+                mobtime = CongMS.ConfigValuesMap.get("提莫刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("提莫刷新时间")*60;
                 monsterid = 5220003;
                 msg = "滴答滴答....咕咕鐘出現了!";
                 pos1 = new Point(-467, 1032);
@@ -623,7 +626,7 @@ public class MapleMapFactory
                 break;
             }
             case 221040301: {
-                mobtime = 2400;
+                mobtime = 600;
                 monsterid = 6220001;
                 msg = "葛雷金剛出現了！";
                 pos1 = new Point(-4134, 416);
@@ -632,7 +635,7 @@ public class MapleMapFactory
                 break;
             }
             case 240040401: {
-                mobtime = 7200;
+                mobtime = CongMS.ConfigValuesMap.get("大海兽刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("大海兽刷新时间")*60;
                 monsterid = 8220003;
                 msg = "寒霜冰龍出現了！";
                 pos1 = new Point(-15, 2481);
@@ -641,39 +644,136 @@ public class MapleMapFactory
                 break;
             }
             case 260010201: {
-                mobtime = 3600;
+                mobtime = CongMS.ConfigValuesMap.get("大宇刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("大宇刷新时间")*60;
                 monsterid = 3220001;
-                msg = "仙人長老出現了！";
+                msg = "大宇出現了！";
                 pos1 = new Point(-215, 275);
                 pos2 = new Point(298, 275);
                 pos3 = new Point(592, 275);
                 break;
             }
             case 261030000: {
-                mobtime = 2700;
+                mobtime = CongMS.ConfigValuesMap.get("吉米拉刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("吉米拉刷新时间")*60;
                 monsterid = 8220002;
-                msg = "奇美拉出現了！";
+                msg = "吉米拉王出現了！";
                 pos1 = new Point(-1094, -405);
                 pos2 = new Point(-772, -116);
                 pos3 = new Point(-108, 181);
                 break;
             }
             case 230020100: {
-                mobtime = 2700;
+                mobtime = CongMS.ConfigValuesMap.get("歇尔夫刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("歇尔夫刷新时间")*60;
                 monsterid = 4220000;
-                msg = "火蚌殼出現了！";
+                msg = "歇尔夫出現了！";
                 pos1 = new Point(-291, -20);
                 pos2 = new Point(-272, -500);
                 pos3 = new Point(-462, 640);
                 break;
             }
+            case 273020400: {
+                mobtime = CongMS.ConfigValuesMap.get("变形树妖王刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("变形树妖王刷新时间")*60;
+                monsterid = 8620012;
+                msg = "变形树妖王出現了！";
+                pos1 = new Point(179, -264);
+                pos2 = new Point(179, -264);
+                pos3 = new Point(179, -264);
+                break;
+            }
+            case 240020402: {
+                mobtime = CongMS.ConfigValuesMap.get("火龙刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("火龙刷新时间")*60;
+                monsterid = 8180000;
+                msg = "火龙出現了！";
+                pos1 = new Point(-7, 451);
+                pos2 = new Point(-7, 451);
+                pos3 = new Point(-7, 451);
+                break;
+            }
+            case 240020101: {
+                mobtime = CongMS.ConfigValuesMap.get("天鹰刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("天鹰刷新时间")*60;
+                monsterid = 8180001;
+                msg = "天鹰出現了！";
+                pos1 = new Point(-63, 451);
+                pos2 = new Point(-63, 451);
+                pos3 = new Point(-63, 451);
+                break;
+            }
+            case 270010500: {
+                mobtime = CongMS.ConfigValuesMap.get("时间多多刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("时间多多刷新时间")*60;
+                monsterid = 8220004;
+                msg = "多多出現了！";
+                pos1 = new Point(343, -878);
+                pos2 = new Point(343, -878);
+                pos3 = new Point(343, -878);
+                break;
+            }
+            case 270020500: {
+                mobtime = CongMS.ConfigValuesMap.get("冰独角兽刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("冰独角兽刷新时间")*60;
+                monsterid = 8220005;
+                msg = "冰独角兽出現了！";
+                pos1 = new Point(55, -530);
+                pos2 = new Point(55, -530);
+                pos3 = new Point(55, -530);
+                break;
+            }
+            case 270030500: {
+                mobtime = CongMS.ConfigValuesMap.get("神殿雷卡刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("神殿雷卡刷新时间")*60;
+                monsterid = 8220006;
+                msg = "雷卡出現了！";
+                pos1 = new Point(-109, -571);
+                pos2 = new Point(-109, -571);
+                pos3 = new Point(-109, -571);
+                break;
+            }
+            case 230040420: {
+                mobtime = CongMS.ConfigValuesMap.get("皮亚努斯刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("皮亚努斯刷新时间")*60;
+                monsterid = 8520000;
+                msg = "皮亚努斯出現了！";
+                pos1 = new Point(-459, 137);
+                pos2 = new Point(-459, 137);
+                pos3 = new Point(-459, 137);
+                map.addAreaMonsterSpawn(MapleLifeFactory.getMonster(monsterid), pos1, pos2, pos3, mobtime, msg);
+
+                monsterid = 8510000;
+                msg = "皮亚努斯出現了！";
+                pos1 = new Point(568, 137);
+                pos2 = new Point(568, 137);
+                pos3 = new Point(568, 137);
+                map.addAreaMonsterSpawn(MapleLifeFactory.getMonster(monsterid), pos1, pos2, pos3, mobtime, msg);
+                return;
+            }
+
+            case 860000022: {
+                mobtime = CongMS.ConfigValuesMap.get("深海布波刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("深海布波刷新时间")*60;
+                monsterid = 9390002;
+                msg = "深海布波出現了！";
+                pos1 = new Point(580, -211);
+                pos2 = new Point(580, -211);
+                pos3 = new Point(580, -211);
+                break;
+            }
+            case 677000005: {
+                mobtime = 60;
+                monsterid = 9400609;
+                msg = "印第安老斑鸠出現了！";
+                pos1 = new Point(-237, 98);
+                pos2 = new Point(-237, 98);
+                pos3 = new Point(-237, 98);
+                break;
+            }
+//            case 541020800: {
+//                mobtime = CongMS.ConfigValuesMap.get("克雷塞尔刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("克雷塞尔刷新时间")*1;
+//                monsterid = 9420521;
+//                msg = "克雷塞尔出現了！";
+//                pos1 = new Point(580, -211);
+//                pos2 = new Point(580, -211);
+//                pos3 = new Point(580, -211);
+//                break;
+//            }
             default: {
                 return;
             }
         }
-        if (monsterid > 0) {
             map.addAreaMonsterSpawn(MapleLifeFactory.getMonster(monsterid), pos1, pos2, pos3, mobtime, msg);
-        }
     }
     
     private MapleNodes loadNodes(final int mapid, final MapleData mapData) {

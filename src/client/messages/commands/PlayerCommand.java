@@ -3,8 +3,8 @@ package client.messages.commands;
 import client.MapleCharacter;
 import client.inventory.IItem;
 import gui.CongMS;
+import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
-import server.Start;
 import server.gashapon.GashaponFactory;
 import client.inventory.MapleInventory;
 import server.MapleInventoryManipulator;
@@ -15,13 +15,11 @@ import constants.PiPiConfig;
 import tools.StringUtil;
 
 import java.text.DecimalFormat;
-import java.util.Iterator;
+import java.util.*;
+
 import server.life.MapleMonster;
 import server.maps.MapleMapObject;
-import java.util.Arrays;
 import server.maps.MapleMapObjectType;
-import java.util.Calendar;
-import java.util.Objects;
 
 import tools.FilePrinter;
 import tools.MaplePacketCreator;
@@ -270,6 +268,15 @@ public class PlayerCommand
             return new StringBuilder().append("@查看 - 解卡").toString();
         }
     }
+
+//    public static class 吸物 extends xw
+//    {
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("@查看 - 吸物").toString();
+//        }
+//    }
+
     
     public static class ea extends CommandExecute
     {
@@ -292,22 +299,22 @@ public class PlayerCommand
                 }
             }
             if (rand){
-                coefficient = Start.ConfigValuesMap.get("4人组队爆率加成") / 100;
+                coefficient = CongMS.ConfigValuesMap.get("4人组队爆率加成") / 100;
             }
             double jiac = 1;
-            if (Start.ConfigValuesMap.get("开启破功爆率加成")>0) {
+            if (CongMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
                 //破功爆率加成机制
                 int 获得破功 = c.getPlayer().取破攻等级();
-                jiac = 获得破功 / Start.ConfigValuesMap.get("破功爆率加成计算");
+                jiac = (获得破功 / CongMS.ConfigValuesMap.get("破功爆率加成计算"));
             }
-            //if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
-            System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
-            System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
-            //}
+            if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+               System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
+               System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
+            }
             double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
             DecimalFormat df = new DecimalFormat("#.00");
             String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
-            String formatDrop = df.format(coefficient *  c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm() + jiac);
+            String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm() +  jiac);
             String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate());
 
             c.sendPacket(MaplePacketCreator.sendHint(
@@ -322,12 +329,38 @@ public class PlayerCommand
                             + "", 350, 5));
             return true;
         }
-        
         @Override
         public String getMessage() {
             return new StringBuilder().append("@ea - 解卡").toString();
         }
-        
+        }
+
+
+//    public static class xw extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            final boolean ItemVac = c.getPlayer().getItemVac();
+//            if (!ItemVac) {
+//                c.getPlayer().stopItemVac();
+//                c.getPlayer().startItemVac();
+//            }
+//            else {
+//                c.getPlayer().stopItemVac();
+//            }
+//            c.getPlayer().dropMessage(6, "目前自动捡物状态:" + (ItemVac ? "关闭" : "开启"));
+//            return true;
+//        }
+//
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!ItemVac - 全图吸物开关").toString();
+//        }
+//    }
+
+
+
         public static String getDayOfWeek() {
             final int dayOfWeek = Calendar.getInstance().get(7) - 1;
             String dd = String.valueOf(dayOfWeek);
@@ -363,7 +396,7 @@ public class PlayerCommand
             }
             return dd;
         }
-    }
+
     
     public static class 怪物 extends mob
     {
@@ -395,7 +428,54 @@ public class PlayerCommand
             return new StringBuilder().append("@mob - 查看怪物状态").toString();
         }
     }
-    
+
+    public static class 在线人数 extends CommandExecute {
+
+        @Override
+        public boolean execute(MapleClient c, String[] splitted) {
+            int total = 0;
+            int curConnected = c.getChannelServer().getConnectedClients();
+            c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
+            c.getPlayer().dropMessage(6, new StringBuilder().append("频道: ").append(c.getChannelServer().getChannel()).append(" 线上人数: ").append(curConnected).toString());
+            total += curConnected;
+            for (MapleCharacter chr : c.getChannelServer().getPlayerStorage().getAllCharacters()) {
+                if (chr != null && c.getPlayer().getGMLevel() >= chr.getGMLevel()) {
+                    StringBuilder ret = new StringBuilder();
+                    ret.append(" 角色名称 ");
+                    ret.append(StringUtil.getRightPaddedStr(chr.getName(), ' ', 13));
+                    ret.append(" ID: ");
+                    ret.append(StringUtil.getRightPaddedStr(chr.getId() + "", ' ', 5));
+                    ret.append(" 等级: ");
+                    ret.append(StringUtil.getRightPaddedStr(String.valueOf(chr.getLevel()), ' ', 3));
+                    ret.append(" 职业: ");
+                    ret.append(StringUtil.getRightPaddedStr(String.valueOf(chr.getJob()), ' ', 4));
+                    if (chr.getMap() != null) {
+                        ret.append(" 地图: ");
+                        ret.append(chr.getMapId()).append("(").append(chr.getMap().getMapName()).append(")");
+                        c.getPlayer().dropMessage(6, ret.toString());
+                    }
+                }
+            }
+            c.getPlayer().dropMessage(6, new StringBuilder().append("当前频道总计线上人数: ").append(total).toString());
+            c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
+            int channelOnline = c.getChannelServer().getConnectedClients();
+            int totalOnline = 0;
+            /*服务器总人数*/
+            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                totalOnline += cserv.getConnectedClients();
+            }
+            c.getPlayer().dropMessage(6, new StringBuilder().append("当前服务器总计线上人数: ").append(totalOnline).append("个").toString());
+            c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
+
+            return true;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("@在线人数 - 查看线上人数").toString();
+        }
+    }
+
     public static class CGM extends CommandExecute
     {
         @Override

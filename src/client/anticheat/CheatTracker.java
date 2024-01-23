@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import gui.CongMS;
-import server.Start;
 import tools.StringUtil;
 import java.util.Comparator;
 import java.util.ArrayList;
@@ -64,6 +63,7 @@ public class CheatTracker
     private long lastLieTime;
     private long error;
     private long noError;
+
     public CheatTracker(final MapleCharacter chr) {
         this.lock = new ReentrantReadWriteLock();
         this.rL = this.lock.readLock();
@@ -100,7 +100,7 @@ public class CheatTracker
         this.invalidationTask = CheatTimer.getInstance().register((Runnable)new InvalidationTask(), 60000L);
         this.takingDamageSince = System.currentTimeMillis();
     }
-
+    
     public final void checkAttack(final int skillId, final int tickcount) {
         short AtkDelay = GameConstants.getAttackDelay(skillId);
         if (((MapleCharacter)this.chr.get()).getBuffedValue(MapleBuffStat.BODY_PRESSURE) != null) {
@@ -129,8 +129,8 @@ public class CheatTracker
                     final String reason = "使用违法程式练功";
                     Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "而被管理員永久停封。"));
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + ((MapleCharacter)this.chr.get()).getName() + " 攻击无延续自动封锁! "));
-                    if ((Start.ConfigValuesMap.get("开启封锁"))> 0) {
-                        if ((Start.ConfigValuesMap.get("封停账号")) > 0) {
+                    if ((CongMS.ConfigValuesMap.get("开启封锁")).intValue() > 0) {
+                        if ((CongMS.ConfigValuesMap.get("封停账号")).intValue() > 0) {
                             this.chr.get().ban("攻击速度异常攻", true, true, false);
                             return;
                         }
@@ -148,9 +148,9 @@ public class CheatTracker
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语开加速]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
                     this.noError = 0;
                     this.error = this.error+1;
-                    if(this.error > Start.ConfigValuesMap.get("攻速异常次数")) {
-                        if (Start.ConfigValuesMap.get("开启封锁") > 0) {
-                            if (Start.ConfigValuesMap.get("封停账号") > 0) {
+                    if(this.error > CongMS.ConfigValuesMap.get("攻速异常次数").intValue()) {
+                        if (CongMS.ConfigValuesMap.get("开启封锁").intValue() > 0) {
+                            if (CongMS.ConfigValuesMap.get("封停账号").intValue() > 0) {
                                 this.chr.get().ban("攻击速度异常攻", true, true, false);
                                 return;
                             }
@@ -335,7 +335,7 @@ public class CheatTracker
             return;
         }
         if (((MapleCharacter)this.chr.get()).hasGmLevel(5)) {
-            ((MapleCharacter)this.chr.get()).dropMessage("註冊：" + (Object)offense + " 原因：" + param);
+            //((MapleCharacter)this.chr.get()).dropMessage("註冊：" + (Object)offense + " 原因：" + param);
         }
         CheatingOffenseEntry entry = null;
         this.rL.lock();
@@ -414,7 +414,7 @@ public class CheatTracker
                 }
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param))));
                 if (log) {
-                    FileoutputUtil.logToFile("logs/Hack/" + out_log + ".txt", "\r\n" + FileoutputUtil.NowTime() + " " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param)));
+                    //FileoutputUtil.logToFile("logs/Hack/" + out_log + ".txt", "\r\n" + FileoutputUtil.NowTime() + " " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param)));
                     break;
                 }
                 break;

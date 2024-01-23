@@ -22,26 +22,22 @@ public class MobVac  extends Thread{
     @Override
     public synchronized void run() {
         try {
-            MapleCharacter player = c.getPlayer();
-            int ID = player.getId();
+            int ID = c.getPlayer().getId();
             while (!Thread.interrupted()) {
                 if(c.getPlayer()!=null){
                     if (!c.isLoggedIn()){
                         NPCConversationManager.gain关闭吸怪(ID);
-                        NPCConversationManager.关闭吸怪(player);
                         map.killAllMonsters(true);
 
                         break;
                     }
                     if (c.getPlayer().getMapId() != object.getMapId()){
                         NPCConversationManager.gain关闭吸怪(ID);
-                        NPCConversationManager.关闭吸怪(player);
                         map.killAllMonsters(true);
                         break;
                     }
                 }else{
                     NPCConversationManager.gain关闭吸怪(ID);
-                    NPCConversationManager.关闭吸怪(player);
                     map.killAllMonsters(true);
                     break;
                 }

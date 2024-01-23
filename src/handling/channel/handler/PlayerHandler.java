@@ -7,10 +7,9 @@ import database.DBConPool;
 import java.awt.geom.Point2D;
 
 import scripting.NPCConversationManager;
-import server.*;
 import tools.packet.UIPacket;
 import constants.MapConstants;
-
+import server.MaplePortal;
 import java.util.List;
 import server.maps.MapleMap;
 import server.maps.AnimatedMapleMapObject;
@@ -18,13 +17,14 @@ import java.util.Collection;
 import server.movement.LifeMovementFragment;
 import server.maps.MapleMapObject;
 import gui.CongMS;
-
+import server.MapleInventoryManipulator;
 import java.lang.ref.WeakReference;
 import server.Timer.CloneTimer;
 import server.events.MapleSnowball.MapleSnowballs;
 import client.anticheat.CheatingOffense;
 import java.awt.Point;
-
+import server.MapleStatEffect;
+import server.MapleItemInformationProvider;
 import client.ISkill;
 import server.life.MobSkill;
 import server.life.MobAttackInfo;
@@ -32,6 +32,8 @@ import client.PlayerStats;
 import server.life.MapleMonster;
 import client.SkillFactory;
 import tools.packet.MobPacket;
+import server.Randomizer;
+import server.AutobanManager;
 import server.life.MobSkillFactory;
 import server.life.MobAttackInfoFactory;
 import java.util.ArrayList;
@@ -138,10 +140,10 @@ public class PlayerHandler
         final IItem toUse = chr.getInventory(type).findById(itemId);
         if (toUse == null && itemId >= 3010000 && itemId < 9999999) {
             FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品");
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
+            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密語]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品"));
             c.getPlayer().ban("修改封包", true, true, false);
-            c.getSession().close();
+            //c.getSession().close();
             return;
         }
         if (itemId / 10000 == 301 && GameConstants.isFishingMap(chr.getMapId())) {
@@ -745,7 +747,9 @@ public class PlayerHandler
         }
         chr.checkFollow();
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
+        //伤害计算
         DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
+        //身外化身处理
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
         for (int i = 0; i < clones.length; ++i) {
             if (clones[i].get() != null) {
@@ -972,7 +976,7 @@ public class PlayerHandler
             }
         }
     }
-    
+    //释放魔法攻击
     public static final void MagicDamage(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
         if (chr == null) {
             return;
@@ -1015,13 +1019,14 @@ public class PlayerHandler
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());
         DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
+        AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? chr.getCloneDamgeRate() : chr.getCloneDamgeRate());
         for (int i = 0; i < clones.length; ++i) {
             if (clones[i].get() != null) {
                 final MapleCharacter clone = (MapleCharacter)clones[i].get();
                 final ISkill skil2 = skill;
                 final MapleStatEffect eff2 = effect;
                 final int skillLevel2 = skillLevel;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
+               // final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -1034,7 +1039,7 @@ public class PlayerHandler
     }
     
     public static final void DropMeso(final int meso, final MapleCharacter chr) {
-        final int 丢出金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出金币开关"));
+        final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
         if (丢出金币开关 > 0) {
             chr.dropMessage(1, "管理员已经从后台禁止丢出金币");
             chr.getClient().sendPacket(MaplePacketCreator.enableActions());
@@ -1109,7 +1114,7 @@ public class PlayerHandler
             chr.addMP(healMP);
         }
     }
-    
+    //移动封包
     public static final void MovePlayer(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
         if (chr == null) {
             return;
@@ -1383,7 +1388,8 @@ public class PlayerHandler
         final int chairid = slea.readInt();
         client.sendPacket(MaplePacketCreator.enableActions());
     }
-    
+
+    //战神增加连击点
     public static final void AranCombo(final MapleClient c, final MapleCharacter chr, int toAdd) {
         if (chr != null && chr.getJob() >= 2000 && chr.getJob() <= 2112) {
             if (chr.hasGmLevel(5)) {

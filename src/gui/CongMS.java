@@ -1,15 +1,14 @@
 package gui;
 
+import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.ImageObserver;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.EventQueue;
 
 import constants.tzjc;
 import database.DBConPool;
+import gui.tools.*;
+import server.*;
 import server.Timer.EventTimer;
-import server.ShutdownServer;
 import provider.MapleDataProvider;
 import provider.MapleDataTool;
 import provider.MapleData;
@@ -17,28 +16,17 @@ import provider.MapleDataProviderFactory;
 import java.io.File;
 import client.LoginCrypto;
 import handling.login.handler.AutoRegister;
-import server.CashItemInfo;
-import gui.tools.删除自添加NPC工具;
-import gui.tools.游戏抽奖工具;
-import gui.tools.活动控制台;
-import gui.tools.代码查询工具;
-import gui.tools.一键还原;
 import client.inventory.ItemFlag;
 import handling.world.World.Broadcast;
 import handling.world.World;
-import server.ServerProperties;
 import handling.login.LoginServer;
 import merchant.merchant_main;
 import server.life.MapleMonsterInformationProvider;
 import scripting.PortalScriptManager;
-import server.MapleShopFactory;
 import server.quest.MapleQuest;
 import scripting.ReactorScriptManager;
-import server.MapleCarnivalChallenge;
 import handling.world.World.Find;
-import server.CashItemFactory;
 import scripting.NPCConversationManager;
-import server.Start;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
@@ -51,23 +39,16 @@ import javax.swing.table.TableModel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.GroupLayout.Group;
 import javax.swing.GroupLayout.Alignment;
-import java.awt.Container;
 
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 
-import java.awt.LayoutManager;
 import org.netbeans.lib.awtextra.AbsoluteLayout;
 import javax.swing.border.Border;
-import java.awt.Font;
-import java.awt.Color;
-import java.awt.Component;
 import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.rmi.NotBoundException;
 import java.util.Calendar;
@@ -79,7 +60,6 @@ import tools.MaplePacketCreator;
 import client.inventory.MaplePet;
 import client.inventory.Equip;
 import client.inventory.MapleInventoryType;
-import server.MapleInventoryManipulator;
 import client.MapleCharacter;
 import handling.channel.ChannelServer;
 import constants.GameConstants;
@@ -87,9 +67,10 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import server.MapleItemInformationProvider;
+
 import database.DatabaseConnection;
 import javax.swing.table.DefaultTableModel;
 import java.net.URLConnection;
@@ -99,7 +80,6 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Date;
 import java.net.URL;
-import java.awt.Canvas;
 import java.util.concurrent.ScheduledFuture;
 import java.util.Map;
 
@@ -108,12 +88,12 @@ import tools.wztosql.*;
 
 public class CongMS extends JFrame
 {
-
+    public static List<String> mobmaptable;
     public static final String 套装属性 = "套装属性";
     private static long starttime;
     private ImageIcon bgImg;
     private JLabel imgLabel;
-    //public static Map<String, Integer> ConfigValuesMap;
+    public static Map<String, Integer> ConfigValuesMap;
     private static CongMS instance;
     private Map<Windows, JFrame> windows;
     boolean 调试模式;
@@ -198,6 +178,9 @@ public class CongMS extends JFrame
     private JButton jButton7;
     private JButton jButton8;
     private JButton jButton9;
+    private JButton jButtonT36;
+
+
     private JLabel jLabel1;
     private JLabel jLabel106;
     private JLabel jLabel107;
@@ -454,6 +437,7 @@ public class CongMS extends JFrame
     private JPanel jPanel92;
     private JPanel jPanel90t;
     private JPanel jPanel93;
+    private JPanel jPanel68;
     private JScrollPane jScrollPane10;
     private JScrollPane jScrollPane107;
     private JScrollPane jScrollPane108;
@@ -539,6 +523,21 @@ public class CongMS extends JFrame
     private JButton 修改账号点券抵用;
     private JButton 修改钓鱼物品;
     private JButton 修改骑士团等级上限;
+  private JButton jButtonT53;
+  private JButton jButtonT46;
+  private JButton jButtonT44;
+  private JButton jButtonT50;
+  private JButton jButtonT27;
+  private JButton jButtonT38;
+  private JButton jButtonT68;
+  private JButton jButtonT47;
+  private JButton jButtonT54;
+  private JButton jButtonT55;
+  private JButton jButtonT51;
+  private JButton jButtonT48;
+  private JButton jButtonT35;
+  private JButton jButtonT49;
+
     private JTextField 全服发送物品代码;
     private JTextField 全服发送物品数量;
     private JTextField 全服发送装备物品ID;
@@ -950,7 +949,7 @@ public class CongMS extends JFrame
     
     private void 刷新魔族突袭开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"魔族突袭开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族突袭开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -962,7 +961,7 @@ public class CongMS extends JFrame
     
     private void 刷新魔族攻城开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"魔族攻城开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族攻城开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -974,7 +973,7 @@ public class CongMS extends JFrame
     
     private void 刷新幸运职业开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"幸运职业开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"幸运职业开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -986,7 +985,7 @@ public class CongMS extends JFrame
     
     private void 刷新神秘商人开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"神秘商人开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"神秘商人开关"));
         if (S <= 0) {
             显示 = "开启";
         }
@@ -1048,38 +1047,67 @@ public class CongMS extends JFrame
             else {
                 数量 = Integer.parseInt(this.个人发送物品数量.getText());
             }
-            final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-            final MapleInventoryType type = GameConstants.getInventoryType(物品ID);
-            for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
-                    if (mch.getName().equals((Object)名字)) {
-                        if (数量 >= 0) {
-                            if (!MapleInventoryManipulator.checkSpace(mch.getClient(), 物品ID, 数量, "")) {
-                                return;
-                            }
-                            if ((type.equals((Object)MapleInventoryType.EQUIP) && !GameConstants.isThrowingStar(物品ID) && !GameConstants.isBullet(物品ID)) || (type.equals((Object)MapleInventoryType.CASH) && 物品ID >= 5000000 && 物品ID <= 5000100)) {
-                                final Equip item = (Equip)(Equip)ii.getEquipById(物品ID);
-                                if (ii.isCash(物品ID)) {
-                                    item.setUniqueId(1);
-                                }
-                                final String name = ii.getName(物品ID);
-                                if (物品ID / 10000 == 114 && name != null && name.length() > 0) {
-                                    final String msg = "你已获得称号 <" + name + ">";
-                                    mch.getClient().getPlayer().dropMessage(5, msg);
-                                }
-                                MapleInventoryManipulator.addbyItem(mch.getClient(), item.copy());
-                            }
-                            else {
-                                MapleInventoryManipulator.addById(mch.getClient(), 物品ID, (short)数量, "", null, (byte)0);
-                            }
-                        }
-                        else {
-                            MapleInventoryManipulator.removeById(mch.getClient(), GameConstants.getInventoryType(物品ID), 物品ID, -数量, true, false);
-                        }
-                        mch.getClient().sendPacket(MaplePacketCreator.getShowItemGain(物品ID, (short)数量, true));
+//            final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+//            final MapleInventoryType type = GameConstants.getInventoryType(物品ID);
+//            for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
+//                for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
+//                    if (mch.getName().equals((Object)名字)) {
+//                        if (数量 >= 0) {
+//                            if (!MapleInventoryManipulator.checkSpace(mch.getClient(), 物品ID, 数量, "")) {
+//                                return;
+//                            }
+//                            if ((type.equals((Object)MapleInventoryType.EQUIP) && !GameConstants.isThrowingStar(物品ID) && !GameConstants.isBullet(物品ID)) || (type.equals((Object)MapleInventoryType.CASH) && 物品ID >= 5000000 && 物品ID <= 5000100)) {
+//                                final Equip item = (Equip)(Equip)ii.getEquipById(物品ID);
+//                                if (ii.isCash(物品ID)) {
+//                                    item.setUniqueId(1);
+//                                }
+//                                final String name = ii.getName(物品ID);
+//                                if (物品ID / 10000 == 114 && name != null && name.length() > 0) {
+//                                    final String msg = "你已获得称号 <" + name + ">";
+//                                    mch.getClient().getPlayer().dropMessage(5, msg);
+//                                }
+//                                MapleInventoryManipulator.addbyItem(mch.getClient(), item.copy());
+//                            }
+//                            else {
+//                                MapleInventoryManipulator.addById(mch.getClient(), 物品ID, (short)数量, "", null, (byte)0);
+//                            }
+//                        }
+//                        else {
+//                            MapleInventoryManipulator.removeById(mch.getClient(), GameConstants.getInventoryType(物品ID), 物品ID, -数量, true, false);
+//                        }
+//                        mch.getClient().sendPacket(MaplePacketCreator.getShowItemGain(物品ID, (short)数量, true));
+//                    }
+//                }
+//            }
+
+
+
+            int 发放范围 = 1;
+            int answer = JOptionPane.showConfirmDialog((Component) this, "当前输入道具代码是:" + 物品ID + "\r\n当前输入道具数量设置是:" + 数量 + "个\r\n当前发放范围设置是:" + 名字 + "" + ((发放范围 == 1) ? ("\r\n当前你选择的角色名字是:" + 名字 + "\r\n") : "") + "请问您是否要开启呢?\r\n", "发放道具", 0);
+            if (answer != 0) {
+                return;
+            }
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            int 个数 = 0;
+            if (发放范围 == 0) {
+                for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    for (MapleCharacter mch : cserv.getPlayerStorage().getAllCharacters()) {
+                        mch.gainItem(物品ID, 数量);
+                        mch.startMapEffect("管理员发放礼物" + 数量 + "个" + ii.getName(物品ID) + "给在线的所有玩家！祝您玩得开心快乐", 5121009);
+                        ++个数;
+                    }
+                }
+            } else {
+                for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    MapleCharacter mch2 = ChannelServer.getInstance(cserv.getChannel()).getPlayerStorage().getCharacterByName(名字);
+                    if (mch2 != null) {
+                        mch2.gainItem(物品ID, 数量);
+                        mch2.startMapEffect("管理员发放礼物" + 数量 + "个" + ii.getName(物品ID) + "单独给你！祝您玩得开心快乐", 5121009);
+                        ++个数;
                     }
                 }
             }
+            System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][信息]发放道具:一共发给了" + 个数 + "个玩家:" + 数量 + "个" + ii.getName(物品ID) + "");
             this.个人发送物品玩家名字.setText("");
             this.个人发送物品代码.setText("");
             this.个人发送物品数量.setText("");
@@ -1152,10 +1180,22 @@ public class CongMS extends JFrame
         this.输出窗口.setEditable(false);
         this.输出窗口.setLineWrap(true);
         this.输出窗口.setWrapStyleWord(true);
+//        this.setSize(1336, 744);                          // 设置窗口大小
+//        Dimension displaySize = Toolkit.getDefaultToolkit().getScreenSize(); // 获得显示器大小对象
+//        Dimension frameSize = this.getSize();             // 获得窗口大小对象
+//        if (frameSize.width > displaySize.width)
+//            frameSize.width = displaySize.width;           // 窗口的宽度不能大于显示器的宽度
+//        if (frameSize.height > displaySize.height)
+//            frameSize.height = displaySize.height;          // 窗口的高度不能大于显示器的高度
+//        this.setLocation((displaySize.width - frameSize.width) / 2,
+//                (displaySize.height - frameSize.height) / 2); // 设置窗口居中显示器显示
+//        this.setVisible(true);
+        this.setResizable(true);
+        this.输出窗口.setVisible(true);
         this.jTabbedPane2.setOpaque(false);
-
     }
-    
+
+
     private void 刷新信息() {
         this.刷新公告广播();
         this.刷新魔族突袭开关();
@@ -1220,7 +1260,7 @@ public class CongMS extends JFrame
                 while (rs.next()) {
                     final String name = rs.getString("name");
                     final int val = rs.getInt("val");
-                    Start.ConfigValuesMap.put(name, Integer.valueOf(val));
+                    CongMS.ConfigValuesMap.put(name, Integer.valueOf(val));
                 }
             }
             ps.close();
@@ -1346,6 +1386,20 @@ public class CongMS extends JFrame
         this.骑士团等级上限 = new JTextField();
         this.jLabel252 = new JLabel();
         this.修改骑士团等级上限 = new JButton();
+       this.jButtonT53 = new JButton();
+       this.jButtonT46 = new JButton();
+       this.jButtonT44 = new JButton();
+       this.jButtonT50 = new JButton();
+       this.jButtonT27 = new JButton();
+       this.jButtonT38 = new JButton();
+       this.jButtonT68 = new JButton();
+       this.jButtonT47 = new JButton();
+       this.jButtonT54 = new JButton();
+       this.jButtonT55 = new JButton();
+       this.jButtonT51 = new JButton();
+       this.jButtonT48 = new JButton();
+       this.jButtonT35 = new JButton();
+       this.jButtonT49 = new JButton();
         this.jPanel7 = new JPanel();
         this.冒险家职业开关 = new JButton();
         this.战神职业开关 = new JButton();
@@ -1359,6 +1413,7 @@ public class CongMS extends JFrame
         this.神秘商人开关 = new JButton();
         this.jLabel7 = new JLabel();
         this.jPanel93 = new JPanel();
+        this.jPanel68 = new JPanel();
         this.jScrollPane136 = new JScrollPane();
         this.经验加成表 = new JTable();
         this.经验加成表序号 = new JTextField();
@@ -1558,6 +1613,7 @@ public class CongMS extends JFrame
         this.删除反应堆物品1 = new JButton();
         this.查找反应堆掉落 = new JTextField();
         this.jButton36 = new JButton();
+        this.jButtonT36 = new JButton();
         this.查找物品 = new JTextField();
         this.jButton37 = new JButton();
         this.jLabel274 = new JLabel();
@@ -2176,7 +2232,7 @@ public class CongMS extends JFrame
         });
         this.jPanel74.add((Component)this.小白兔开关, (Object)new AbsoluteConstraints(610, 150, 110, 40));
 //        this.青鳄鱼开关.setText("青鳄鱼:X");
-        this.青鳄鱼开关.setText("重置ETC");
+        this.青鳄鱼开关.setText("重载配置");
         this.青鳄鱼开关.addActionListener((ActionListener)new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent evt) {
@@ -2804,7 +2860,7 @@ public class CongMS extends JFrame
         this.jTextArea1.setColumns(20);
         this.jTextArea1.setFont(new Font("新宋体", 0, 12));
         this.jTextArea1.setRows(5);
-        this.jTextArea1.setText("感谢使用Ms079商业服务端\nby远古天际工作室 QQ: 849340706");
+        this.jTextArea1.setText("感谢使用AsMs079商业服务端\n QQ: 476215166");
         this.jScrollPane5.setViewportView((Component)this.jTextArea1);
         final GroupLayout jPanel5Layout = new GroupLayout((Container)this.jPanel5);
         this.jPanel5.setLayout((LayoutManager)jPanel5Layout);
@@ -2867,10 +2923,24 @@ public class CongMS extends JFrame
                 CongMS.this.jButton46ActionPerformed(evt);
             }
         });
+
+
+
+        //======================================================================================
         final GroupLayout jPanel6Layout = new GroupLayout((Container)this.jPanel6);
         this.jPanel6.setLayout((LayoutManager)jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING).addGroup((Group)jPanel6Layout.createSequentialGroup().addContainerGap().addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING).addComponent((Component)this.jLabel1).addGroup((Group)jPanel6Layout.createSequentialGroup().addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING).addGroup((Group)jPanel6Layout.createSequentialGroup().addGap(45, 45, 45).addComponent((Component)this.jButton31, -2, 133, -2)).addComponent((Component)this.jButton7, Alignment.TRAILING, -2, 134, -2)).addGap(63, 63, 63).addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING, false).addGroup((Group)jPanel6Layout.createSequentialGroup().addComponent((Component)this.jButton29, -2, 135, -2).addGap(61, 61, 61).addComponent((Component)this.jButton44)).addGroup((Group)jPanel6Layout.createSequentialGroup().addComponent((Component)this.jButton8, -2, 135, -2).addPreferredGap(ComponentPlacement.RELATED, -1, 32767).addComponent((Component)this.jButton46, -2, 153, -2))).addGap(60, 60, 60).addComponent((Component)this.jButton39))).addContainerGap(-1, 32767)));
-        jPanel6Layout.setVerticalGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING).addGroup(Alignment.TRAILING, (Group)jPanel6Layout.createSequentialGroup().addContainerGap().addComponent((Component)this.jLabel1).addGap(18, 18, 18).addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.BASELINE).addComponent((Component)this.jButton44, -2, 49, -2).addComponent((Component)this.jButton39, -2, 46, -2).addComponent((Component)this.jButton31, -2, 46, -2).addComponent((Component)this.jButton29, -2, 49, -2)).addPreferredGap(ComponentPlacement.RELATED, 50, 32767).addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.BASELINE).addComponent((Component)this.jButton7, -2, 46, -2).addComponent((Component)this.jButton8, -2, 46, -2).addComponent((Component)this.jButton46, -2, 46, -2)).addGap(26, 26, 26)));
+        jPanel6Layout.setHorizontalGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING)
+        .addGroup((Group)jPanel6Layout.createSequentialGroup().addContainerGap()
+        .addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING).addComponent((Component)this.jLabel1)
+        .addGroup((Group)jPanel6Layout.createSequentialGroup().addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING)
+        .addGroup((Group)jPanel6Layout.createSequentialGroup().addGap(45, 45, 45).addComponent((Component)this.jButton31, -2, 133, -2)).addComponent((Component)this.jButton7, Alignment.TRAILING, -2, 134, -2)).addGap(63, 63, 63)
+        .addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING, false)
+        .addGroup((Group)jPanel6Layout.createSequentialGroup().addComponent((Component)this.jButton29, -2, 135, -2).addGap(61, 61, 61).addComponent((Component)this.jButton44))
+        .addGroup((Group)jPanel6Layout.createSequentialGroup().addComponent((Component)this.jButton8, -2, 135, -2).addPreferredGap(ComponentPlacement.RELATED, -1, 32767).addComponent((Component)this.jButton46, -2, 153, -2).addComponent((Component)this.jButton46, -2, 153, -2))).addGap(60, 60, 60).addComponent((Component)this.jButton39))).addContainerGap(-1, 32767)));
+        jPanel6Layout.setVerticalGroup((Group)jPanel6Layout.createParallelGroup(Alignment.LEADING)
+        .addGroup(Alignment.TRAILING, (Group)jPanel6Layout.createSequentialGroup().addContainerGap().addComponent((Component)this.jLabel1).addGap(18, 18, 18)
+        .addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.BASELINE).addComponent((Component)this.jButton44, -2, 49, -2).addComponent((Component)this.jButton39, -2, 46, -2).addComponent((Component)this.jButton31, -2, 46, -2).addComponent((Component)this.jButton29, -2, 49, -2)).addPreferredGap(ComponentPlacement.RELATED, 50, 32767)
+        .addGroup((Group)jPanel6Layout.createParallelGroup(Alignment.BASELINE).addComponent((Component)this.jButton7, -2, 46, -2).addComponent((Component)this.jButton8, -2, 46, -2).addComponent((Component)this.jButton46, -2, 46, -2)).addGap(26, 26, 26)));
         this.jPanel13.setBackground(new Color(255, 255, 240));
         this.jPanel13.setBorder((Border)BorderFactory.createTitledBorder("重载系列"));
         this.重载副本按钮.setText("重载副本");
@@ -6104,6 +6174,84 @@ public class CongMS extends JFrame
         jPanel90Layout.setVerticalGroup((Group) jPanel90Layout.createParallelGroup(Alignment.LEADING).addGroup((Group) jPanel90Layout.createSequentialGroup().addContainerGap().addGroup((Group) jPanel90Layout.createParallelGroup(Alignment.LEADING, false).addComponent((Component) this.jPanel91t, -1, -1, 32767).addComponent((Component) this.jPanel92t, -1, -1, 32767)).addContainerGap(88, 32767)));
         this.jTabbedPane2.addTab("套装属性", (Component)this.jPanel90t);
 //==============================================================================================>
+//===============================================================================================================
+        jButtonT36.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/冒险岛.png"))); // NOI18N
+        jButtonT36.setText("套装系统");
+        jButtonT36.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonActionPerformed36(evt);
+            }
+        });
+
+
+        javax.swing.GroupLayout jPanel68Layout = new javax.swing.GroupLayout(jPanel68);
+        jPanel68.setLayout(jPanel68Layout);
+        jPanel68Layout.setHorizontalGroup(
+                jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                .addGap(21, 21, 21)
+                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jButtonT53, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                                .addGap(1, 1, 1)
+                                                .addComponent(jButtonT46, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(jButtonT44, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(27, 27, 27)
+                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jButtonT50, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT27, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT38, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(26, 26, 26)
+                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                                .addComponent(jButtonT68, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(jButtonT47, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(jButtonT54, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                                                .addComponent(jButtonT55, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(18, 18, 18)
+                                                                .addComponent(jButtonT51, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                                                .addComponent(jButtonT48, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                .addComponent(jButtonT36, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                .addGap(18, 18, 18)
+                                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jButtonT35, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButtonT49, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addContainerGap(42, Short.MAX_VALUE))
+        );
+        jPanel68Layout.setVerticalGroup(
+                jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel68Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonT53, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT38, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT68, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT47, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT54, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE, false)
+                                        .addComponent(jButtonT55, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT27, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT51, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT46, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT49, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(jPanel68Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonT44, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT50, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT48, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT36, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonT35, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addContainerGap(33, Short.MAX_VALUE))
+        );
+        this.jTabbedPane2.addTab("套装系统", (Component)this.jPanel68);
 
         final GroupLayout jPanel2Layout = new GroupLayout((Container)this.jPanel2);
         this.jPanel2.setLayout((LayoutManager)jPanel2Layout);
@@ -8354,7 +8502,7 @@ public class CongMS extends JFrame
             final ResultSet rs = null;
             try (final Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps2 = con.prepareStatement("INSERT INTO drop_data_global (continent,dropType,itemid,minimum_quantity,maximum_quantity,questid,chance) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
-                ps2.setInt(1, 1);
+                ps2.setInt(1, -1);
                 ps2.setInt(2, 1);
                 ps2.setInt(3, Integer.parseInt(this.世界爆物物品代码.getText()));
                 ps2.setInt(4, 1);
@@ -8701,7 +8849,10 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的物品代码 ");
         }
     }
-    
+    private void jButtonActionPerformed36( final ActionEvent evt) {//GEN-FIRST:event_jButton36ActionPerformed
+        // TODO add your handling code here:
+        this.openWindow(Windows.套装系统);
+    }
     private void jButton36ActionPerformed(final ActionEvent evt) {
         final boolean result2 = this.查找反应堆掉落.getText().matches("[0-9]+");
         if (result2) {
@@ -8780,7 +8931,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点豆豆开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点豆豆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+        final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
         if (泡点豆豆开关 <= 0) {
             this.按键开关("泡点豆豆开关", 711);
             this.刷新泡点豆豆开关();
@@ -8792,7 +8943,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点抵用开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点抵用开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用开关"));
+        final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
         if (泡点抵用开关 <= 0) {
             this.按键开关("泡点抵用开关", 707);
             this.刷新泡点抵用开关();
@@ -8804,7 +8955,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点点券开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点点券开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券开关"));
+        final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
         if (泡点点券开关 <= 0) {
             this.按键开关("泡点点券开关", 703);
             this.刷新泡点点券开关();
@@ -8816,7 +8967,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点经验开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点经验开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验开关"));
+        final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
         if (泡点经验开关 <= 0) {
             this.按键开关("泡点经验开关", 705);
             this.刷新泡点经验开关();
@@ -8828,7 +8979,7 @@ public class CongMS extends JFrame
     }
     
     private void 泡点金币开关ActionPerformed(final ActionEvent evt) {
-        final int 泡点金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币开关"));
+        final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
         if (泡点金币开关 <= 0) {
             this.按键开关("泡点金币开关", 701);
             this.刷新泡点金币开关();
@@ -9302,7 +9453,7 @@ public class CongMS extends JFrame
             final String rate = "金币";
             World.scheduleRateDelay("金币", (long)time);
             for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(三倍金币活动);
+                cservs.setMesoRate(三倍金币活动);
             }
             Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 3 倍打怪金币活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, (Object)("成功开启三倍金币活动，持续 " + hours + " 小时"));
@@ -9328,7 +9479,7 @@ public class CongMS extends JFrame
             final String rate = "爆率";
             World.scheduleRateDelay("爆率", (long)time);
             for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(三倍爆率活动);
+                cservs.setDropRate(三倍爆率活动);
             }
             Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 3 倍打怪爆率活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, (Object)("成功开启三倍爆率活动，持续 " + hours + " 小时"));
@@ -9380,7 +9531,7 @@ public class CongMS extends JFrame
             final String rate = "金币";
             World.scheduleRateDelay("金币", (long)time);
             for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(双倍金币活动);
+                cservs.setMesoRate(双倍金币活动);
             }
             Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 2 倍打怪金币活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, (Object)("成功开启双倍金币活动，持续 " + hours + " 小时"));
@@ -9406,7 +9557,7 @@ public class CongMS extends JFrame
             final String rate = "爆率";
             World.scheduleRateDelay("爆率", (long)time);
             for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(双倍爆率活动);
+                cservs.setDropRate(双倍爆率活动);
             }
             Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 2 倍打怪爆率活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, (Object)("成功开启双倍爆率活动，持续 " + hours + " 小时"));
@@ -9585,7 +9736,8 @@ public class CongMS extends JFrame
     private void 青鳄鱼开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("青鳄鱼开关", 2218);
 //        this.刷新青鳄鱼开关();
-        DumpCashShop.main(null);
+//        DumpCashShop.main(null);
+        重载套装加成列表();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
     
@@ -9740,43 +9892,87 @@ public class CongMS extends JFrame
         try {
             final int 物品ID = Integer.parseInt(this.全服发送物品代码.getText());
             final int 数量 = Integer.parseInt(this.全服发送物品数量.getText());
-            final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-            final MapleInventoryType type = GameConstants.getInventoryType(物品ID);
-            for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
-                    if (数量 >= 0) {
-                        if (!MapleInventoryManipulator.checkSpace(mch.getClient(), 物品ID, 数量, "")) {
-                            return;
-                        }
-                        if ((type.equals((Object)MapleInventoryType.EQUIP) && !GameConstants.isThrowingStar(物品ID) && !GameConstants.isBullet(物品ID)) || (type.equals((Object)MapleInventoryType.CASH) && 物品ID >= 5000000 && 物品ID <= 5000100)) {
-                            final Equip item = (Equip)(Equip)ii.getEquipById(物品ID);
-                            if (ii.isCash(物品ID)) {
-                                item.setUniqueId(1);
-                            }
-                            final String name = ii.getName(物品ID);
-                            if (物品ID / 10000 == 114 && name != null && name.length() > 0) {
-                                final String msg = "你已获得称号 <" + name + ">";
-                                mch.getClient().getPlayer().dropMessage(5, msg);
-                            }
-                            MapleInventoryManipulator.addbyItem(mch.getClient(), item.copy());
-                        }
-                        else {
-                            MapleInventoryManipulator.addById(mch.getClient(), 物品ID, (short)数量, "", null, (byte)0);
-                        }
+//            final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+//            final MapleInventoryType type = GameConstants.getInventoryType(物品ID);
+//            for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
+//                for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
+//                    if (数量 >= 0) {
+//                        if (!MapleInventoryManipulator.checkSpace(mch.getClient(), 物品ID, 数量, "")) {
+//                            return;
+//                        }
+//                        if ((type.equals((Object)MapleInventoryType.EQUIP) && !GameConstants.isThrowingStar(物品ID) && !GameConstants.isBullet(物品ID)) || (type.equals((Object)MapleInventoryType.CASH) && 物品ID >= 5000000 && 物品ID <= 5000100)) {
+//                            final Equip item = (Equip)(Equip)ii.getEquipById(物品ID);
+//                            if (ii.isCash(物品ID)) {
+//                                item.setUniqueId(1);
+//                            }
+//                            final String name = ii.getName(物品ID);
+//                            if (物品ID / 10000 == 114 && name != null && name.length() > 0) {
+//                                final String msg = "你已获得称号 <" + name + ">";
+//                                mch.getClient().getPlayer().dropMessage(5, msg);
+//                            }
+//                            MapleInventoryManipulator.addbyItem(mch.getClient(), item.copy());
+//                        } else {
+//                            MapleInventoryManipulator.addById(mch.getClient(), 物品ID, (short)数量, "", null, (byte)0);
+//                        }
+//                    } else {
+//                        MapleInventoryManipulator.removeById(mch.getClient(), GameConstants.getInventoryType(物品ID), 物品ID, -数量, true, false);
+//                    }
+//                    mch.getClient().getSession().write((Object)MaplePacketCreator.getShowItemGain(物品ID, (short)数量, true));
+//                }
+//            }
+//            this.全服发送物品代码.setText("");
+//            this.全服发送物品数量.setText("");
+//            JOptionPane.showMessageDialog(null, (Object)"[信息]:发送成功。");
+//
+
+
+
+            int 道具代码 = 0;
+            if ("输入道具代码".equals(物品ID)) {
+                道具代码 = 4000000;
+            } else {
+                道具代码 = ((物品ID < 1) ? 1 : 物品ID);
+            }
+            int 道具数量 = 0;
+            if ("输入数字".equals(数量+"")) {
+                道具数量 = 0;
+            } else {
+                道具数量 = 数量;
+            }
+            int 发放范围 = 0;
+            String 名字 = "全服";
+            String 玩家的名字 = "";
+
+            int answer = JOptionPane.showConfirmDialog((Component) this, "当前输入道具代码是:" + 道具代码 + "\r\n当前输入道具数量设置是:" + 道具数量 + "个\r\n当前发放范围设置是:" + 名字 + "" + ((发放范围 == 1) ? ("\r\n当前你选择的角色名字是:" + 玩家的名字 + "\r\n") : "") + "请问您是否要开启呢?\r\n", "发放道具", 0);
+            if (answer != 0) {
+                return;
+            }
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            int 个数 = 0;
+            if (发放范围 == 0) {
+                for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    for (MapleCharacter mch : cserv.getPlayerStorage().getAllCharacters()) {
+                        mch.gainItem(道具代码, 道具数量);
+                        mch.startMapEffect("管理员发放礼物" + 道具数量 + "个" + ii.getName(道具代码) + "给在线的所有玩家！祝您玩得开心快乐", 5121009);
+                        ++个数;
                     }
-                    else {
-                        MapleInventoryManipulator.removeById(mch.getClient(), GameConstants.getInventoryType(物品ID), 物品ID, -数量, true, false);
+                }
+            } else {
+                for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    MapleCharacter mch2 = ChannelServer.getInstance(cserv.getChannel()).getPlayerStorage().getCharacterByName(玩家的名字);
+                    if (mch2 != null) {
+                        mch2.gainItem(道具代码, 道具数量);
+                        mch2.startMapEffect("管理员发放礼物" + 道具数量 + "个" + ii.getName(道具代码) + "单独给你！祝您玩得开心快乐", 5121009);
+                        ++个数;
                     }
-                    mch.getClient().getSession().write((Object)MaplePacketCreator.getShowItemGain(物品ID, (short)数量, true));
                 }
             }
-            this.全服发送物品代码.setText("");
-            this.全服发送物品数量.setText("");
-            JOptionPane.showMessageDialog(null, (Object)"[信息]:发送成功。");
+            System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][信息]发放道具:一共发给了" + 个数 + "个玩家:" + 道具数量 + "个" + ii.getName(道具代码) + "");
+        } catch (Exception e) {
+           // JOptionPane.showMessageDialog(null, (Object)("[信息]:错误!" + (Object)e));
         }
-        catch (Exception e) {
-            JOptionPane.showMessageDialog(null, (Object)("[信息]:错误!" + (Object)e));
-        }
+
+
     }
     
     private void 刷装备2(final int a) {
@@ -10152,6 +10348,9 @@ public class CongMS extends JFrame
                     this.windows.put(w, new 删除自添加NPC工具());
                     break;
                 }
+                case 套装系统:
+                    windows.put(w, new 套装系统());
+                    break;
                 default: {
                     return;
                 }
@@ -11234,6 +11433,7 @@ public class CongMS extends JFrame
                 ps = con.prepareStatement("SELECT * FROM skills  WHERE characterid =" + this.角色ID.getText() + "");
                 rs = ps.executeQuery();
                 while (rs.next()) {
+//                    final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File( "E:/新建文件夹 (2)/ms079/wz/String.wz"));
                     final MapleDataProvider data = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("net.sf.odinms.wzpath") + "/String.wz"));
                     String itemName = "";
                     final MapleData itemsData = data.getData("Skill.img");
@@ -11856,7 +12056,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点金币开关() {
         String 泡点金币开关显示 = "";
-        final int 泡点金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点金币开关"));
+        final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
         if (泡点金币开关 <= 0) {
             泡点金币开关显示 = "泡点金币:开启";
         }
@@ -11868,7 +12068,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点点券开关() {
         String 泡点点券开关显示 = "";
-        final int 泡点点券开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点点券开关"));
+        final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
         if (泡点点券开关 <= 0) {
             泡点点券开关显示 = "泡点点券:开启";
         }
@@ -11880,7 +12080,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点经验开关() {
         String 泡点经验开关显示 = "";
-        final int 泡点经验开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点经验开关"));
+        final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
         if (泡点经验开关 <= 0) {
             泡点经验开关显示 = "泡点经验:开启";
         }
@@ -11892,7 +12092,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点抵用开关() {
         String 泡点抵用开关显示 = "";
-        final int 泡点抵用开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点抵用开关"));
+        final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
         if (泡点抵用开关 <= 0) {
             泡点抵用开关显示 = "泡点抵用:开启";
         }
@@ -11904,7 +12104,7 @@ public class CongMS extends JFrame
     
     private void 刷新泡点豆豆开关() {
         String 泡点豆豆开关显示 = "";
-        final int 泡点豆豆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+        final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
         if (泡点豆豆开关 <= 0) {
             泡点豆豆开关显示 = "泡点豆豆:开启";
         }
@@ -12012,7 +12212,7 @@ public class CongMS extends JFrame
     
     private void 刷新花蘑菇开关() {
         String 花蘑菇显示 = "";
-        final int 花蘑菇 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"花蘑菇开关"));
+        final int 花蘑菇 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"花蘑菇开关"));
         if (花蘑菇 <= 0) {
             花蘑菇显示 = "重载刷新怪物技能";
         }
@@ -12024,7 +12224,7 @@ public class CongMS extends JFrame
     
     private void 刷新火野猪开关() {
         String 火野猪显示 = "";
-        final int 火野猪 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"火野猪开关"));
+        final int 火野猪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"火野猪开关"));
         if (火野猪 <= 0) {
             火野猪显示 = "重载修改怪物技能:开";
         }
@@ -12036,19 +12236,19 @@ public class CongMS extends JFrame
     
     private void 刷新青鳄鱼开关() {
         String 青鳄鱼显示 = "";
-        final int 青鳄鱼 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"青鳄鱼开关"));
+        final int 青鳄鱼 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"青鳄鱼开关"));
         if (青鳄鱼 <= 0) {
-            青鳄鱼显示 = "重置ETC";
+            青鳄鱼显示 = "重载配置";
         }
         else {
-            青鳄鱼显示 = "重置ETC";
+            青鳄鱼显示 = "重载配置";
         }
         this.青鳄鱼开关(青鳄鱼显示);
     }
     
     private void 刷新喷火龙开关() {
         String 喷火龙显示 = "";
-        final int 喷火龙 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"喷火龙开关"));
+        final int 喷火龙 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"喷火龙开关"));
         if (喷火龙 <= 0) {
             喷火龙显示 = "重载修改item:开";
         }
@@ -12060,7 +12260,7 @@ public class CongMS extends JFrame
     
     private void 刷新小白兔开关() {
         String 小白兔显示 = "";
-        final int 小白兔 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"小白兔开关"));
+        final int 小白兔 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"小白兔开关"));
         if (小白兔 <= 0) {
             小白兔显示 = "重载新增item:开";
         }
@@ -12072,7 +12272,7 @@ public class CongMS extends JFrame
     
     private void 刷新大灰狼开关() {
         String 大灰狼显示 = "";
-        final int 大灰狼 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"大灰狼开关"));
+        final int 大灰狼 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大灰狼开关"));
         if (大灰狼 <= 0) {
             大灰狼显示 = "重载修改任务:开";
         }
@@ -12084,7 +12284,7 @@ public class CongMS extends JFrame
     
     private void 刷新紫色猫开关() {
         String 紫色猫显示 = "";
-        final int 紫色猫 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"紫色猫开关"));
+        final int 紫色猫 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"紫色猫开关"));
         if (紫色猫 <= 0) {
             紫色猫显示 = "重载任务:开";
         }
@@ -12100,7 +12300,7 @@ public class CongMS extends JFrame
     
     private void 刷新石头人开关() {
         String 石头人显示 = "";
-        final int 石头人 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"石头人开关"));
+        final int 石头人 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"石头人开关"));
         if (石头人 <= 0) {
             石头人显示 = "重载怪物掉落:开";
         }
@@ -12112,7 +12312,7 @@ public class CongMS extends JFrame
     
     private void 刷新白雪人开关() {
         String 白雪人显示 = "";
-        final int 白雪人 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"白雪人开关"));
+        final int 白雪人 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"白雪人开关"));
         if (白雪人 <= 0) {
             白雪人显示 = "白雪人:开";
         }
@@ -12124,7 +12324,7 @@ public class CongMS extends JFrame
     
     private void 刷新胖企鹅开关() {
         String 胖企鹅显示 = "";
-        final int 胖企鹅 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"胖企鹅开关"));
+        final int 胖企鹅 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"胖企鹅开关"));
         if (胖企鹅 <= 0) {
             胖企鹅显示 = "胖企鹅:开";
         }
@@ -12136,7 +12336,7 @@ public class CongMS extends JFrame
     
     private void 刷新星精灵开关() {
         String 星精灵显示 = "";
-        final int 星精灵 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"星精灵开关"));
+        final int 星精灵 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"星精灵开关"));
         if (星精灵 <= 0) {
             星精灵显示 = "星精灵:开";
         }
@@ -12148,7 +12348,7 @@ public class CongMS extends JFrame
     
     private void 刷新顽皮猴开关() {
         String 顽皮猴显示 = "";
-        final int 顽皮猴 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"顽皮猴开关"));
+        final int 顽皮猴 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"顽皮猴开关"));
         if (顽皮猴 <= 0) {
             顽皮猴显示 = "顽皮猴:开";
         }
@@ -12160,7 +12360,7 @@ public class CongMS extends JFrame
     
     private void 刷新章鱼怪开关() {
         String 章鱼怪显示 = "";
-        final int 章鱼怪 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"章鱼怪开关"));
+        final int 章鱼怪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"章鱼怪开关"));
         if (章鱼怪 <= 0) {
             章鱼怪显示 = "重置发型脸:开";
         }
@@ -12172,7 +12372,7 @@ public class CongMS extends JFrame
     
     private void 刷新大海龟开关() {
         String 大海龟显示 = "";
-        final int 大海龟 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"大海龟开关"));
+        final int 大海龟 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大海龟开关"));
         if (大海龟 <= 0) {
             大海龟显示 = "大海龟:开";
         }
@@ -12184,7 +12384,7 @@ public class CongMS extends JFrame
     
     private void 刷新红螃蟹开关() {
         String 红螃蟹显示 = "";
-        final int 红螃蟹 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"红螃蟹开关"));
+        final int 红螃蟹 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"红螃蟹开关"));
         if (红螃蟹 <= 0) {
             红螃蟹显示 = "提取WZ文件内容:开";
         }
@@ -12196,7 +12396,7 @@ public class CongMS extends JFrame
     
     private void 刷新小青蛇开关() {
         String 小青蛇显示 = "";
-        final int 小青蛇 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"战力修正"));
+        final int 小青蛇 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战力修正"));
         if (小青蛇 <= 0) {
             小青蛇显示 = "战力修正:开";
         }
@@ -12208,7 +12408,7 @@ public class CongMS extends JFrame
     
     private void 刷新蓝蜗牛开关() {
         String 蓝蜗牛显示 = "";
-        final int 蓝蜗牛 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"蓝蜗牛开关"));
+        final int 蓝蜗牛 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蓝蜗牛开关"));
         if (蓝蜗牛 <= 0) {
             蓝蜗牛显示 = "蓝蜗牛:开";
         }
@@ -12220,7 +12420,7 @@ public class CongMS extends JFrame
     
     private void 刷新漂漂猪开关() {
         String 漂漂猪显示 = "";
-        final int 漂漂猪 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"漂漂猪开关"));
+        final int 漂漂猪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"漂漂猪开关"));
         if (漂漂猪 <= 0) {
             漂漂猪显示 = "漂漂猪:开";
         }
@@ -12232,7 +12432,7 @@ public class CongMS extends JFrame
     
     private void 刷新绿水灵开关() {
         String 绿水灵显示 = "";
-        final int 绿水灵 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"绿水灵开关"));
+        final int 绿水灵 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"绿水灵开关"));
         if (绿水灵 <= 0) {
             绿水灵显示 = "绿水灵:开";
         }
@@ -12244,7 +12444,7 @@ public class CongMS extends JFrame
     
     private void 刷新蘑菇仔开关() {
         String 蘑菇仔显示 = "";
-        final int 蘑菇仔 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"蘑菇仔开关"));
+        final int 蘑菇仔 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蘑菇仔开关"));
         if (蘑菇仔 <= 0) {
             蘑菇仔显示 = "蘑菇仔:开";
         }
@@ -12256,7 +12456,7 @@ public class CongMS extends JFrame
     
     private void 刷新指令通知开关() {
         String 刷新指令通知开关显示 = "";
-        final int 指令通知开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关"));
+        final int 指令通知开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关"));
         if (指令通知开关 <= 0) {
             刷新指令通知开关显示 = "指令通知:开启";
         }
@@ -12268,7 +12468,7 @@ public class CongMS extends JFrame
     
     private void 刷新玩家聊天开关() {
         String 刷新玩家聊天开关显示 = "";
-        final int 玩家聊天开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"玩家聊天开关"));
+        final int 玩家聊天开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家聊天开关"));
         if (玩家聊天开关 <= 0) {
             刷新玩家聊天开关显示 = "玩家聊天:开启";
         }
@@ -12280,7 +12480,7 @@ public class CongMS extends JFrame
     
     private void 刷新禁止登陆开关() {
         String 刷新禁止登陆开关显示 = "";
-        final int 禁止登陆开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"禁止登陆开关"));
+        final int 禁止登陆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"禁止登陆开关"));
         if (禁止登陆开关 <= 0) {
             刷新禁止登陆开关显示 = "游戏登陆:禁止";
         }
@@ -12292,7 +12492,7 @@ public class CongMS extends JFrame
     
     private void 刷新升级快讯() {
         String 升级快讯显示 = "";
-        final int 升级快讯 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"升级快讯开关"));
+        final int 升级快讯 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"升级快讯开关"));
         if (升级快讯 <= 0) {
             升级快讯显示 = "升级快讯:开启";
         }
@@ -12304,7 +12504,7 @@ public class CongMS extends JFrame
     
     private void 刷新丢出金币开关() {
         String 刷新丢出金币开关显示 = "";
-        final int 丢出金币开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出金币开关"));
+        final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
         if (丢出金币开关 <= 0) {
             刷新丢出金币开关显示 = "丢出金币:开启";
         }
@@ -12316,7 +12516,7 @@ public class CongMS extends JFrame
     
     private void 刷新玩家交易开关() {
         String 刷新玩家交易开关显示 = "";
-        final int 玩家交易开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"玩家交易开关"));
+        final int 玩家交易开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家交易开关"));
         if (玩家交易开关 <= 0) {
             刷新玩家交易开关显示 = "玩家交易:开启";
         }
@@ -12328,7 +12528,7 @@ public class CongMS extends JFrame
     
     private void 刷新丢出物品开关() {
         String 刷新丢出物品开关显示 = "";
-        final int 丢出物品开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出物品开关"));
+        final int 丢出物品开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出物品开关"));
         if (丢出物品开关 <= 0) {
             刷新丢出物品开关显示 = "丢出物品:开启";
         }
@@ -12340,7 +12540,7 @@ public class CongMS extends JFrame
     
     private void 刷新游戏指令开关() {
         String 刷新游戏指令开关显示 = "";
-        final int 游戏指令开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"游戏指令开关"));
+        final int 游戏指令开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏指令开关"));
         if (游戏指令开关 <= 0) {
             刷新游戏指令开关显示 = "游戏指令:关闭";
         }
@@ -12352,7 +12552,7 @@ public class CongMS extends JFrame
     
     private void 刷新上线提醒开关() {
         String 刷新上线提醒开关显示 = "";
-        final int 上线提醒开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"上线提醒开关"));
+        final int 上线提醒开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"上线提醒开关"));
         if (上线提醒开关 <= 0) {
             刷新上线提醒开关显示 = "登录公告:开启";
         }
@@ -12364,7 +12564,7 @@ public class CongMS extends JFrame
     
     private void 刷新回收地图开关() {
         String 刷新回收地图开关显示 = "";
-        final int 回收地图开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"回收地图开关"));
+        final int 回收地图开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"回收地图开关"));
         if (回收地图开关 <= 0) {
             刷新回收地图开关显示 = "回收地图:开启";
         }
@@ -12376,7 +12576,7 @@ public class CongMS extends JFrame
     
     private void 刷新管理隐身开关() {
         String 刷新管理隐身开关显示 = "";
-        final int 管理隐身开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"管理隐身开关"));
+        final int 管理隐身开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理隐身开关"));
         if (管理隐身开关 <= 0) {
             刷新管理隐身开关显示 = "管理隐身:开启";
         }
@@ -12388,7 +12588,7 @@ public class CongMS extends JFrame
     
     private void 刷新管理加速开关() {
         String 刷新管理加速开关显示 = "";
-        final int 管理加速开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"管理加速开关"));
+        final int 管理加速开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理加速开关"));
         if (管理加速开关 <= 0) {
             刷新管理加速开关显示 = "管理加速:开启";
         }
@@ -12400,7 +12600,7 @@ public class CongMS extends JFrame
     
     private void 刷新雇佣商人开关() {
         String 刷新雇佣商人开关显示 = "";
-        final int 雇佣商人开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"雇佣商人开关"));
+        final int 雇佣商人开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"雇佣商人开关"));
         if (雇佣商人开关 <= 0) {
             刷新雇佣商人开关显示 = "雇佣商人:开启";
         }
@@ -12412,7 +12612,7 @@ public class CongMS extends JFrame
     
     private void 刷新欢迎弹窗开关() {
         String 刷新欢迎弹窗开关显示 = "";
-        final int 欢迎弹窗开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"欢迎弹窗开关"));
+        final int 欢迎弹窗开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"欢迎弹窗开关"));
         if (欢迎弹窗开关 <= 0) {
             刷新欢迎弹窗开关显示 = "欢迎弹窗:开启";
         }
@@ -12424,7 +12624,7 @@ public class CongMS extends JFrame
     
     private void 刷新滚动公告开关() {
         String 刷新滚动公告开关显示 = "";
-        final int 滚动公告开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"滚动公告开关"));
+        final int 滚动公告开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"滚动公告开关"));
         if (滚动公告开关 <= 0) {
             刷新滚动公告开关显示 = "滚动公告:开启";
         }
@@ -12436,7 +12636,7 @@ public class CongMS extends JFrame
     
     private void 刷新游戏喇叭开关() {
         String 刷新游戏喇叭开关显示 = "";
-        final int 游戏喇叭开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+        final int 游戏喇叭开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
         if (游戏喇叭开关 <= 0) {
             刷新游戏喇叭开关显示 = "游戏喇叭:开启";
         }
@@ -12536,7 +12736,7 @@ public class CongMS extends JFrame
     
     private void 刷新登陆帮助() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"登陆帮助开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"登陆帮助开关"));
         if (S <= 0) {
             显示 = "登陆帮助:开启";
         }
@@ -12548,7 +12748,7 @@ public class CongMS extends JFrame
     
     private void 刷新怪物状态开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"怪物状态开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"怪物状态开关"));
         if (S <= 0) {
             显示 = "怪物状态:开启";
         }
@@ -12560,7 +12760,7 @@ public class CongMS extends JFrame
     
     private void 刷新越级打怪开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"越级打怪开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"越级打怪开关"));
         if (S <= 0) {
             显示 = "越级打怪:开启";
         }
@@ -12572,7 +12772,7 @@ public class CongMS extends JFrame
     
     private void 刷新地图名称开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"地图名称开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"地图名称开关"));
         if (S <= 0) {
             显示 = "地图名称:显示";
         }
@@ -12584,7 +12784,7 @@ public class CongMS extends JFrame
     
     private void 刷新过图存档时间() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"过图存档开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"过图存档开关"));
         if (S <= 0) {
             显示 = "过图存档:开启";
         }
@@ -12596,7 +12796,7 @@ public class CongMS extends JFrame
     
     private void 刷新吸怪检测开关() {
         String 显示 = "";
-        final int S = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"吸怪检测开关"));
+        final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"吸怪检测开关"));
         if (S <= 0) {
             显示 = "吸怪检测:开启";
         }
@@ -12608,21 +12808,21 @@ public class CongMS extends JFrame
     
     private void 刷新冒险家等级上限() {
         String 冒险家等级上限显示 = "";
-        final int 冒险家等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"));
+        final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
         冒险家等级上限显示 = "" + 冒险家等级上限;
         this.冒险家等级上限(冒险家等级上限显示);
     }
     
     private void 刷新骑士团等级上限() {
         String 骑士团等级上限显示 = "";
-        final int 骑士团等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团等级上限"));
+        final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
         骑士团等级上限显示 = "" + 骑士团等级上限;
         this.骑士团等级上限(骑士团等级上限显示);
     }
     
     private void 刷新冒险家职业开关() {
         String 冒险家职业开关显示 = "";
-        final int 冒险家职业开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家职业开关"));
+        final int 冒险家职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家职业开关"));
         if (冒险家职业开关 <= 0) {
             冒险家职业开关显示 = "冒险家:开启";
         }
@@ -12634,7 +12834,7 @@ public class CongMS extends JFrame
     
     private void 刷新骑士团职业开关() {
         String 骑士团职业开关显示 = "";
-        final int 骑士团职业开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团职业开关"));
+        final int 骑士团职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团职业开关"));
         if (骑士团职业开关 <= 0) {
             骑士团职业开关显示 = "骑士团:开启";
         }
@@ -12646,7 +12846,7 @@ public class CongMS extends JFrame
     
     private void 刷新战神职业开关() {
         String 战神职业开关显示 = "";
-        final int 战神职业开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"战神职业开关"));
+        final int 战神职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战神职业开关"));
         if (战神职业开关 <= 0) {
             战神职业开关显示 = "战   神:开启";
         }
@@ -12658,7 +12858,7 @@ public class CongMS extends JFrame
     
     private void 刷新屠令广播开关() {
         String 屠令广播显示 = "";
-        final int 屠令广播 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"屠令广播开关"));
+        final int 屠令广播 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关"));
         if (屠令广播 <= 0) {
             屠令广播显示 = "屠令广播:开启";
         }
@@ -12698,7 +12898,7 @@ public class CongMS extends JFrame
     }
     
     public void 按键开关(final String a, final int b) {
-        final int 检测开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)a));
+        final int 检测开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)a));
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
         ResultSet rs = null;
@@ -12929,7 +13129,7 @@ public class CongMS extends JFrame
  
     
     static {
-        Start.ConfigValuesMap = new HashMap<String, Integer>();
+        CongMS.ConfigValuesMap = new HashMap<String, Integer>();
         CongMS.instance = new CongMS();
         CongMS.DEFAULT_FONT = new String[] { "Table.font", "TableHeader.font", "CheckBox.font", "Tree.font", "Viewport.font", "ProgressBar.font", "RadioButtonMenuItem.font", "ToolBar.font", "ColorChooser.font", "ToggleButton.font", "Panel.font", "TextArea.font", "Menu.font", "TableHeader.font", "OptionPane.font", "MenuBar.font", "Button.font", "Label.font", "PasswordField.font", "ScrollPane.font", "MenuItem.font", "ToolTip.font", "List.font", "EditorPane.font", "Table.font", "TabbedPane.font", "RadioButton.font", "CheckBoxMenuItem.font", "TextPane.font", "PopupMenu.font", "TitledBorder.font", "ComboBox.font" };
         CongMS.ts = null;
@@ -13040,6 +13240,7 @@ public class CongMS extends JFrame
                     ps.close();
                     break;
                 }
+
                 case 1: {
                     ps = con.prepareStatement("DELETE FROM suitdamtable where name = ? AND numb = ? AND proportion = ? AND proname = ? ");
                     ps.setString(1, CongMS.原套装代码.getText());
@@ -13069,8 +13270,11 @@ public class CongMS extends JFrame
         }
     }
     private void 重载套装加成列表() {
-        Start.套装加成表.clear();
+        //Start.套装加成表.clear();
         Start.GetSuitDamTable();
+        GetConfigValues();
+        tzjc.sr_tz();
+
     }
     private void 加载套装伤害加成表() {
         for (int i = ((DefaultTableModel) CongMS.套装伤害加成表.getModel()).getRowCount() - 1; i >= 0; --i) {
@@ -13112,8 +13316,8 @@ public class CongMS extends JFrame
 
 
     public void 配置更新(String name, int value) {
-        if (Start.ConfigValuesMap.get(name) != null) {
-            Start.ConfigValuesMap.put(name, value);
+        if (CongMS.ConfigValuesMap.get(name) != null) {
+            CongMS.ConfigValuesMap.put(name, value);
         }
         try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
@@ -13138,7 +13342,7 @@ public class CongMS extends JFrame
     }
 
     private void 套装个数FocusLost(FocusEvent evt) {
-        if (Start.ConfigValuesMap.get("套装个数") != Integer.valueOf(CongMS.套装个数.getText())) {
+        if (CongMS.ConfigValuesMap.get("套装个数") != Integer.valueOf(CongMS.套装个数.getText())) {
             this.配置更新("套装个数", Integer.valueOf(CongMS.套装个数.getText()).intValue());
         }
     }
@@ -13146,7 +13350,9 @@ public class CongMS extends JFrame
     private void 重载套装加成ActionPerformed(ActionEvent evt) {
         int n = JOptionPane.showConfirmDialog((Component) this, "你需要重载套装加成属性吗？", "信息", 0);
         if (n == 0) {
+            重载套装加成列表();
             tzjc.sr_tz();
+
             JOptionPane.showMessageDialog(null, "重载完成。");
         }
     }
@@ -13160,19 +13366,42 @@ public class CongMS extends JFrame
     }
 
     public static void 配置同步到界面() {
-        CongMS.套装个数.setText(String.valueOf(Start.ConfigValuesMap.get("套装个数")));
-        CongMS.战力修正.setSelected(((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0);
-        CongMS.套装属性加成开关.setSelected(((Integer) Start.ConfigValuesMap.get("套装属性加成开关")).intValue() > 0);
-        CongMS.伤害修正开关.setSelected(((Integer) Start.ConfigValuesMap.get("伤害修正")).intValue() > 0);
+        CongMS.套装个数.setText(String.valueOf(CongMS.ConfigValuesMap.get("套装个数")));
+        CongMS.战力修正.setSelected(((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0);
+        CongMS.套装属性加成开关.setSelected(((Integer) CongMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0);
+        CongMS.伤害修正开关.setSelected(((Integer) CongMS.ConfigValuesMap.get("伤害修正")).intValue() > 0);
     }
 
-
+    public static void GetMobMapTable() {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT name FROM mobmaptable");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                final String name = rs.getString("name");
+                CongMS.mobmaptable.add(name);
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        }
+        catch (SQLException ex) {
+            System.err.println("读取多倍怪物地图列表出错：" + ex.getMessage());
+        }
+        finally {
+            DBConPool.cleanUP(rs, ps, con);
+        }
+    }
     public enum Windows
     {
         一键还原, 
         代码查询工具, 
         活动控制台, 
-        游戏抽奖工具, 
+        游戏抽奖工具,
+        套装系统,
         删除自添加NPC工具;
     }
 }

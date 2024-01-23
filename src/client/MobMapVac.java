@@ -6,9 +6,11 @@ import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import handling.world.World;
 import scripting.NPCConversationManager;
+import server.life.MapleMonster;
 import server.maps.MapleMap;
 import tools.MaplePacketCreator;
 
+import java.util.List;
 import java.util.Objects;
 
 public class MobMapVac extends Thread{
@@ -53,6 +55,7 @@ public class MobMapVac extends Thread{
                     if (Objects.isNull(map.getMonsterById(mobId))) {
                         //System.out.println("检测到怪物被击杀");
                         //杀死怪物的时间毫秒
+                        boolean flag = false;
                         time = System.currentTimeMillis() - l;
                         if (Objects.nonNull(chr.getClient().getPlayer().getParty()) && chr.getClient().getPlayer().getParty().getMembers().size() >= 4) {
                             // System.out.println("检测到怪物被击杀");
@@ -83,6 +86,7 @@ public class MobMapVac extends Thread{
                         if (ID == c.getPlayer().getMapId()) {
                             //统计击杀时间
                             NPCConversationManager.setBossLog统计用(c.getPlayer().getId(), "参与"+mobName, 1, 1);
+
                             for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
                                 for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
                                     long l1 = time / 1000L;

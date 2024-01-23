@@ -52,8 +52,7 @@ public class AttackInfo
                 return null;
             }
             return skillLink.getEffect(skillLevel);
-        }
-        else {
+        } else {
             if (this.skill != skill_.getId()) {
                 FileoutputUtil.logToFile("logs/Data/AttackEffect.txt", "" + FileoutputUtil.NowTime() + " 連結技能[" + this.skill + "](" + skill_.getId() + "傳承) 連結技能等級:" + skillLevel + " 不在getLinkedkill清單內卻被觸發, 觸發者: " + chr.getName() + " 职业: " + (int)chr.getJob() + " 等級: " + (int)chr.getLevel() + "\r\n");
             }

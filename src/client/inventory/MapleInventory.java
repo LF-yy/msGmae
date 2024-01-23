@@ -65,6 +65,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable
         int possesed = 0;
         for (final IItem item : this.inventory.values()) {
             if (item.getItemId() == itemId) {
+
                 possesed += item.getQuantity();
             }
         }

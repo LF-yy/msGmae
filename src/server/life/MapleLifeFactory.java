@@ -1,12 +1,12 @@
 package server.life;
 
 import java.util.HashMap;
+
 import provider.MapleDataProviderFactory;
 import tools.Pair;
 import java.util.LinkedList;
 import provider.WzXML.MapleDataType;
 import tools.StringUtil;
-import java.util.Iterator;
 import java.util.ArrayList;
 import provider.MapleDataFileEntry;
 import provider.MapleDataDirectoryEntry;
@@ -80,8 +80,10 @@ public class MapleLifeFactory
     public static MapleMonster getMonster(final int mid) {
         MapleMonsterStats stats = (MapleMonsterStats)MapleLifeFactory.monsterStats.get((Object)Integer.valueOf(mid));
         if (stats == null) {
+            //System.out.println("没有这个怪物");
             MapleData monsterData = MapleLifeFactory.data.getData(StringUtil.getLeftPaddedStr(Integer.toString(mid) + ".img", '0', 11));
             if (monsterData == null) {
+                //System.out.println("没有这个怪物缺少资源");
                 return null;
             }
             final MapleData monsterInfoData = monsterData.getChildByPath("info");
@@ -297,7 +299,11 @@ public class MapleLifeFactory
     public static Map<Integer, String> getNPCNames() {
         return MapleLifeFactory.npcNames;
     }
-    
+
+    public static Map<Integer, MapleMonsterStats> getMonsterStats() {
+        return MapleLifeFactory.monsterStats;
+    }
+
     static {
         data = MapleDataProviderFactory.getDataProvider("Mob.wz");
         stringDataWZ = MapleDataProviderFactory.getDataProvider("String.wz");

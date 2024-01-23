@@ -1,6 +1,8 @@
 package handling.channel.handler;
 
 import bean.UserAttraction;
+import gui.CongMS;
+import gui.GuaiMS;
 import scripting.NPCConversationManager;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
@@ -9,6 +11,7 @@ import java.awt.geom.Point2D;
 
 import client.inventory.MapleInventoryType;
 import server.maps.MapleMap;
+
 import java.util.List;
 import java.awt.Point;
 import java.util.Objects;
@@ -34,19 +37,24 @@ import tools.data.LittleEndianAccessor;
 
 public class MobHandler
 {
+
     public static final void MoveMonster(final LittleEndianAccessor slea, final MapleClient c) {
+        //如开启吸怪直接返回
+       UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
+
+
         final MapleCharacter chr = c.getPlayer();
         if (chr == null || chr.getMap() == null) {
             return;
         }
-        //如开启吸怪直接返回
-        UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
         final int objectId = slea.readInt();
         final MapleMonster monster = chr.getMap().getMonsterByOid(objectId);
         if (monster == null) {
             chr.addMoveMob(objectId);
             return;
         }
+        final MapleMap map = chr.getMap();
+
         final short moveid = slea.readShort();
         final boolean useSkill = slea.readByte() > 0;
         final byte skill = slea.readByte();
@@ -92,18 +100,28 @@ public class MobHandler
         final Point startPos = slea.readPos();
         List<LifeMovementFragment> res;
         try {
-                res = MovementParse.parseMovement(slea, 2);
-            c.getPlayer().setLastRes(res);
+            res = MovementParse.parseMovement(slea, 2);
         }
         catch (ArrayIndexOutOfBoundsException e) {
             if (chr.isShowErr()) {
                 chr.showInfo("移動", true, "怪物移動錯誤Move_life : AIOBE Type2");
             }
-            FileoutputUtil.log("logs\\Log_Movement.txt", "怪物移動錯誤 AIOBE Type2 : 玩家: " + c.getPlayer().getName() + "(編號" + c.getPlayer().getId() + ") 怪物ID " + monster.getId() + "\r\n錯誤信息:" + (Object)e + "\r\n封包:\r\n" + slea.toString(true));
+           // FileoutputUtil.log("logs\\Log_Movement.txt", "怪物移動錯誤 AIOBE Type2 : 玩家: " + c.getPlayer().getName() + "(編號" + c.getPlayer().getId() + ") 怪物ID " + monster.getId() + "\r\n錯誤信息:" + (Object)e + "\r\n封包:\r\n" + slea.toString(true));
             return;
         }
+
         final MapleCharacter controller = monster.getController();
-        final MapleMap map = chr.getMap();
+
+        if ( CongMS.ConfigValuesMap.get("怪物多倍地图倍率") < 1) {
+
+            try {
+                CheckMobVac(c, monster, res, startPos);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
         if (chr.getMapId() != 926013100 && chr.getMapId() != 926013200 && chr.getMapId() != 926013300 && chr.getMapId() != 926013400 && chr.getMapId() != 926013500) {
             try {
                 final boolean fly = monster.getStats().getFly();
@@ -207,9 +225,8 @@ public class MobHandler
                                         }
                                     }
                                 }
-                            }
-                            else {
-                                c.getPlayer().dropMessage("觸發吸怪 --  x: " + reduce_x + ", y: " + reduce_y);
+                            }else {
+//                                c.getPlayer().dropMessage("觸發吸怪 --  x: " + reduce_x + ", y: " + reduce_y);
                             }
                         }
                     }
@@ -238,12 +255,140 @@ public class MobHandler
                 c.getSession().close();
                 return;
             }
-            MovementParse.updatePosition(res, (AnimatedMapleMapObject)monster, -1);
-            map.moveMonster(monster, monster.getPosition());
-            map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int)skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
+
+            //=======================================================================
+        if (Objects.nonNull(userAttraction)) {
+            if (Objects.isNull(c.getPlayer().getLastRes())){
+               c.getPlayer().setLastRes(res);
+           }
+
+            // MovementParse.updatePosition(res, (AnimatedMapleMapObject) monster, -1);
+            //map.moveMonster(monster, userAttraction.getPosition());
+            // map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int) skill, unk2, monster.getObjectId(), startPos, c.getPlayer().getPosition(), res),);
+            map.broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(),userAttraction.getPosition(), null, c.getPlayer().getLastRes()));
+            //monster.setPosition(userAttraction.getPosition());
+            monster.setPosition(userAttraction.getPosition());
+            return;
+        }
+            c.getPlayer().setLastRes(res);
+            //==========================================================================================
+                MovementParse.updatePosition(res, (AnimatedMapleMapObject) monster, -1);
+                map.moveMonster(monster, monster.getPosition());
+                map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int) skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
+//            }
         }
     }
-    
+    public static void CheckMobVac(final MapleClient c, final MapleMonster monster, final List<LifeMovementFragment> res, final Point startPos) {
+        final MapleCharacter chr = c.getPlayer();
+        try {
+            final boolean fly = monster.getStats().getFly();
+            Point endPos = null;
+            int reduce_x = 0;
+            int reduce_y = 0;
+            for (final LifeMovementFragment move : res) {
+                if (move instanceof AbstractLifeMovement) {
+                    endPos = ((LifeMovement)move).getPosition();
+                    try {
+                        reduce_x = Math.abs(startPos.x - endPos.x);
+                        reduce_y = Math.abs(startPos.y - endPos.y);
+                    }
+                    catch (Exception ex) {}
+                }
+            }
+            if (!fly) {
+                int GeneallyDistance_y = 150;
+                int GeneallyDistance_x = 200;
+                int Check_x = 250;
+                int max_x = 450;
+                switch (chr.getMapId()) {
+                    case 100040001:
+                    case 926013500: {
+                        GeneallyDistance_y = 200;
+                        break;
+                    }
+                    case 200010300: {
+                        GeneallyDistance_x = 1000;
+                        GeneallyDistance_y = 500;
+                        break;
+                    }
+                    case 220010600:
+                    case 926013300: {
+                        GeneallyDistance_x = 200;
+                        break;
+                    }
+                    case 211040001: {
+                        GeneallyDistance_x = 220;
+                        break;
+                    }
+                    case 101030105: {
+                        GeneallyDistance_x = 250;
+                        break;
+                    }
+                    case 541020500: {
+                        Check_x = 300;
+                        break;
+                    }
+                }
+                switch (monster.getId()) {
+                    case 4230100: {
+                        GeneallyDistance_y = 200;
+                        break;
+                    }
+                    case 9410066: {
+                        Check_x = 1000;
+                        break;
+                    }
+                }
+                if (GeneallyDistance_x > max_x) {
+                    max_x = GeneallyDistance_x;
+                }
+                if (((reduce_x > GeneallyDistance_x || reduce_y > GeneallyDistance_y) && reduce_y != 0) || (reduce_x > Check_x && reduce_y == 0) || reduce_x > max_x) {
+                    chr.add吸怪();
+                    if (c.getPlayer().get吸怪() % 50 == 0 || reduce_x > max_x) {
+                        final StringBuilder sb = new StringBuilder();
+                        sb.append("\r\n");
+                        sb.append(FileoutputUtil.NowTime());
+                        sb.append(" 玩家: ");
+                        sb.append(StringUtil.getRightPaddedStr(c.getPlayer().getName(), ' ', 13));
+                        sb.append("(编号:");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getId()), ' ', 5));
+                        sb.append(" )怪物: ");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getId()), ' ', 7));
+                        sb.append("(");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getObjectId()), ' ', 6));
+                        sb.append(")");
+                        sb.append(" 地图: ");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getMapId()), ' ', 9));
+                        sb.append(" 初始座标:");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.x), ' ', 4));
+                        sb.append(",");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.y), ' ', 4));
+                        sb.append(" 移动座标:");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.x), ' ', 4));
+                        sb.append(",");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.y), ' ', 4));
+                        sb.append(" 相差座标:");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_x), ' ', 4));
+                        sb.append(",");
+                        sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_y), ' ', 4));
+                        if (!chr.hasGmLevel(1)) {
+                            for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                                for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                                    if (chr_.getAuto吸怪()) {
+                                        chr_.warpAuto吸怪(chr);
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            c.getPlayer().dropMessage("触发吸怪 --  x: " + reduce_x + ", y: " + reduce_y);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex2) {}
+    }
     public static final void handleFriendlyDamage(final LittleEndianAccessor slea, final MapleClient c) {
         final MapleCharacter chr = c.getPlayer();
         final MapleMap map = chr.getMap();

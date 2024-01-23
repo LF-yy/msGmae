@@ -49,6 +49,7 @@ public class CashItemFactory
         this.itemIdToSN = new HashMap<Integer, Integer>();
         this.itemIdToSn = new HashMap<Integer, Integer>();
         this.data = MapleDataProviderFactory.getDataProvider("Etc.wz");
+//        this.itemStringInfo = MapleDataProviderFactory.getDataProvider(new File("E:/新建文件夹 (2)/ms079/wz" + "/String.wz"));
         this.itemStringInfo = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("net.sf.odinms.wzpath") + "/String.wz"));
         this.idLookup = new HashMap<Integer, Integer>();
     }
@@ -214,7 +215,9 @@ public class CashItemFactory
         }
         return 0;
     }
-    
+    public final boolean getModInfoSN(final int sn) {
+        return this.itemMods.get(Integer.valueOf(sn)) != null;
+    }
     static {
         instance = new CashItemFactory();
         bestItems = new int[] { 50100010, 50100010, 50100010, 50100010, 50100010 };

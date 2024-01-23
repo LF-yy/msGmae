@@ -113,7 +113,7 @@ public class Item implements IItem, Serializable
     public final int getItemId() {
         return this.id;
     }
-    
+
     @Override
     public void setItemId(final int ui) {
         this.id = ui;

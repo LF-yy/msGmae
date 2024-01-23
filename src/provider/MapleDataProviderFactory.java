@@ -33,6 +33,7 @@ public class MapleDataProviderFactory
     }
     
     static {
-        wzPath = ServerProperties.getProperty("server.wzpath", "wz");
+//        wzPath = ServerProperties.getProperty("server.wzpath", "E:/新建文件夹 (2)/ms079/wz");
+        wzPath = ServerProperties.getProperty("server.wzpath", System.getProperty("net.sf.odinms.wzpath"));
     }
 }

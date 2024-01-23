@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.FileReader;
 import server.ServerProperties;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Properties;
 import com.alibaba.druid.pool.DruidDataSource;
 
@@ -98,6 +103,27 @@ public class DBConPool
         
         static {
             instance = new DBConPool();
+        }
+    }
+    public static void cleanUP(final ResultSet rs, final PreparedStatement ps, final Connection con) {
+        if (rs != null) {
+            try {
+                rs.close();
+            }catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (ps != null) {
+            try {
+                ps.close();
+            }catch (SQLException ex) {
+            }
+        }
+        try {
+            if (con != null) {
+                con.close();
+            }
+        }catch (SQLException ex2) {
         }
     }
 }

@@ -815,7 +815,7 @@ public class MapleInventoryManipulator
         }
         c.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
     }
-    
+    //更换装备刷新属性
     public static void equip(final MapleClient c, final short src, final short dst) {
         Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(src);
         MapleCharacter chr = c.getPlayer();
@@ -915,10 +915,10 @@ public class MapleInventoryManipulator
         final int reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
         if (reqlv > c.getPlayer().getLevel() + c.getPlayer().getStat().levelBonus && !c.getPlayer().isGM()) {
             FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，穿上装备時封鎖。 該装备需求等級: " + reqlv);
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
+            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，穿上装备時封鎖。 該装备需求等級: " + reqlv));
-            c.getPlayer().ban("修改封包", true, true, false);
-            c.getSession().close();
+            //c.getPlayer().ban("修改封包", true, true, false);
+            //c.getSession().close();
             return;
         }
         c.getPlayer().equipChanged();
@@ -934,6 +934,7 @@ public class MapleInventoryManipulator
     
     public static void unequip(final MapleClient c, final short src, final short dst) {
         final Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(src);
+        //MapleCharacter chr = c.getPlayer();
         final Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(dst);
         if (dst < 0) {
             return;
@@ -961,14 +962,15 @@ public class MapleInventoryManipulator
             target.setPosition(src);
             c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).addFromDB((IItem)target);
         }
+        //chr.set套装伤害加成(tzjc.check_tz(chr));
         c.sendPacket(MaplePacketCreator.modifyInventory(true, Collections.singletonList(new ModifyInventory(2, (IItem)source, src))));
         final int reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
         if (reqlv > c.getPlayer().getLevel() + c.getPlayer().getStat().levelBonus && !c.getPlayer().isGM()) {
             FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，脫除装备時封鎖。 該装备需求等級: " + reqlv);
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
+            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，脫除装备時封鎖。 該装备需求等級: " + reqlv));
-            c.getPlayer().ban("修改封包", true, true, false);
-            c.getSession().close();
+            //c.getPlayer().ban("修改封包", true, true, false);
+            //c.getSession().close();
             return;
         }
         c.getPlayer().equipChanged();
@@ -992,7 +994,7 @@ public class MapleInventoryManipulator
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
             }
-        final int 丢出物品开关 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"丢出物品开关"));
+        final int 丢出物品开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出物品开关"));
         if (丢出物品开关 > 0) {
             c.getPlayer().dropMessage(1, "管理员从后台关闭了物品丢出功能。");
             c.sendPacket(MaplePacketCreator.enableActions());

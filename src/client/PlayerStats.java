@@ -1,5 +1,7 @@
 package client;
 
+import abc.套装系统完善版;
+import gui.CongMS;
 import tools.data.MaplePacketLittleEndianWriter;
 import client.inventory.MapleWeaponType;
 import client.inventory.ModifyInventory;
@@ -37,27 +39,27 @@ public class PlayerStats implements Serializable
     private final List<Equip> equipLevelHandling;
     private transient float shouldHealHP;
     private transient float shouldHealMP;
-    public short str;
-    public short dex;
-    public short luk;
-    public short int_;
+    public short str;//力量
+    public short dex;//敏捷
+    public short luk;//运气
+    public short int_;//智力
     public short hp;
     public short maxhp;
     public short mp;
     public short maxmp;
-    private transient short passive_sharpeye_percent;  //爆击最大伤害倍率
+    private transient short passive_sharpeye_percent; //爆击最大伤害倍率
     private transient short localmaxhp;
     private transient short localmaxmp;
-    private transient byte passive_mastery;  ///武器数量度
-    private transient byte passive_sharpeye_rate; //爆击概率
-    private transient int localstr;//力量
-    private transient int localdex;//敏捷
-    private transient int localluk;//运气
+    private transient byte passive_mastery; //武器数量度
+    private transient byte passive_sharpeye_rate;  //爆击概率
+    private transient int localstr; //力量
+    private transient int localdex; //敏捷
+    private transient int localluk; //运气
     private transient int localint_;//智力
-    private transient int magic;//魔法防御
-    private transient int watk;//物理防御
+    private transient int magic; //魔法防御
+    private transient int watk;  //物理防御
     private transient int hands;
-    private transient int accuracy;//攻速
+    private transient int accuracy; //攻速
     public transient boolean equippedWelcomeBackRing; //以前是1112127 盛大修改 回归戒指 - 热烈欢迎玩家回归的特别戒指，附带特殊福利。佩戴本戒指时，在组队状态下，#c全队队员可享受额外80%的召回经验奖励#。归来的朋友，快去和其他玩家组队一起战斗吧！
     public transient boolean equippedFairy;
     public transient boolean hasMeso;
@@ -82,8 +84,8 @@ public class PlayerStats implements Serializable
     public transient double realDropBuff;
     public transient double realMesoBuff;
     public transient double realCashBuff;
-    public transient double dam_r;//伤害
-    public transient double bossdam_r;//BOSS伤害
+    public transient double dam_r; //伤害
+    public transient double bossdam_r; //BOSS伤害
     public transient double dropm;
     public transient double expm;
     public transient int itemExpm;
@@ -106,8 +108,8 @@ public class PlayerStats implements Serializable
     private transient float jumpMod;
     private transient float localmaxbasedamage;
     public transient int def;
-    public transient int element_ice;//element_ice  冰
-    public transient int element_fire;//element_fire 火
+    public transient int element_ice;  //element_ice  冰
+    public transient int element_fire; //element_fire 火
     public transient int element_light;//element_light  光
     public transient int element_psn;
     public static final short maxStr = 999;
@@ -116,11 +118,12 @@ public class PlayerStats implements Serializable
     public int defRange;
     public transient int dotTime;
     public transient boolean 精灵吊坠;
+    private int TZ1, TZ2, TZ3, TZ4, TZ5, TZ6;
+    boolean 套装1是否共存, 套装2是否共存, 套装3是否共存, 套装4是否共存, 套装5是否共存, 套装6是否共存;
 
-    {
-            itemExpm = 100;
-            itemDropm = 0;
-    }
+    private transient int regularStr,regularDex,regularLuk,regularInt_;//潜能固定加成  力量,敏捷,运气,智力
+    private transient int pgStr,pgDex,pgLuk,pgInt_;//潜能百分比加成  力量,敏捷,运气,智力
+
     public PlayerStats(final MapleCharacter chr) {
         this.equipLevelHandling = new ArrayList<Equip>();
         this.Berserk = false;
@@ -131,7 +134,11 @@ public class PlayerStats implements Serializable
         this.durabilityHandling = new ArrayList<Equip>();
         this.chr = new WeakReference<MapleCharacter>(chr);
     }
-    
+
+    {
+        itemExpm = 100;
+        itemDropm = 0;
+    }
     public final void init() {
         this.recalcLocalStats();
         this.relocHeal();
@@ -289,8 +296,17 @@ public class PlayerStats implements Serializable
     public void recalcLocalStats() {
         this.recalcLocalStats(false);
     }
-    
+
+
+    //角色属性整合
     public void recalcLocalStats(final boolean first_login) {
+
+        int 套装1装备数量 = CongMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
+        int 套装2装备数量 = CongMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
+        int 套装3装备数量 = CongMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
+        int 套装4装备数量 = CongMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
+        int 套装5装备数量 = CongMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
+        int 套装6装备数量 = CongMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
         final MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra == null) {
             return;
@@ -310,17 +326,17 @@ public class PlayerStats implements Serializable
         int speed = 100;
         int jump = 100;
         this.dotTime = 0;
-        int percent_hp = 0;
-        int percent_mp = 0;
-        int percent_str = 0;
-        int percent_dex = 0;
-        int percent_int = 0;
-        int percent_luk = 0;
-        int percent_acc = 0;
-        int percent_atk = 0;
-        int percent_matk = 0;
-        int added_sharpeye_rate = 0;
-        int added_sharpeye_dmg = 0;
+        int percent_hp = 0;//Hp增加x%
+        int percent_mp = 0;//Mp增加x%
+        int percent_str = 0; //力量增加x%
+        int percent_dex = 0;//敏捷增加x%
+        int percent_int = 0;//智力增加x%
+        int percent_luk = 0;//运气增加x%
+        int percent_acc = 0; //命中增加x%
+        int percent_atk = 0;//物理攻击力增加x%
+        int percent_matk = 0;//魔法攻击力增加x%
+        int added_sharpeye_rate = 0;//添加暴击率
+        int added_sharpeye_dmg = 0;//添加暴击伤害
         this.magic = this.localint_;
         this.watk = 0;
         if (chra.getJob() == 500 || (chra.getJob() >= 520 && chra.getJob() <= 522)) {
@@ -366,7 +382,14 @@ public class PlayerStats implements Serializable
         this.dropm = 1.0;
         this.expMod = 1;
         this.expm = 1.0;
+
         this.cashMod = 1;
+        this.TZ1 = 0;
+        this.TZ2 = 0;
+        this.TZ3 = 0;
+        this.TZ4 = 0;
+        this.TZ5 = 0;
+        this.TZ6 = 0;
         this.精灵吊坠 = false;
         this.levelBonus = 0;
         this.incAllskill = 0;
@@ -379,6 +402,7 @@ public class PlayerStats implements Serializable
         this.element_psn = 100;
         this.def = 100;
         this.defRange = 0;
+        //装备属性合并
         for (final IItem item : chra.getInventory(MapleInventoryType.EQUIPPED)) {
             final IEquip equip = (IEquip)item;
             if (equip.getPosition() == -11 && GameConstants.isMagicWeapon(equip.getItemId())) {
@@ -400,6 +424,21 @@ public class PlayerStats implements Serializable
             this.watk += equip.getWatk();
             speed += equip.getSpeed();
             jump += equip.getJump();
+            if (CongMS.ConfigValuesMap.get("套装系统开关") >= 1) {//开启
+                if (自定义套装1(equip.getItemId())) {
+                    TZ1 += 1;
+                } else if (自定义套装2(equip.getItemId())) {
+                    TZ2 += 1;
+                } else if (自定义套装3(equip.getItemId())) {
+                    TZ3 += 1;
+                } else if (自定义套装4(equip.getItemId())) {
+                    TZ4 += 1;
+                } else if (自定义套装5(equip.getItemId())) {
+                    TZ5 += 1;
+                } else if (自定义套装6(equip.getItemId())) {
+                    TZ6 += 1;
+                }
+            }
             switch (equip.getItemId()) {
                 case 1122017: {
                     this.精灵吊坠 = true;
@@ -463,6 +502,7 @@ public class PlayerStats implements Serializable
                 }
                 this.setHandling.put(Integer.valueOf(set), Integer.valueOf(value));
             }
+
             if (equip.getState() > 1) {
                 final int[] array;
                 final int[] potentials = array = new int[] { equip.getPotential1(), equip.getPotential2(), equip.getPotential3() };
@@ -540,6 +580,7 @@ public class PlayerStats implements Serializable
                 this.equipLevelHandling.add((Equip)equip);
             }
         }
+
         for (final Entry<Integer, Integer> entry : this.setHandling.entrySet()) {
             final StructSetItem set2 = ii.getSetItem((int)Integer.valueOf(entry.getKey()));
             if (set2 != null) {
@@ -567,6 +608,7 @@ public class PlayerStats implements Serializable
             this.expm = 1.1;
             this.dropm = 1.1;
         }
+
         this.expMod = 1;
         this.dropMod = 1;
         for (final IItem item2 : chra.getInventory(MapleInventoryType.CASH)) {
@@ -618,6 +660,7 @@ public class PlayerStats implements Serializable
         if (chra.getHiredChannel() > 0) {
             this.expMod_H = 10;
         }
+        //梯级经验设置
         if (chra.getLevel() >= 1 && chra.getLevel() <= 120) {
             this.expMod *= ServerConfig.BeiShu1;
         }
@@ -649,6 +692,123 @@ public class PlayerStats implements Serializable
                 }
             }
         }
+        chra.TZ1 = chra.getStat().TZ1;
+        chra.TZ2 = chra.getStat().TZ2;
+        chra.TZ3 = chra.getStat().TZ3;
+        chra.TZ4 = chra.getStat().TZ4;
+        chra.TZ5 = chra.getStat().TZ5;
+        chra.TZ6 = chra.getStat().TZ6;
+        if (CongMS.ConfigValuesMap.get("套装叠加开关") > 0) {
+            if (TZ1 >= 套装1装备数量 && TZ1 >= TZ2 || TZ1 >= 套装1装备数量 && TZ1 >= TZ3 || TZ1 >= 套装1装备数量 && TZ1 >= TZ4 || TZ1 >= 套装1装备数量 && TZ1 >= TZ5 || TZ1 >= 套装1装备数量 && TZ1 >= TZ6) {
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = true;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ2 >= 套装2装备数量 && TZ2 >= TZ1 || TZ2 >= 套装2装备数量 && TZ2 >= TZ3 || TZ2 >= 套装2装备数量 && TZ2 >= TZ4 || TZ2 >= 套装2装备数量 && TZ2 >= TZ5 || TZ2 >= 套装2装备数量 && TZ2 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = true;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ3 >= 套装3装备数量 && TZ3 >= TZ1 || TZ3 >= 套装3装备数量 && TZ3 >= TZ2 || TZ3 >= 套装3装备数量 && TZ3 >= TZ4 || TZ3 >= 套装3装备数量 && TZ3 >= TZ5 || TZ3 >= 套装3装备数量 && TZ3 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = true;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ4 >= 套装4装备数量 && TZ4 >= TZ1 || TZ4 >= 套装4装备数量 && TZ4 >= TZ2 || TZ4 >= 套装4装备数量 && TZ4 >= TZ3 || TZ4 >= 套装4装备数量 && TZ4 >= TZ5 || TZ4 >= 套装4装备数量 && TZ4 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = true;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ5 >= 套装5装备数量 && TZ5 >= TZ1 || TZ5 >= 套装5装备数量 && TZ5 >= TZ2 || TZ5 >= 套装5装备数量 && TZ5 >= TZ3 || TZ5 >= 套装5装备数量 && TZ5 >= TZ4 || TZ5 >= 套装5装备数量 && TZ5 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = true;
+                套装6是否共存 = false;
+            } else if (TZ6 >= 套装6装备数量 && TZ6 >= TZ1 || TZ6 >= 套装6装备数量 && TZ6 >= TZ2 || TZ6 >= 套装6装备数量 && TZ6 >= TZ3 || TZ6 >= 套装6装备数量 && TZ6 >= TZ4 || TZ6 >= 套装6装备数量 && TZ6 >= TZ5) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = false;
+                套装6是否共存 = true;
+            }
+        }
+        chra.套装1是否共存 = 套装1是否共存;
+        chra.套装2是否共存 = 套装2是否共存;
+        chra.套装3是否共存 = 套装3是否共存;
+        chra.套装4是否共存 = 套装4是否共存;
+        chra.套装5是否共存 = 套装5是否共存;
+        chra.套装6是否共存 = 套装6是否共存;
         for (final IItem item2 : chra.getInventory(MapleInventoryType.CASH)) {
             switch (item2.getItemId()) {
                 case 5062000: {
@@ -996,6 +1156,7 @@ public class PlayerStats implements Serializable
             chra.updatePartyMemberHP();
         }
         this.isRecalc = false;
+
     }
     
     public boolean checkEquipLevels(final MapleCharacter chr, final int gain) {
@@ -1545,5 +1706,59 @@ public class PlayerStats implements Serializable
     
     public int getExpModH() {
         return this.expMod_H;
+    }
+
+    public static boolean 自定义套装1(int a) {
+        套装系统完善版 TZXT = new 套装系统完善版();
+        String items2 = TZXT.get套装1();
+        if (items2.contains("*" + a + "*")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean 自定义套装2(int a) {
+        套装系统完善版 TZXT = new 套装系统完善版();
+        String items2 = TZXT.get套装2();
+        if (items2.contains("*" + a + "*")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean 自定义套装3(int a) {
+        套装系统完善版 TZXT = new 套装系统完善版();
+        String items2 = TZXT.get套装3();
+        if (items2.contains("*" + a + "*")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean 自定义套装4(int a) {
+        套装系统完善版 TZXT = new 套装系统完善版();
+        String items2 = TZXT.get套装4();
+        if (items2.contains("*" + a + "*")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean 自定义套装5(int a) {
+        套装系统完善版 TZXT = new 套装系统完善版();
+        String items2 = TZXT.get套装5();
+        if (items2.contains("*" + a + "*")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean 自定义套装6(int a) {
+        套装系统完善版 TZXT = new 套装系统完善版();
+        String items2 = TZXT.get套装6();
+        if (items2.contains("*" + a + "*")) {
+            return true;
+        }
+        return false;
     }
 }

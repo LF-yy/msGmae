@@ -4,7 +4,8 @@ import constants.ServerConstants;
 import java.util.List;
 import java.util.Arrays;
 
-import server.Start;
+import handling.channel.handler.InventoryHandler;
+import server.maps.MapleMapItem;
 import server.maps.MapleMapObjectType;
 import java.awt.Point;
 import gui.CongMS;
@@ -579,10 +580,9 @@ public class AdminCommand
     {
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
-            for (final MapleMapObject mmo : c.getPlayer().getMap().getAllMonstersThreadsafe()) {
-                final MapleMonster monster = (MapleMonster)mmo;
-                c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(), monster.getPosition(), c.getPlayer().getPosition(), c.getPlayer().getLastRes()));
-                monster.setPosition(c.getPlayer().getPosition());
+            for (final MapleMonster mmo : c.getPlayer().getMap().getAllMonstersThreadsafe()) {//mmo.getPosition()
+                c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, 0, 0, mmo.getObjectId(), c.getPlayer().getPosition(), c.getPlayer().getPosition(), c.getPlayer().getLastRes()));
+                mmo.setPosition(c.getPlayer().getPosition());
             }
             return true;
         }
@@ -1454,7 +1454,30 @@ public class AdminCommand
             return new StringBuilder().append("!断线 [m|c|w] - 所有玩家断线").toString();
         }
     }
-    
+
+//
+//    public static class 吸怪 extends CommandExecute {
+//
+//        @Override
+//        public boolean execute(MapleClient c, String splitted[]) {
+//            for (final MapleMapObject mmo : c.getPlayer().getMap().getAllMonstersThreadsafe()) {
+//                final MapleMonster monster = (MapleMonster) mmo;
+//                c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(), monster.getPosition(), c.getPlayer().getPosition(), c.getPlayer().getLastRes()));
+//                monster.setPosition(c.getPlayer().getPosition());
+//            }
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!吸怪 - 全图吸怪").toString();
+//        }
+//    }
+//
+
+
+
+
     public static class KillMonsterByOID extends CommandExecute
     {
         @Override
@@ -1583,7 +1606,7 @@ public class AdminCommand
             return new StringBuilder().append("!打开NPC <npcid> - 呼叫出NPC").toString();
         }
     }
-    
+
     public static class MakePNPC extends CommandExecute
     {
         @Override
@@ -3076,7 +3099,7 @@ public class AdminCommand
                 item.setOwner(c.getPlayer().getName());
                 item.setGMLog(c.getPlayer().getName());
                 MapleInventoryManipulator.addbyItem(c, item);
-                if (Start.ConfigValuesMap.get("指令通知开关") <= 0) {
+                if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]刷出了物品: " + MapleItemInformationProvider.getInstance().getName(Integer.parseInt(splitted[1])) + " [" + splitted[1] + "]"));
                 }
             }
@@ -3098,7 +3121,7 @@ public class AdminCommand
             }
             final Point pos = c.getPlayer().getPosition();
             c.getPlayer().dropMessage(6, "X: " + pos.x + " | Y: " + pos.y + " | RX0: " + (pos.x + 50) + " | RX1: " + (pos.x - 50) + " | FH: " + c.getPlayer().getFH() + "| CY:" + pos.y);
-            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]使用了我的位置指令"));
             }
             return true;
@@ -3120,7 +3143,7 @@ public class AdminCommand
             c.getPlayer().dropMessage(5, "坐标: " + String.valueOf(c.getPlayer().getPosition().x) + " , " + String.valueOf(c.getPlayer().getPosition().y) + "");
             c.getPlayer().dropMessage(5, "使用 !传送+<空格>+<地图ID> 可直接传送到目标地图");
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
-            if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]使用了查询当前地图代码功能"));
             }
             return true;
@@ -3162,7 +3185,7 @@ public class AdminCommand
                     targetPortal = target.getPortal(0);
                 }
                 c.getPlayer().changeMap(target, targetPortal);
-                if ((int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
+                if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关")) <= 0) {
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:[管理员:" + c.getPlayer().getName() + "]传送到地图[" + splitted[1] + "]"));
                 }
             }

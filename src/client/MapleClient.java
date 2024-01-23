@@ -74,6 +74,9 @@ public class MapleClient
     private int accountId;
     private String accountName;
     private int world;
+    /**
+     * 角色频道
+     */
     private int channel;
     private int birthday;
     private int charslots;
@@ -840,6 +843,7 @@ public class MapleClient
                     }
                 }
             }
+            System.out.println("删除角色");
             MapleCharacter.deleteWhereCharacterId(con2, "DELETE FROM characters WHERE id = ?", cid);
             MapleCharacter.deleteWhereCharacterId(con2, "DELETE FROM monsterbook WHERE charid = ?", cid);
             MapleCharacter.deleteWhereCharacterId(con2, "DELETE FROM mts_cart WHERE characterid = ?", cid);

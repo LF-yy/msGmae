@@ -23,7 +23,7 @@ public class BankItemManager2
     private BankItemManager2() {
     }
     
-    public int saveItem(final MapleCharacter player, final byte type, final short slot, final short count) {
+    public int saveItem(final MapleCharacter player, final byte type, final short slot, final short count, final short types) {
         final int ret = 1;
         if (type != 2 && type != 3 && type != 4) {
             return -2;
@@ -34,10 +34,10 @@ public class BankItemManager2
         final MapleInventoryType itemtype = MapleInventoryType.getByType(type);
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final IItem source = player.getInventory(itemtype).getItem(slot);
-        return this.saveItem(player, source, count);
+        return this.saveItem(player, source, count,types);
     }
     
-    public int saveItem(final MapleCharacter player, final IItem source, short count) {
+    public int saveItem(final MapleCharacter player, final IItem source, short count, short types) {
         int ret = 1;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final byte type = (byte)(source.getItemId() / 1000000);
@@ -54,7 +54,7 @@ public class BankItemManager2
         if (count > source.getQuantity() || count < 1) {
             return -6;
         }
-        ret = this.add(player.getId(), source.getItemId(), (int)count);
+        ret = this.add(player.getId(), source.getItemId(), (int)count,(int)types);
         if (ret < 1) {
             return -8;
         }
@@ -81,6 +81,7 @@ public class BankItemManager2
                 info.setItemid(rs.getInt("itemid"));
                 info.setCid(rs.getInt("cid"));
                 info.setCount(rs.getInt("count"));
+                info.setType(rs.getInt("type"));
                 items.add(info);
             }
         }
@@ -114,11 +115,12 @@ public class BankItemManager2
         return items;
     }
     
-    public int add(final int cid, final int itemid, final int count) {
+    public int add(final int cid, final int itemid, final int count, final int type) {
         final BankItem2 item = new BankItem2();
         item.setCid(cid);
         item.setItemid(itemid);
         item.setCount(count);
+        item.setType(type);
         return this.add(item);
     }
     
@@ -130,11 +132,12 @@ public class BankItemManager2
         final Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         try {
-            ps = con1.prepareStatement("insert into bank_item2 (id,cid,itemid,count) values (?,?,?,?)");
+            ps = con1.prepareStatement("insert into bank_item2 (id,cid,itemid,count,type) values (?,?,?,?,?)");
             ps.setLong(1, item.getId());
             ps.setInt(2, item.getCid());
             ps.setInt(3, item.getItemid());
             ps.setInt(4, item.getCount());
+            ps.setInt(5, item.getType());
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {

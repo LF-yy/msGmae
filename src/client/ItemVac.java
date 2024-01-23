@@ -51,7 +51,10 @@ public class ItemVac extends Thread
     public synchronized void run() {
         try {
             while (!Thread.interrupted()) {
-                this.wait(5000L);
+                if (!c.isLoggedIn()){
+                    break;
+                }
+                this.wait(3000L);
                 final List<MapleMapItem> items = this.chr.getMap().getAllItemsThreadsafe();
                 for (final MapleMapItem i : items) {
                     this.addObject((MapleMapObject)i);

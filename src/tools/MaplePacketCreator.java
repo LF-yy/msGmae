@@ -2,6 +2,8 @@ package tools;
 
 import java.sql.SQLException;
 import java.sql.ResultSet;
+
+import gui.CongMS;
 import server.maps.MapleDragon;
 import client.MapleBeans;
 import client.MapleBeans.BeansType;
@@ -124,7 +126,15 @@ public class MaplePacketCreator
         mplew.writeLong(PacketHelper.getTime(System.currentTimeMillis()));
         return mplew.getPacket();
     }
-    
+    public static byte[] clearInventoryItem(final MapleInventoryType type, final short slot, final boolean fromDrop) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.MODIFY_INVENTORY_ITEM.getValue());
+        mplew.write((int)(fromDrop ? 1 : 0));
+        mplew.write(HexTool.getByteArrayFromHexString("01 03"));
+        mplew.write(type.getType());
+        mplew.writeShort((int)slot);
+        return mplew.getPacket();
+    }
     public static final byte[] enableActions() {
         return updatePlayerStats((Map<MapleStat, Integer>)new EnumMap<MapleStat, Integer>(MapleStat.class), true, null);
     }
@@ -827,11 +837,11 @@ public class MaplePacketCreator
             mplew.writeShort(0);
         }
         if (drop.getMeso() == 0) {
-            PacketHelper.addExpirationTime(mplew, drop.getItem().getExpiration());
+            PacketHelper.addExpirationTime(mplew,drop.getItem().getExpiration());
         }
-        mplew.writeShort((int)(drop.isPlayerDrop() ? 0 : 1));
-        return mplew.getPacket();
-    }
+            mplew.writeShort((int) (drop.isPlayerDrop() ? 0 : 1));// 玩家丢弃是 0 怪物掉落是 1
+            return mplew.getPacket();
+        }
     
     public static void writeBuffMask(final MaplePacketLittleEndianWriter mplew, final Collection<MapleBuffStat> statups) {
         final int[] mask = { 0, 0, -262144, 0 };

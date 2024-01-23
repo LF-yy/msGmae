@@ -21,7 +21,6 @@ import handling.world.World;
 import handling.world.PlayerBuffStorage;
 import handling.world.MapleMessengerCharacter;
 import io.netty.channel.Channel;
-import tools.MapleAESOFB;
 import tools.MockIOSession;
 import server.maps.MapleFoothold;
 import java.util.Comparator;
@@ -231,6 +230,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private boolean auto吸怪;
     private boolean DebugMessage;
     private boolean itemVacs;
+    private boolean mobVacs;
+    private boolean mobMapVacs;
     private boolean beansStart;
     private int[] wishlist;
     private int[] rocks;
@@ -289,6 +290,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private SkillMacro[] skillMacros;
     private MapleKeyLayout keylayout;
     private ItemVac ItemVac;
+    private MobVac mobVac;
+    private MobMapVac mobMapVac;
     private transient ScheduledFuture<?> beholderHealingSchedule;
     private transient ScheduledFuture<?> beholderBuffSchedule;
     private transient ScheduledFuture<?> BerserkSchedule;
@@ -410,27 +413,21 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int jf8;
     private int jf9;
     private int jf10;
+    private int 等级上限;
     private Map<Integer, Integer> _equippedFuMoMap;
-    public int 吸怪特权 = 0;
-    private double 套装伤害加成;
-
-    public transient MapleMap 上个地图;
     private transient List<LifeMovementFragment> 吸怪RES;
 
-    public final Collection<IItem> getHasEquipped() {
-        return this.inventory[MapleInventoryType.EQUIPPED.ordinal()].list();
-    }
-    public List<LifeMovementFragment> get吸怪Res() {
-        return this.吸怪RES;
-    }
-
-    public void set吸怪Res(final List<LifeMovementFragment> 吸怪RES) {
-        this.吸怪RES = 吸怪RES;
-    }
-    public int get吸怪特权() {
-        return this.吸怪特权;
-    }
+    public boolean 套装1是否共存 = false, 套装2是否共存 = false, 套装3是否共存 = false, 套装4是否共存 = false, 套装5是否共存 = false, 套装6是否共存 = false;
+    public int TZ1 = 0;
+    public int TZ2 = 0;
+    public int TZ3 = 0;
+    public int TZ4 = 0;
+    public int TZ5 = 0;
+    public int TZ6 = 0;
+    private double 套装伤害加成;
+    private int clonedamgerate;
     private MapleCharacter(final boolean ChannelServer) {
+        this.clonedamgerate = 0;
         this.teleportname = "";
         this.nowmacs = "";
         this.nextConsume = 0L;
@@ -473,6 +470,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.auto吸怪 = false;
         this.DebugMessage = false;
         this.itemVacs = false;
+        this.mobVacs = false;
+        this.mobMapVacs = false;
         this.beansStart = false;
         this.remainingSp = new int[10];
         this.savedHairs = new int[6];
@@ -564,6 +563,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.记录移动坐标Y1 = 0.0;
         this.记录移动坐标X2 = 0.0;
         this.记录移动坐标Y2 = 0.0;
+        this.等级上限 = 0;
         this.isCheating = Boolean.valueOf(false);
         this._isCheatingPlayer = 0;
         this._equippedFuMoMap = new HashMap<Integer, Integer>();
@@ -1123,7 +1123,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                             for (int m = 0; m <= GameConstants.getSkillBook((int)ret.job); ++m) {
                                 final int[] remainingSp2 = ret.remainingSp;
                                 final int n = m;
-                                remainingSp2[n] += 2;
+                                remainingSp2[n] += 3;//修改升级sp技能点
                             }
                             ret.setQuestAdd(MapleQuest.getInstance(170000), (byte)0, null);
                         }
@@ -1135,13 +1135,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ps.setInt(1, charid);
                     rs = ps.executeQuery();
 
-                    if (rs.next()) {
+                    try {
                         while (rs.next()) {
                             final int position = rs.getInt("position");
                             final SkillMacro macro = new SkillMacro(rs.getInt("skill1"), rs.getInt("skill2"), rs.getInt("skill3"), rs.getString("name"), rs.getInt("shout"), position);
                             ret.skillMacros[position] = macro;
+                            //System.out.println("读取技能宏");
                         }
-                    }else{
+                    } catch (SQLException e) {
                         int index = 0;
                         while (index<=2) {
                             final SkillMacro macro = new SkillMacro(0,0,0,"",0,index);
@@ -1149,6 +1150,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                             index = index + 1;
                         }
                     }
+
+
+
                     rs.close();
                     ps.close();
                     ps = con.prepareStatement("SELECT `keye`,`type`,`action` FROM keymap WHERE characterid = ?");
@@ -1481,7 +1485,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.setShort(5, this.stats.getLuk());
             ps.setShort(6, this.stats.getInt());
             ps.setInt(7, this.exp);
-            ps.setShort(8, (short)((this.stats.getHp() < 1) ? 50 : this.stats.getHp()));
+            ps.setShort(8, (short)((this.stats.getHp() < 1) ? 50 : this.stats.getHp() > this.stats.getMaxHp() ? this.stats.getMaxHp() : this.stats.getHp()));
             ps.setShort(9, this.stats.getMp());
             ps.setShort(10, this.stats.getMaxHp());
             ps.setShort(11, this.stats.getMaxMp());
@@ -1602,7 +1606,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             ps.close();
             this.deleteWhereCharacterId(con, "DELETE FROM skillmacros WHERE characterid = ?");
+            //System.out.println("移除技能宏");
             for (int l = 0; l < 5; ++l) {
+                //System.out.println("新增技能宏");
                 final SkillMacro macro = this.skillMacros[l];
                 if (macro != null) {
                     ps = con.prepareStatement("INSERT INTO skillmacros (characterid, skill1, skill2, skill3, name, shout, position) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -1627,6 +1633,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.setByte(6, this.getInventory(MapleInventoryType.CASH).getSlotLimit());
             ps.execute();
             ps.close();
+            //保存装备数据
             this.saveInventory(con);
             this.deleteWhereCharacterId(con, "DELETE FROM questinfo WHERE characterid = ?");
             ps = con.prepareStatement("INSERT INTO questinfo (`characterid`, `quest`, `customData`) VALUES (?, ?, ?)");
@@ -2986,28 +2993,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (to == null) {
             return;
         }
-        if (this.上个地图 != null) {
-            if (this.上个地图.getMonsterSpawnner().right != null) {
-                if (this.上个地图.getMonsterSpawnner().left == this.getId()) {
-                    this.上个地图.setMonsterspawn(null, -1);
-                }
-            }
-        }
-        this.吸怪特权 = 0;
-        if (pto != null && GameConstants.isNotTo(to.getId(), pto.getName())) {
-            if (this.getParty() == null || this.getParty().getMembers().size() == 1) {
-                this.changeMap(211060000);
-                return;
-            }
-            final int cMap = this.getMapId();
-            for (final MaplePartyCharacter chr : this.getParty().getMembers()) {
-                final MapleCharacter curChar = this.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
-                if (curChar != null && (curChar.getMapId() == cMap || curChar.getEventInstance() == this.getEventInstance())) {
-                    curChar.changeMap(211060000);
-                }
-            }
-        }
-        else {
+//        if (pto != null && GameConstants.isNotTo(to.getId(), pto.getName())) {
+//            if (this.getParty() == null || this.getParty().getMembers().size() == 1) {
+//                this.changeMap(211060000);
+//                return;
+//            }
+//            final int cMap = this.getMapId();
+//            for (final MaplePartyCharacter chr : this.getParty().getMembers()) {
+//                final MapleCharacter curChar = this.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+//                if (curChar != null && (curChar.getMapId() == cMap || curChar.getEventInstance() == this.getEventInstance())) {
+//                    curChar.changeMap(211060000);
+//                }
+//            }
+//        }
+//        else {
             if (this.getAntiMacro().inProgress()) {
                 this.dropMessage(5, "被使用測謊儀時無法操作。");
                 this.client.sendPacket(MaplePacketCreator.enableActions());
@@ -3030,13 +3029,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     final MapleTrade local = this.getTrade();
                     final MapleTrade partners = local.getPartner();
                     if (local.isLocked() && partners.isLocked()) {
-                        this.client.getSession().write((Object)MaplePacketCreator.enableActions());
-                    }
-                    else {
+                        this.client.getSession().write((Object) MaplePacketCreator.enableActions());
+                    } else {
                         MapleTrade.cancelTrade(this.getTrade(), this.getClient());
                     }
-                }
-                else {
+                } else {
                     MapleTrade.cancelTrade(this.getTrade(), this.client);
                 }
             }
@@ -3054,7 +3051,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             if (pyramid && this.pyramidSubway != null) {
                 this.pyramidSubway.onChangeMap(this, to.getId());
             }
-        }
+//        }
     }
     
     public void leaveMap() {
@@ -3277,22 +3274,28 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void changeSkillLevel(final ISkill skill, final byte newLevel, final byte newMasterlevel, final long expiration) {
         if (skill == null || (!GameConstants.isApplicableSkill(skill.getId()) && !GameConstants.isApplicableSkill_(skill.getId()))) {
+            //System.out.println("直接返回了");
             return;
         }
         this.client.sendPacket(MaplePacketCreator.updateSkill(skill.getId(), (int)newLevel, (int)newMasterlevel, expiration));
         if (newLevel == 0 && newMasterlevel == 0) {
             if (!this.skills.containsKey((Object)skill)) {
+                //System.out.println("可能没找到技能");
                 return;
             }
             this.skills.remove((Object)skill);
+            //System.out.println("删除了技能");
         }
         else {
+            //System.out.println("新增技能了");
             this.skills.put(skill, new SkillEntry(newLevel, newMasterlevel, expiration));
         }
         if (GameConstants.isRecoveryIncSkill(skill.getId())) {
+            //System.out.println("恢复技能");
             this.stats.relocHeal();
         }
         else if (GameConstants.isElementAmpSkill(skill.getId())) {
+           // System.out.println("是元素技能");
             this.stats.recalcLocalStats();
         }
     }
@@ -3301,6 +3304,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (skill == null) {
             return;
         }
+        System.out.println("更改技能级别");
         this.client.sendPacket(MaplePacketCreator.updateSkill(skill.getId(), (int)newLevel, (int)newMasterlevel, -1L));
         if (newLevel == 0 && newMasterlevel == 0) {
             if (this.skills.containsKey((Object)skill)) {
@@ -3469,8 +3473,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         try {
             final int prevexp = this.getExp();
             int needed = GameConstants.getExpNeededForLevel((int)this.level);
-            final int 骑士团等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团等级上限"));
-            final int 冒险家等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"));
+            final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
+            final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
             if (total > 0) {
                 this.stats.checkEquipLevels(this, total);
             }
@@ -3603,8 +3607,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (total > 0) {
             this.stats.checkEquipLevels(this, total);
         }
-        final int 冒险家等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"冒险家等级上限"));
-        final int 骑士团等级上限 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"骑士团等级上限"));
+        final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
+        final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
         int needed = GameConstants.getExpNeededForLevel((int)this.level);
         if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && this.level >= 骑士团等级上限)) {
             if (this.exp + total > needed) {
@@ -3967,9 +3971,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void levelUp() {
-        if (this.level >= this.取限制等级()) {
-            this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
-            return;
+        if (等级上限 == 0 ){
+            等级上限 =  this.取限制等级(getId());
+        }
+        int shijiedengji = this.取限制等级();
+        if (shijiedengji > 等级上限){
+            等级上限 = shijiedengji;
+        }
+        if ( this.level >= 等级上限) {
+            //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
+                return;
         }
         if (GameConstants.isKOC((int)this.job)) {
             if (this.level <= 70) {
@@ -4114,7 +4125,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void DoLevelMsg() {
-        final int 升级快讯 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"升级快讯开关"));
+        final int 升级快讯 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"升级快讯开关"));
         if (升级快讯 <= 0 && !this.isGM() && this.level >= 1) {
             final String 最高等级玩家 = NPCConversationManager.获取最高等级玩家名字();
             final StringBuilder sb = new StringBuilder("[升级快讯]: 恭喜玩家【");
@@ -5107,7 +5118,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public final boolean hasEquipped(final int itemid) {
+        Collection<IItem> list = this.inventory[MapleInventoryType.EQUIPPED.ordinal()].list();
         return this.inventory[MapleInventoryType.EQUIPPED.ordinal()].countById(itemid) >= 1;
+    }
+
+    public final Collection<IItem> getHasEquipped() {
+        return this.inventory[MapleInventoryType.EQUIPPED.ordinal()].list();
     }
     
     public final boolean haveItem(final int itemid, final int quantity, final boolean checkEquipped, final boolean greaterOrEquals) {
@@ -5159,11 +5175,33 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         (this.ItemVac = new ItemVac(this)).start();
         this.itemVacs = true;
     }
-    
+    public void startMobVac(UserAttraction userAttraction) {
+        (this.mobVac = new MobVac(this,userAttraction)).start();
+        this.mobVacs = true;
+    }
+    public void startMobMapVac(UserAttraction userAttraction,int mobId,String mobName,String adress,String value, long hp) {
+        (this.mobMapVac = new MobMapVac(this,userAttraction,mobId,mobName, adress, value,hp)).start();
+        this.mobMapVacs = true;
+    }
     public void stopItemVac() {
         if (this.itemVacs) {
-            this.ItemVac.interrupt();
+            try {
+                this.ItemVac.interrupt();
+            } catch (Exception e) {
+            }
             this.itemVacs = false;
+        }
+    }
+    public void stopMobVac() {
+        if (this.mobVacs) {
+            this.mobVac.interrupt();
+            this.mobVacs = false;
+        }
+    }
+    public void stopMobMapVac() {
+        if (this.mobMapVacs) {
+            this.mobMapVac.interrupt();
+            this.mobMapVacs = false;
         }
     }
     
@@ -5725,6 +5763,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             System.err.println("错误" + (Object)Ex);
         }
     }
+    public int getCloneDamgeRate() {
+        return this.clonedamgerate;
+    }
+
+    public void setCloneDamgeRate(int a) {
+        this.clonedamgerate = a;
+    }
 
     public void set套装伤害加成(double set) {
         this.套装伤害加成 = set;
@@ -5733,33 +5778,59 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public double get套装伤害加成() {
         return this.套装伤害加成;
     }
-
-    public int getBossLog1(final String boss) {
-        return this.getBossLog1(boss, 0);
-    }
+    
     public int getBossLog(final String boss) {
         return this.getBossLog(boss, 0);
     }
-    public void setBossLog1(final String boss, final int type) {
-        this.setBossLog1(boss, type, 1);
+    public int getBossLog1(final String boss) {
+        return this.getBossLog1(boss, 0);
     }
-
-    public void setBossLog1(final String boss) {
-        this.setBossLog1(boss, 0);
-    }
-    public void setBossLog1(final String boss, final int type, final int count) {
-        final int bossCount = this.getBossLog1(boss, type);
+    public int getBossLog(final String boss, final int type) {
         try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-            ps.setInt(1, bossCount + count);
-            ps.setInt(2, type);
-            ps.setInt(3, this.id);
-            ps.setString(4, boss);
-            ps.executeUpdate();
+            int count = 0;
+            final Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ?");
+            ps.setInt(1, this.id);
+            ps.setString(2, boss);
+            final ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt("count");
+                if (count < 0) {
+                    return count;
+                }
+                final Timestamp bossTime = rs.getTimestamp("time");
+                rs.close();
+                ps.close();
+                if (type == 0) {
+                    final Calendar sqlcal = Calendar.getInstance();
+                    if (bossTime != null) {
+                        sqlcal.setTimeInMillis(bossTime.getTime());
+                    }
+                    if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
+                        count = 0;
+                        ps = con.prepareStatement("UPDATE bosslog SET count = 0, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+                        ps.setInt(1, this.id);
+                        ps.setString(2, boss);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+            else {
+                final PreparedStatement psu = con.prepareStatement("INSERT INTO bosslog (characterid, bossid, count, type) VALUES (?, ?, ?, ?)");
+                psu.setInt(1, this.id);
+                psu.setString(2, boss);
+                psu.setInt(3, 0);
+                psu.setInt(4, type);
+                psu.executeUpdate();
+                psu.close();
+            }
+            rs.close();
             ps.close();
+            return count;
         }
         catch (Exception Ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            return -1;
         }
     }
     public int getBossLog1(final String boss, final int type) {
@@ -5810,83 +5881,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
-
-
-    public void resetBossLog1(final String boss) {
-        this.resetBossLog1(boss, 0);
-    }
-
-    public void resetBossLog1(final String boss, final int type) {
-        try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-            ps.setInt(1, 0);
-            ps.setInt(2, type);
-            ps.setInt(3, this.id);
-            ps.setString(4, boss);
-            ps.executeUpdate();
-            ps.close();
-        }
-        catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
-        }
-    }
-    public int getBossLog(final String boss, final int type) {
-        try {
-            int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ?");
-            ps.setInt(1, this.id);
-            ps.setString(2, boss);
-            final ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                count = rs.getInt("count");
-                if (count < 0) {
-                    return count;
-                }
-                final Timestamp bossTime = rs.getTimestamp("time");
-                rs.close();
-                ps.close();
-                if (type == 0) {
-                    final Calendar sqlcal = Calendar.getInstance();
-                    if (bossTime != null) {
-                        sqlcal.setTimeInMillis(bossTime.getTime());
-                    }
-                    if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
-                        count = 0;
-                        ps = con.prepareStatement("UPDATE bosslog SET count = 0, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-                        ps.setInt(1, this.id);
-                        ps.setString(2, boss);
-                        ps.executeUpdate();
-                    }
-                }
-            }
-            else {
-                final PreparedStatement psu = con.prepareStatement("INSERT INTO bosslog (characterid, bossid, count, type) VALUES (?, ?, ?, ?)");
-                psu.setInt(1, this.id);
-                psu.setString(2, boss);
-                psu.setInt(3, 0);
-                psu.setInt(4, type);
-                psu.executeUpdate();
-                psu.close();
-            }
-            rs.close();
-            ps.close();
-            return count;
-        }
-        catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
-            return -1;
-        }
-    }
-    
     public void setBossLog(final String boss) {
         this.setBossLog(boss, 0);
     }
-    
+    public void setBossLog1(final String boss) {
+        this.setBossLog1(boss, 0);
+    }
+
     public void setBossLog(final String boss, final int type) {
         this.setBossLog(boss, type, 1);
     }
-    
+    public void setBossLog1(final String boss, final int type) {
+        this.setBossLog1(boss, type, 1);
+    }
+
     public void setBossLog(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog(boss, type);
         try {
@@ -5902,6 +5910,24 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
         }
     }
+
+    public void setBossLog1(final String boss, final int type, final int count) {
+        final int bossCount = this.getBossLog1(boss, type);
+        try {
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+            ps.setInt(1, bossCount + count);
+            ps.setInt(2, type);
+            ps.setInt(3, this.id);
+            ps.setString(4, boss);
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+        }
+    }
+
+
     
     public void resetBossLog(final String boss) {
         this.resetBossLog(boss, 0);
@@ -5921,7 +5947,24 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
         }
     }
-    
+    public void resetBossLog1(final String boss) {
+        this.resetBossLog1(boss, 0);
+    }
+
+    public void resetBossLog1(final String boss, final int type) {
+        try {
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+            ps.setInt(1, 0);
+            ps.setInt(2, type);
+            ps.setInt(3, this.id);
+            ps.setString(4, boss);
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+        }
+    }
     public int getBossLogAcc(final String boss) {
         try {
             int count = 0;
@@ -6323,14 +6366,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.stats.dropMod;
     }
     
-    public double getDropm() {
+        public double getDropm() {
         return this.stats.dropm;
     }
-    
-    public double getExpm() {
-        return this.stats.expm;
+    public void setDropm(double drop) {
+        this.stats.dropm = drop;
     }
-
     public int getItemDropm() {
         return this.stats.itemDropm;
     }
@@ -6342,6 +6383,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     public void setItemExpm(int itemExp) {
         this.stats.itemExpm = itemExp;
+    }
+    
+    public double getExpm() {
+        return this.stats.expm;
     }
     
     public int getCashMod() {
@@ -6526,13 +6571,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.fairySchedule = null;
         }
         if (exp) {
-            final int 精灵吊坠 = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"精灵吊坠经验加成"));
+            final int 精灵吊坠 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"精灵吊坠经验加成"));
             this.fairyExp = (byte)精灵吊坠;
         }
     }
     
     public void 人气经验加成() {
-        final int 人气 = this.getFame() * (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"人气经验加成"));
+        final int 人气 = this.getFame() * (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"人气经验加成"));
         this.gainExp(人气, true, false, false);
     }
     
@@ -11050,7 +11095,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         catch (Exception ex) {}
     }
     
-    public int 取限制等级() {
+    public static int 取限制等级() {
         int 限制等级 = 0;
         try {
             final int cid = 4001128;
@@ -11066,7 +11111,40 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         catch (SQLException ex) {}
         return 限制等级;
     }
-    
+
+    public int 取限制等级(final int cid) {
+        try {
+            int 限制等级 = CongMS.ConfigValuesMap.get("等级初始上限");
+            final Connection con = DatabaseConnection.getConnection();
+            PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
+
+            final ResultSet rs = limitCheck.executeQuery();
+            if (rs.next()) {
+                限制等级 = rs.getInt("xianzhidengji");
+                rs.close();
+                limitCheck.close();
+                return 限制等级;
+            }
+            else {
+                final PreparedStatement psu = con.prepareStatement("INSERT INTO shijiexianzhidengji (huoyaotongid, dangqianshuliang, zongshuliang, xianzhidengji) VALUES (?, ?, ?, ?)");
+                psu.setInt(1, cid);
+                psu.setInt(2, 0);
+                psu.setInt(3, 0);
+                psu.setInt(4, 限制等级);
+                psu.executeUpdate();
+                psu.close();
+               // return 限制等级;
+            }
+            rs.close();
+            limitCheck.close();
+            return 限制等级;
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            return CongMS.ConfigValuesMap.get("等级初始上限");
+        }
+    }
+
     public void updateOfflineTime1() {
         try (final Connection con = DatabaseConnection.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update lefttime set lefttime = ? Where accid = ?");
@@ -11286,7 +11364,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinStat1(equip);
                 } else {
                     Num += this.RuinStat(equip);
@@ -11302,7 +11380,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinStr(equip) * 10;
                 } else {
                     Num += this.RuinStr(equip);
@@ -11318,7 +11396,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinDex(equip) * 10;
                 } else {
                     Num += this.RuinDex(equip);
@@ -11334,7 +11412,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinInt(equip) * 10;
                 } else {
                     Num += this.RuinInt(equip);
@@ -11350,7 +11428,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinLuk(equip) * 10;
                 } else {
                     Num += this.RuinLuk(equip);
@@ -11366,7 +11444,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinWatk(equip) * 50;
                 } else {
                     Num += this.RuinWatk(equip);
@@ -11382,7 +11460,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinMatk(equip) * 10;
                 } else {
                     Num += this.RuinMatk(equip);
@@ -11398,7 +11476,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinMdef(equip) * 10;
                 } else {
                     Num += this.RuinMdef(equip);
@@ -11414,7 +11492,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinWdef(equip) * 10;
                 } else {
                     Num += this.RuinWdef(equip);
@@ -11430,7 +11508,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinHp(equip) * 10;
                 } else {
                     Num += this.RuinHp(equip);
@@ -11446,7 +11524,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) Start.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinMp(equip) * 10;
                 } else {
                     Num += this.RuinMp(equip);
@@ -11502,28 +11580,169 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return equip.getMp();
     }
 
-    private boolean mobVacs;
-    private boolean mobMapVacs;
-    private MobVac mobVac;
-    private MobMapVac mobMapVac;
-    public void stopMobVac() {
-        if (this.mobVacs) {
-            this.mobVac.interrupt();
-            this.mobVacs = false;
+
+
+    public int getAccountLog(String log1, int a) {
+        if (a < 1) {
+            return this.getAccountidBossLog(log1);
+        }
+        return this.getAccountidLog(log1);
+    }
+
+    public void setAccountLog(String log1, int a) {
+        if (a < 1) {
+            this.setAccountidBossLog(log1, 1);
+        } else {
+            this.setAccountidLog(log1, 1);
         }
     }
-    public void stopMobMapVac() {
-        if (this.mobMapVacs) {
-            this.mobMapVac.interrupt();
-            this.mobMapVacs = false;
+
+    public void setAccountLog(String log1, int a, int b) {
+        if (a < 1) {
+            this.setAccountidBossLog(log1, b);
+        } else {
+            this.setAccountidLog(log1, b);
         }
     }
-    public void startMobVac(UserAttraction userAttraction) {
-        (this.mobVac = new MobVac(this,userAttraction)).start();
-        this.mobVacs = true;
+
+    public int getAccountidBossLog(String log1) {
+        int jf = 0;
+        try (Connection con = DatabaseConnection.getConnection()) {
+            PreparedStatement ps = con.prepareStatement("select * from accountidbosslog where id =? and log = ?");
+            ps.setInt(1, this.accountid);
+            ps.setString(2, log1);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                jf = rs.getInt("sz1");
+            } else {
+                PreparedStatement psu = con.prepareStatement("insert into accountidbosslog (id,log, sz1) VALUES (?,?, ?)");
+                psu.setInt(1, this.accountid);
+                psu.setString(2, log1);
+                psu.setInt(3, 0);
+                psu.executeUpdate();
+                psu.close();
+            }
+            rs.close();
+            ps.close();
+
+        } catch (SQLException ex) {
+            System.err.println("FZ3读取发生错误: " + ex);
+        }
+        return jf;
     }
-    public void startMobMapVac(UserAttraction userAttraction,int mobId,String mobName,String adress,String value, long hp) {
-        (this.mobMapVac = new MobMapVac(this,userAttraction,mobId,mobName, adress, value,hp)).start();
-        this.mobMapVacs = true;
+
+    public void setAccountidBossLog(String log1) {
+        this.setAccountidBossLog(log1, 1);
     }
+
+    public void setAccountidBossLog(String log1, int slot) {
+        int jf = this.getAccountidBossLog(log1);
+        try (Connection con = DatabaseConnection.getConnection()) {
+            PreparedStatement ps = con.prepareStatement("UPDATE accountidbosslog SET sz1 = ? where id = ? AND log = ?");
+            ps.setInt(1, jf + slot);
+            ps.setInt(2, this.accountid);
+            ps.setString(3, log1);
+            ps.executeUpdate();
+            ps.close();
+        } catch (SQLException ex) {
+            System.err.println("accountidbosslog加减发生错误: " + ex);
+        }
+    }
+    public void setPartyAccountidLog(MapleCharacter c, String log1, int slot) {
+        if (c.getParty() == null || c.getParty().getMembers().size() == 1) {
+            c.setAccountidLog(log1, slot);
+            return;
+        }
+        for (MaplePartyCharacter chr : c.getParty().getMembers()) {
+            MapleCharacter curChar = c.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                curChar.setAccountidLog(log1, slot);
+            }
+        }
+    }
+
+    public int getAccountidLog(String log1) {
+        int jf = 0;
+        try (Connection con = DatabaseConnection.getConnection()) {
+            PreparedStatement ps = con.prepareStatement("select * from accountidlog where id =? and log = ?");
+            ps.setInt(1, this.accountid);
+            ps.setString(2, log1);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                jf = rs.getInt("sz1");
+            } else {
+                PreparedStatement psu = con.prepareStatement("insert into accountidlog (id,log, sz1) VALUES (?,?, ?)");
+                psu.setInt(1, this.accountid);
+                psu.setString(2, log1);
+                psu.setInt(3, 0);
+                psu.executeUpdate();
+                psu.close();
+            }
+            rs.close();
+            ps.close();
+
+        } catch (SQLException ex) {
+            System.err.println("FZ3读取发生错误: " + ex);
+        }
+        return jf;
+    }
+
+    public void setAccountidLog(String log1) {
+        this.setAccountidLog(log1, 1);
+    }
+
+    public void setAccountidLog(String log1, int slot) {
+        int jf = this.getAccountidLog(log1);
+        try (Connection con = DatabaseConnection.getConnection()) {
+            PreparedStatement ps = con.prepareStatement("UPDATE accountidlog SET sz1 = ? where id = ? AND log = ?");
+            ps.setInt(1, jf + slot);
+            ps.setInt(2, this.accountid);
+            ps.setString(3, log1);
+            ps.executeUpdate();
+            ps.close();
+
+        } catch (SQLException ex) {
+            System.err.println("FZ3加减发生错误: " + ex);
+        }
+    }
+
+
+    public List<LifeMovementFragment> get吸怪Res() {
+        return this.吸怪RES;
+    }
+
+    public void set吸怪Res(final List<LifeMovementFragment> 吸怪RES) {
+        this.吸怪RES = 吸怪RES;
+    }
+
+    public final void openSkill(final MapleCharacter victim) {
+        for (final ISkill skil : SkillFactory.getAllSkills()) {
+            if (victim.getSkillLevel(skil) < 1) {
+                this.changeSkillLevel(skil, (byte)0, (byte)10);
+            }
+        }
+    }
+
+//    public int getAccountLog(String log1, int a) {
+//        if (a < 1) {
+//            return this.getAccountidBossLog(log1);
+//        }
+//        return this.getAccountidLog(log1);
+//    }
+//
+//    public void setAccountLog(String log1, int a) {
+//        if (a < 1) {
+//            this.setAccountidBossLog(log1, 1);
+//        } else {
+//            this.setAccountidLog(log1, 1);
+//        }
+//    }
+//
+//    public void setAccountLog(String log1, int a, int b) {
+//        if (a < 1) {
+//            this.setAccountidBossLog(log1, b);
+//        } else {
+//            this.setAccountidLog(log1, b);
+//        }
+//    }
 }

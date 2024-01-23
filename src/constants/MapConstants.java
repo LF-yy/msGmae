@@ -1,5 +1,7 @@
 package constants;
 
+import gui.CongMS;
+import gui.GuaiMS;
 import server.maps.MapleMapObject;
 import java.util.Iterator;
 import server.life.MapleMonster;
@@ -131,6 +133,17 @@ public class MapConstants
             final MapleMonster mob = (MapleMonster)obj;
             if (mob.getStats().isBoss()) {
                 return 1;
+            }
+        }
+        boolean 判定 = false;
+        if (((Integer) CongMS.ConfigValuesMap.get("怪物多倍地图开关")).intValue() > 0) {
+            for (int i = 0; i < CongMS.mobmaptable.size(); ++i) {
+                if (map.getId() == Integer.parseInt((String)CongMS.mobmaptable.get(i)) || ((Integer)CongMS.ConfigValuesMap.get("怪物地图多倍怪物开关")).intValue() > 0) {
+                    判定 = true;
+                }
+            }
+            if (判定) {
+                return ((Integer)CongMS.ConfigValuesMap.get("怪物多倍地图倍率")).intValue();
             }
         }
         switch (map.getId()) {

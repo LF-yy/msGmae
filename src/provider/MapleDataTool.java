@@ -61,7 +61,10 @@ public class MapleDataTool
             return Integer.parseInt(getString(data));
         }
         if (data.getType() == MapleDataType.SHORT) {
-            return (int)Integer.valueOf((int)(short)(Short)data.getData());
+            return Integer.valueOf((Short)data.getData());
+        }
+        if (data.getType() == MapleDataType.DOUBLE) {
+            return (int) Math.abs(Double.parseDouble(String.valueOf(data.getData())));
         }
         return (int)(Integer)data.getData();
     }

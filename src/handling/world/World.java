@@ -1,5 +1,7 @@
 package handling.world;
 
+import constants.ServerConfig;
+import gui.CongMS;
 import scripting.ReactorScriptManager;
 import server.life.MapleMonsterInformationProvider;
 import handling.world.family.MapleFamilyCharacter;
@@ -158,7 +160,7 @@ public class World
     }
     
     public static void registerRespawn() {
-        WorldTimer.getInstance().register((Runnable)new Respawn(), 5000L);
+        WorldTimer.getInstance().register((Runnable)new Respawn(),  (long)((Integer) CongMS.ConfigValuesMap.get("怪物刷新频率设定")));
     }
     
     public static void handleMap(final MapleMap map, final int numTimes, final int size) {
@@ -175,6 +177,7 @@ public class World
                 }
             }
         }
+        //刷怪判斷輪迴
         if (map.characterSize() > 0) {
             if (map.canSpawn()) {
                 map.respawn(false);
@@ -1627,5 +1630,32 @@ public class World
                 ReactorScriptManager.getInstance().clearDrops();
             }
         }
+    }
+
+    public static void scheduleRateDelay1(final String type, final long delay) {
+        WorldTimer.getInstance().schedule((Runnable)new Runnable() {
+            @Override
+            public void run() {
+                final String rate = type;
+                if (rate.equals("经验")) {
+                    for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+                        cservs.setExpRate(ServerConfig.ExpRate);
+                    }
+                    MapleParty.活动经验倍率 = 1;
+                }
+                else if (rate.equals("爆率")) {
+                    for (ChannelServer channelServer : ChannelServer.getAllInstances()) {}
+                    MapleParty.活动爆率倍率 = 1;
+                }
+                else if (rate.equals("金币")) {
+                    for (ChannelServer channelServer : ChannelServer.getAllInstances()) {}
+                    MapleParty.活动金币倍率 = 1;
+                }
+                else if (!rate.equalsIgnoreCase("boss爆率")) {
+                    if (rate.equals("宠物经验")) {}
+                }
+                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "系统" + rate + "活动已经结束。系统已成功自动切换为正常游戏模式！"));
+            }
+        }, delay * 1000L);
     }
 }

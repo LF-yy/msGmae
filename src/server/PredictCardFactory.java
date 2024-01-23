@@ -17,7 +17,8 @@ public class PredictCardFactory
     protected Map<Integer, PredictCardComment> predictCardComment;
     
     public PredictCardFactory() {
-        this.etcData = MapleDataProviderFactory.getDataProvider(new File("wz/Etc.wz"));
+//        this.etcData = MapleDataProviderFactory.getDataProvider(new File("E:/新建文件夹 (2)/ms079/wz/Etc.wz"));
+        this.etcData = MapleDataProviderFactory.getDataProvider(new File(System.getProperty("net.sf.odinms.wzpath")+"/Etc.wz"));
         this.predictCard = new HashMap<Integer, PredictCard>();
         this.predictCardComment = new HashMap<Integer, PredictCardComment>();
     }

@@ -59,7 +59,7 @@ public class 活动神秘商人
             @Override
             public void run() {
                 try {
-                    Thread.sleep((long)(60000 * 存在时间));
+                    Thread.sleep((long)(2000));
                     活动神秘商人.删除神秘商人();
                 }
                 catch (InterruptedException ex) {}

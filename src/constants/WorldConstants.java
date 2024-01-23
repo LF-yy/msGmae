@@ -66,7 +66,7 @@ public class WorldConstants
         WorldConstants.SCROLL_MESSAGE = ServerProperties.getProperty("CongMS.serverMessage", WorldConstants.SCROLL_MESSAGE);
         WorldConstants.CHANNEL_COUNT = ServerProperties.getProperty("CongMS.channel.count", WorldConstants.CHANNEL_COUNT);
         WorldConstants.USER_LIMIT = ServerProperties.getProperty("CongMS.userlimit", WorldConstants.USER_LIMIT);
-//        WorldConstants.USER_LIMIT = (int)Integer.valueOf(Start.ConfigValuesMap.get((Object)"服务端最大人数"));
+       // WorldConstants.USER_LIMIT = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"服务端最大人数"));
         WorldConstants.MAX_CHAR_VIEW = ServerProperties.getProperty("CongMS.maxCharView", WorldConstants.MAX_CHAR_VIEW);
         WorldConstants.GMITEMS = ServerProperties.getProperty("CongMS.gmitems", WorldConstants.GMITEMS);
         WorldConstants.CS_ENABLE = ServerProperties.getProperty("CongMS.cashshop.enable", WorldConstants.CS_ENABLE);
@@ -88,7 +88,7 @@ public class WorldConstants
         WorldConstants.DROP_RATE = 1;
         WorldConstants.FLAG = 3;
         WorldConstants.CHANNEL_COUNT = 2;
-        WorldConstants.WORLD_TIP = "請享受冒險島的冒險之旅吧!";
+        WorldConstants.WORLD_TIP = "请享受冒险岛的冒险之旅吧!";//請享受冒險島的冒險之旅吧!
         WorldConstants.SCROLL_MESSAGE = "";
         WorldConstants.AVAILABLE = true;
         recommendedmsg = "";

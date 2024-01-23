@@ -1,7 +1,6 @@
 package tools.wztosql;
 
 import gui.CongMS;
-import server.Start;
 import tools.Pair;
 import server.life.Element;
 import client.inventory.EquipAdditions;
@@ -182,11 +181,11 @@ public class DumpItems
                 ret = 1;
             }
             else {
-                ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+                ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
             }
         } else {
 //            ret = (short)MapleDataTool.getIntConvert(smEntry, -1);
-            ret = Short.parseShort(Start.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+            ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
         }
         ps.setInt(5, (int)ret);
         double pEntry = 0.0;
@@ -344,7 +343,7 @@ public class DumpItems
                     else {
                         final int dd = MapleDataTool.getIntConvert(d, 0);
                         if (dd != 0) {
-                            rett.put(stat, Integer.valueOf(dd));
+                            rett.put(stat, dd);
                         }
                     }
                 }
@@ -412,6 +411,7 @@ public class DumpItems
             ps.setString(20, "");
         }
         ps.setInt(21, MapleDataTool.getInt("info/create", iz, 0));
+        System.out.println("新增数据了");
         ps.addBatch();
     }
     
@@ -422,11 +422,12 @@ public class DumpItems
             this.delete("DELETE FROM wz_itemadddata");
             this.delete("DELETE FROM wz_itemrewarddata");
             System.out.println("Deleted wz_itemdata successfully.");
+        }else {
+            System.out.println("Adding into wz_itemdata.....");
+            this.dumpItems(this.item, psa, psr, ps, pse, false);
+            this.dumpItems(this.character, psa, psr, ps, pse, true);
+            System.out.println("Done wz_itemdata...");
         }
-        System.out.println("Adding into wz_itemdata.....");
-        this.dumpItems(this.item, psa, psr, ps, pse, false);
-        this.dumpItems(this.character, psa, psr, ps, pse, true);
-        System.out.println("Done wz_itemdata...");
     }
     
     public int currentId() {
@@ -438,7 +439,7 @@ public class DumpItems
         boolean update = false;
         final long startTime = System.currentTimeMillis();
         for (final String file : args) {
-            if (file.equalsIgnoreCase("-update")) {
+            if (file.equals("-update")) {
                 update = true;
             }
         }

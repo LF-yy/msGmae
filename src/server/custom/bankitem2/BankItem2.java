@@ -6,7 +6,8 @@ public class BankItem2
     private int cid;
     private int itemid;
     private int count;
-    
+    private int type;
+
     public long getId() {
         return this.id;
     }
@@ -37,5 +38,13 @@ public class BankItem2
     
     public void setCount(final int count) {
         this.count = count;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

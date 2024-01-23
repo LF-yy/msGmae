@@ -5,7 +5,16 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import client.inventory.*;
+import constants.ServerConstants;
 import database.DatabaseConnection;
+import handling.world.World;
+import provider.MapleData;
+import provider.MapleDataDirectoryEntry;
+import provider.MapleDataFileEntry;
+import provider.MapleDataTool;
+import server.*;
 import server.custom.bankitem2.BankItem2;
 import server.custom.bankitem1.BankItem1;
 import server.custom.bankitem.BankItem;
@@ -34,15 +43,11 @@ import server.custom.bossrank1.BossRankManager1;
 import server.custom.bossrank1.BossRankInfo1;
 import server.custom.bossrank.BossRankManager;
 import server.custom.bossrank.BossRankInfo;
-import java.util.Calendar;
+
+import java.util.*;
+
 import constants.ServerConfig;
-import java.util.Map;
-import java.util.EnumMap;
 import client.MapleStat;
-import client.inventory.Item;
-import client.inventory.MapleInventory;
-import java.util.ArrayList;
-import server.RandomRewards;
 import tools.FileoutputUtil;
 import client.messages.CommandProcessor;
 import constants.ServerConstants.CommandType;
@@ -57,39 +62,31 @@ import server.life.MapleMonster;
 import tools.packet.PetPacket;
 import tools.packet.UIPacket;
 import client.SkillFactory;
-import java.util.List;
 import handling.world.MapleParty;
 import handling.world.guild.MapleGuild;
 import handling.world.World.Guild;
 import handling.world.World.Broadcast;
-import client.inventory.MaplePet;
-import client.inventory.MapleInventoryIdentifier;
 import constants.ItemConstants.類型;
-import client.inventory.Equip;
-import server.MapleItemInformationProvider;
 import server.maps.MapleMapObject;
 import server.maps.MapleReactor;
 import server.quest.MapleQuest;
 import client.MapleQuestStatus;
-import server.MapleInventoryManipulator;
-import client.inventory.MapleInventoryType;
-import client.inventory.IItem;
 import constants.GameConstants;
 import server.life.MapleLifeFactory;
 import java.awt.geom.Point2D;
 import tools.MaplePacketCreator;
 import java.awt.Point;
+import java.util.stream.Collectors;
+
 import server.maps.MapleMap;
-import server.Randomizer;
 import handling.channel.ChannelServer;
-import java.util.Iterator;
 import handling.world.MaplePartyCharacter;
 import client.MapleCharacter;
 import client.MapleClient;
 
 public abstract class AbstractPlayerInteraction
 {
-    private MapleClient c;
+    protected MapleClient c;
     
     public AbstractPlayerInteraction(final MapleClient c) {
         this.c = c;
@@ -138,34 +135,82 @@ public abstract class AbstractPlayerInteraction
     public void 添加破功(final int pg) {
         this.c.getPlayer().添加破功(pg);
     }
-    
+    public void setAccountidBossLog(String bossid) {
+        this.getPlayer().setAccountidBossLog(bossid);
+    }
+    public void setAccountidLog(String bossid) {
+        this.getPlayer().setAccountidLog(bossid);
+    }
 
-    public int getBossLog1(final String bossid) {
-        return this.c.getPlayer().getBossLog1(bossid);
+    public void setAccountidBossLog(String bossid, int number) {
+        this.getPlayer().setAccountidBossLog(bossid, number);
     }
-    public void setBossLog1(final String bossid) {
-        this.c.getPlayer().setBossLog1(bossid);
+
+    public void setAccountidLog(String bossid, int number) {
+        this.getPlayer().setAccountidLog(bossid, number);
     }
-    public void setBossLog1(final String bossid, final int type, final int count) {
-        this.c.getPlayer().setBossLog1(bossid, type, count);
+    public void givePartyAccountidBossLog(String bossid) {
+        this.givePartyAccountidBossLog(bossid, 1);
+    }
+    public void givePartyAccountidLog(String bossid) {
+        this.givePartyAccountidLog(bossid, 1);
+    }
+
+
+    public void givePartyAccountidBossLog(String bossid, int number) {
+        if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
+            this.getPlayer().setAccountidBossLog(bossid, number);
+            return;
+        }
+        for (MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                curChar.setAccountidBossLog(bossid, number);
+            }
+        }
+    }
+    public void givePartyAccountidLog(String bossid, int number) {
+        if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
+            this.getPlayer().setAccountidLog(bossid, number);
+            return;
+        }
+        for (MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                curChar.setAccountidLog(bossid, number);
+            }
+        }
     }
     public int getBossLog(final String bossid) {
         return this.c.getPlayer().getBossLog(bossid);
     }
+    public int getBossLog1(final String bossid) {
+        return this.c.getPlayer().getBossLog1(bossid);
+    }
+    
     public int getBossLog(final String bossid, final int type) {
         return this.c.getPlayer().getBossLog(bossid, type);
     }
-    
+        public int getBossLog1(final String bossid, final int type) {
+        return this.c.getPlayer().getBossLog1(bossid, type);
+    }
+
     public void setBossLog(final String bossid) {
         this.c.getPlayer().setBossLog(bossid);
     }
-    
+
     public void setBossLog(final String bossid, final int type) {
         this.c.getPlayer().setBossLog(bossid, type);
     }
     
     public void setBossLog(final String bossid, final int type, final int count) {
         this.c.getPlayer().setBossLog(bossid, type, count);
+    }
+    public void setBossLog1(final String bossid) {
+        this.c.getPlayer().setBossLog1(bossid);
+    }
+    public void setBossLog1(final String bossid, final int type, final int count) {
+        this.c.getPlayer().setBossLog1(bossid, type, count);
     }
     
     public void resetBossLog(final String bossid) {
@@ -634,6 +679,7 @@ public abstract class AbstractPlayerInteraction
             this.gainPotion(1, amount);
         }
     }
+    
     public final int getNX() {
         return this.getPotion(1);
     }
@@ -660,7 +706,7 @@ public abstract class AbstractPlayerInteraction
     public final void gainItemF(final int id, final short quantity) {
         if (quantity >0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
-            this.getPlayer().ban("刷物品", true, true, false);
+           this.getPlayer().ban("刷物品", true, true, false);
         }else {
             this.gainItem(id, quantity, false, 0L, -1, "");
         }
@@ -673,6 +719,7 @@ public abstract class AbstractPlayerInteraction
             this.gainItem(id, quantity, false, 0L, -1, "");
         }
     }
+    
     public final void gainItem(final int id, final short quantity, final boolean randomStats) {
         this.gainItem(id, quantity, randomStats, 0L, -1, "");
     }
@@ -1113,6 +1160,7 @@ public abstract class AbstractPlayerInteraction
             this.getClient().getPlayer().gainMeso(gain, true, false, true);
         }
     }
+    
     public void gainExp(final int gain) {
         this.getClient().getPlayer().gainExp(gain, true, true, true);
     }
@@ -2257,6 +2305,7 @@ public abstract class AbstractPlayerInteraction
             }
             return;
         }
+
         final boolean rand = portal < 0;
         final MapleMap target = this.getMap(mapId);
         final int cMap = this.getPlayer().getMapId();
@@ -2314,15 +2363,7 @@ public abstract class AbstractPlayerInteraction
             }
         }
     }
-
-    public void resetBossLog1(final String bossid) {
-        this.c.getPlayer().resetBossLog1(bossid);
-    }
-
-    public void resetBossLog1(final String bossid, final int type) {
-        this.c.getPlayer().resetBossLog1(bossid, type);
-    }
-
+    
     public final void 给团队经验(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainExp(amount);
@@ -2442,19 +2483,7 @@ public abstract class AbstractPlayerInteraction
         }
         return Guild.getGP(this.getPlayer().getGuildId());
     }
-
-    public final void 给团队永久(final String bossid) {
-        if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
-            this.setBossLog1(bossid);
-            return;
-        }
-        for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
-            final MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
-            if (curChar != null) {
-                curChar.setBossLog1(bossid);
-            }
-        }
-    }
+    
     public final void 给团队每日(final String bossid) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.setBossLog(bossid);
@@ -2467,7 +2496,18 @@ public abstract class AbstractPlayerInteraction
             }
         }
     }
-    
+    public final void 给团队每日1(final String bossid) {
+        if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
+            this.setBossLog1(bossid);
+            return;
+        }
+        for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            final MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                curChar.setBossLog1(bossid);
+            }
+        }
+    }
     public int 判断团队每日(final String bossid) {
         int a = 0;
         for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
@@ -3315,8 +3355,8 @@ public abstract class AbstractPlayerInteraction
         return BankItemManager1.getInstance().saveItem(this.getPlayer(), item, count);
     }
     
-    public int saveBankItem2(final IItem item, final short count) {
-        return BankItemManager2.getInstance().saveItem(this.getPlayer(), item, count);
+    public int saveBankItem2(final IItem item, final short count, final short type) {
+        return BankItemManager2.getInstance().saveItem(this.getPlayer(), item, count,type);
     }
     
     public List<BankItem> getBankItems() {
@@ -3807,4 +3847,141 @@ public abstract class AbstractPlayerInteraction
         }
         return null;
     }
+
+    //重置潜能
+    public int UseCube(Item equip ,int flag) {
+
+
+        boolean fail = false;
+        int moba = 100;
+        if (flag == 1) {
+
+                final Item item = (Item) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) equip.getPosition());
+                if (item != null && c.getPlayer().getInventory(MapleInventoryType.USE).getNumFreeSlot() >= 1) {
+                    final Equip eq = (Equip) item;
+                    if (eq.getState() >= 5 && eq.getState() != 8) {
+                        if (!haveItem(5062000, 1)) {
+                            return 3;
+                        }
+                        gainItemF(5062000, (short) -1);
+                        eq.renewPotential();
+                        //c.getSession().write(MaplePacketCreator.scrolledItem(scroll, item, false, true));
+//                        c.getPlayer().marriage();
+                        c.getPlayer().forceReAddItem_NoUpdate(item, MapleInventoryType.EQUIP);
+                        MapleInventoryManipulator.addById(c, 2430112, (short) 1, "Cube" + " on " + FileoutputUtil.CurrentReadable_Date());
+
+                            FileoutputUtil.logToFile("logs/Data/使用方块.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSessionIPAddress() + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了魔方道具: 5062000");
+
+                            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 聊天]『" + c.getPlayer().getName() + "』(" + c.getPlayer().getId() + ")地图『" + c.getPlayer().getMapId() + "』使用了魔方道具: 5062000"));
+//
+                        return 0;
+                    } else {
+                        c.getPlayer().dropMessage(5, "该装备沒有潜能或已经超过该方块能改变的潜能等級");
+                        fail = true;
+                        moba = 4;
+                    }
+                } else {
+                    c.getPlayer().dropMessage(5, "请检查你的背包是否已满。");
+                    fail = true;
+                    moba = 5;
+                }
+               // c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getPotentialReset( c.getPlayer().getId(), scroll.getPosition()));
+               // c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getPotentialReset(fail, c.getPlayer().getId(), scroll.getItemId()));
+                return moba;
+
+
+        } else if (flag ==2) {
+            if (c.getPlayer().getLevel() < 70) {
+                //c.getPlayer().dropMessage(1, "You may not use this until level 70.");
+                return 12;
+            } else {
+                final Item item = (Item) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) equip.getPosition());
+                if (item != null && c.getPlayer().getInventory(MapleInventoryType.USE).getNumFreeSlot() >= 1) {
+                    final Equip eq = (Equip) item;
+                    if (eq.getState() >= 5 && eq.getState() != 8) {
+                        if (!haveItem(5062001, 1)) {
+                            return 3;
+                        }
+
+                        gainItemF(5062001, (short) -1);
+                        if (eq.getPotential3() <= 0){
+                            eq.resetPotential();
+                        }else{
+                            eq.renewPotential();
+                        }
+
+                        //c.getSession().write(MaplePacketCreator.scrolledItem(scroll, item, false, true));
+//                        c.getPlayer().marriage();
+                        c.getPlayer().forceReAddItem_NoUpdate(item, MapleInventoryType.EQUIP);
+                        MapleInventoryManipulator.addById(c, 2430112, (short) 5, "Cube" + " on " + FileoutputUtil.CurrentReadable_Date());
+
+                            FileoutputUtil.logToFile("logs/Data/使用方块.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSessionIPAddress() + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了魔方道具: 5062001");
+
+                            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 聊天]『" + c.getPlayer().getName() + "』(" + c.getPlayer().getId() + ")地图『" + c.getPlayer().getMapId() + "』使用了魔方道具: 5062001"));
+
+                        return 0;
+                    } else {
+                        //c.getPlayer().dropMessage(5, "Make sure your equipment has a potential.");
+                        fail = true;
+                        moba = 4;
+                    }
+                } else {
+                    //c.getPlayer().dropMessage(5, "Make sure you have room for a Fragment.");
+                    fail = true;
+                    moba = 5;
+                }
+               // c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getPotentialReset( c.getPlayer().getId(), scroll.getPosition()));
+                return moba;
+            }
+        }
+        return 6;
+    }
+    //潜能鉴定
+    public int UseMagnify(Item equip, int scroll ) {
+        c.getPlayer().updateTick(equip.getItemId());
+        final IItem toReveal = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)(byte)equip.getItemId());
+        if ( toReveal == null) {
+            c.sendPacket(MaplePacketCreator.getInventoryFull());
+            return 0;
+        }
+        final Equip toScroll = (Equip)toReveal;
+
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        final int reqLevel = ii.getReqLevel(toScroll.getItemId()) / 10;
+        if (toScroll.getState() == 1 &&  reqLevel <= 12 ) {
+            final List<List<StructPotentialItem>> pots = new LinkedList<List<StructPotentialItem>>((Collection<? extends List<StructPotentialItem>>)ii.getAllPotentialInfo().values());
+            int new_state = Math.abs((int)toScroll.getPotential1());
+            if (new_state > 7 || new_state < 5) {
+                new_state = 5;
+            }
+            final int lines = (toScroll.getPotential2() != 0) ? 3 : 2;// 默认2条属性
+            while (toScroll.getState() != new_state) {
+                //31001 = 好用的轻功, 31002 = 好用的时空门, 31003 = 好用的火眼晶晶, 31004 = 好用的神圣之火, 41005 = 强化战斗命令, 41006 = 强化进阶祝福, 41007 = 强化极速领域
+                for (int i = 0; i < lines; ++i) {//最小 2 条, 最大 3 条
+                    for (boolean rewarded = false; !rewarded; rewarded = true) {
+                        final StructPotentialItem pot = (StructPotentialItem)((List<StructPotentialItem>)pots.get(Randomizer.nextInt(pots.size()))).get(reqLevel);
+                        if (pot != null && pot.reqLevel / 10 <= reqLevel && GameConstants.optionTypeFits(pot.optionType, toScroll.getItemId()) && GameConstants.potentialIDFits((int)pot.potentialID, new_state, i)) {
+                            if (i == 0) {
+                                toScroll.setPotential1(pot.potentialID);
+                            }
+                            else if (i == 1) {
+                                toScroll.setPotential2(pot.potentialID);
+                            }
+                            else if (i == 2) {
+                                toScroll.setPotential3(pot.potentialID);
+                            }
+                        }
+                    }
+                }
+            }
+            //c.sendPacket(MaplePacketCreator.modifyInventory(true, new ModifyInventory(2, magnify)));
+            c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.getPotentialReset(c.getPlayer().getId(), toScroll.getPosition()));
+           // MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, magnify.getPosition(), (short)1, false);
+            return 1;
+        } else {
+            c.sendPacket(MaplePacketCreator.getInventoryFull());
+            return  0;
+        }
+    }
+
 }

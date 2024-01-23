@@ -1,5 +1,6 @@
 package client.inventory;
 
+import handling.login.LoginServer;
 import server.Randomizer;
 import constants.GameConstants;
 import java.io.Serializable;
@@ -513,7 +514,7 @@ public class Equip extends Item implements IEquip, Serializable
         }
         return 0;
     }
-    
+
     public void resetPotential() {
         final int rank = (Randomizer.nextInt(100) < 4) ? ((Randomizer.nextInt(100) < 4) ? -7 : -6) : -5;
         this.setPotential1((short)rank);
@@ -527,7 +528,7 @@ public class Equip extends Item implements IEquip, Serializable
         this.setPotential2((short)((this.getPotential3() > 0) ? rank : 0));
         this.setPotential3((short)0);
     }
-    
+
     @Override
     public short getHpR() {
         return this.hpR;

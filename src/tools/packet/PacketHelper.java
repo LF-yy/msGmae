@@ -1,5 +1,6 @@
 package tools.packet;
 
+import handling.SendPacketOpcode;
 import server.shops.AbstractPlayerStore;
 import server.shops.IMaplePlayerShop;
 import server.movement.LifeMovementFragment;
@@ -571,7 +572,18 @@ public class PacketHelper
             mplew.write(0);
         }
     }
-    
+    /*
+     * 其他玩家更换伤害皮肤效果
+     */
+    public static byte[] showDamageSkin(int chrId, int skinId) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        mplew.writeShort(SendPacketOpcode.SHOW_DAMAGE_SKIN.getValue());
+        mplew.writeInt(chrId); //玩家ID
+        mplew.writeInt(skinId); //更换的伤害皮肤ID
+
+        return mplew.getPacket();
+    }
     static {
         unk1 = new byte[] { 0, 64, -32, -3 };
         unk2 = new byte[] { 59, 55, 79, 1 };

@@ -74,18 +74,18 @@ public class PlayersHandler
         if (target != null) {
             if (target.getId() == chr.getId()) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + chr.getName() + "(" + chr.getId() + ") 修改名聲封包，使用時封鎖。加自己名聲");
-                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理員永久停權。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理員永久停權。"));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + chr.getName() + "(" + chr.getId() + ") 修改名聲封包，使用時封鎖。加自己名聲"));
-                chr.ban("修改封包", true, true, false);
-                chr.getClient().getSession().close();
+                //chr.ban("修改封包", true, true, false);
+                //chr.getClient().getSession().close();
                 return;
             }
             if (chr.getLevel() < 15) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + chr.getName() + "(" + chr.getId() + ")(等級:" + (int)chr.getLevel() + ") 修改名聲封包，使用時封鎖。十五等以下加名聲");
-                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理員永久停權。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理員永久停權。"));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + chr.getName() + "(" + chr.getId() + ")(等級:" + (int)chr.getLevel() + ") 修改名聲封包，使用時封鎖。十五等以下加名聲"));
-                chr.ban("修改封包", true, true, false);
-                chr.getClient().getSession().close();
+                //chr.ban("修改封包", true, true, false);
+                //chr.getClient().getSession().close();
                 return;
             }
             switch (chr.canGiveFame(target)) {

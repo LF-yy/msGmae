@@ -144,6 +144,61 @@ public class MapleMonsterInformationProvider
         this.drops.put(Integer.valueOf(monsterId), ret);
         return ret;
     }
+
+    public final List<Integer> dropList(final int monsterId) {
+        final  List<Integer> list = new ArrayList<>();
+        if (this.drops.containsKey((Object) monsterId)) {
+            List<MonsterDropEntry> monsterDropEntries = this.drops.get((Object) monsterId);
+            for (MonsterDropEntry monsterDropEntry : monsterDropEntries) {
+                list.add(monsterDropEntry.itemId);
+            }
+            return list;
+        }
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+                ps = con.prepareStatement("SELECT itemid FROM drop_data WHERE dropperid = ?");
+                ps.setInt(1, monsterId);
+                rs = ps.executeQuery();
+                while (rs.next()) {
+                    final int itemid = rs.getInt("itemid");
+                    list.add(itemid);
+                }
+            }
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            }
+            catch (SQLException ignore) {
+                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ignore);
+                return list;
+            }
+        }
+        catch (SQLException e) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            return list;
+        }
+        finally {
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+            }
+            catch (SQLException ignore2) {
+                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ignore2);
+                return list;
+            }
+        }
+        return list;
+    }
     
     public final void clearDrops() {
         this.drops.clear();

@@ -57,4 +57,6 @@ public interface IItem extends Comparable<IItem>
     String getGiftFrom();
     
     MapleRing getRing();
+
+
 }

@@ -45,7 +45,10 @@ public class ServerConfig
     public static String[] ipStr;
     public static final byte[] Gateway_IP;
     public static final byte[] Gateway_IP2;
-    
+    public static int ExpRate;
+    public static int MesoRate;
+    public static int DropRate;
+    public static int CashRate;
     public static boolean isPvPChannel(final int ch) {
         return ServerConfig.pvp && ch == ServerConfig.pvpch;
     }
@@ -181,7 +184,7 @@ public class ServerConfig
     }
     
     static {
-        ServerConfig.pvp = false;
+        ServerConfig.pvp = true;
         ServerConfig.pvpch = 1;
         ServerConfig.LOG_MRECHANT = true;
         ServerConfig.LOG_CSBUY = true;
@@ -206,7 +209,7 @@ public class ServerConfig
         ServerConfig.version = "1.7版本[ 黑金用户版 ]";
         ServerConfig.TOUDING = "Ver.079版本";
         ServerConfig.IP = Game.IP地址;
-        ServerConfig.wzpath = "WZ";
+        ServerConfig.wzpath = "E:\\新建文件夹 (2)\\ms079\\wz";
         ServerConfig.EVENTS = null;
         ServerConfig.DEBUG_MODE = false;
         ServerConfig.NMGB = true;
@@ -217,6 +220,10 @@ public class ServerConfig
         ServerConfig.BeiShu1 = 1;
         ServerConfig.BeiShu2 = 1;
         ServerConfig.BeiShu3 = 1;
+        ServerConfig.ExpRate = 2;
+        ServerConfig.MesoRate = 1;
+        ServerConfig.DropRate = 2;
+        ServerConfig.CashRate = 1;
         ServerConfig.ipStr = ServerConfig.IP.split("\\.");
         Gateway_IP = new byte[] { (byte)Integer.parseInt(ServerConfig.ipStr[0]), (byte)Integer.parseInt(ServerConfig.ipStr[1]), (byte)Integer.parseInt(ServerConfig.ipStr[2]), (byte)Integer.parseInt(ServerConfig.ipStr[3]) };
         Gateway_IP2 = new byte[] { (byte)Integer.parseInt(ServerConfig.ipStr[0]), (byte)Integer.parseInt(ServerConfig.ipStr[1]), (byte)Integer.parseInt(ServerConfig.ipStr[2]), (byte)Integer.parseInt(ServerConfig.ipStr[3]) };

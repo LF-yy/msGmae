@@ -95,7 +95,7 @@ public class Skill implements ISkill
             isBuff |= (action_ != null && MapleDataTool.getString("0", action_, "").equals((Object)"alert2"));
             switch (id) {
                 case 2111002:
-                case 2111003:
+                case 2111003://致命毒雾
                 case 2121001:
                 case 2221001:
                 case 2301002:
@@ -219,7 +219,20 @@ public class Skill implements ISkill
             return (MapleStatEffect)this.effects.get(level - 1);
         }
     }
-    
+    public MapleStatEffect getEffect1(final int level) {
+        if (this.effects.size() <= level) {
+            for (int a = 0; a < this.effects.size(); ++a) {
+                if (((MapleStatEffect)this.effects.get(a)).getLevel() == level) {
+                    return (MapleStatEffect)this.effects.get(a);
+                }
+            }
+            return null;
+        }
+        if (level <= 0) {
+            return (MapleStatEffect)this.effects.get(0);
+        }
+        return (MapleStatEffect)this.effects.get(level - 1);
+    }
     @Override
     public boolean hasAction() {
         return this.action;

@@ -756,9 +756,33 @@ public class MapScriptMethods
             case enter_410000500:
             case enter_410000570:
             case enter_410000580:
+            case starforce_enter:
+            case enter_401040000:
+            case field_grave_fall_summon:
+            case enter_450001000:
+            case enter_350042450:
             case summon_ARCflyingmob: {
                 break;
             }
+            case TD_NC_title: {
+                switch ((c.getPlayer().getMapId() / 100) % 10) {
+                    case 0:
+                        c.getSession().write(UIPacket.MapEff("temaD/enter/teraForest"));
+                        break;
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                        c.getSession().write(UIPacket.MapEff("temaD/enter/neoCity" + ((c.getPlayer().getMapId() / 100) % 10)));
+                        break;
+                }
+                break;
+            }
+            case TD_LC_title:
+                c.getSession().write(MaplePacketCreator.showEffect("temaD/enter/lionCastle"));
+                break;
             default: {
                 System.err.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
                 FilePrinter.printError("MapScriptMethods.txt", "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
@@ -836,9 +860,11 @@ public class MapScriptMethods
     
     private static void handlePinkBeanStart(final MapleClient c) {
         final MapleMap map = c.getPlayer().getMap();
-        map.resetFully();
-        if (!map.containsNPC(2141000)) {
-            map.spawnNpc(2141000, new Point(-190, -42));
+        if (map.getAllMonster().size()==0) {
+            map.resetFully();
+            if (!map.containsNPC(2141000)) {
+                map.spawnNpc(2141000, new Point(-190, -42));
+            }
         }
     }
     
@@ -1011,6 +1037,13 @@ public class MapScriptMethods
         enter_410000570,
         enter_410000580,
         summon_ARCflyingmob,
+        TD_NC_title,
+        TD_LC_title,
+        starforce_enter,
+        enter_401040000,
+        field_grave_fall_summon,
+        enter_450001000,
+        enter_350042450,
         NULL;
         
         private static onUserEnter fromString(final String Str) {

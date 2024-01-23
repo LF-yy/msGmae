@@ -278,7 +278,9 @@ public enum SendPacketOpcode implements WritableIntValueHolder
     PET_AUTO_MP, 
     TOP_MSG, 
     CHAR_CASH, 
-    OPEN_WEB, 
+    OPEN_WEB,
+    //显示角色更换伤害皮肤效果//32766
+    SHOW_DAMAGE_SKIN(586),
     CS_WEB;
     
     private short code;

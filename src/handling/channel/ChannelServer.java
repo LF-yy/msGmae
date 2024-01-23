@@ -5,7 +5,6 @@ import java.sql.Connection;
 import database.DatabaseConnection;
 import handling.cashshop.CashShopServer;
 import client.MapleClient;
-import server.Start;
 import tools.FileoutputUtil;
 import tools.CollectionUtil;
 import handling.world.CheaterData;
@@ -181,7 +180,7 @@ public class ChannelServer implements Serializable
     
     public final void addPlayer(final MapleCharacter chr) {
         this.getPlayerStorage().registerPlayer(chr);
-        if (Start.ConfigValuesMap.get("滚动公告开关") <= 0) {
+        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"滚动公告开关")) <= 0) {
             chr.getClient().sendPacket(MaplePacketCreator.serverMessage(this.getServerMessage()));
         }
     }
@@ -753,5 +752,39 @@ public class ChannelServer implements Serializable
         DEFAULT_PORT = (short)Integer.parseInt(ChannelServer.cf.getConfig("CongMS.channel.port1"));
         instances = new HashMap<Integer, ChannelServer>();
         ChannelServer.clones = new ArrayList<离线人偶>();
+    }
+
+    public final void guaiReloadEvents() {
+        this.eventSM.cancel();
+        (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("Guai.events").split(","))).init();
+    }
+    private EventScriptManager eventSMA;
+    private EventScriptManager eventSMB;
+    private EventScriptManager eventSMC;
+    public final EventScriptManager getEventSMA() {
+        return this.eventSMA;
+    }
+
+    public final EventScriptManager getEventSMB() {
+        return this.eventSMB;
+    }
+
+    public final EventScriptManager getEventSMC() {
+        return this.eventSMC;
+    }
+
+    public final void reloadEventsa() {
+        this.eventSMA.cancel();
+        (this.eventSMA = new EventScriptManager(this, ServerProperties.getProperty("Guai.活动事件脚本").split(","))).init();
+    }
+
+    public final void reloadEventsb() {
+        this.eventSMB.cancel();
+        (this.eventSMB = new EventScriptManager(this, ServerProperties.getProperty("Guai.BOSS事件脚本").split(","))).init();
+    }
+
+    public final void reloadEventsc() {
+        this.eventSMC.cancel();
+        (this.eventSMC = new EventScriptManager(this, ServerProperties.getProperty("Guai.自定义事件脚本").split(","))).init();
     }
 }

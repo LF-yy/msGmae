@@ -6,7 +6,6 @@ import gui.CongMS;
 import server.Start;
 import server.life.MapleMonster;
 import tools.FileoutputUtil;
-import tools.packet.MobPacket;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,12 +15,20 @@ public class tzjc {
     private static List<tz_model> tz_list;
     public static Map<String,Integer> tzMap;
     public static Map<Integer, Map<String, Integer>> sbMap;
+
     public long star_damage(MapleCharacter player, long totDamageToOneMonster, MapleMonster monster) {
         try {
             if (player.get套装伤害加成() > 0.0) {
                 double jc_damage = (double) totDamageToOneMonster * player.get套装伤害加成();
+                if(jc_damage>100000000L){
+                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/100000000L) + "亿");
+                }else if(jc_damage>10000){
+                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/10000) + "万");
+                }else{
+                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage)  + "");
+                }
                 totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
-                player.getMap().broadcastMessage(MobPacket.healMonster(monster.getObjectId(), (int) jc_damage));
+                //player.getMap().broadcastMessage(MobPacket.healMonster(monster.getObjectId(), (int) jc_damage));
             }
         } catch (Exception e) {
             FileoutputUtil.outError("logs/套装伤害异常.txt", e);
@@ -32,40 +39,49 @@ public class tzjc {
 
     public static void sr_tz() {
         tzjc.tz_list.clear();
+       // tzjc.tz_map.clear();
         System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][========================================]");
-        System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][信息]:初始化套装加成");
-        for (int i = 0; i < Start.套装加成表.size(); ++i) {
-            if (((Integer) (Start.套装加成表.get(i)).getLeft()).intValue() == 0) {
-                tz_model tz = new tz_model();
-                tz.setName((String) ((Start.套装加成表.get(i)).getRight()).getLeft());
-                tz.setJc((double) ((Integer) (((Start.套装加成表.get(i)).getRight()).getRight()).getRight()).intValue() / 100.0);
-                int[] list = {Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()};
-                tz.setList(list);
-                tzjc.tz_list.add(tz);
-            }
-        }
-        for (int b = 1; b < ((Integer) Start.ConfigValuesMap.get("套装个数")).intValue(); ++b) {
-            List<Integer> 套装 = (List<Integer>) new ArrayList();
-            int 加成 = 0;
-            String 套装名 = "";
-            for (int j = 0; j < Start.套装加成表.size(); ++j) {
-                if (((Integer) (Start.套装加成表.get(j)).getLeft()).intValue() == b) {
-                    套装.add(Integer.valueOf((String) (((Start.套装加成表.get(j)).getRight()).getRight()).getLeft()));
-                    加成 += ((Integer) (((Start.套装加成表.get(j)).getRight()).getRight()).getRight()).intValue();
-                    套装名 = (String) ((Start.套装加成表.get(j)).getRight()).getLeft();
+        System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][信息]:初始化赋能装备加成");
+        if (((Integer) CongMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0) {
+            for (int i = 0; i < Start.套装加成表.size(); ++i) {
+                if (((Integer) (Start.套装加成表.get(i)).getLeft()).intValue() == 0) {
+                    tz_model tz = new tz_model();
+                    tz.setName((String) ((Start.套装加成表.get(i)).getRight()).getLeft());
+                    tz.setJc((double) ((Integer) (((Start.套装加成表.get(i)).getRight()).getRight()).getRight()).intValue() / 100.0);
+                    int[] list = {Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()};
+                    tz.setList(list);
+                   // System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][赋能]:[" + tz.getName() + "] 添加成功 加成伤害：" + tz.getJc() * 100.0 + "%");
+                    tzjc.tz_list.add(tz);
                 }
             }
-            tz_model tz2 = new tz_model();
-            tz2.setName(套装名);
-            tz2.setJc((double) 加成 / 100.0);
-            int[] list2 = new int[套装.size()];
-            for (int k = 0; k < list2.length; ++k) {
-                list2[k] = ((Integer) 套装.get(k)).intValue();
+
+            for (int b = 1; b < ((Integer) CongMS.ConfigValuesMap.get("套装个数")).intValue(); ++b) {
+                List<Integer> 套装 = (List<Integer>) new ArrayList();
+                int 加成 = 0;
+                String 套装名 = "";
+                for (int j = 0; j < Start.套装加成表.size(); ++j) {
+                    if (((Integer) (Start.套装加成表.get(j)).getLeft()).intValue() == b) {
+                        套装.add(Integer.valueOf((String) (((Start.套装加成表.get(j)).getRight()).getRight()).getLeft()));
+                        加成 += ((Integer) (((Start.套装加成表.get(j)).getRight()).getRight()).getRight()).intValue();
+                        套装名 = (String) ((Start.套装加成表.get(j)).getRight()).getLeft();
+                    }
+                }
+                tz_model tz2 = new tz_model();
+                tz2.setName(套装名);
+                tz2.setJc((double) 加成 / 100.0);
+                int[] list2 = new int[套装.size()];
+                for (int k = 0; k < list2.length; ++k) {
+                    list2[k] = ((Integer) 套装.get(k)).intValue();
+                }
+                tz2.setList(list2);
+                //System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][赋能]:[" + tz2.getName() + "] 添加成功 加成伤害：" + tz2.getJc() * 100.0 + "%");
+                tzjc.tz_list.add(tz2);
             }
-            tz2.setList(list2);
-            tzjc.tz_list.add(tz2);
+
         }
-        tzMap.putAll(Start.新套装加成表);
+        if (((Integer) CongMS.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
+            tzMap.putAll(Start.新套装加成表);
+        }
         sbMap.putAll(Start.双爆加成);
     }
 
@@ -73,6 +89,7 @@ public class tzjc {
         Collection<IItem> hasEquipped = chr.getHasEquipped();
         AtomicInteger drop = new AtomicInteger(0);
         AtomicInteger exp = new AtomicInteger(0);
+        AtomicReference<Double> number = new AtomicReference<>(0.0);
         try {
             hasEquipped.forEach(it->{
                 Map<String, Integer> stringIntegerMap = sbMap.get(it.getItemId());
@@ -98,11 +115,9 @@ public class tzjc {
         } catch (Exception e) {
             System.out.println("双爆装备装备加载异常");
         }
-        AtomicReference<Double> number = new AtomicReference<>(0.0);
-
-        if (((Integer) Start.ConfigValuesMap.get("套装属性加成开关")).intValue() > 0) {
-            for (tz_model tz : tzjc.tz_list) {
-                int[] list = tz.getList();
+        if (((Integer) CongMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0) {
+            for (final tz_model tz : tzjc.tz_list) {
+                final int[] list = tz.getList();
                 boolean is_tz = true;
                 for (int j = 0; j < list.length; ++j) {
                     if (!chr.hasEquipped(list[j])) {
@@ -114,26 +129,26 @@ public class tzjc {
                     chr.dropMessage(5, "检测到佩戴了 [" + tz.getName() + "] 套装  加成伤害：" + tz.getJc() * 100.0 + "%");
                 }
             }
-            if (((Integer) Start.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
-                List<String> list = new ArrayList<>();
-                hasEquipped.forEach(iItem -> {
-                    Integer integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
-                    if (Objects.nonNull(integer)) {
-                        if (!list.contains("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "")) {
-                            if (integer > 0) {
-                                list.add("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
-                                number.updateAndGet(v -> (double) (v + (integer / 100.0)));
-                                chr.dropMessage(5, "检测到佩戴赋能装备加成伤害：" + integer + "%");
-                            }
+        }
+        if (((Integer) CongMS.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
+            List<String> list = new ArrayList<>();
+            hasEquipped.forEach(iItem -> {
+                Integer integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                if (Objects.nonNull(integer)) {
+                    if (!list.contains("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "")) {
+                        if (integer > 0) {
+                            list.add("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                            number.updateAndGet(v -> (double) (v + (integer / 100.0)));
+                            chr.dropMessage(5, "检测到佩戴赋能装备加成伤害：" + integer + "%");
                         }
                     }
-                });
-            }
+                }
+            });
         }
         if (number.get() > 0) {
             chr.dropMessage(5, "赋能/套装伤害加成总计：" + number.get() * 100 + "%");
         }
-        return 0.0;
+        return number.get();
     }
 
     static {

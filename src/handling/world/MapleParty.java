@@ -9,6 +9,9 @@ import java.io.Serializable;
 
 public class MapleParty implements Serializable
 {
+    public static int 活动经验倍率;
+    public static int 活动爆率倍率;
+    public static int 活动金币倍率;
     private static final long serialVersionUID = 9179541993413738569L;
     private MaplePartyCharacter leader;
     private final List<MaplePartyCharacter> members;
@@ -91,7 +94,17 @@ public class MapleParty implements Serializable
     public static String 复读机彩旦;
     public static int 活动安排;
     public static int 雪球赛;
-    
+    public static int 捉鬼任务线程;
+    public static int 捉鬼任务;
+    public static int 捉鬼任务频道;
+    public static int 捉鬼任务地图;
+    public static int 捉鬼任务坐标X;
+    public static int 捉鬼任务坐标Y;
+    public static int 捉鬼任务时间;
+    public static boolean 蘑菇剧情启动状态;
+    public static boolean 蘑菇剧情第一阶段启动状态;
+    public static long 蘑菇剧情第一阶段时间;
+    public static int 蘑菇第一阶段配置设定间隔时间;
     private void calculateAverageLevel() {
         int value = 0;
         for (final MaplePartyCharacter chr : this.members) {
@@ -198,6 +211,20 @@ public class MapleParty implements Serializable
         MapleParty.开服名字 = "冒险岛";
         MapleParty.IP地址 = ServerProperties.getProperty("CongMS.CustomIP");
         MapleParty.互相伤害 = 0;
+        MapleParty.活动经验倍率 = 1;
+        MapleParty.活动爆率倍率 = 1;
+        MapleParty.活动金币倍率 = 1;
+        MapleParty.捉鬼任务线程 = 0;
+        MapleParty.捉鬼任务 = 0;
+        MapleParty.捉鬼任务频道 = 0;
+        MapleParty.捉鬼任务地图 = 10000;
+        MapleParty.捉鬼任务坐标X = 0;
+        MapleParty.捉鬼任务坐标Y = 0;
+        MapleParty.捉鬼任务时间 = 0;
+        MapleParty.蘑菇剧情启动状态 = false;
+        MapleParty.蘑菇剧情第一阶段启动状态 = false;
+        MapleParty.蘑菇剧情第一阶段时间 = 0L;
+        //MapleParty.蘑菇第一阶段配置设定间隔时间 = Integer.parseInt(ServerProperties.getProperty("Guai.蘑菇第一阶段开启时间"));
         MapleParty.通缉BOSS = 0;
         MapleParty.地图回收 = 0;
         MapleParty.通缉地图 = 0;

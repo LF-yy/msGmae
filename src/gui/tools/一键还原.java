@@ -310,6 +310,9 @@ public class 一键还原 extends JFrame
         this.Delete("bank", 139);
         this.Delete("mail", 140);
         this.Delete("jiezoudashi", 141);
+        this.Delete("bosslog1", 142);
+        this.Delete("bosslog2", 143);
+        this.Delete("bosslog3", 144);
         this.Delete("shouce", 145);
         JOptionPane.showMessageDialog(null, (Object)"清理完成");
         System.exit(0);

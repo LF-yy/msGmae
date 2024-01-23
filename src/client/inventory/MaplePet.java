@@ -1,6 +1,8 @@
 package client.inventory;
 
 import java.util.ArrayList;
+
+import gui.CongMS;
 import server.movement.StaticLifeMovement;
 import server.movement.LifeMovementFragment;
 import java.util.List;
@@ -229,7 +231,13 @@ public class MaplePet implements Serializable
     }
     
     public final void setFullness(final int fullness) {
-        this.fullness = (byte)fullness;
+        final int 宠物永不饥饿 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"宠物永不饥饿"));
+        if (宠物永不饥饿>0){
+            this.fullness = (byte)100;
+        }else{
+            this.fullness = (byte)fullness;
+
+        }
         this.changed = true;
     }
     
