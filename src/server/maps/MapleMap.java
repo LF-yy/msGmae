@@ -1,9 +1,6 @@
 package server.maps;
 
 import java.awt.Point;
-
-import configs.ServerConfig;
-import server.maps.MobConstants;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.lang.ref.WeakReference;
@@ -199,6 +196,7 @@ public final class MapleMap
             this.returnMapId = 211060000;
         }
         this.monsterRate = monsterRate;
+        this.createMobInterval = Short.parseShort(String.valueOf(CongMS.ConfigValuesMap.get("地图刷新频率")));
         final EnumMap<MapleMapObjectType, LinkedHashMap<Integer, MapleMapObject>> objsMap = new EnumMap<MapleMapObjectType, LinkedHashMap<Integer, MapleMapObject>>(MapleMapObjectType.class);
         final EnumMap<MapleMapObjectType, ReentrantReadWriteLock> objlockmap = new EnumMap<MapleMapObjectType, ReentrantReadWriteLock>(MapleMapObjectType.class);
         for (final MapleMapObjectType type : MapleMapObjectType.values()) {
@@ -697,7 +695,7 @@ public final class MapleMap
         if (mob == null || chr == null || ChannelServer.getInstance((int)this.channel) == null || this.dropsDisabled || mob.dropsDisabled() || chr.getPyramidSubway() != null) {
             return;
         }
-        if (mapObjects.get(MapleMapObjectType.ITEM).size() >= 3000 )
+        if (mapObjects.get(MapleMapObjectType.ITEM).size() >= CongMS.ConfigValuesMap.get("掉落物数量上限"))
         {
             removeDrops();
             chr.dropMessage(6, "[系统提示] : 当前地图物品数量已经达到限制，现在已被清除。");
@@ -760,17 +758,16 @@ public final class MapleMap
             }
 
             int itemDropm = chr.getItemDropm()/100;
-
-            final double lastDrop = (chr.getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (chr.getStat().realDropBuff - 100.0);
+            final double lastDrop = (chr.getStat().dropBuff - 100.0 <= 0.0) ? 100.0 : chr.getStat().dropBuff ;
            int drop =  (int)(de2.chance * (chServerrate *  chr.getDropMod() * coefficient * jiac
                                         * chr.getDropm()
                                         * (showdown/100)
-                                       // * ((double)(chr.getVipExpRate() / 100) + 1.0)
-                                        *  lastDrop / 100.0 + itemDropm ));//* (showdown / 100.0)
+                                        * lastDrop / 100.0
+                                        + itemDropm ));// *  lastDrop / 100.0 * (showdown / 100.0) * ((double)(chr.getVipExpRate() / 100) + 1.0)
 //            int  drop =   (int)((double)((long)(de2.chance * chServerrate) * Math.round((double)chr.getDropMod() * chr.getStat().dropBuff / 100.0)) * (showdown / 100.0) / (double)(CongMS.ConfigValuesMap.get("砍爆率")).intValue());
-            if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
-                System.out.println("爆率:"+drop+"-------"+de2.chance+"-"+chServerrate+"-"+chr.getDropMod()+"-"+coefficient+"-"+jiac+"-"+chr.getDropm()+"-"+showdown+"-"+(lastDrop / 100.0)+"-"+itemDropm);
-            }
+//            if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+//                System.out.println("爆率:"+drop+"-------"+de2.chance+"-"+chServerrate+"-"+chr.getDropMod()+"-"+coefficient+"-"+jiac+"-"+chr.getDropm()+"-"+showdown+"-"+(lastDrop / 100.0)+"-"+itemDropm);
+//            }
             if (Randomizer.nextInt(999999) >= ((de2.itemId == 1012168 || de2.itemId == 1012169 || de2.itemId == 1012170 || de2.itemId == 1012171) ? de2.chance : drop )) {
                 continue;
             }
@@ -1270,7 +1267,9 @@ public final class MapleMap
             try {
                 for (final MapleCharacter mc : this.characters) {
                     if (mc.isAlive()) {
-                        buff.applyTo(mc);
+                        if (buff!=null){
+                            buff.applyTo(mc);
+                        }
                         switch (monster.getId()) {
                             case 8810018:
                             case 8810122:
@@ -2242,12 +2241,15 @@ public final class MapleMap
     }
     
     public final void spawnMist(final MapleMist mist, final int duration, final boolean fake) {
+    //生成并添加范围映射对象
         this.spawnAndAddRangedMapObject((MapleMapObject)mist, (DelayedPacketCreation)new DelayedPacketCreation() {
             @Override
             public void sendPackets(final MapleClient c) {
+                //发送召唤数据
                 mist.sendSpawnData(c);
             }
         }, null);
+        //映射计时器
         final MapTimer tMan = MapTimer.getInstance();
         ScheduledFuture<?> poisonSchedule = null;
         switch (mist.isPoisonMist()) {
@@ -2262,7 +2264,7 @@ public final class MapleMap
                             }
                         }
                     }
-                }, 2000L, 2500L);
+                }, CongMS.ConfigValuesMap.get("重复时间"), CongMS.ConfigValuesMap.get("延迟时间"));
                 break;
             }
             case 2: {
@@ -2276,7 +2278,7 @@ public final class MapleMap
                             }
                         }
                     }
-                }, 2000L, 2500L);
+                }, CongMS.ConfigValuesMap.get("重复时间1"), CongMS.ConfigValuesMap.get("延迟时间1"));
                 break;
             }
             default: {
@@ -2289,13 +2291,15 @@ public final class MapleMap
             tMan.schedule((Runnable)new Runnable() {
                 @Override
                 public void run() {
+                    //移除毒雾
                     MapleMap.this.broadcastMessage(MaplePacketCreator.removeMist(mist.getObjectId(), false));
+                    //移除地图对象
                     MapleMap.this.removeMapObject((MapleMapObject)mist);
                     if (poisonSchedule2 != null) {
                         poisonSchedule2.cancel(false);
                     }
                 }
-            }, (long)duration);
+            }, (long)CongMS.ConfigValuesMap.get("毒雾存在时间"));//毒雾存在时间
         }
         catch (RejectedExecutionException ex) {}
     }
@@ -2388,9 +2392,8 @@ public final class MapleMap
                 }
             }
         }, null);
-        //&& !mob.getStats().isBoss()
-        if (MapleMap.特殊宠物吸取开关 && MapleMap.特殊宠物吸物开关 && chr.getEventInstance() == null) {
-            宠物吸物(chr, mdrop);
+        if (Objects.isNull(CongMS.ConfigValuesMap.get("吸物排除"+mob.getId())) && MapleMap.特殊宠物吸取开关 && MapleMap.特殊宠物吸物开关 && chr.getEventInstance() == null){
+                宠物吸物(chr, mdrop);
         }
         mdrop.registerExpire(120000L);
         if (droptype == 0 || droptype == 1) {

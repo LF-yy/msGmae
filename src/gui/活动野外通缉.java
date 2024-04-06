@@ -17,7 +17,7 @@ import java.util.Date;
 public class 活动野外通缉
 {
     public static void 随机通缉() {
-        if (new Date().getHours() >= 22) {// && (
+        if (new Date().getHours() >= 21) {// && (
 //            final int a = (int)Math.ceil(Math.random() * 25.0);
 //            final int[][] 通缉 = { { 2220000, 104000400 }, { 5220001, 110040000 }, { 7220000, 250010304 }, { 8220000, 200010300 }, { 7220002, 250010503 }, { 7220001, 222010310 }, { 6220000, 107000300 }, { 5220002, 100040105 }, { 5220003, 220050100 }, { 6220001, 221040301 }, { 8220003, 240040401 }, { 3220001, 260010201 }, { 8220002, 261030000 }, { 4220000, 230020100 }, { 6130101, 100000005 }, { 6300005, 105070002 }, { 8130100, 105090900 }, { 9400205, 800010100 }, { 9400120, 801030000 }, { 8220001, 211040101 }, { 8180000, 240020401 }, { 8180001, 240020101 }, { 8220006, 270030500 }, { 8220005, 270020500 }, { 8220004, 270010500 }, { 3220000, 101030404 } };
 //            MapleParty.通缉BOSS = 通缉[a][0];
@@ -34,7 +34,11 @@ public class 活动野外通缉
             System.out.println("进入世界BOSS3");
             //刷新怪物
             //final MapleMonster mobName = MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS"));
-            mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")),CongMS.ConfigValuesMap.get( "世界BOSS血量") * 100000000);
+            for (int i = 0; i < CongMS.ConfigValuesMap.get("世界BOSS刷新数量"); i++) {
+                mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
+            }
+            //mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
+            //mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
             if (mapleMap.getAllMonster().size()>0) {
 //                mobName.setPosition(new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
 //                mobName.setHp(CongMS.ConfigValuesMap.get( "世界BOSS血量") * 100000000);
@@ -45,7 +49,7 @@ public class 活动野外通缉
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, 信息));
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, 信息));
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, 信息));
-                System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : " + 信息);
+                System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : " + 信息);
                 System.out.println("进入世界BOSS4");
                 new Thread() {
                     @Override
@@ -56,18 +60,18 @@ public class 活动野外通缉
                             boolean flag = false;
                             Thread.sleep(5000);
                             while (true) {
-//                                System.out.println("进入世界BOSS循环");
-//                                if (mapleMap1.getAllMonster().size() == 0) {
-//                                    System.out.println("进入世界BOSS循环无怪");
-//                                    for (MapleCharacter character : mapleMap1.getCharacters()) {
-//                                        System.out.println("进入世界BOSS即将结束");
-//                                        character.getClient().getPlayer().setBossLog("参与击杀世界BOSS");
-//                                        flag = true;
-//                                    }
-//                                    if (flag) {
-//                                        return;
-//                                    }
-//                                }
+                                System.out.println("进入世界BOSS循环");
+                                if (mapleMap1.getAllMonster().size() == 0) {
+                                    System.out.println("进入世界BOSS循环无怪");
+                                    for (MapleCharacter character : mapleMap1.getCharacters()) {
+                                        System.out.println("进入世界BOSS即将结束");
+                                        character.getClient().getPlayer().setBossLog("参与击杀世界BOSS");
+                                        flag = true;
+                                    }
+                                    if (flag) {
+                                        return;
+                                    }
+                                }
                                 if (new Date().getHours() == 23) {
                                     mapleMap1.killAllMonsters(true);
                                     mapleMap1.清怪();

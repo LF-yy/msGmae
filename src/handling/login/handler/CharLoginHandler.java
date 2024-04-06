@@ -3,7 +3,11 @@ package handling.login.handler;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
+
+import GuaiSetting.Game;
 import database.DBConPool;
+
+import java.sql.SQLException;
 import java.util.Iterator;
 import handling.cashshop.CashShopServer;
 import client.inventory.IItem;
@@ -102,19 +106,19 @@ public class CharLoginHandler
             if (loginok == 5) {
                 if (LoginServer.getAutoReg()) {
                     if (password.equalsIgnoreCase("fixlogged")) {
-                        errorInfo = "這個密碼是解卡密碼，請換其他密碼。";
+                        errorInfo = "这个密码是解卡密码,请换其他密码!。";
                     }
                     else if (account.length() >= 12) {
-                        errorInfo = "您的账号長度太長了唷!\r\n請重新輸入.";
+                        errorInfo = "您的密码太长了!\r\n请重新输入.";
                     }
                     else {
                         AutoRegister.createAccount(account, password, c.getSession().remoteAddress().toString());
                         if (AutoRegister.success && AutoRegister.mac) {
-                            errorInfo = "账号創建成功,請重新登入!";
+                            errorInfo = "账号创建成功,请重新登录!";
                             FileoutputUtil.logToFile("logs/data/創建账号.txt", "\r\n 时间\u3000[" + FileoutputUtil.NowTime() + "] IP 地址 : " + c.getSession().remoteAddress().toString().split(":")[0] + " MAC: " + macData + " 账号：\u3000" + account + " 密碼：" + password);
                         }
                         else if (!AutoRegister.mac) {
-                            errorInfo = "無法註冊過多的账号密碼唷!";
+                            errorInfo = "无法注册更多的账户!";
                             AutoRegister.success = false;
                             AutoRegister.mac = true;
                         }
@@ -135,6 +139,32 @@ public class CharLoginHandler
                 loginok = 1;
             }
         }
+
+        if (CongMS.ConfigValuesMap.get("同IP多开") == 0) {
+            if (!IP登陆数("" + c.getSessionIPAddress() + "")) {
+                c.sendPacket(MaplePacketCreator.serverNotice(1, "<<" + Game.服务端名字 + ">>\r\n\r\n该IP下已经有登陆的账号。"));
+                c.sendPacket(LoginPacket.getLoginFailed(1));
+                return;
+            }
+        }
+        else if (IP登陆数2("" + c.getSessionIPAddress() + "") >= CongMS.ConfigValuesMap.get("IP多开上限")) {
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "<<" + Game.服务端名字 + ">>\r\n\r\n登陆超出多开上限 A01。"));
+            c.sendPacket(LoginPacket.getLoginFailed(1));
+            return;
+        }
+        if (CongMS.ConfigValuesMap.get("同MAC多开") == 0) {
+            if (!机器码登陆数("" + macData + "")) {
+                c.sendPacket(MaplePacketCreator.serverNotice(1, "<<" + Game.服务端名字 + ">>\r\n\r\n该机器下已经有登陆的账号。"));
+                c.sendPacket(LoginPacket.getLoginFailed(1));
+                return;
+            }
+        }
+        else if (机器码登陆数2("" + macData + "") >= CongMS.ConfigValuesMap.get("MAC多开上限")) {
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "<<" + Game.服务端名字 + ">>\r\n\r\n登陆超出多开上限 A02。"));
+            c.sendPacket(LoginPacket.getLoginFailed(1));
+            return;
+        }
+
         if (loginok != 0) {
             if (!loginFailCount(c)) {
                 c.sendPacket(LoginPacket.getLoginFailed(loginok));
@@ -640,4 +670,110 @@ public class CharLoginHandler
         c.sendPacket(MaplePacketCreator.getServerIP(c, Integer.parseInt(ChannelServer.getInstance(c.getChannel()).getSocket().split(":")[1]), charId));
         System.setProperty(String.valueOf(charId), "1");
     }
+
+    public static boolean IP登陆数(final String a) {
+        boolean ret = true;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM  accounts");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                if (rs.getString("SessionIP") != null && rs.getString("SessionIP").equals("" + a + "") && rs.getInt("loggedin") > 0) {
+                    ret = false;
+                }
+            }
+            rs.close();
+            ps.close();
+        }
+        catch (SQLException Ex) {
+            System.err.println("IP登陆数、出错");
+        }
+        finally {
+            DBConPool.cleanUP(rs, ps, con);
+        }
+        return ret;
+    }
+
+    public static int IP登陆数2(final String a) {
+        int ret = 0;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM  accounts");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                if (rs.getString("SessionIP") != null && rs.getString("SessionIP").equals("" + a + "") && rs.getInt("loggedin") > 0) {
+                    ++ret;
+                }
+            }
+            rs.close();
+            ps.close();
+        }
+        catch (SQLException Ex) {
+            System.err.println("IP登陆数、出错");
+        }
+        finally {
+            DBConPool.cleanUP(rs, ps, con);
+        }
+        return ret;
+    }
+
+    public static boolean 机器码登陆数(final String a) {
+        boolean ret = true;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM  accounts");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                if (rs.getString("macs") != null && rs.getString("macs").equals("" + a + "") && rs.getInt("loggedin") > 0) {
+                    ret = false;
+                }
+            }
+            rs.close();
+            ps.close();
+        }
+        catch (SQLException Ex) {
+            System.err.println("Mac登陆数、出错");
+        }
+        finally {
+            DBConPool.cleanUP(rs, ps, con);
+        }
+        return ret;
+    }
+
+    public static int 机器码登陆数2(final String a) {
+        int ret = 0;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM  accounts");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                if (rs.getString("macs") != null && rs.getString("macs").equals("" + a + "") && rs.getInt("loggedin") > 0) {
+                    ++ret;
+                }
+            }
+            rs.close();
+            ps.close();
+        }
+        catch (SQLException Ex) {
+            System.err.println("Mac登陆数、出错");
+        }
+        finally {
+            DBConPool.cleanUP(rs, ps, con);
+        }
+        return ret;
+    }
+
+
 }

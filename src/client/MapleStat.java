@@ -49,13 +49,13 @@ public enum MapleStat
         INT(4), 
         LUK(8), 
         WATK(16), 
-        WDEF(32), 
+        WDEF(32), //物理防御
         MATK(64), 
-        MDEF(128), 
-        ACC(256), 
-        AVOID(512), 
-        SPEED(1024), 
-        JUMP(2048);
+        MDEF(128),//魔法防御
+        ACC(256), //命中
+        AVOID(512), //回避
+        SPEED(1024), //速度
+        JUMP(2048);//跳跃
         
         private final int i;
         

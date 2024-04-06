@@ -64,8 +64,7 @@ public class MobMapVac extends Thread{
                                     //统计击杀时间
                                     // System.out.println("组队统计击杀结果");
                                     NPCConversationManager.setBossLog统计用(cc.getId(), "参与"+mobName, 1, 1);
-                                    for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
-                                        for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
+
                                             long l1 = time / 1000L;
                                             long l2 = hp/ l1;
                                             String shanghai;
@@ -77,8 +76,7 @@ public class MobMapVac extends Thread{
                                                 shanghai  = Math.ceil(l2) +"";
                                             }
                                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, adress + ": " + cc.getName() + " " + value + mobName + ",用时" + (time / 1000) + "秒==>秒伤:"+shanghai));
-                                        }
-                                    }
+
                                 }
                             }
                             break;
@@ -87,8 +85,6 @@ public class MobMapVac extends Thread{
                             //统计击杀时间
                             NPCConversationManager.setBossLog统计用(c.getPlayer().getId(), "参与"+mobName, 1, 1);
 
-                            for (final ChannelServer cserv1 : ChannelServer.getAllInstances()) {
-                                for (final MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
                                     long l1 = time / 1000L;
                                     long l2 = hp/ l1;
                                     String shanghai;
@@ -100,8 +96,7 @@ public class MobMapVac extends Thread{
                                         shanghai  = Math.ceil(l2) +"";
                                     }
                                     World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, adress + ": " + c.getPlayer().getName() + " " + value + mobName + ",用时" + (time / 1000) + "秒==>秒伤:"+shanghai));
-                                }
-                            }
+
                             break;
                         }
                     }

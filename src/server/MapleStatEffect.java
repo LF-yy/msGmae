@@ -4,12 +4,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 
@@ -27,6 +22,7 @@ import client.inventory.MapleInventoryType;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import constants.GameConstants;
+import gui.CongMS;
 import handling.channel.ChannelServer;
 import provider.MapleData;
 import provider.MapleDataTool;
@@ -154,7 +150,11 @@ public class MapleStatEffect implements Serializable
         ret.mmp_temp = (byte)MapleDataTool.getInt("mmp_temp", source, 0);
         ret.mpCon = (short)MapleDataTool.getInt("mpCon", source, 0);
         ret.hpCon = (short)MapleDataTool.getInt("hpCon", source, 0);
-        ret.prop = (short)MapleDataTool.getInt("prop", source, 100);
+        if (Objects.nonNull(Start.skillProp.get(sourceid))){
+            ret.prop = Short.parseShort(Start.skillProp.get(sourceid)+"");
+        }else {
+            ret.prop = (short) MapleDataTool.getInt("prop", source, 100);
+        }
         ret.cooldown = MapleDataTool.getInt("cooltime", source, 0);
         ret.expinc = MapleDataTool.getInt("expinc", source, 0);
         ret.exp = MapleDataTool.getInt("exp", source, 0);
@@ -240,8 +240,8 @@ public class MapleStatEffect implements Serializable
         ret.y = MapleDataTool.getInt("y", source, 0);
         ret.z = MapleDataTool.getInt("z", source, 0);
         ret.damage = (short)MapleDataTool.getIntConvert("damage", source, 100);//伤害
-        ret.attackCount = (byte)MapleDataTool.getIntConvert("attackCount", source, 1);//打击数量
-        ret.bulletCount = (byte)MapleDataTool.getIntConvert("bulletCount", source, 1);
+        ret.attackCount = (byte)MapleDataTool.getIntConvert("attackCount", source, 1);//段数
+        ret.bulletCount = (byte)MapleDataTool.getIntConvert("bulletCount", source, 1);//打击个数
         ret.bulletConsume = MapleDataTool.getIntConvert("bulletConsume", source, 0);
         ret.moneyCon = MapleDataTool.getIntConvert("moneyCon", source, 0);
         ret.itemCon = MapleDataTool.getInt("itemCon", source, 0);
@@ -387,8 +387,11 @@ public class MapleStatEffect implements Serializable
                 case 35001003:
                 case 35101006: {
                     ret.duration = 1800000;
-                   //int i =  Integer.valueOf(ret.x)*10;
-                    statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER,Integer.valueOf(ret.x)));//设置攻击速度
+                    if (sourceid == 3201002){
+                        statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, Integer.valueOf(ret.x)*10));//设置攻击速度
+                    }else {
+                        statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, Integer.valueOf(ret.x)));//设置攻击速度
+                    }
                     break;
                 }
                 case 5121009:
@@ -422,6 +425,7 @@ public class MapleStatEffect implements Serializable
                 case 20008003:
                 case 20018003:
                 case 30008003: {
+                    ret.duration = 1800000;
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXHP, Integer.valueOf(ret.x)));
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXMP, Integer.valueOf(ret.y)));
                     break;
@@ -475,11 +479,12 @@ public class MapleStatEffect implements Serializable
                     break;
                 }
                 case 4331003: {
-                    ret.duration = 60000;
+                    ret.duration = 6000000;
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.OWL_SPIRIT, Integer.valueOf(ret.y)));
                     break;
                 }
                 case 1311008: {
+                    ret.duration = 6000000;
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DRAGONBLOOD, Integer.valueOf(ret.x)));
                     break;
                 }
@@ -505,7 +510,8 @@ public class MapleStatEffect implements Serializable
                     statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAPLE_WARRIOR, Integer.valueOf(ret.x)));
                     break;
                 }
-                case 5121003: {
+                case 5121003:
+                case 1301006: {
                     //statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, -100));//设置攻击速度
                     ret.duration = 86400000;
                     break;
@@ -946,9 +952,10 @@ public class MapleStatEffect implements Serializable
             }
         }
         else if (this.isMist()) {
+            //致命毒雾处理
             final int addx = 0;
             final Rectangle bounds = this.calculateBoundingBox((pos != null) ? pos : applyfrom.getPosition(), applyfrom.isFacingLeft(), addx);
-            final MapleMist mist = new MapleMist(bounds, applyfrom, this);
+            final MapleMist mist = new MapleMist(bounds, applyfrom, this);//设置毒雾对象
             applyfrom.getMap().spawnMist(mist, this.getDuration(), false);
         }
         else if (this.isTimeLeap()) {
@@ -1155,7 +1162,8 @@ public class MapleStatEffect implements Serializable
     }
     
     private void applyBuffEffect(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final int newDuration, final boolean dc) {
-        int localDuration = newDuration;
+//        int localDuration = newDuration;
+        int localDuration = (CongMS.ConfigValuesMap.get("无限BUFF") > 0) ? 8480832 : newDuration;
         if (primary && applyto.getBuffedValue(MapleBuffStat.MORPH) == null) {
             localDuration = (dc ? newDuration : this.alchemistModifyVal(applyfrom, localDuration, false));
             applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.showBuffeffect(applyto.getId(), this.sourceid, 1), false);

@@ -1,5 +1,7 @@
 package scripting;
 // 汉化方法库
+import bean.BreakthroughMechanism;
+import bean.FiveTurn;
 import bean.UserAttraction;
 import com.alibaba.druid.util.StringUtils;
 import constants.tzjc;
@@ -76,6 +78,7 @@ import client.MapleStat;
 
 import javax.script.Invocable;
 import client.MapleClient;
+import util.ListUtil;
 
 public class NPCConversationManager extends AbstractPlayerInteraction
 {
@@ -116,6 +119,273 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         PacketHelper.showDamageSkin(c.getPlayer().getId(),param);
     }
 
+    public void yourIsGM() {
+        if (!c.getPlayer().isGM()) {
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 这么屌读我GM权限,走你。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 这么屌读我GM权限,走你。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 这么屌读我GM权限,走你。"));
+            this.getPlayer().ban("读GM权限", true, true, false);
+        }
+
+    }
+    public BreakthroughMechanism 查询境界(int userId) {
+        return ListUtil.isNotEmpty(Start.breakthroughMechanism.get(userId)) ? Start.breakthroughMechanism.get(userId).get(0) : null;
+    }
+    public void 提升境界(int userId,String name,String equalOrder,int allQuality) {
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        BreakthroughMechanism su = new BreakthroughMechanism();
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT name,characterid,equal_order,localstr,localdex,localluk,localint,all_quality,harm,crit,crit_harm,boss_harm,hp,mp,pad,matk,customize_attribute,customize_smash_roll FROM lt_breakthrough_mechanism where characterid = ?");
+            ps.setInt(1, userId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                su.setName(rs.getString("name"));
+                su.setCharacterid(rs.getInt("characterid"));
+                su.setEqualOrder(rs.getString("equal_order"));
+                su.setLocalstr(rs.getInt("localstr"));
+                su.setLocaldex(rs.getInt("localdex"));
+                su.setLocalluk(rs.getInt("localluk"));
+                su.setLocalint(rs.getInt("localint"));
+                su.setAllQuality(rs.getInt("all_quality"));
+                su.setHarm(rs.getInt("harm"));
+                su.setCrit(rs.getInt("crit"));
+                su.setCritHarm(rs.getInt("crit_harm"));
+                su.setBossHarm(rs.getInt("boss_harm"));
+                su.setHp(rs.getInt("hp"));
+                su.setMp(rs.getInt("mp"));
+                su.setPad(rs.getInt("pad"));
+                su.setMatk(rs.getInt("matk"));
+                su.setCustomizeAttribute(rs.getInt("matk"));
+                su.setCustomizeSmashRoll(rs.getInt("matk"));
+                su.setCustomizeAttribute(rs.getInt("customize_attribute"));
+                su.setCustomizeSmashRoll(rs.getInt("customize_smash_roll"));
+            }
+            ps.execute();
+            ps.close();
+            if(su.getCharacterid() >0 ){
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                su.setName(name);
+                su.setEqualOrder(equalOrder);
+                su.setAllQuality(allQuality);
+                su.setCustomizeAttribute(su.getCustomizeAttribute()+1);
+                su.setCustomizeSmashRoll(su.getCustomizeSmashRoll()+1);
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("update lt_breakthrough_mechanism set name,characterid,equal_order,customize_attribute,customize_smash_roll  where characterid = ? ");
+                ps1.setString(1, su.getName());
+                ps1.setInt(2, su.getCharacterid());
+                ps1.setString(3, su.getEqualOrder());
+                ps1.setInt(4, su.getCustomizeAttribute());
+                ps1.setInt(5, su.getCustomizeSmashRoll());
+                ps1.execute();
+                ps1.close();
+            }else{
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                su.setName(name);
+                su.setCharacterid(userId);
+                su.setEqualOrder(equalOrder);
+                su.setAllQuality(allQuality);
+                su.setCustomizeAttribute(1);
+                su.setCustomizeSmashRoll(1);
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("INSERT INTO lt_breakthrough_mechanism (name,characterid,equal_order,all_quality,customize_attribute,customize_smash_roll) VALUES(?,?,?,?,?,?)");
+                ps1.setString(1, su.getName());
+                ps1.setInt(2, su.getCharacterid());
+                ps1.setString(3, su.getEqualOrder());
+                ps1.setInt(4, su.getAllQuality());
+                ps1.setInt(5, su.getCustomizeAttribute()+1);
+                ps1.setInt(6, su.getCustomizeSmashRoll()+1);
+                ps1.execute();
+                ps1.close();
+            }
+
+            List<BreakthroughMechanism> list = new ArrayList<>();
+            list.add(su);
+            Start.breakthroughMechanism.remove(userId);
+            Start.breakthroughMechanism.put(userId,list);
+        } catch (SQLException ex) {
+            System.out.println("境界提升异常：" + ex.getMessage());
+        }
+
+    }
+
+    public void 五转转职(final int id,final int job,final String jobName){
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int numbOld = 0;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT occupation_name,occupation_id FROM lt_five_turn where charactersid = ?  ");
+            ps.setInt(1, id);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                numbOld = rs.getInt("occupation_id");
+            }
+            ps.execute();
+            ps.close();
+            if(numbOld>0){
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("update lt_five_turn set occupation_id = ?,occupation_name = ? where charactersid = ? ");
+                ps1.setInt(1, job);
+                ps1.setString(2, jobName);
+                ps1.setInt(3, id);
+                ps1.execute();
+                ps1.close();
+            }else{
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("INSERT INTO lt_five_turn (charactersid,occupation_id,occupation_name) VALUES(?,?,?)");
+                ps1.setInt(1, id);
+                ps1.setInt(2, job);
+                ps1.setString(3, jobName);
+                ps1.execute();
+                ps1.close();
+            }
+            FiveTurn fiveTurn = new FiveTurn();
+            fiveTurn.setCharactersid(id);
+            fiveTurn.setOccupationId(job);
+            fiveTurn.setOccupationName(jobName);
+            List<FiveTurn> list = new ArrayList<>();
+            list.add(fiveTurn);
+            Start.fiveTurn.remove(id);
+            Start.fiveTurn.put(id,list);
+        } catch (SQLException ex) {
+            System.out.println("五转转职异常：" + ex.getMessage());
+        }
+
+    }
+    public int 查5转职业id(final int id){
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int numbOld = 0;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT occupation_name,occupation_id FROM lt_five_turn where charactersid = ? ");
+            ps.setInt(1, id);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                numbOld = rs.getInt("occupation_id");
+            }
+            ps.execute();
+            ps.close();
+
+        } catch (SQLException ex) {
+            System.out.println("查5转职业出错：" + ex.getMessage());
+        }
+        return numbOld;
+    }
+    public String 查5转职业名称(final int id){
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        String numbOld = null;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT occupation_name,occupation_id FROM lt_five_turn where charactersid = ? ");
+            ps.setInt(1, id);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                numbOld = rs.getString("occupation_name");
+            }
+            ps.execute();
+            ps.close();
+
+        } catch (SQLException ex) {
+            System.out.println("查5转职业出错：" + ex.getMessage());
+        }
+        return numbOld;
+    }
+
+    public String 移除五转(final int id){
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        String numbOld = null;
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("delete FROM lt_five_turn where charactersid = ? ");
+            ps.setInt(1, id);
+            ps.execute();
+            ps.close();
+            Start.GetfiveTurn();
+        } catch (SQLException ex) {
+            System.out.println("查5转职业出错：" + ex.getMessage());
+        }
+        return numbOld;
+    }
+    public String 自助爆率(int hours,int drop) {
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.dropRate"));
+        if (drop==0){
+            drop = 2;
+        }
+        if ("1".equals(ServerProperties.getProperty("dropRate"))){
+            return "已经有大佬开启倍率了";
+        }
+        final int 双倍爆率活动 = 原始爆率 * drop;
+        final int seconds = 0;
+        final int mins = 0;
+        final int time = hours * 60 * 60;
+        final String rate = "爆率";
+        World.scheduleRateDelay("爆率", (long)time);
+        ServerProperties.setProperty("dropRate","1");
+        for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+            cservs.setDropRate(双倍爆率活动);
+        }
+        Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[自助倍率] : 感谢 "+c.getPlayer().getName()+"大佬开启了"+drop+" 倍打怪爆率活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
+        return "开启成功";
+    }
+    public String 自助经验(int hours,int drop) {
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.expRate"));
+        if (drop==0){
+            drop = 2;
+        }
+        if ("1".equals(ServerProperties.getProperty("expRate"))){
+            return "已经有大佬开启倍率了";
+        }
+        final int 双倍爆率活动 = 原始爆率 * drop;
+        final int seconds = 0;
+        final int mins = 0;
+        final int time = hours * 60 * 60;
+        final String rate = "经验";
+        World.scheduleRateDelay("经验", (long)time);
+        ServerProperties.setProperty("expRate","1");
+        for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+            cservs.setExpRate(双倍爆率活动);
+        }
+        Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[自助倍率] : 感谢  "+c.getPlayer().getName()+"大佬开启了"+drop+" 倍打怪经验活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
+        return "开启成功";
+    }
+
+    public String 自助金币(int hours,int drop) {
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.mesoRate"));
+        if (drop==0){
+            drop = 2;
+        }
+        if ("1".equals(ServerProperties.getProperty("mesoRate"))){
+            return "已经有大佬开启倍率了";
+        }
+        final int 双倍爆率活动 = 原始爆率 * drop;
+        final int seconds = 0;
+        final int mins = 0;
+        final int time = hours * 60 * 60;
+        final String rate = "金币";
+        World.scheduleRateDelay("金币", (long)time);
+        ServerProperties.setProperty("mesoRate","1");
+        for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
+            cservs.setMesoRate(双倍爆率活动);
+        }
+        Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[自助倍率] : 感谢  "+c.getPlayer().getName()+"大佬开启了"+drop+"倍打怪金币活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
+        return "开启成功";
+    }
     public int 获取配置(final String param) {
         return CongMS.ConfigValuesMap.get(param);
     }
@@ -128,7 +398,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         int numbOld = 0;
         try  {
             final Connection con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("SELECT numb FROM suitdamtable where name = ? ");
+            ps = con.prepareStatement("SELECT numb FROM suitdamtablenew where name = ? ");
             ps.setString(1, names);
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -142,19 +412,19 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         return numbOld;
     }
-        public int 装备赋能(final IItem item,final Integer numb,final String name){
+        public double 装备赋能(final IItem item,final Double numb,final String name){
         String names = "赋能"+item.getItemId()+name;
 
         PreparedStatement ps = null;
         ResultSet rs = null;
-        int numbOld = 0;
+        double numbOld = 0.0;
         try  {
             final Connection con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("SELECT numb FROM suitdamtable where name = ? ");
+            ps = con.prepareStatement("SELECT numb FROM suitdamtablenew where name = ? ");
             ps.setString(1, names);
             rs = ps.executeQuery();
             while (rs.next()) {
-                numbOld = rs.getInt("numb");
+                numbOld = rs.getDouble("numb");
             }
             ps.execute();
             ps.close();
@@ -162,8 +432,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
                 final Connection con1 = DatabaseConnection.getConnection();
-                ps1 = con1.prepareStatement("update suitdamtable set numb = ? where name = ? ");
-                ps1.setInt(1, numbOld+numb);
+                ps1 = con1.prepareStatement("update suitdamtablenew set numb = ? where name = ? ");
+                ps1.setDouble(1, numbOld+numb);
                 ps1.setString(2, names);
                 ps1.execute();
                 ps1.close();
@@ -171,15 +441,14 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
                 final Connection con1 = DatabaseConnection.getConnection();
-                ps1 = con1.prepareStatement("INSERT INTO suitdamtable (name,numb,proportion,proname) VALUES(?,?,?,?)");
+                ps1 = con1.prepareStatement("INSERT INTO suitdamtablenew (name,numb,proportion,proname) VALUES(?,?,?,?)");
                 ps1.setString(1, names);
-                ps1.setInt(2, numbOld+numb);
+                ps1.setDouble(2, numbOld+numb);
                 ps1.setInt(3, 9999);
                 ps1.setString(4, name);
                 ps1.execute();
                 ps1.close();
             }
-
             tzjc.tzMap.put(names,numbOld+numb);
         } catch (SQLException ex) {
             System.out.println("赋能装备加成表出错：" + ex.getMessage());
@@ -557,6 +826,22 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         if (this.lastMsg > -1) {
             return;
         }
+        if (def>max){
+            return;
+        }
+        if (def<min){
+            return;
+        }
+        if (def>30000){
+            return;
+        }
+        if (def<0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
+            this.getPlayer().ban("非法利用漏洞", true, true, false);
+        }
+
         if (text.contains((CharSequence)"#L")) {
             this.sendSimple(text);
             return;
@@ -564,7 +849,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.c.sendPacket(MaplePacketCreator.getNPCTalkNum(this.npc, text, def, min, max));
         this.lastMsg = 3;
     }
-    
+
     public void sendGetText(final String text) {
         if (this.lastMsg > -1 || StringUtils.isEmpty(text)) {
             return;
@@ -577,7 +862,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.c.sendPacket(MaplePacketCreator.getNPCTalkText(this.npc, text));
         this.lastMsg = 2;
     }
-    
+
     public void setGetText(final String text) {
         this.getText = text;
     }
@@ -1589,13 +1874,13 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     //获取潜能信息
     public final String getPotentialInfo(final int id) {
         final List<StructPotentialItem> potInfo = MapleItemInformationProvider.getInstance().getPotentialInfo(id);
-        final StringBuilder builder = new StringBuilder("#b#ePOTENTIAL INFO FOR ID: ");
+        final StringBuilder builder = new StringBuilder("#b#e以下是潜能ID为: ");
         builder.append(id);
         builder.append("#n#k\r\n\r\n");
         int minLevel = 1;
         int maxLevel = 10;
         for (final StructPotentialItem item : potInfo) {
-            builder.append("#eLevels ");
+            builder.append("#e等级范围 ");
             builder.append(minLevel);
             builder.append("~");
             builder.append(maxLevel);
@@ -1888,7 +2173,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                             namez = de.Minimum * this.getClient().getChannelServer().getMesoRate() + " 到 " + de.Maximum * this.getClient().getChannelServer().getMesoRate() + " 金币";
                         }
                         ch = de.chance * this.getClient().getChannelServer().getDropRate();
-                        name.append(num + 1 + ") #v" + itemId + "#" + namez + ((de.questid > 0 && MapleQuest.getInstance((int) de.questid).getName().length() > 0) ? ("需要接受任務 " + MapleQuest.getInstance((int) de.questid).getName() + "") : "") + "\r\n");
+                        name.append(num + 1 + ") #v" + itemId + "#" + namez + ("#d  掉落機率：" + (double)Integer.valueOf((ch >= 999999) ? 1000000 : ch) / 10000.0 + "%\r\n") + ((de.questid > 0 && MapleQuest.getInstance((int) de.questid).getName().length() > 0) ? ("需要接受任務 " + MapleQuest.getInstance((int) de.questid).getName() + "") : "") + "\r\n");
                         ++num;
                     }
                 }
@@ -5457,7 +5742,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         }
         return data;
     }
-    public static int 取限制等级() {
+    public  int 取限制等级() {
         int 限制等级 = 0;
         try {
             final int cid = 4001128;
@@ -5572,10 +5857,14 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     }
 
     public void 清除地图所有(final int mapId) {
-        MapleMap mapleMap =this.getMap(mapId);
-        mapleMap.resetFully();
-        mapleMap.killAllMonsters(true);
-        mapleMap.respawn(true);
+        try {
+            MapleMap mapleMap =this.getMap(mapId);
+            mapleMap.resetFully();
+            mapleMap.killAllMonsters(true);
+            mapleMap.respawn(true);
+        } catch (Exception e) {
+
+        }
     }
 
     int temp;

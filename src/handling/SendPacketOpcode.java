@@ -11,10 +11,10 @@ import java.util.Properties;
 
 public enum SendPacketOpcode implements WritableIntValueHolder
 {
-    SPAWN_KITE_ERROR(265), 
-    SPAWN_KITE(266), 
-    DESTROY_KITE(267), 
-    LOGIN_STATUS(0), 
+    SPAWN_KITE_ERROR(265),   //召唤_风筝_错误
+    SPAWN_KITE(266),        //召唤_风筝
+    DESTROY_KITE(267),      //摧毁风筝
+    LOGIN_STATUS(0),        //登录状态
     SERVERLIST(2), 
     CHARLIST(3), 
     SERVER_IP(4), 

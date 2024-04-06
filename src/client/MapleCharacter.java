@@ -5,6 +5,7 @@ import bean.UserAttraction;
 import client.inventory.*;
 import scripting.EventManager;
 import server.*;
+import server.Timer;
 import server.Timer.EventTimer;
 import server.maps.MapleMapEffect;
 import handling.world.World.Find;
@@ -23,7 +24,9 @@ import handling.world.MapleMessengerCharacter;
 import io.netty.channel.Channel;
 import tools.MockIOSession;
 import server.maps.MapleFoothold;
-import java.util.Comparator;
+
+import java.util.*;
+
 import client.inventory.MapleRing.RingComparator;
 import tools.packet.MonsterCarnivalPacket;
 import tools.packet.PlayerShopPacket;
@@ -35,7 +38,7 @@ import handling.world.guild.MapleGuild;
 import server.maps.MapleMapObjectType;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Calendar;
+
 import scripting.NPCConversationManager;
 import tools.packet.MobPacket;
 import handling.world.PartyOperation;
@@ -45,11 +48,8 @@ import gui.CongMS;
 import server.maps.FieldLimitType;
 import tools.packet.MTSCSPacket;
 import handling.world.MaplePartyCharacter;
-import java.util.Collections;
 import handling.world.PlayerBuffValueHolder;
-import java.util.Arrays;
 import tools.packet.PetPacket;
-import java.util.EnumMap;
 import tools.HexTool;
 import java.util.concurrent.RejectedExecutionException;
 import server.FishingRewardFactory.FishingReward;
@@ -60,15 +60,12 @@ import server.Timer.EtcTimer;
 import server.Timer.MapTimer;
 import server.Timer.BuffTimer;
 
-import java.util.Collection;
 import tools.MaplePacketCreator;
 import tools.data.MaplePacketLittleEndianWriter;
 import server.life.PlayerNPC;
 import database.DatabaseException;
 import tools.FilePrinter;
 import tools.Pair;
-
-import java.util.Iterator;
 
 import server.maps.MapleMapFactory;
 import constants.GameConstants;
@@ -84,12 +81,7 @@ import java.sql.SQLException;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import server.maps.SavedLocationType;
-import java.util.LinkedList;
-import java.util.LinkedHashSet;
-import java.util.HashMap;
-import java.util.ArrayList;
 import tools.ConcurrentEnumMap;
-import java.util.LinkedHashMap;
 import server.maps.Event_PyramidSubway;
 import java.util.concurrent.ScheduledFuture;
 
@@ -102,20 +94,18 @@ import handling.world.MapleMessenger;
 import server.maps.MapleMap;
 import client.anticheat.CheatTracker;
 
-import java.util.Deque;
-
 import server.maps.MapleSummon;
 import server.quest.MapleQuest;
-import java.util.Map;
+
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import server.maps.MapleMapObject;
 import server.life.MapleMonster;
-import java.util.Set;
+
 import java.lang.ref.WeakReference;
 
 import server.maps.MapleDoor;
 import server.movement.LifeMovementFragment;
-import java.util.List;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.awt.Point;
 import java.io.Serializable;
@@ -1235,6 +1225,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         throw new RuntimeException("No mount data found on SQL column");
                     }
                     final IItem mount = ret.getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-18));
+
                     ret.mount = new MapleMount(ret, (mount != null) ? mount.getItemId() : 0, (ret.job > 1000 && ret.job < 2000) ? 10001004 : ((ret.job >= 2000) ? ((ret.job == 2001 || ret.job >= 2200) ? 20011004 : ((ret.job >= 3000) ? 30001004 : 20001004)) : 1004), rs.getByte("Fatigue"), rs.getByte("Level"), rs.getInt("Exp"));
                     ps.close();
                     rs.close();
@@ -3230,7 +3221,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     final int i = (int)Integer.valueOf(iterator.next());
                     final ISkill skil = SkillFactory.getSkill(i);
                     if (skil != null && !skil.isInvisible() && skil.isFourthJob() && this.getSkillLevel(skil) <= 0 && this.getMasterLevel(skil) <= 0 && skil.getMasterLevel() > 0) {
-                        this.changeSkillLevel(skil, (byte)0, (byte)skil.getMasterLevel());
+                        if (Objects.nonNull(Start.初始化技能等级.get(skil.getId()))){
+                            this.changeSkillLevel(skil, (byte)0, (byte)(int)Start.初始化技能等级.get(skil.getId()));
+                        }else{
+                            this.changeSkillLevel(skil, (byte)0, (byte)skil.getMasterLevel());
+                        }
                     }
                 }
             }
@@ -3626,14 +3621,28 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.exp += total;
             long oexp = (long)this.exp;
             short olevel = this.level;
-            while (oexp >= (long)needed) {
-                this.levelUp();
-                leveled = true;
-                oexp -= (long)needed;
-                ++olevel;
-                needed = GameConstants.getExpNeededForLevel((int)olevel);
-                if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && olevel >= 骑士团等级上限) || oexp < (long)needed) {
-                    break;
+            if (CongMS.ConfigValuesMap.get("等级连升开关") ==1) {
+                while (oexp >= (long) needed) {
+                    this.levelUp();
+                    leveled = true;
+                    oexp -= (long) needed;
+                    ++olevel;
+                    //获取当前等级经验上限
+                    needed = GameConstants.getExpNeededForLevel((int) olevel);
+                    if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && olevel >= 骑士团等级上限) || oexp < (long) needed) {
+                        break;
+                    }
+                }
+            }else {
+                if (oexp >= (long) needed) {
+                    this.levelUp();
+                    leveled = true;
+                    oexp = 0L;
+                    olevel++;
+                    needed = GameConstants.getExpNeededForLevel((int) olevel);
+                    if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && olevel >= 骑士团等级上限) || oexp < (long) needed) {
+                        this.setExp(0);
+                    }
                 }
             }
             if (total > 0) {
@@ -3972,7 +3981,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void levelUp() {
         if (等级上限 == 0 ){
-            等级上限 =  this.取限制等级(getId());
+            等级上限 =  this.取限制等级1(getId());
         }
         int shijiedengji = this.取限制等级();
         if (shijiedengji > 等级上限){
@@ -5895,6 +5904,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.setBossLog1(boss, type, 1);
     }
 
+
+
     public void setBossLog(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog(boss, type);
         try {
@@ -5910,6 +5921,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
         }
     }
+
+
 
     public void setBossLog1(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog1(boss, type);
@@ -5927,7 +5940,67 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-
+    public void setPublicRecord(final String boss, final int type, final int count) {
+        final int bossCount = this.getPublicRecord(boss, type);
+        try {
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE lt_public_record SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE record_name = ?");
+            ps.setInt(1, bossCount + count);
+            ps.setInt(2, type);
+            ps.setString(3, boss);
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+        }
+    }
+    public int getPublicRecord(final String boss, final int type) {
+        try {
+            int count = 0;
+            final Connection con = DatabaseConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM lt_public_record WHERE  record_name = ? and type = ?");
+            ps.setString(1, boss);
+            ps.setInt(2, type);
+            final ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt("count");
+                if (count < 0) {
+                    return count;
+                }
+                final Timestamp bossTime = rs.getTimestamp("time");
+                rs.close();
+                ps.close();
+                if (type == 0) {
+                    final Calendar sqlcal = Calendar.getInstance();
+                    if (bossTime != null) {
+                        sqlcal.setTimeInMillis(bossTime.getTime());
+                    }
+                    if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
+                        count = 0;
+                        ps = con.prepareStatement("UPDATE lt_public_record SET count = 0, time = CURRENT_TIMESTAMP() WHERE  record_name = ? and type = ?");
+                        ps.setString(1, boss);
+                        ps.setInt(2, type);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+            else {
+                final PreparedStatement psu = con.prepareStatement("INSERT INTO lt_public_record (record_name, count, type) VALUES (?, ?, ?)");
+                psu.setString(1, boss);
+                psu.setInt(2, 0);
+                psu.setInt(3, type);
+                psu.executeUpdate();
+                psu.close();
+            }
+            rs.close();
+            ps.close();
+            return count;
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            return -1;
+        }
+    }
     
     public void resetBossLog(final String boss) {
         this.resetBossLog(boss, 0);
@@ -11112,7 +11185,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return 限制等级;
     }
 
-    public int 取限制等级(final int cid) {
+    public int 取限制等级1(final int cid) {
         try {
             int 限制等级 = CongMS.ConfigValuesMap.get("等级初始上限");
             final Connection con = DatabaseConnection.getConnection();

@@ -15,22 +15,18 @@ import client.inventory.MaplePet.PetFlag;
 import tools.StringUtil;
 import client.MapleCharacter;
 
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.LinkedHashMap;
+
 import constants.GameConstants;
 import client.MapleClient;
 import provider.MapleDataFileEntry;
 import provider.MapleDataDirectoryEntry;
 
-import java.util.Iterator;
 import provider.MapleDataTool;
-import java.util.ArrayList;
-import java.util.HashMap;
 import provider.MapleDataProviderFactory;
 import tools.Pair;
 
-import java.util.List;
-import java.util.Map;
 import provider.MapleData;
 import provider.MapleDataProvider;
 
@@ -202,6 +198,69 @@ public class MapleItemInformationProvider
         itemsData = this.stringData.getData("Pet.img");
         for (final MapleData itemFolder : itemsData.getChildren()) {
             itemPairs.add(new Pair<Integer, String>(Integer.valueOf(Integer.parseInt(itemFolder.getName())), MapleDataTool.getString("name", itemFolder, "NO-NAME")));
+        }
+        //20240218 LT 新增  装备潜能
+        final MapleData potsData = itemData.getData("ItemOption.img");
+        StructPotentialItem item;
+        List<StructPotentialItem> items;
+        for (MapleData dat : potsData) {
+            items = new LinkedList<StructPotentialItem>();
+            for (MapleData level : dat.getChildByPath("level")) {
+                item = new StructPotentialItem();
+                item.optionType = MapleDataTool.getIntConvert("info/optionType", dat, 0);
+                item.reqLevel = MapleDataTool.getIntConvert("info/reqLevel", dat, 0);
+                item.face = MapleDataTool.getString("face", level, "");
+                item.boss = MapleDataTool.getIntConvert("boss", level, 0) > 0;
+                item.potentialID = (short)Integer.parseInt(dat.getName());
+                item.attackType = (short) MapleDataTool.getIntConvert("attackType", level, 0);
+                item.incMHP = (short) MapleDataTool.getIntConvert("incMHP", level, 0);
+                item.incMMP = (short) MapleDataTool.getIntConvert("incMMP", level, 0);
+                item.incSTR = (byte) MapleDataTool.getIntConvert("incSTR", level, 0);
+                item.incDEX = (byte) MapleDataTool.getIntConvert("incDEX", level, 0);
+                item.incINT = (byte) MapleDataTool.getIntConvert("incINT", level, 0);
+                item.incLUK = (byte) MapleDataTool.getIntConvert("incLUK", level, 0);
+                item.incACC = (byte) MapleDataTool.getIntConvert("incACC", level, 0);
+                item.incEVA = (byte) MapleDataTool.getIntConvert("incEVA", level, 0);
+                item.incSpeed = (byte) MapleDataTool.getIntConvert("incSpeed", level, 0);
+                item.incJump = (byte) MapleDataTool.getIntConvert("incJump", level, 0);
+                item.incPAD = (byte) MapleDataTool.getIntConvert("incPAD", level, 0);
+                item.incMAD = (byte) MapleDataTool.getIntConvert("incMAD", level, 0);
+                item.incPDD = (byte) MapleDataTool.getIntConvert("incPDD", level, 0);
+                item.incMDD = (byte) MapleDataTool.getIntConvert("incMDD", level, 0);
+                item.prop = (byte) MapleDataTool.getIntConvert("prop", level, 0);
+                item.time = (byte) MapleDataTool.getIntConvert("time", level, 0);
+                item.incSTRr = (byte) MapleDataTool.getIntConvert("incSTRr", level, 0);
+                item.incDEXr = (byte) MapleDataTool.getIntConvert("incDEXr", level, 0);
+                item.incINTr = (byte) MapleDataTool.getIntConvert("incINTr", level, 0);
+                item.incLUKr = (byte) MapleDataTool.getIntConvert("incLUKr", level, 0);
+                item.incMHPr = (byte) MapleDataTool.getIntConvert("incMHPr", level, 0);
+                item.incMMPr = (byte) MapleDataTool.getIntConvert("incMMPr", level, 0);
+                item.incACCr = (byte) MapleDataTool.getIntConvert("incACCr", level, 0);
+                item.incEVAr = (byte) MapleDataTool.getIntConvert("incEVAr", level, 0);
+                item.incPADr = (byte) MapleDataTool.getIntConvert("incPADr", level, 0);
+                item.incMADr = (byte) MapleDataTool.getIntConvert("incMADr", level, 0);
+                item.incPDDr = (byte) MapleDataTool.getIntConvert("incPDDr", level, 0);
+                item.incMDDr = (byte) MapleDataTool.getIntConvert("incMDDr", level, 0);
+                item.incCr = (byte) MapleDataTool.getIntConvert("incCr", level, 0);
+                item.incDAMr = (byte) MapleDataTool.getIntConvert("incDAMr", level, 0);
+                item.RecoveryHP = (byte) MapleDataTool.getIntConvert("RecoveryHP", level, 0);
+                item.RecoveryMP = (byte) MapleDataTool.getIntConvert("RecoveryMP", level, 0);
+                item.HP = (byte) MapleDataTool.getIntConvert("HP", level, 0);
+                item.MP = (byte) MapleDataTool.getIntConvert("MP", level, 0);
+                item.level = (byte) MapleDataTool.getIntConvert("level", level, 0);
+                item.ignoreTargetDEF = (byte) MapleDataTool.getIntConvert("ignoreTargetDEF", level, 0);
+                item.ignoreDAM = (byte) MapleDataTool.getIntConvert("ignoreDAM", level, 0);
+                item.DAMreflect = (byte) MapleDataTool.getIntConvert("DAMreflect", level, 0);
+                item.mpconReduce = (byte) MapleDataTool.getIntConvert("mpconReduce", level, 0);
+                item.mpRestore = (byte) MapleDataTool.getIntConvert("mpRestore", level, 0);
+                item.incMesoProp = (byte) MapleDataTool.getIntConvert("incMesoProp", level, 0);
+                item.incRewardProp = (byte) MapleDataTool.getIntConvert("incRewardProp", level, 0);
+                item.incAllskill = (byte) MapleDataTool.getIntConvert("incAllskill", level, 0);
+                item.ignoreDAMr = (byte) MapleDataTool.getIntConvert("ignoreDAMr", level, 0);
+                item.RecoveryUP = (byte) MapleDataTool.getIntConvert("RecoveryUP", level, 0);
+                items.add(item);
+            }
+            potentialCache.put(Integer.parseInt(dat.getName()), items);
         }
         return itemPairs;
     }
@@ -845,14 +904,14 @@ public class MapleItemInformationProvider
 //                }
 //            else if (ItemConstants.isPotentialAddScroll(scroll)) { //附加潜能
 //                return scrollPotentialAdd(equip, scroll, chr);
-//            } else if (ItemConstants.isLimitBreakScroll(scroll)) { //突破攻击上限石头
+            //if (ItemConstants.isLimitBreakScroll(scroll)) { //突破攻击上限石头
 //                return scrollLimitBreak(equip, scroll, chr);
 //            } else if (ItemConstants.isResetScroll(scroll)) { //还原卷轴
 //                return scrollResetEquip(equip, scroll, chr);
 //            } else if (ItemConstants.isSealedScroll(scroll)) {
 //                return scrollSealedEquip(equip, scroll, chr);
 //            }
-            if (GameConstants.isPotentialScroll(scrollId.getItemId()) || GameConstants.isEquipScroll(scrollId.getItemId()) || Randomizer.nextInt(100) <= success) {
+            if (GameConstants.isPotentialScroll(scrollId.getItemId()) || GameConstants.isEquipScroll(scrollId.getItemId()) || Randomizer.nextInt(100) <= success || scrollId.getItemId() ==2049124) {
                 switch (scrollId.getItemId()) {
                     case 2049000:
                     case 2049001:

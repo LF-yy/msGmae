@@ -1,32 +1,29 @@
 package client;
 
 import abc.套装系统完善版;
+import bean.SuitSystem;
 import gui.CongMS;
+import server.*;
 import tools.data.MaplePacketLittleEndianWriter;
 import client.inventory.MapleWeaponType;
 import client.inventory.ModifyInventory;
-import server.MapleInventoryManipulator;
 import tools.MaplePacketCreator;
-import java.util.Collection;
-import server.MapleStatEffect;
-import server.StructSetItem;
-import java.util.Iterator;
+
+import java.util.*;
+
 import constants.ServerConfig;
-import java.util.Calendar;
 import server.StructSetItem.SetItem;
 import java.util.Map.Entry;
-import server.StructPotentialItem;
+
 import client.inventory.IEquip;
 import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
-import server.MapleItemInformationProvider;
-import java.util.HashMap;
-import java.util.ArrayList;
+
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import client.inventory.Equip;
-import java.util.List;
-import java.util.Map;
+
 import java.lang.ref.WeakReference;
 import java.io.Serializable;
 
@@ -47,19 +44,19 @@ public class PlayerStats implements Serializable
     public short maxhp;
     public short mp;
     public short maxmp;
-    private transient short passive_sharpeye_percent; //爆击最大伤害倍率
-    private transient short localmaxhp;
-    private transient short localmaxmp;
-    private transient byte passive_mastery; //武器数量度
-    private transient byte passive_sharpeye_rate;  //爆击概率
-    private transient int localstr; //力量
-    private transient int localdex; //敏捷
-    private transient int localluk; //运气
-    private transient int localint_;//智力
-    private transient int magic; //魔法防御
-    private transient int watk;  //物理防御
-    private transient int hands;
-    private transient int accuracy; //攻速
+    public transient short passive_sharpeye_percent; //爆击最大伤害倍率
+    public transient short localmaxhp;//血量
+    public transient short localmaxmp;//蓝量
+    public transient byte passive_mastery; //武器熟练度
+    public transient byte passive_sharpeye_rate;  //爆击概率
+    public transient int localstr; //力量
+    public transient int localdex; //敏捷
+    public transient int localluk; //运气
+    public transient int localint_;//智力
+    public transient int magic; //魔法防御
+    public transient int watk;  //物理防御
+    public transient int hands;//手技
+    public transient int accuracy; //命中
     public transient boolean equippedWelcomeBackRing; //以前是1112127 盛大修改 回归戒指 - 热烈欢迎玩家回归的特别戒指，附带特殊福利。佩戴本戒指时，在组队状态下，#c全队队员可享受额外80%的召回经验奖励#。归来的朋友，快去和其他玩家组队一起战斗吧！
     public transient boolean equippedFairy;
     public transient boolean hasMeso;
@@ -84,8 +81,8 @@ public class PlayerStats implements Serializable
     public transient double realDropBuff;
     public transient double realMesoBuff;
     public transient double realCashBuff;
-    public transient double dam_r; //伤害
-    public transient double bossdam_r; //BOSS伤害
+    public transient double dam_r; //伤害加成
+    public transient double bossdam_r; //BOSS伤害加成
     public transient double dropm;
     public transient double expm;
     public transient int itemExpm;
@@ -106,7 +103,7 @@ public class PlayerStats implements Serializable
     public transient int incAllskill;
     private transient float speedMod;
     private transient float jumpMod;
-    private transient float localmaxbasedamage;
+    public transient float localmaxbasedamage;
     public transient int def;
     public transient int element_ice;  //element_ice  冰
     public transient int element_fire; //element_fire 火
@@ -121,8 +118,10 @@ public class PlayerStats implements Serializable
     private int TZ1, TZ2, TZ3, TZ4, TZ5, TZ6;
     boolean 套装1是否共存, 套装2是否共存, 套装3是否共存, 套装4是否共存, 套装5是否共存, 套装6是否共存;
 
-    private transient int regularStr,regularDex,regularLuk,regularInt_;//潜能固定加成  力量,敏捷,运气,智力
-    private transient int pgStr,pgDex,pgLuk,pgInt_;//潜能百分比加成  力量,敏捷,运气,智力
+    public transient int regularStr,regularDex,regularLuk,regularInt_;//潜能固定加成  力量,敏捷,运气,智力
+    public transient int pgStr,pgDex,pgLuk,pgInt_;//潜能百分比加成  力量,敏捷,运气,智力
+    public transient Map<String, List<SuitSystem>> suitSys;//套装列表
+    public transient long damage;//伤害
 
     public PlayerStats(final MapleCharacter chr) {
         this.equipLevelHandling = new ArrayList<Equip>();
@@ -307,6 +306,12 @@ public class PlayerStats implements Serializable
         int 套装4装备数量 = CongMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
         int 套装5装备数量 = CongMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
         int 套装6装备数量 = CongMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
+        套装1是否共存 = true;
+        套装2是否共存 = true;
+        套装3是否共存 = true;
+        套装4是否共存 = true;
+        套装5是否共存 = true;
+        套装6是否共存 = true;
         final MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra == null) {
             return;
@@ -345,8 +350,11 @@ public class PlayerStats implements Serializable
         else if (chra.getJob() == 400 || (chra.getJob() >= 410 && chra.getJob() <= 412) || (chra.getJob() >= 1400 && chra.getJob() <= 1412)) {
             this.watk = 30;
         }
-        this.dam_r = 100.0;
-        this.bossdam_r = 100.0;
+        suitSys = new Hashtable<>();
+        suitSys.putAll(Start.suitSystemsMap);
+
+        this.dam_r = 100.0;//伤害
+        this.bossdam_r = 100.0;//boss伤害
         this.realExpBuff = 100.0;
         this.realCashBuff = 100.0;
         this.realDropBuff = 100.0;
@@ -438,7 +446,19 @@ public class PlayerStats implements Serializable
                 } else if (自定义套装6(equip.getItemId())) {
                     TZ6 += 1;
                 }
+                //统计套装
+                if (suitSys.keySet().stream().anyMatch(s -> s.contains("*"+equip.getItemId()+"*"))){
+                    suitSys.forEach((s, suitSystems) -> {
+                        if (s.contains("*"+equip.getItemId()+"*")){
+                            suitSystems.get(0).setHaveNub(suitSystems.get(0).getHaveNub()+1);
+                            if (suitSystems.get(0).getHaveNub()>=suitSystems.get(0).getTriggerNumber()){
+                                suitSystems.get(0).setEffective(true);
+                            }
+                        }
+                    });
+                }
             }
+
             switch (equip.getItemId()) {
                 case 1122017: {
                     this.精灵吊坠 = true;
@@ -503,6 +523,7 @@ public class PlayerStats implements Serializable
                 this.setHandling.put(Integer.valueOf(set), Integer.valueOf(value));
             }
 
+            //潜能
             if (equip.getState() > 1) {
                 final int[] array;
                 final int[] potentials = array = new int[] { equip.getPotential1(), equip.getPotential2(), equip.getPotential3() };
@@ -565,6 +586,7 @@ public class PlayerStats implements Serializable
                     }
                 }
             }
+
             if (equip.getDurability() > 0) {
                 this.durabilityHandling.add((Equip)equip);
             }
@@ -579,6 +601,48 @@ public class PlayerStats implements Serializable
                 }
                 this.equipLevelHandling.add((Equip)equip);
             }
+
+        }
+        //套装属性设置
+        AtomicInteger hp = new AtomicInteger();
+        AtomicInteger mp = new AtomicInteger();
+        AtomicInteger rate = new AtomicInteger();
+        AtomicInteger dmg = new AtomicInteger();
+        suitSys.forEach((s, suitSystems) -> {
+            if (suitSystems.get(0).isEffective()){
+                localstr += suitSystems.get(0).getLocalstr();
+                localdex += suitSystems.get(0).getLocaldex();
+                localint_ += suitSystems.get(0).getLocalint();
+                localluk += suitSystems.get(0).getLocalluk();
+
+                localstr += suitSystems.get(0).getAllQuality();
+                localdex += suitSystems.get(0).getAllQuality();
+                localint_ += suitSystems.get(0).getAllQuality();
+                localluk += suitSystems.get(0).getAllQuality();
+
+                watk += suitSystems.get(0).Pad();
+                magic += suitSystems.get(0).getLocalint() + suitSystems.get(0).getMatk();
+                hp.addAndGet( suitSystems.get(0).getHp());
+                mp.addAndGet(suitSystems.get(0).getMp());
+
+                rate.addAndGet(suitSystems.get(0).getCrit());
+                dmg.addAndGet(suitSystems.get(0).getCritHarm());
+                dam_r +=  suitSystems.get(0).getHarm();
+                bossdam_r += suitSystems.get(0).getBossHarm() ;
+            }
+        });
+        localmaxhp += hp.get();
+        localmaxmp += mp.get();
+        passive_sharpeye_rate += rate.get();
+        passive_sharpeye_percent += dmg.get();
+        if (localmaxhp>=30000){
+            localmaxhp = 30000;
+        }
+        if (localmaxmp>=30000){
+            localmaxmp = 30000;
+        }
+        if(passive_sharpeye_rate>=100){
+            passive_sharpeye_rate = 100;
         }
 
         for (final Entry<Integer, Integer> entry : this.setHandling.entrySet()) {
@@ -611,6 +675,7 @@ public class PlayerStats implements Serializable
 
         this.expMod = 1;
         this.dropMod = 1;
+        //背包物品经验卡
         for (final IItem item2 : chra.getInventory(MapleInventoryType.CASH)) {
             if (this.expMod < 3 && (item2.getItemId() == 5211060 || item2.getItemId() == 5211050 || item2.getItemId() == 5211051 || item2.getItemId() == 5211052 || item2.getItemId() == 5211053 || item2.getItemId() == 5211054)) {
                 this.expMod = 3;
@@ -628,7 +693,7 @@ public class PlayerStats implements Serializable
                 this.expMod = 2;
             }
             if (this.dropMod == 1) {
-                if (item2.getItemId() == 5360015) {
+                if (item2.getItemId() == 5360015) {//双倍爆率卡
                     this.dropMod = 2;
                 }
                 else if (item2.getItemId() == 5360000 && hour >= 0 && hour <= 6) {
@@ -698,7 +763,7 @@ public class PlayerStats implements Serializable
         chra.TZ4 = chra.getStat().TZ4;
         chra.TZ5 = chra.getStat().TZ5;
         chra.TZ6 = chra.getStat().TZ6;
-        if (CongMS.ConfigValuesMap.get("套装叠加开关") > 0) {
+        if (CongMS.ConfigValuesMap.get("套装叠加开关") == 0) {
             if (TZ1 >= 套装1装备数量 && TZ1 >= TZ2 || TZ1 >= 套装1装备数量 && TZ1 >= TZ3 || TZ1 >= 套装1装备数量 && TZ1 >= TZ4 || TZ1 >= 套装1装备数量 && TZ1 >= TZ5 || TZ1 >= 套装1装备数量 && TZ1 >= TZ6) {
                 chra.TZ2 = 0;
                 chra.TZ3 = 0;
@@ -933,19 +998,24 @@ public class PlayerStats implements Serializable
             this.realExpBuff += (double)buff;
         }
         if (chra.isBuffedValue(2382046)) {
-            this.realMesoBuff += 100.0;
-            this.mesoBuff *= 2.0;
-            this.realDropBuff += 200.0;
-            this.dropBuff *= 3.0;
+//            this.realMesoBuff += 100.0;
+//            this.mesoBuff *= 2.0;
+//            this.realDropBuff += 200.0;
+//            this.dropBuff *= 3.0;
         }
         else if (chra.isBuffedValue(2382028)) {
-            this.realMesoBuff += 100.0;
-            this.mesoBuff *= 2.0;
-            this.realDropBuff += 200.0;
-            this.dropBuff *= 3.0;
+//            this.realMesoBuff += 100.0;
+//            this.mesoBuff *= 2.0;
+//            this.realDropBuff += 200.0;
+//            this.dropBuff *= 3.0;
         }
         buff = chra.getBuffedValue(MapleBuffStat.DROP_RATE);
         if (buff != null) {
+              if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2022462) {
+                this.realDropBuff += 50.0;
+                this.dropBuff *= 1.5;
+            }
+              else
             if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382028) {
                 switch (chra.getMapId()) {
                     case 100040101:
@@ -973,31 +1043,31 @@ public class PlayerStats implements Serializable
                     }
                 }
             }
-            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2022462) {
-                this.realDropBuff += 50.0;
-                this.dropBuff *= 1.5;
-            }
             else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382001) {
-                this.realMesoBuff += 100.0;
-                this.mesoBuff *= 2.0;
-                this.realDropBuff += 200.0;
-                this.dropBuff *= 3.0;
+//                this.realMesoBuff += 100.0;
+//                this.mesoBuff *= 2.0;
+//                this.realDropBuff += 200.0;
+//                this.dropBuff *= 3.0;
             }
             else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382040) {
-                this.realMesoBuff += 100.0;
-                this.mesoBuff *= 2.0;
-                this.realDropBuff += 200.0;
-                this.dropBuff *= 3.0;
+//                this.realMesoBuff += 100.0;
+//                this.mesoBuff *= 2.0;
+//                this.realDropBuff += 200.0;
+//                this.dropBuff *= 3.0;
             }
             else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2383003) {
-                this.realMesoBuff += 100.0;
-                this.mesoBuff *= 2.0;
-                this.realDropBuff += 200.0;
-                this.dropBuff *= 3.0;
+//                this.realMesoBuff += 100.0;
+//                this.mesoBuff *= 2.0;
+//                this.realDropBuff += 200.0;
+//                this.dropBuff *= 3.0;
             }
             else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2383006) {
-                this.realDropBuff += 300.0;
-                this.dropBuff *= 4.0;
+//                this.realDropBuff += 300.0;
+//                this.dropBuff *= 4.0;
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2383010) {
+//                this.realDropBuff += 300.0;
+//                this.dropBuff *= 4.0;
             }
             else {
                 this.realDropBuff += (double)buff;
@@ -1009,6 +1079,7 @@ public class PlayerStats implements Serializable
             this.realCashBuff += (double)buff;
             this.cashBuff *= (double)buff / 100.0;
         }
+
         buff = chra.getBuffedValue(MapleBuffStat.MESO_RATE);
         if (buff != null) {
             if (chra.getBuffSource(MapleBuffStat.MESO_RATE) == 2382005 || chra.getBuffSource(MapleBuffStat.MESO_RATE) == 2382016) {
@@ -1157,6 +1228,76 @@ public class PlayerStats implements Serializable
         }
         this.isRecalc = false;
 
+
+        switch (chra.getJob()){
+            //战士
+            case 110:
+            case 111:
+            case 112:
+            case 120:
+            case 121:
+            case 122:
+            case 130:
+            case 131:
+            case 132:
+            case 2000:
+            case 2100:
+            case 2110:
+            case 2111:
+            case 2112:
+                damage = (long) ((this.localstr*4L+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //法师
+            case 200:
+            case 210:
+            case 211:
+            case 212:
+            case 220:
+            case 221:
+            case 222:
+            case 230:
+            case 231:
+            case 232:
+                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_*4L)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //射手
+            case 300:
+            case 310:
+            case 311:
+            case 312:
+            case 320:
+            case 321:
+            case 322:
+
+             damage = (long) ((this.localstr+this.localdex*4L+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //飞侠
+            case 400:
+            case 410:
+            case 411:
+            case 412:
+            case 420:
+            case 421:
+            case 422:
+
+                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //海盗
+            case 500:
+            case 510:
+            case 511:
+            case 512:
+            case 520:
+            case 521:
+            case 522:
+                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            default:
+                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+
+        }
+        
     }
     
     public boolean checkEquipLevels(final MapleCharacter chr, final int gain) {

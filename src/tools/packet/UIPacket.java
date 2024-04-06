@@ -4,6 +4,9 @@ import tools.MaplePacketCreator;
 import handling.SendPacketOpcode;
 import tools.data.MaplePacketLittleEndianWriter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class UIPacket
 {
     public static final byte[] EarnTitleMsg(final String msg) {

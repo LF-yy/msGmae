@@ -1138,6 +1138,12 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void gainMeso(final int gain) {
+        if ( this.getClient()==null){
+            return;
+        }
+        if ( this.getClient().getPlayer()==null){
+            return;
+        }
         this.getClient().getPlayer().gainMeso(gain, true, false, true);
     }
     public void gainMesoZ(final int gain) {
@@ -3859,11 +3865,8 @@ public abstract class AbstractPlayerInteraction
                 final Item item = (Item) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) equip.getPosition());
                 if (item != null && c.getPlayer().getInventory(MapleInventoryType.USE).getNumFreeSlot() >= 1) {
                     final Equip eq = (Equip) item;
-                    if (eq.getState() >= 5 && eq.getState() != 8) {
-                        if (!haveItem(5062000, 1)) {
-                            return 3;
-                        }
-                        gainItemF(5062000, (short) -1);
+
+                        //gainItemF(5062000, (short) -1);
                         eq.renewPotential();
                         //c.getSession().write(MaplePacketCreator.scrolledItem(scroll, item, false, true));
 //                        c.getPlayer().marriage();
@@ -3875,11 +3878,7 @@ public abstract class AbstractPlayerInteraction
                             World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 聊天]『" + c.getPlayer().getName() + "』(" + c.getPlayer().getId() + ")地图『" + c.getPlayer().getMapId() + "』使用了魔方道具: 5062000"));
 //
                         return 0;
-                    } else {
-                        c.getPlayer().dropMessage(5, "该装备沒有潜能或已经超过该方块能改变的潜能等級");
-                        fail = true;
-                        moba = 4;
-                    }
+
                 } else {
                     c.getPlayer().dropMessage(5, "请检查你的背包是否已满。");
                     fail = true;
@@ -3898,12 +3897,7 @@ public abstract class AbstractPlayerInteraction
                 final Item item = (Item) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) equip.getPosition());
                 if (item != null && c.getPlayer().getInventory(MapleInventoryType.USE).getNumFreeSlot() >= 1) {
                     final Equip eq = (Equip) item;
-                    if (eq.getState() >= 5 && eq.getState() != 8) {
-                        if (!haveItem(5062001, 1)) {
-                            return 3;
-                        }
 
-                        gainItemF(5062001, (short) -1);
                         if (eq.getPotential3() <= 0){
                             eq.resetPotential();
                         }else{
@@ -3920,13 +3914,9 @@ public abstract class AbstractPlayerInteraction
                             World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 聊天]『" + c.getPlayer().getName() + "』(" + c.getPlayer().getId() + ")地图『" + c.getPlayer().getMapId() + "』使用了魔方道具: 5062001"));
 
                         return 0;
-                    } else {
-                        //c.getPlayer().dropMessage(5, "Make sure your equipment has a potential.");
-                        fail = true;
-                        moba = 4;
-                    }
+
                 } else {
-                    //c.getPlayer().dropMessage(5, "Make sure you have room for a Fragment.");
+                    c.getPlayer().dropMessage(5, "请检查你的背包是否已满。");
                     fail = true;
                     moba = 5;
                 }
@@ -3937,7 +3927,7 @@ public abstract class AbstractPlayerInteraction
         return 6;
     }
     //潜能鉴定
-    public int UseMagnify(Item equip, int scroll ) {
+    public int UseMagnify(Item equip ) {
         c.getPlayer().updateTick(equip.getItemId());
         final IItem toReveal = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)(byte)equip.getItemId());
         if ( toReveal == null) {

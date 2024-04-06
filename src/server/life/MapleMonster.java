@@ -453,16 +453,16 @@ public class MapleMonster extends AbstractLoadedMapleLife
                         exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
                     else if (attacker.getLevel() >= 10 && attacker.getLevel() < 30) {
-                        exp = 5 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
                     else if (attacker.getLevel() >= 30 && attacker.getLevel() < 60) {
-                        exp = 4 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
                     else if (attacker.getLevel() >= 60 && attacker.getLevel() < 90) {
-                        exp = 3 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
                     else if (attacker.getLevel() >= 90 && attacker.getLevel() < 120) {
-                        exp = 2 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
                     else {
                         exp *= ChannelServer.getInstance(this.map.getChannel()).getExpRate();
@@ -815,7 +815,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         sb.append(") 座標 ");
         sb.append(this.getHp());
         sb.append("/ ");
-        sb.append(this.getMobMaxHp()>10000 ? this.getMobMaxHp()>100000000 ? this.getMobMaxHp()/100000000 + "亿" :this.getMobMaxHp()/10000+"万" : this.getMobMaxHp());
+        sb.append(this.getMobMaxHp()>10000 ? this.getMobMaxHp()>100000000 ? (this.getMobMaxHp()/100000000)>100000000 ? this.getMobMaxHp()/100000000/100000000 + "兆" : this.getMobMaxHp()/100000000 + "亿" : this.getMobMaxHp()/10000+"万" : this.getMobMaxHp());
         sb.append("血量, ");
         sb.append(this.getMp());
         sb.append("/ ");
@@ -1203,7 +1203,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
             this.map.broadcastMessage(MobPacket.applyMonsterStatus(this, status), this.getTruePosition());
         }
         if (from.getDebugMessage()) {
-            //from.dropMessage(6, "開始 => 給予怪物状态: 持續时间[" + aniTime + "] 状态效果[" + status.getStatus().name() + "] 開始时间[" + System.currentTimeMillis() + "]");
+           // from.dropMessage(6, "開始 => 給予怪物状态: 持續时间[" + aniTime + "] 状态效果[" + status.getStatus().name() + "] 開始时间[" + System.currentTimeMillis() + "]");
         }
     }
     
@@ -1824,8 +1824,26 @@ public class MapleMonster extends AbstractLoadedMapleLife
                 final double innerBaseExp = (double)baseExp * ((double)iDamage / (double)this.totDamage);
                 final double expFraction = innerBaseExp / (double)expApplicable.size();
                 for (final MapleCharacter expReceiver : expApplicable) {
-                    final int iexp = (int)Math.round(expFraction);
+                    //2024-1-25修改,修正经验
+                    int iexp = (expMap.get(expReceiver) == null) ? 0 : ((ExpMap)expMap.get(expReceiver)).exp;
+                    final double expWeight = (expReceiver == attacker.getKey()) ? 200.0 : ((double)(CongMS.ConfigValuesMap.get("修正队员分配经验")));
+                    double levelMod = (double)expReceiver.getLevel() / averagePartyLevel;
+                    if (levelMod > 1.0 || this.attackers.containsKey(Integer.valueOf(expReceiver.getId()))) {
+                        levelMod = 1.0;
+                    }
+                    if (CongMS.ConfigValuesMap.get("越级带人开关") > 0) {
+                        if ((Integer)CongMS.ConfigValuesMap.get("越级带人道具开关") > 0) {
+                            if (((MapleCharacter)attacker.getKey()).getItemQuantity(CongMS.ConfigValuesMap.get("越级带人道具"), true) > 0) {
+                                levelMod = 1.0;
+                            }
+                        }
+                        else {
+                            levelMod = 1.0;
+                        }
+                    }
+                     iexp += (int)Math.round(expFraction * expWeight * levelMod / 100.0);
                     expMap.put(expReceiver, new ExpMap(iexp, (byte)(expApplicable.size() + added_partyinc), Class_Bonus_EXP, Premium_Bonus_EXP));
+
                 }
             }
             for (final Entry<MapleCharacter, ExpMap> expReceiver2 : expMap.entrySet()) {

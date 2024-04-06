@@ -33,12 +33,12 @@ public class MapleMist extends AbstractMapleMapObject
     }
     
     public MapleMist(final Rectangle mistPosition, final MapleCharacter owner, final MapleStatEffect source) {
-        this.mistPosition = mistPosition;
-        this.ownerId = owner.getId();
-        this.source = source;
-        this.skillDelay = 8;
-        this.isMobMist = false;
-        this.skilllevel = owner.getSkillLevel(SkillFactory.getSkill(source.getSourceId()));
+        this.mistPosition = mistPosition;//毒雾位置
+        this.ownerId = owner.getId();//所有者id
+        this.source = source;  //来源
+        this.skillDelay = 8;//技能延迟
+        this.isMobMist = false; //是否怪物的毒雾
+        this.skilllevel = owner.getSkillLevel(SkillFactory.getSkill(source.getSourceId()));//技能等级
         switch (source.getSourceId()) {
             case 4221006: {
                 this.isPoisonMist = 0;
@@ -47,11 +47,11 @@ public class MapleMist extends AbstractMapleMapObject
             case 2111003:
             case 12111005:
             case 14111006: {
-                this.isPoisonMist = 1;
+                this.isPoisonMist = 1;//
                 break;
             }
             case 22161003: {
-                this.isPoisonMist = 2;
+                this.isPoisonMist = 2; //毒雾类型为 2
                 break;
             }
         }

@@ -57,7 +57,7 @@ public class AttackInfo
                 FileoutputUtil.logToFile("logs/Data/AttackEffect.txt", "" + FileoutputUtil.NowTime() + " 連結技能[" + this.skill + "](" + skill_.getId() + "傳承) 連結技能等級:" + skillLevel + " 不在getLinkedkill清單內卻被觸發, 觸發者: " + chr.getName() + " 职业: " + (int)chr.getJob() + " 等級: " + (int)chr.getLevel() + "\r\n");
             }
             if (this.display > 80 && !skill_.hasAction()) {
-                AutobanManager.getInstance().autoban(chr.getClient(), "攻击無延遲，技能ID： " + this.skill);
+                AutobanManager.getInstance().autoban(chr.getClient(), "攻击无延迟，技能ID： " + this.skill);
                 return null;
             }
             return skill_.getEffect(skillLevel);

@@ -10,10 +10,11 @@ import scripting.NPCConversationManager;
 import tools.packet.UIPacket;
 import constants.MapConstants;
 import server.MaplePortal;
-import java.util.List;
+
+import java.util.*;
+
 import server.maps.MapleMap;
 import server.maps.AnimatedMapleMapObject;
-import java.util.Collection;
 import server.movement.LifeMovementFragment;
 import server.maps.MapleMapObject;
 import gui.CongMS;
@@ -36,7 +37,6 @@ import server.Randomizer;
 import server.AutobanManager;
 import server.life.MobSkillFactory;
 import server.life.MobAttackInfoFactory;
-import java.util.ArrayList;
 import io.netty.channel.Channel;
 import tools.MapleAESOFB;
 import tools.MockIOSession;
@@ -45,7 +45,6 @@ import handling.channel.ChannelServer;
 import tools.packet.MTSCSPacket;
 import server.maps.FieldLimitType;
 import client.MapleBuffStat;
-import java.util.Iterator;
 import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import handling.world.World.Broadcast;
@@ -623,8 +622,10 @@ public class PlayerHandler
             chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
         }
+        System.out.println();
         final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
         double maxdamage = (double)chr.getStat().getCurrentMaxBaseDamage();
+//        System.out.println("1:"+maxdamage);
         int attackCount = 1;
         int skillLevel = 0;
         MapleStatEffect effect = null;
@@ -649,14 +650,21 @@ public class PlayerHandler
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
+            //获取技能数据
             skill = SkillFactory.getSkill(GameConstants.getLinkedSkill(attack.skill));
+            //获取技能等级
             skillLevel = chr.getSkillLevel(skill);
+            //效果,伤害,段数
             effect = attack.getAttackEffect(chr, skillLevel, skill);
             if (effect == null) {
                 return;
             }
+            //最大伤害*技能伤害倍数
             maxdamage *= (double)effect.getDamage() / 100.0;
+           // System.out.println("2:"+maxdamage);
+            //段数
             attackCount = ((effect.getAttackCount() > effect.getBulletCount()) ? effect.getAttackCount() : effect.getBulletCount());
+           // System.out.println("段数:"+attackCount);
             if (effect.getCooldown() > 0 && !chr.isGM()) {
                 if (chr.skillisCooling(attack.skill)) {
                     c.sendPacket(MaplePacketCreator.enableActions());
@@ -666,7 +674,9 @@ public class PlayerHandler
                 chr.addCooldown(attack.skill, System.currentTimeMillis(), (long)(effect.getCooldown() * 1000));
             }
         }
+        //判断是否有影子
         attackCount *= (mirror ? 2 : 1);
+//        System.out.println("段数2:"+attackCount);
         if (!energy) {
             if ((chr.getMapId() == 109060000 || chr.getMapId() == 109060002 || chr.getMapId() == 109060004) && attack.skill == 0) {
                 MapleSnowballs.hitSnowball(chr);
@@ -745,10 +755,18 @@ public class PlayerHandler
                 maxdamage = 500000.0;
             }
         }
+//        System.out.println("伤害3:"+maxdamage);
         chr.checkFollow();
+        //发起攻击封包推送
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
         //伤害计算
         DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
+        if (CongMS.ConfigValuesMap.get("重复释放")==1){
+            //发起攻击封包推送
+            chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
+            //伤害计算
+            DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
+        }
         //身外化身处理
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
         for (int i = 0; i < clones.length; ++i) {
@@ -770,7 +788,7 @@ public class PlayerHandler
             }
         }
     }
-    
+    //远程攻击
     public static final void rangedAttack(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
         if (chr == null) {
             return;
@@ -791,6 +809,9 @@ public class PlayerHandler
                 return;
             }
             skill = SkillFactory.getSkill(GameConstants.getLinkedSkill(attack.skill));
+            if(CongMS.ConfigValuesMap.get("开启封包调试") >0 && skill!=null){
+                System.out.println("释放技能编码:"+ skill.getId());
+            }
             skillLevel = chr.getSkillLevel(skill);
             effect = attack.getAttackEffect(chr, skillLevel, skill);
             if (effect == null) {
@@ -955,6 +976,10 @@ public class PlayerHandler
         chr.checkFollow();
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.rangedAttack(chr.getId(), attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, visProjectile, attack.allDamage, attack.position, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk), chr.getPosition());
         DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
+        if (CongMS.ConfigValuesMap.get("重复释放")==1){
+            chr.getMap().broadcastMessage(chr, MaplePacketCreator.rangedAttack(chr.getId(), attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, visProjectile, attack.allDamage, attack.position, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk), chr.getPosition());
+            DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
+        }
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
         for (int i = 0; i < clones.length; ++i) {
             if (clones[i].get() != null) {
@@ -1018,6 +1043,8 @@ public class PlayerHandler
         chr.checkFollow();
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());
         DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
+
+
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
         AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? chr.getCloneDamgeRate() : chr.getCloneDamgeRate());
         for (int i = 0; i < clones.length; ++i) {
@@ -1037,7 +1064,34 @@ public class PlayerHandler
             }
         }
     }
-    
+
+
+    public static  void triggeredMagicDamage(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+        if (chr == null) {
+            return;
+        }
+        if (!chr.isAlive() || chr.getMap() == null) {
+            chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
+            return;
+        }
+        AttackInfo attackInfo = DamageParse.parseDmgMaNew(slea);
+        if (attackInfo==null){
+            return;
+        }
+        final AttackInfo attack = DamageParse.Modify_AttackCrit(attackInfo, chr, 3);
+        final ISkill skill = SkillFactory.getSkill(GameConstants.getLinkedSkill(attack.skill));
+        final int skillLevel = chr.getSkillLevel(skill);
+        final MapleStatEffect effect = attack.getAttackEffect(chr, skillLevel, skill);
+        if (effect == null) {
+            return;
+        }
+        chr.checkFollow();
+        chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());
+        DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
+    }
+
+
+
     public static final void DropMeso(final int meso, final MapleCharacter chr) {
         final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
         if (丢出金币开关 > 0) {

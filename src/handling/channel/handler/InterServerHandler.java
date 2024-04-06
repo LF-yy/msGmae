@@ -358,7 +358,7 @@ public class InterServerHandler
         player.updatePetAuto();
         if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"登陆帮助开关")) == 0) {
             if (player.getGMLevel() > 0 && player.getBossLog("管理上线提示") == 0) {
-                player.dropMessage(5, "指令: [AsMs079服务端] 查看管理员指令文本");
+                player.dropMessage(5, "指令: [CongMs079服务端] 查看管理员指令文本");
                 player.dropMessage(5, "指令: [@帮助] 查看玩家指令");
             }
             else if (player.getGMLevel() <= 0 && player.getBossLog("玩家上线提示") == 0) {

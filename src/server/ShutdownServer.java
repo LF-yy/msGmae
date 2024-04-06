@@ -84,7 +84,7 @@ public class ShutdownServer implements Runnable, ShutdownServerMBean
         }
         try {
             CashShopServer.shutdown();
-            System.out.println("[购物商城关闭完成]\r\n\r\n本地服务器关闭完成，感谢使用AsMs079服务端！！！");
+            System.out.println("[购物商城关闭完成]\r\n\r\n本地服务器关闭完成，感谢使用CongMs079服务端！！！");
         }
         catch (Exception e2) {
             System.out.println("[购物商城关闭失败]");

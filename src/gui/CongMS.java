@@ -7,6 +7,8 @@ import java.awt.image.ImageObserver;
 import constants.tzjc;
 import database.DBConPool;
 import gui.tools.*;
+import handling.channel.handler.AttackInfo;
+import handling.channel.handler.DamageParse;
 import server.*;
 import server.Timer.EventTimer;
 import provider.MapleDataProvider;
@@ -84,6 +86,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.Map;
 
 import org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper;
+import tools.data.ByteArrayByteStream;
+import tools.data.LittleEndianAccessor;
 import tools.wztosql.*;
 
 public class CongMS extends JFrame
@@ -1148,7 +1152,7 @@ public class CongMS extends JFrame
         this.minutesLeft = 0;
         final ImageIcon icon = new ImageIcon(this.getClass().getClassLoader().getResource("image/Icon.png"));
         this.setIconImage(icon.getImage());
-        this.setTitle("AsMsv0.1 [079版本] 启动时间为:" + this.获取网络时间("http://baidu.com") + "");
+        this.setTitle("CongMsv0.1 [079版本] 启动时间为:" + this.获取网络时间("http://baidu.com") + "");
         GetConfigValues();
         this.initComponents();
         this.刷新信息();
@@ -2142,7 +2146,7 @@ public class CongMS extends JFrame
             }
         });
         this.jPanel74.add((Component)this.大海龟开关, (Object)new AbsoluteConstraints(30, 83, 110, 40));
-        this.章鱼怪开关.setText("重置发型脸");
+        this.章鱼怪开关.setText("测试技能");
         this.章鱼怪开关.addActionListener((ActionListener)new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent evt) {
@@ -2860,7 +2864,23 @@ public class CongMS extends JFrame
         this.jTextArea1.setColumns(20);
         this.jTextArea1.setFont(new Font("新宋体", 0, 12));
         this.jTextArea1.setRows(5);
-        this.jTextArea1.setText("感谢使用AsMs079商业服务端\n QQ: 476215166");
+        this.jTextArea1.setText(
+                "感谢使用CongMs079商业服务端\r\n " +
+                        "1.修复队长变身技能受击取消问题.\r\n" +
+                        "2.添加装备全局赋能伤害机制.\r\n" +
+                        "3.添加个人装备赋能机制.\r\n" +
+                        "4.添加装备物品独立爆率加成机制.\r\n" +
+                        "5.修改攻速异常封号逻辑.\r\n" +
+                        "6.添加可配置调节攻速检测机制.\r\n" +
+                        "7.添加点卷,金币,物品防刷封号机制.\r\n" +
+                        "8.解卡提示信息修改.\r\n" +
+                        "9.装备替换添加属性更新提示.\r\n " +
+                        "10.添加四人组队爆率翻倍机制.\r\n" +
+                        "11.添加破功爆率加成机制.\r\n" +
+                        "12.修复运行时物品掉落概率消失问题.\r\n" +
+                        "13.修改伤害异常检测机制.\r\n" +
+                        "14.添加BOSS击杀伤害统计机制.\r\n" +
+                        "QQ: 476215166");
         this.jScrollPane5.setViewportView((Component)this.jTextArea1);
         final GroupLayout jPanel5Layout = new GroupLayout((Container)this.jPanel5);
         this.jPanel5.setLayout((LayoutManager)jPanel5Layout);
@@ -8072,7 +8092,8 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)this.账号信息.getModel()).insertRow(this.账号信息.getRowCount(), new Object[] { Integer.valueOf(rs.getInt("id")), rs.getString("name"), rs.getString("SessionIP"), rs.getString("macs"), QQ, Integer.valueOf(rs.getInt("ACash")), Integer.valueOf(rs.getInt("mPoints")), rs.getString("lastlogin"), 在线, 封号, Integer.valueOf(rs.getInt("gm")) });
             }
         }
-        catch (SQLException ex) {
+        catch (Exception ex) {
+            ex.printStackTrace();
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
         this.读取显示账号();
@@ -8562,7 +8583,7 @@ public class CongMS extends JFrame
                     final String a2 = 怪物爆物.getValueAt(i, 1).toString();
                     final String a3 = 怪物爆物.getValueAt(i, 2).toString();
                     final String a4 = 怪物爆物.getValueAt(i, 3).toString();
-                    final String a5 = 怪物爆物.getValueAt(i, 4).toString();
+                    final String a5 = 怪物爆物.getValueAt(i, 4)==null ? "" : 怪物爆物.getValueAt(i, 4).toString();
                     怪物爆物序列号.setText(a);
                     怪物爆物怪物代码.setText(a2);
                     怪物爆物物品代码.setText(a3);
@@ -9242,7 +9263,7 @@ public class CongMS extends JFrame
             tt.start();
             return;
         }
-        System.out.println("AsMs服务端正在运行中！");
+        System.out.println("CongMs服务端正在运行中！");
     }
     
     private void jTextField22ActionPerformed(final ActionEvent evt) {
@@ -9828,11 +9849,24 @@ public class CongMS extends JFrame
     private void 章鱼怪开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("章鱼怪开关", 2207);
 //        this.刷新章鱼怪开关();
-        try {
-            DumpHairFace.main(null);
-        } catch (SQLException e) {
+        for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
 
+            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                if (chr.getId()==CongMS.ConfigValuesMap.get("测试角色ID")){
+//                        final LittleEndianAccessor slea = new LittleEndianAccessor(new ByteArrayByteStream((byte[])(byte[])message));
+//                    final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
+//                    chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), CongMS.ConfigValuesMap.get("attackTbyte"), attack.skill, CongMS.ConfigValuesMap.get("skillLevel"), attack.display, attack.animation, attack.speed, attack.allDamage, CongMS.ConfigValuesMap.get("energy") == 1 ? true : false , (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
+                }
+
+            }
         }
+
+
+//        try {
+//            DumpHairFace.main(null);
+//        } catch (SQLException e) {
+//
+//        }
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
     
@@ -11307,7 +11341,8 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)this.账号信息.getModel()).insertRow(this.账号信息.getRowCount(), new Object[] { Integer.valueOf(rs.getInt("id")), rs.getString("name"), rs.getString("SessionIP"), rs.getString("macs"), QQ, Integer.valueOf(rs.getInt("ACash")), Integer.valueOf(rs.getInt("mPoints")), rs.getString("lastlogin"), 在线, 封号, Integer.valueOf(rs.getInt("gm")) });
             }
         }
-        catch (SQLException ex) {
+        catch (Exception ex) {
+            ex.printStackTrace();
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
         this.读取显示账号();
@@ -11471,10 +11506,10 @@ public class CongMS extends JFrame
     
     private void 刷新角色信息() {
         final String 输出 = "";
+        try {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
         }
-        try {
             final Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
@@ -11490,44 +11525,46 @@ public class CongMS extends JFrame
                 }
                 ((DefaultTableModel)this.角色信息.getModel()).insertRow(this.角色信息.getRowCount(), new Object[] { Integer.valueOf(rs.getInt("id")), Integer.valueOf(rs.getInt("accountid")), rs.getString("name"), MapleCarnivalChallenge.getJobNameById(rs.getInt("job")), Integer.valueOf(rs.getInt("level")), Integer.valueOf(rs.getInt("str")), Integer.valueOf(rs.getInt("dex")), Integer.valueOf(rs.getInt("luk")), Integer.valueOf(rs.getInt("int")), Integer.valueOf(rs.getInt("maxhp")), Integer.valueOf(rs.getInt("maxmp")), Integer.valueOf(rs.getInt("meso")), Integer.valueOf(rs.getInt("map")), 在线, Integer.valueOf(rs.getInt("gm")), Integer.valueOf(rs.getInt("hair")), Integer.valueOf(rs.getInt("face")) });
             }
+
+            this.角色信息.addMouseListener((MouseListener)new MouseAdapter() {
+                @Override
+                public void mouseClicked(final MouseEvent e) {
+                    final int i = 角色信息.getSelectedRow();
+//                    final String a = 角色信息.getValueAt(i, 0).toString();
+//                    final String a2 = 角色信息.getValueAt(i, 2).toString();
+//                    final String a3 = 角色信息.getValueAt(i, 4).toString();
+//                    final String a4 = 角色信息.getValueAt(i, 5).toString();
+//                    final String a5 = 角色信息.getValueAt(i, 6).toString();
+//                    final String a6 = 角色信息.getValueAt(i, 7).toString();
+//                    final String a7 = 角色信息.getValueAt(i, 8).toString();
+//                    final String a8 = 角色信息.getValueAt(i, 9).toString();
+//                    final String a9 = 角色信息.getValueAt(i, 10).toString();
+//                    final String a10 = 角色信息.getValueAt(i, 11).toString();
+//                    final String a11 = 角色信息.getValueAt(i, 12).toString();
+//                    final String a12 = 角色信息.getValueAt(i, 14).toString();
+//                    final String a13 = 角色信息.getValueAt(i, 15).toString();
+//                    final String a14 = 角色信息.getValueAt(i, 16).toString();
+                    角色ID.setText(角色信息.getValueAt(i, 0).toString());
+                    角色昵称.setText(角色信息.getValueAt(i, 2).toString());
+                    等级.setText(角色信息.getValueAt(i, 4).toString());
+                    力量.setText(角色信息.getValueAt(i, 5).toString());
+                    敏捷.setText(角色信息.getValueAt(i, 6).toString());
+                    智力.setText(角色信息.getValueAt(i, 7).toString());
+                    运气.setText(角色信息.getValueAt(i, 8).toString());
+                    HP.setText(角色信息.getValueAt(i, 9).toString());
+                    MP.setText(角色信息.getValueAt(i, 10).toString());
+                    金币1.setText(角色信息.getValueAt(i, 11).toString());
+                    地图.setText(角色信息.getValueAt(i, 12).toString());
+                    GM.setText( 角色信息.getValueAt(i, 14).toString());
+                    发型.setText(角色信息.getValueAt(i, 15).toString());
+                    脸型.setText(角色信息.getValueAt(i, 16).toString());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)e);
+
         }
-        catch (SQLException ex) {
-            Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
-        }
-        this.角色信息.addMouseListener((MouseListener)new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent e) {
-                final int i = 角色信息.getSelectedRow();
-                final String a = 角色信息.getValueAt(i, 0).toString();
-                final String a2 = 角色信息.getValueAt(i, 2).toString();
-                final String a3 = 角色信息.getValueAt(i, 4).toString();
-                final String a4 = 角色信息.getValueAt(i, 5).toString();
-                final String a5 = 角色信息.getValueAt(i, 6).toString();
-                final String a6 = 角色信息.getValueAt(i, 7).toString();
-                final String a7 = 角色信息.getValueAt(i, 8).toString();
-                final String a8 = 角色信息.getValueAt(i, 9).toString();
-                final String a9 = 角色信息.getValueAt(i, 10).toString();
-                final String a10 = 角色信息.getValueAt(i, 11).toString();
-                final String a11 = 角色信息.getValueAt(i, 12).toString();
-                final String a12 = 角色信息.getValueAt(i, 14).toString();
-                final String a13 = 角色信息.getValueAt(i, 15).toString();
-                final String a14 = 角色信息.getValueAt(i, 16).toString();
-                角色ID.setText(a);
-                角色昵称.setText(a2);
-                等级.setText(a3);
-                力量.setText(a4);
-                敏捷.setText(a5);
-                智力.setText(a6);
-                运气.setText(a7);
-                HP.setText(a8);
-                MP.setText(a9);
-                金币1.setText(a10);
-                地图.setText(a11);
-                GM.setText(a12);
-                发型.setText(a13);
-                脸型.setText(a14);
-            }
-        });
     }
     
     private void 刷新角色背包穿戴() {
@@ -11551,12 +11588,12 @@ public class CongMS extends JFrame
             @Override
             public void mouseClicked(final MouseEvent e) {
                 final int i = 角色背包穿戴.getSelectedRow();
-                final String a = 角色背包穿戴.getValueAt(i, 0).toString();
-                final String a2 = 角色背包穿戴.getValueAt(i, 1).toString();
-                final String a3 = 角色背包穿戴.getValueAt(i, 2).toString();
-                身上穿戴序号1.setText(a);
-                背包物品代码1.setText(a2);
-                背包物品名字1.setText(a3);
+//                final String a = 角色背包穿戴.getValueAt(i, 0).toString();
+//                final String a2 = 角色背包穿戴.getValueAt(i, 1).toString();
+//                final String a3 = 角色背包穿戴.getValueAt(i, 2).toString();
+                身上穿戴序号1.setText(角色背包穿戴.getValueAt(i, 0).toString());
+                背包物品代码1.setText(角色背包穿戴.getValueAt(i, 1).toString());
+                背包物品名字1.setText(角色背包穿戴.getValueAt(i, 2).toString());
             }
         });
     }
@@ -13099,6 +13136,8 @@ public class CongMS extends JFrame
         });
     }*/
     public static void main(final String[] args) {
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        JDialog.setDefaultLookAndFeelDecorated(true);
         /*界面風格
          Metal
          Nimbus
@@ -13112,12 +13151,13 @@ public class CongMS extends JFrame
             EventQueue.invokeLater(new Runnable() {
             public void run() {
         		try {
-			org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
+			//org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
 			BeautyEyeLNFHelper.frameBorderStyle = BeautyEyeLNFHelper.FrameBorderStyle.translucencySmallShadow;
-			org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
+			//org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
 			UIManager.put("RootPane.setupButtonVisible", false);//苹果设置开关
+                    BeautyEyeLNFHelper.launchBeautyEyeLNF();
 			//BeautyEyeLNFHelper.translucencyAtFrameInactive = true;
-                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());//显示win标题
+                       // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());//显示win标题
 		} catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -13272,6 +13312,11 @@ public class CongMS extends JFrame
     private void 重载套装加成列表() {
         //Start.套装加成表.clear();
         Start.GetSuitDamTable();
+        Start.GetSuitDamTableNew();
+        Start.GetLtInitializationSkills();
+        Start.GetSuitSystem();
+        Start.GetfiveTurn();
+        Start.GetBreakthroughMechanism();
         GetConfigValues();
         tzjc.sr_tz();
 

@@ -136,6 +136,10 @@ public class MobSkill
         final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
         final List<Integer> reflection = new LinkedList<Integer>();
         if (CongMS.ConfigValuesMap.get("怪物状态开关") > 0) {
+            if (this.skillId == 140 || this.skillId == 141 ||  this.skillId == 145 ||  this.skillId == 129 ){
+                return;
+            }
+
             switch (this.skillId) {
                 case 102:
                 case 112:
@@ -181,7 +185,7 @@ public class MobSkill
                     break;
                 }
                 case 120: {
-                    if (CongMS.ConfigValuesMap.get((Object)"启用封印")==1 ){
+                    if (CongMS.ConfigValuesMap.get((Object)"启用封印")==0 ){
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
@@ -244,7 +248,7 @@ public class MobSkill
                 }
                 default: {
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用未知技能 " + this.skillId));
-                    break;
+                    return;
                 }
             }
         }

@@ -1,11 +1,14 @@
 package constants;
 
+import bean.SuitSystem;
 import client.MapleCharacter;
+import client.MapleStat;
 import client.inventory.IItem;
 import gui.CongMS;
 import server.Start;
 import server.life.MapleMonster;
 import tools.FileoutputUtil;
+import tools.MaplePacketCreator;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,13 +16,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class tzjc {
     private static List<tz_model> tz_list;
-    public static Map<String,Integer> tzMap;
+    public static Map<String,Double> tzMap;
     public static Map<Integer, Map<String, Integer>> sbMap;
-
+    public static Map<String, List<SuitSystem>> suitSys;//套装列表
     public long star_damage(MapleCharacter player, long totDamageToOneMonster, MapleMonster monster) {
         try {
             if (player.get套装伤害加成() > 0.0) {
-                double jc_damage = (double) totDamageToOneMonster * player.get套装伤害加成();
+                double jc_damage = totDamageToOneMonster * player.get套装伤害加成();
                 if(jc_damage>100000000L){
                     player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/100000000L) + "亿");
                 }else if(jc_damage>10000){
@@ -83,9 +86,11 @@ public class tzjc {
             tzMap.putAll(Start.新套装加成表);
         }
         sbMap.putAll(Start.双爆加成);
+        suitSys.putAll(Start.suitSystemsMap);
     }
 
     public static double check_tz(MapleCharacter chr) {
+        //int id = chr.getClient().getPlayer().getId();
         Collection<IItem> hasEquipped = chr.getHasEquipped();
         AtomicInteger drop = new AtomicInteger(0);
         AtomicInteger exp = new AtomicInteger(0);
@@ -97,10 +102,10 @@ public class tzjc {
                     drop.addAndGet(stringIntegerMap.get("drop"));
                     exp.addAndGet(stringIntegerMap.get("exp"));
                     if ( drop.get()>0) {
-                        chr.dropMessage(5, "检测到佩戴双爆装备,物品掉落概率加：" + drop.get() + "%");
+                        chr.dropMessage(5, "检测到佩戴双爆装备,物品掉落概率加：" + stringIntegerMap.get("drop") + "%");
                     }
                     if (exp.get()>0) {
-                        chr.dropMessage(5, "检测到佩戴双爆装备,经验倍率加：" + exp.get() + "%");
+                        chr.dropMessage(5, "检测到佩戴双爆装备,经验倍率加：" + stringIntegerMap.get("exp") + "%");
                     }
                 }
             });
@@ -115,7 +120,7 @@ public class tzjc {
         } catch (Exception e) {
             System.out.println("双爆装备装备加载异常");
         }
-        if (((Integer) CongMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0) {
+        if ( CongMS.ConfigValuesMap.get("赋能属性加成开关") > 0) {
             for (final tz_model tz : tzjc.tz_list) {
                 final int[] list = tz.getList();
                 boolean is_tz = true;
@@ -126,14 +131,14 @@ public class tzjc {
                 }
                 if (is_tz && tz.getJc() >0) {
                     number.updateAndGet(v -> (double) v + tz.getJc());
-                    chr.dropMessage(5, "检测到佩戴了 [" + tz.getName() + "] 套装  加成伤害：" + tz.getJc() * 100.0 + "%");
+                   // chr.dropMessage(5, "检测到佩戴了 [" + tz.getName() + "] 套装  加成伤害：" + tz.getJc() * 100.0 + "%");
                 }
             }
         }
-        if (((Integer) CongMS.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
+        if ( CongMS.ConfigValuesMap.get("个人赋能属性加成开关") > 0) {
             List<String> list = new ArrayList<>();
             hasEquipped.forEach(iItem -> {
-                Integer integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                Double integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
                 if (Objects.nonNull(integer)) {
                     if (!list.contains("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "")) {
                         if (integer > 0) {
@@ -143,11 +148,46 @@ public class tzjc {
                         }
                     }
                 }
+
             });
         }
-        if (number.get() > 0) {
-            chr.dropMessage(5, "赋能/套装伤害加成总计：" + number.get() * 100 + "%");
-        }
+
+
+//        private transient short passive_sharpeye_percent; //爆击最大伤害倍率
+//        private transient short localmaxhp;//血量
+//        private transient short localmaxmp;//蓝量
+//        private transient byte passive_mastery; //武器熟练度
+//        private transient byte passive_sharpeye_rate;  //爆击概率
+//        private transient int localstr; //力量
+//        private transient int localdex; //敏捷
+//        private transient int localluk; //运气
+//        private transient int localint_;//智力
+//        private transient int magic; //魔法防御
+//        private transient int watk;  //物理防御
+//        private transient int hands;//手技
+//        private transient int accuracy; //攻速
+//        public transient double dam_r; //伤害加成
+//        public transient double bossdam_r; //BOSS伤害加成
+
+        chr.dropMessage(5,
+                "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
+                        "血量：" + chr.getStat().localmaxhp + ">>" +
+                        "蓝量：" + chr.getStat().localmaxmp + ">>" +
+                        "力量：" + chr.getStat().localstr + ">>" +
+                        "敏捷：" + chr.getStat().localdex + ">>" +
+                        "运气：" + chr.getStat().localluk + ">>" +
+                        "智力：" + chr.getStat().localint_ + ">>" +
+                        "物攻：" + chr.getStat().watk + ">>" +
+                        "魔攻：" + chr.getStat().magic + ">>" +
+                        "手技：" + chr.getStat().hands + ">>" +
+                        "武器熟练度：" + chr.getStat().passive_mastery + ">>" +
+                        "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
+                        "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
+                        "最大攻击力：" + chr.getStat().localmaxbasedamage + ">>" +
+                        //"计算后的攻击：" + chr.getStat().damage + ">>" +
+                        "伤害加成：" + chr.getStat().dam_r + ">>" +
+                        "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")
+        );
         return number.get();
     }
 
@@ -155,5 +195,7 @@ public class tzjc {
         tz_list = (List<tz_model>) new LinkedList();
         tzjc.tzMap = new Hashtable<>();
         tzjc.sbMap = new Hashtable<>();
+        tzjc.suitSys = new Hashtable<>();
+
     }
 }

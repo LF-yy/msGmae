@@ -455,7 +455,7 @@ public class GameConstants
     }
     
     public static boolean isEquipScroll(final int scrollId) {
-        return scrollId / 100 == 20493 ;//|| ( scrollId != 2049122 && scrollId != 2049124)
+        return scrollId / 100 == 20493 ;
     }
     
     public static boolean isPotentialScroll(final int scrollId) {
@@ -647,7 +647,6 @@ public class GameConstants
     
     public static short getAttackDelay(final int id) {
         switch (id) {
-
             case 5201001: {
                 return getaShort(id + "攻击延迟", 200);
             }
@@ -1009,7 +1008,7 @@ public class GameConstants
                 return getaShort(id + "攻击延迟", 3060);
             }
             default: {
-                return getaShort("默认攻击延迟", 330);
+                return getaShort("攻击延迟"+id, 440);
             }
         }
     }
@@ -2745,7 +2744,8 @@ public class GameConstants
     }
     
     public static int getFishingTime(final boolean vip, final boolean gm) {
-        return gm ? 1000 : (vip ? 12000 : 12000);
+        return gm ? 1000 : CongMS.ConfigValuesMap.get("钓鱼间隔");
+
     }
     
     public static int getCustomSpawnID(final int summoner, final int def) {
@@ -3233,6 +3233,6 @@ public class GameConstants
         rareDrops = new int[] { 2049100, 2049301, 2049401, 2022326, 2022193, 2049000, 2049001, 2049002 };
         superDrops = new int[] { 2040804, 2049400, 2049100 };
         GameConstants.owlItems = new int[] { 1082002, 2070005, 2070006, 1022047, 1102041, 2044705, 2340000, 2040017, 1092030, 2040804 };
-        lBalloon = Arrays.asList(new Balloon("欢迎來到" + LoginServer.getServerName(), 236, 122), new Balloon("禁止开外挂", 0, 276), new Balloon("开服联系唯一QQ：327321366", 196, 263));
+        lBalloon = Arrays.asList(new Balloon("欢迎來到" + LoginServer.getServerName(), 236, 122), new Balloon("禁止开外挂", 0, 276), new Balloon("开服联系唯一QQ：476215166", 196, 263));
     }
 }

@@ -49,7 +49,12 @@ public class MapleDataTool
         }
         return (int)(Integer)data.getData();
     }
-    
+    public static long getLong(final MapleData data) {
+        if (data.getType() == MapleDataType.STRING) {
+            return Long.parseLong(getString(data));
+        }
+        return (long)(Long)data.getData();
+    }
     public static int getInt(final MapleData data, final int def) {
         if (data == null || data.getData() == null) {
             return def;
@@ -87,7 +92,13 @@ public class MapleDataTool
         }
         return getInt(d);
     }
-    
+    public static long getLongConvert(final String path, final MapleData data) {
+        final MapleData d = data.getChildByPath(path);
+        if (d.getType() == MapleDataType.STRING) {
+            return Long.parseLong(getString(d));
+        }
+        return getLong(d);
+    }
     public static int getInt(final String path, final MapleData data, final int def) {
         return getInt(data.getChildByPath(path), def);
     }

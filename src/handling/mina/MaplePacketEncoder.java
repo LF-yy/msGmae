@@ -15,8 +15,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-public class MaplePacketEncoder extends MessageToByteEncoder<Object>
-{
+public class MaplePacketEncoder extends MessageToByteEncoder<Object> {
     protected void encode(final ChannelHandlerContext chc, final Object message, final ByteBuf buffer) throws Exception {
         final MapleClient client = (MapleClient)chc.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
         if (client != null) {

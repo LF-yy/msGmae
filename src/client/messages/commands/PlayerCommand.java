@@ -5,6 +5,7 @@ import client.inventory.IItem;
 import gui.CongMS;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
+import scripting.EventManager;
 import server.gashapon.GashaponFactory;
 import client.inventory.MapleInventory;
 import server.MapleInventoryManipulator;
@@ -301,28 +302,28 @@ public class PlayerCommand
             if (rand){
                 coefficient = CongMS.ConfigValuesMap.get("4人组队爆率加成") / 100;
             }
-            double jiac = 1;
+            double jiac = 0;
             if (CongMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
                 //破功爆率加成机制
                 int 获得破功 = c.getPlayer().取破攻等级();
-                jiac = (获得破功 / CongMS.ConfigValuesMap.get("破功爆率加成计算"));
+                jiac = (获得破功 / CongMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
             }
             if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
                System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
                System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
             }
-            double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
+            //double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
             DecimalFormat df = new DecimalFormat("#.00");
-            String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
-            String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm() +  jiac);
-            String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate());
+            String formatExp = df.format(c.getPlayer().getEXPMod()  * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
+            String formatDrop = df.format((jiac+1 )* coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0)  * c.getChannelServer().getDropRate() + (int)(c.getPlayer().getItemDropm()/100) );//
+            String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0)  * c.getChannelServer().getMesoRate());
 
             c.sendPacket(MaplePacketCreator.sendHint(
                     "解卡完毕..\r\n"
                             + "当前系统时间" + FilePrinter.getLocalDateString() + " 星期" + getDayOfWeek() + "\r\n"
                             + "经验值倍率 " + formatExp
-                            + "%, 怪物爆率 " + formatDrop
-                            + "%, 金币倍率 " + speciesDrop /*+ "% VIP经验加成：" + c.getPlayer().getVipExpRate()*/ + "%\r\n"
+                            + "倍, 怪物爆率 " + formatDrop
+                            + "倍, 金币倍率 " + speciesDrop /*+ "% VIP经验加成：" + c.getPlayer().getVipExpRate()*/ + "倍\r\n"
                             + "当前剩余 " + c.getPlayer().getCSPoints(1) + " 点券 " + c.getPlayer().getCSPoints(2) + " 抵用券\r\n"
                             + "当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒\r\n"
                             + "角色坐标 " + "X:"+c.getPlayer().getPosition().x+"-Y:"+c.getPlayer().getPosition().y
@@ -908,6 +909,80 @@ public class PlayerCommand
         @Override
         public String getMessage() {
             return new StringBuilder().append("@运气 - 运气").toString();
+        }
+    }
+
+    public static class 解卡组队 extends CommandExecute
+    {
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            c.getPlayer().setParty(null);
+            c.getPlayer().dropMessage(1, "解卡组队成功，赶紧去组队把。");
+            return true;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("@解卡组队-游戏无法进行组队的时候输入").toString();
+        }
+    }
+
+    public static class 副本拉人 extends CommandExecute
+    {
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            if (c.getPlayer().getEventInstance() != null) {
+                if (c.getChannelServer().getEventSMA().getEventManager(c.getPlayer().getEventInstance().getName()) != null) {
+                    final EventManager em = c.getChannelServer().getEventSMA().getEventManager(c.getPlayer().getEventInstance().getName());
+                }
+                else if (c.getChannelServer().getEventSMB().getEventManager(c.getPlayer().getEventInstance().getName()) != null) {
+                    c.getChannelServer().getEventSMB().getEventManager(c.getPlayer().getEventInstance().getName());
+                }
+                EventManager em;
+                if (c.getChannelServer().getEventSMC().getEventManager(c.getPlayer().getEventInstance().getName()) != null) {
+                    em = c.getChannelServer().getEventSMC().getEventManager(c.getPlayer().getEventInstance().getName());
+                }
+                else {
+                    if (c.getChannelServer().getEventSM().getEventManager(c.getPlayer().getEventInstance().getName()) == null) {
+                        c.getPlayer().dropMessage(1, "你这是什么鬼副本找都没找到");
+                        return false;
+                    }
+                    em = c.getChannelServer().getEventSM().getEventManager(c.getPlayer().getEventInstance().getName());
+                }
+                final EventManager eim = em;
+                for (final MaplePartyCharacter chr : c.getPlayer().getParty().getMembers()) {
+                    final MapleCharacter curChar = c.getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
+                    if (eim.getProperty("joinid").indexOf("" + curChar.getId()) == -1) {
+                        c.getPlayer().dropMessage(1, "偷鸡么,你想拉谁？搞事情啊？把偷鸡的人给我t了!");
+                        return false;
+                    }
+                    final int Map = c.getPlayer().getMapId();
+                    if (curChar.getMapId() == Map) {
+                        continue;
+                    }
+                    curChar.dropMessage(1, "你的队友拉你回副本，稍后就会传送至队友身边。");
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(3000L);
+                                if (curChar != null) {
+                                    eim.startInstancea(curChar);
+                                }
+                            }
+                            catch (InterruptedException ex) {}
+                        }
+                    }.start();
+                }
+                return true;
+            }
+            c.getPlayer().dropMessage(1, "我拉你个pp虾,都不在副本拉拉,去厕所把！！");
+            return false;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("@副本拉人-副本或者boss击杀过程中有人掉线可以拉回").toString();
         }
     }
 }

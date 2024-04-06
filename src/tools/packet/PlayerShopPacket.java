@@ -1,13 +1,13 @@
 package tools.packet;
 
 import java.util.List;
+
+import client.inventory.IItem;
 import server.shops.MapleMiniGame;
 import client.MapleClient;
-import client.inventory.IItem;
 import server.MerchItemPackage;
 import server.shops.IMaplePlayerShop;
 import server.shops.MaplePlayerShop;
-import java.util.Iterator;
 import server.shops.MaplePlayerShopItem;
 import server.shops.AbstractPlayerStore.BoughtItem;
 import tools.Pair;

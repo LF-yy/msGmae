@@ -314,6 +314,10 @@ public class 一键还原 extends JFrame
         this.Delete("bosslog2", 143);
         this.Delete("bosslog3", 144);
         this.Delete("shouce", 145);
+        this.Delete("lt_breakthrough_mechanism", 146);
+        this.Delete("lt_five_turn", 147);
+        this.Delete("lt_public_record", 148);
+        this.Delete("suitdamtablenew", 149);
         JOptionPane.showMessageDialog(null, (Object)"清理完成");
         System.exit(0);
     }

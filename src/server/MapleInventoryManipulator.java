@@ -792,6 +792,7 @@ public class MapleInventoryManipulator
         if (c.getPlayer().getGMLevel() > 0) {
             c.getPlayer().dropMessage("移动物品代码ID：" + source.getItemId());
         }
+        c.getPlayer().dropMessage("移动物品代码ID：" + source.getItemId());
         short olddstQ = -1;
         if (initialTarget != null) {
             olddstQ = initialTarget.getQuantity();

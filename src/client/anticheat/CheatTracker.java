@@ -1,13 +1,9 @@
 package client.anticheat;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import gui.CongMS;
 import tools.StringUtil;
-import java.util.Comparator;
-import java.util.ArrayList;
-import java.util.Collections;
 import constants.WorldConstants;
 import client.SkillFactory;
 import tools.FileoutputUtil;
@@ -16,12 +12,11 @@ import tools.MaplePacketCreator;
 import client.MapleBuffStat;
 import constants.GameConstants;
 import server.Timer.CheatTimer;
-import java.util.LinkedHashMap;
+
 import java.util.concurrent.ScheduledFuture;
 import java.awt.Point;
 import client.MapleCharacter;
 import java.lang.ref.WeakReference;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -101,7 +96,7 @@ public class CheatTracker
         this.takingDamageSince = System.currentTimeMillis();
     }
     
-    public final void checkAttack(final int skillId, final int tickcount) {
+    public final int checkAttack(final int skillId, final int tickcount) {
         short AtkDelay = GameConstants.getAttackDelay(skillId);
         if (((MapleCharacter)this.chr.get()).getBuffedValue(MapleBuffStat.BODY_PRESSURE) != null) {
             AtkDelay /= 6;
@@ -127,20 +122,23 @@ public class CheatTracker
                     ((MapleCharacter)this.chr.get()).ban(((MapleCharacter)this.chr.get()).getName() + "攻击速度异常攻速为"+(tickcount - this.lastAttackTickCount)+"，技能：" + skillId, true, true, false);
                     //((MapleCharacter)this.chr.get()).getClient().getSession().close();
                     final String reason = "使用违法程式练功";
-                    Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "而被管理員永久停封。"));
+                    Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "攻击无延续自动封锁。"));
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + ((MapleCharacter)this.chr.get()).getName() + " 攻击无延续自动封锁! "));
                     if ((CongMS.ConfigValuesMap.get("开启封锁")).intValue() > 0) {
                         if ((CongMS.ConfigValuesMap.get("封停账号")).intValue() > 0) {
-                            this.chr.get().ban("攻击速度异常攻", true, true, false);
-                            return;
+                            //this.chr.get().ban("攻击速度异常攻", true, true, false);
+                            if (Objects.requireNonNull(chr.get()).getClient()!=null){
+                                chr.get().getClient().disconnect(true, false);
+                                chr.get().getClient().getSession().close();
+                            }
+                            return 1;
                         }
                     }
                 }else {
                     ((MapleCharacter)this.chr.get()).dropMessage("触发攻击速度封锁");
-
                 }
                 FileoutputUtil.logToFile("logs/Hack/Ban/攻击速度.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + " 技能: " + skillId + " check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
-                return;
+                return 1;
             }
             if (tickcount - this.lastAttackTickCount >0  &&  GameConstants.getWuYanChi(skillId)) {
                 FileoutputUtil.logToFile("logs/Hack/攻击速度异常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + "\u3000技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ") check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
@@ -151,8 +149,12 @@ public class CheatTracker
                     if(this.error > CongMS.ConfigValuesMap.get("攻速异常次数").intValue()) {
                         if (CongMS.ConfigValuesMap.get("开启封锁").intValue() > 0) {
                             if (CongMS.ConfigValuesMap.get("封停账号").intValue() > 0) {
-                                this.chr.get().ban("攻击速度异常攻", true, true, false);
-                                return;
+                                //this.chr.get().ban("攻击速度异常攻", true, true, false);
+                                if (Objects.requireNonNull(chr.get()).getClient()!=null){
+                                    chr.get().getClient().disconnect(true, false);
+                                    chr.get().getClient().getSession().close();
+                                }
+                                return 1;
                             }
                         }
                     }
@@ -195,6 +197,7 @@ public class CheatTracker
         this.Server_ClientAtkTickDiff = STime_TC;
         ((MapleCharacter)this.chr.get()).updateTick(tickcount);
         this.lastAttackTickCount = tickcount;
+        return 0;
     }
     
     public final void checkTakeDamage(final int damage) {
@@ -412,10 +415,12 @@ public class CheatTracker
                 if (this.gm_message % 5 != 0) {
                     break;
                 }
-                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param))));
-                if (log) {
-                    //FileoutputUtil.logToFile("logs/Hack/" + out_log + ".txt", "\r\n" + FileoutputUtil.NowTime() + " " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param)));
-                    break;
+                if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param))));
+                    if (log) {
+                        FileoutputUtil.logToFile("logs/Hack/" + out_log + ".txt", "\r\n" + FileoutputUtil.NowTime() + " " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param)));
+                        break;
+                    }
                 }
                 break;
             }

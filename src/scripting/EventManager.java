@@ -450,4 +450,14 @@ public class EventManager
     static {
         EventManager.eventChannel = new int[4];
     }
+    public void startInstancea(final MapleCharacter character) {
+        try {
+            final EventInstanceManager eim = (EventInstanceManager)(EventInstanceManager)this.iv.invokeFunction("setupa", null);
+            eim.registerPlayer(character);
+        }
+        catch (ScriptException | NoSuchMethodException ex3) {
+            System.err.println("Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
+            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
+        }
+    }
 }

@@ -185,48 +185,52 @@ public class MobHandler
                     if (GeneallyDistance_x > max_x) {
                         max_x = GeneallyDistance_x;
                     }
-                    if (((reduce_x > GeneallyDistance_x || reduce_y > GeneallyDistance_y) && reduce_y != 0) || (reduce_x > Check_x && reduce_y == 0) || reduce_x > max_x) {
-                        chr.add吸怪();
-                        if (c.getPlayer().get吸怪() % 50 == 0 || reduce_x > max_x) {
-                            c.getPlayer().getCheatTracker().registerOffense(CheatingOffense.MOB_VAC, "(地图: " + chr.getMapId() + " 怪物數量:" + chr.get吸怪() + ")");
-                            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chr.getName() + " (編號: " + chr.getId() + ")使用吸怪(" + chr.get吸怪() + ")! - 地图:" + chr.getMapId() + "(" + chr.getMap().getMapName() + ")"), true);
-                            final StringBuilder sb = new StringBuilder();
-                            sb.append("\r\n");
-                            sb.append(FileoutputUtil.NowTime());
-                            sb.append(" 玩家: ");
-                            sb.append(StringUtil.getRightPaddedStr(c.getPlayer().getName(), ' ', 13));
-                            sb.append("(編號:");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getId()), ' ', 5));
-                            sb.append(" )怪物: ");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getId()), ' ', 7));
-                            sb.append("(");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getObjectId()), ' ', 6));
-                            sb.append(")");
-                            sb.append(" 地图: ");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getMapId()), ' ', 9));
-                            sb.append(" 初始座標:");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.x), ' ', 4));
-                            sb.append(",");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.y), ' ', 4));
-                            sb.append(" 移動座標:");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.x), ' ', 4));
-                            sb.append(",");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.y), ' ', 4));
-                            sb.append(" 相差座標:");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_x), ' ', 4));
-                            sb.append(",");
-                            sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_y), ' ', 4));
-                            FileoutputUtil.logToFile("logs/Hack/吸怪.txt", sb.toString());
-                            if (!chr.hasGmLevel(1)) {
-                                for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                                    for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
-                                        if (chr_.getAuto吸怪()) {
-                                            chr_.warpAuto吸怪(chr);
+                    if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
+                        if (((reduce_x > GeneallyDistance_x || reduce_y > GeneallyDistance_y) && reduce_y != 0) || (reduce_x > Check_x && reduce_y == 0) || reduce_x > max_x) {
+                            chr.add吸怪();
+                            if (c.getPlayer().get吸怪() % 50 == 0 || reduce_x > max_x) {
+                                c.getPlayer().getCheatTracker().registerOffense(CheatingOffense.MOB_VAC, "(地图: " + chr.getMapId() + " 怪物數量:" + chr.get吸怪() + ")");
+                                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chr.getName() + " (編號: " + chr.getId() + ")使用吸怪(" + chr.get吸怪() + ")! - 地图:" + chr.getMapId() + "(" + chr.getMap().getMapName() + ")"), true);
+                                final StringBuilder sb = new StringBuilder();
+                                sb.append("\r\n");
+                                sb.append(FileoutputUtil.NowTime());
+                                sb.append(" 玩家: ");
+                                sb.append(StringUtil.getRightPaddedStr(c.getPlayer().getName(), ' ', 13));
+                                sb.append("(編號:");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getId()), ' ', 5));
+                                sb.append(" )怪物: ");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getId()), ' ', 7));
+                                sb.append("(");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getObjectId()), ' ', 6));
+                                sb.append(")");
+                                sb.append(" 地图: ");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getMapId()), ' ', 9));
+                                sb.append(" 初始座標:");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.x), ' ', 4));
+                                sb.append(",");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.y), ' ', 4));
+                                sb.append(" 移動座標:");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.x), ' ', 4));
+                                sb.append(",");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.y), ' ', 4));
+                                sb.append(" 相差座標:");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_x), ' ', 4));
+                                sb.append(",");
+                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_y), ' ', 4));
+                                //FileoutputUtil.logToFile("logs/Hack/吸怪.txt", sb.toString());
+                                if (!chr.hasGmLevel(1)) {
+                                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                                        //获取玩家
+                                        for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+
+                                            if (chr_.getAuto吸怪()) {
+                                                chr_.warpAuto吸怪(chr);
+                                            }
                                         }
                                     }
-                                }
-                            }else {
+                                } else {
 //                                c.getPlayer().dropMessage("觸發吸怪 --  x: " + reduce_x + ", y: " + reduce_y);
+                                }
                             }
                         }
                     }
@@ -277,6 +281,40 @@ public class MobHandler
                 map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int) skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
 //            }
         }
+    }
+
+    public static void main(String[] args) {
+        double ux = -550,uy = -600;
+        double mx = -555,my = -666;
+        int x = 0,y=0 ;
+        if (ux>0){
+            if (mx>0){
+                if (ux>mx){
+                    x = (int)Math.abs(ux - mx);
+                }else{
+                    x = (int)Math.abs(mx - ux);
+                }
+            }else{
+                x = (int)Math.abs(ux + mx);
+            }
+        }else {
+                x = (int)Math.abs(ux - mx);
+        }
+        if (uy>0){
+            if (my>0){
+                if (uy>my){
+                    y = (int)Math.abs(uy - my);
+                }else{
+                    y = (int)Math.abs(my -uy);
+                }
+            }else{
+                y= (int)Math.abs(uy + my);
+            }
+        }else{
+                y = (int)Math.abs(uy - my);
+        }
+        System.out.println((int)Math.sqrt(x*x + y*y));
+
     }
     public static void CheckMobVac(final MapleClient c, final MapleMonster monster, final List<LifeMovementFragment> res, final Point startPos) {
         final MapleCharacter chr = c.getPlayer();

@@ -209,18 +209,21 @@ public class World
                     for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
                         cservs.setExpRate(Integer.parseInt(ServerProperties.getProperty("CongMS.expRate")));
                         cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "[系统公告]：经验倍率活动已经结束，已经恢复正常值。"));
+                        ServerProperties.setProperty("expRate","0");
                     }
                 }
                 else if (rate.equals((Object)"爆率")) {
                     for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
                         cservs.setDropRate(Integer.parseInt(ServerProperties.getProperty("CongMS.dropRate")));
                         cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "[系统公告]：爆物倍率活动已经结束，已经恢复正常值。"));
+                        ServerProperties.setProperty("dropRate","0");
                     }
                 }
                 else if (rate.equals((Object)"金币")) {
                     for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
                         cservs.setMesoRate(Integer.parseInt(ServerProperties.getProperty("CongMS.mesoRate")));
                         cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "[系统公告]：金币倍率活动已经结束，已经恢复正常值。"));
+                        ServerProperties.setProperty("mesoRate","0");
                     }
                 }
                 else if (rate.equals((Object)"宠物经验")) {}

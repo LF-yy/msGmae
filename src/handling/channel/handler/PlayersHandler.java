@@ -1,8 +1,18 @@
 package handling.channel.handler;
 
+import client.messages.commands.PlayerCommand;
+import gui.CongMS;
+import handling.channel.ChannelServer;
+import handling.world.MapleParty;
+import handling.world.MaplePartyCharacter;
+import scripting.NPCScriptManager;
+import server.ServerProperties;
+import server.Start;
 import server.maps.MapleMap;
 import client.MapleLieDetector;
 import server.maps.FieldLimitType;
+
+import java.text.DecimalFormat;
 import java.util.Map;
 import client.inventory.ItemFlag;
 import tools.ArrayMap;
@@ -17,10 +27,13 @@ import client.inventory.MapleInventoryType;
 import server.MapleItemInformationProvider;
 import constants.GameConstants;
 import java.util.Iterator;
+import java.util.Objects;
+
 import server.maps.MapleDoor;
 import server.maps.MapleMapObject;
 import client.MapleStat;
 import handling.world.World.Broadcast;
+import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import tools.FileoutputUtil;
 import server.maps.MapleMapObjectType;
@@ -112,7 +125,53 @@ public class PlayersHandler
             }
         }
     }
-    
+
+    public static void ChatRoomHandler(final LittleEndianAccessor slea, final MapleClient c) {
+        //4人组队爆率加成机制
+        boolean rand = false;
+        double coefficient = 1;
+        final int cMap = c.getPlayer().getMapId();
+        if (Objects.nonNull(c.getPlayer().getParty()) && c.getPlayer().getParty().getMembers().size()>=4) {
+            for (final MaplePartyCharacter cc : c.getPlayer().getParty().getMembers()) {
+                if (cMap == cc.getMapid()) {
+                    rand = true;
+                } else {
+                    rand = false;
+                }
+            }
+        }
+        if (rand){
+            coefficient = CongMS.ConfigValuesMap.get("4人组队爆率加成") / 100.0;
+        }
+        double jiac = 1;
+        if (CongMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
+            //破功爆率加成机制
+            int 获得破功 = c.getPlayer().取破攻等级();
+            jiac = (获得破功 / CongMS.ConfigValuesMap.get("破功爆率加成计算"));
+        }
+        if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+            System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
+            System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
+        }
+        double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
+        DecimalFormat df = new DecimalFormat("#.00");
+        String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
+        String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm());// +  jiac
+        String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate());
+
+        NPCScriptManager.getInstance().dispose(c);
+        c.getSession().write(MaplePacketCreator.enableActions());
+         c.getPlayer().dropMessage(1,"解卡完毕...");
+         c.getPlayer().dropMessage(6,  "当前系统时间" + FilePrinter.getLocalDateString() + " 星期" + PlayerCommand.getDayOfWeek());
+         c.getPlayer().dropMessage(6, "经验值倍率 " + formatExp);
+         c.getPlayer().dropMessage(6, "%, 怪物爆率 " + formatDrop);
+         c.getPlayer().dropMessage(6, "%, 金币倍率 " + speciesDrop /*+ "% VIP经验加成：" + c.getPlayer().getVipExpRate()*/ + "%\r\n");
+         c.getPlayer().dropMessage(6, "当前剩余 " + c.getPlayer().getCSPoints(1) + " 点券 " + c.getPlayer().getCSPoints(2) + " 抵用券\r\n");
+         c.getPlayer().dropMessage(6, "当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒\r\n");
+         c.getPlayer().dropMessage(6, "角色坐标 " + "X:"+c.getPlayer().getPosition().x+"-Y:"+c.getPlayer().getPosition().y);
+
+    }
+
     public static void UseDoor(final LittleEndianAccessor slea, final MapleCharacter chr) {
         final int oid = slea.readInt();
         final boolean mode = slea.readByte() == 0;

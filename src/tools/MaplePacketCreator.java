@@ -3,7 +3,9 @@ package tools;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 
-import gui.CongMS;
+import bean.BreakthroughMechanism;
+import bean.FiveTurn;
+import server.*;
 import server.maps.MapleDragon;
 import client.MapleBeans;
 import client.MapleBeans.BeansType;
@@ -16,7 +18,6 @@ import constants.ServerConstants;
 import java.util.Comparator;
 import client.MapleStat.Temp;
 import server.events.MapleSnowball.MapleSnowballs;
-import server.MapleDueyActions;
 import client.SkillMacro;
 import handling.channel.MapleGuildRanking.GuildRankingInfo;
 import handling.channel.MapleGuildRanking.levelRankingInfo;
@@ -31,8 +32,6 @@ import handling.world.PartyOperation;
 import handling.world.MaplePartyCharacter;
 import handling.world.MapleParty;
 import client.MapleKeyLayout;
-import server.MapleTrade;
-import server.MapleStatEffect;
 import client.MapleDisease;
 import client.inventory.MapleInventory;
 import client.inventory.MapleMount;
@@ -44,15 +43,13 @@ import client.MapleQuestStatus;
 import client.inventory.IEquip.ScrollResult;
 import java.util.Collections;
 import client.inventory.ModifyInventory;
-import server.MapleItemInformationProvider;
-import server.MapleShopItem;
 import server.life.SummonAttackEntry;
 import server.movement.LifeMovementFragment;
 import handling.world.guild.MapleGuild;
 import client.inventory.MapleRing;
 import constants.GameConstants;
 import client.inventory.MapleInventoryType;
-import server.Randomizer;
+
 import java.util.ArrayList;
 import handling.world.World.Guild;
 import java.util.Collection;
@@ -77,6 +74,7 @@ import constants.ServerConfig;
 import handling.SendPacketOpcode;
 import tools.data.MaplePacketLittleEndianWriter;
 import client.MapleClient;
+import util.ListUtil;
 
 public class MaplePacketCreator
 {
@@ -142,7 +140,8 @@ public class MaplePacketCreator
     public static final byte[] updatePlayerStats(final Map<MapleStat, Integer> stats, final MapleCharacter chr) {
         return updatePlayerStats(stats, false, chr);
     }
-    
+
+    //强制变更属性1
     public static final byte[] updatePlayerStats(final Map<MapleStat, Integer> mystats, final boolean itemReaction, final MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.UPDATE_STATS.getValue());
@@ -868,7 +867,19 @@ public class MaplePacketCreator
         else {
             final MapleGuild gs = Guild.getGuild(chr.getGuildId());
             if (gs != null) {
-                mplew.writeMapleAsciiString("[" + gs.getName() + "]||战力 :" + chr.getCombat());
+                List<FiveTurn> fiveTurns = Start.fiveTurn.get(chr.getId());
+
+                if(ListUtil.isNotEmpty(fiveTurns)){
+                    List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(chr.getId());
+                    if(ListUtil.isNotEmpty(breakthroughMechanisms)){
+                        mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
+
+                    }else{
+                        mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
+                    }
+                }else{
+                    mplew.writeMapleAsciiString("[" + gs.getName() + "]||战力 :" + chr.getCombat());
+                }
                 mplew.writeShort(gs.getLogoBG());
                 mplew.write(gs.getLogoBGColor());
                 mplew.writeShort(gs.getLogo());
@@ -2846,11 +2857,25 @@ public class MaplePacketCreator
     public static void getGuildInfo(final MaplePacketLittleEndianWriter mplew, final MapleGuild guild, final MapleCharacter c) {
         mplew.writeInt(guild.getId());
 //        mplew.writeMapleAsciiString(guild.getName());
+
         if (c != null) {
-            mplew.writeMapleAsciiString("[" + guild.getName() + "]||战力 :" + c.getCombat());
+            List<FiveTurn> fiveTurns = Start.fiveTurn.get(c.getClient().getPlayer().getId());
+
+            if(ListUtil.isNotEmpty(fiveTurns)){
+                List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(c.getClient().getPlayer().getId());
+                if(ListUtil.isNotEmpty(breakthroughMechanisms)){
+                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
+
+                }else{
+                    mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
+                }
+            }else{
+                mplew.writeMapleAsciiString("[" + guild.getName() + "]||战力 :" + c.getCombat());
+            }
         } else {
             mplew.writeMapleAsciiString("[" + guild.getName() + "]");
         }
+
 
         for (int i = 1; i <= 5; ++i) {
             mplew.writeMapleAsciiString(guild.getRankTitle(i));
@@ -3846,7 +3871,7 @@ public class MaplePacketCreator
         mplew.writeShort((int)SendPacketOpcode.STOP_CLOCK.getValue());
         return mplew.getPacket();
     }
-    
+
     public static final byte[] temporaryStats_Aran() {
         final List<Pair<Temp, Integer>> stats = new ArrayList<Pair<Temp, Integer>>();
         stats.add(new Pair<Temp, Integer>(Temp.STR, Integer.valueOf(999)));
@@ -3860,7 +3885,7 @@ public class MaplePacketCreator
         stats.add(new Pair<Temp, Integer>(Temp.JUMP, Integer.valueOf(120)));
         return temporaryStats(stats);
     }
-    
+    //强制修改属性2
     public static final byte[] temporaryStats_Balrog(final MapleCharacter chr) {
         final List<Pair<Temp, Integer>> stats = new ArrayList<Pair<Temp, Integer>>();
         final int offset = 1 + (chr.getLevel() - 90) / 20;
@@ -3872,7 +3897,7 @@ public class MaplePacketCreator
         stats.add(new Pair<Temp, Integer>(Temp.MATK, Integer.valueOf(chr.getStat().getTotalMagic() / offset)));
         return temporaryStats(stats);
     }
-    
+
     public static final byte[] temporaryStats(final List<Pair<Temp, Integer>> stats) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.TEMP_STATS.getValue());

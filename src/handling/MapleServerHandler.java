@@ -263,6 +263,10 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 CharLoginHandler.handleLogin(slea, c);
                 break;
             }
+            case ChatRoom_SYSTEM: {
+                PlayersHandler.ChatRoomHandler(slea, c);
+                break;
+            }
             case SERVERLIST_REQUEST: {
                 CharLoginHandler.ServerListRequest(c);
                 break;
@@ -339,12 +343,13 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 PlayerHandler.closeRangeAttack(slea, c, c.getPlayer(), false);
                 break;
             }
-            case RANGED_ATTACK: {
+            case RANGED_ATTACK: {//远程攻击
                 PlayerHandler.rangedAttack(slea, c, c.getPlayer());
                 break;
             }
-            case MAGIC_ATTACK: {
-                PlayerHandler.MagicDamage(slea, c, c.getPlayer());
+            case MAGIC_ATTACK: {//魔法攻击
+                PlayerHandler.MagicDamage(slea, c,c.getPlayer() );
+                //PlayerHandler.triggeredMagicDamage(slea,c,c.getPlayer());
                 break;
             }
             case SPECIAL_MOVE: {

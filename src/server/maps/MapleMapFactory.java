@@ -6,12 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import database.DBConPool;
@@ -679,7 +674,7 @@ public class MapleMapFactory
                 pos3 = new Point(179, -264);
                 break;
             }
-            case 240020402: {
+            case 240020401: {
                 mobtime = CongMS.ConfigValuesMap.get("火龙刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("火龙刷新时间")*60;
                 monsterid = 8180000;
                 msg = "火龙出現了！";
@@ -760,15 +755,15 @@ public class MapleMapFactory
                 pos3 = new Point(-237, 98);
                 break;
             }
-//            case 541020800: {
-//                mobtime = CongMS.ConfigValuesMap.get("克雷塞尔刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("克雷塞尔刷新时间")*1;
-//                monsterid = 9420521;
-//                msg = "克雷塞尔出現了！";
-//                pos1 = new Point(580, -211);
-//                pos2 = new Point(580, -211);
-//                pos3 = new Point(580, -211);
-//                break;
-//            }
+            case 211040101: {
+                mobtime = CongMS.ConfigValuesMap.get("驮狼雪人刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("驮狼雪人刷新时间")*60;
+                monsterid = 8220001;
+                msg = "驮狼雪人出現了！";
+                pos1 = new Point(95, 274);
+                pos2 = new Point(95, 274);
+                pos3 = new Point(95, 274);
+                break;
+            }
             default: {
                 return;
             }

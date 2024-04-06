@@ -13,7 +13,8 @@ public enum RecvPacketOpcode implements WritableIntValueHolder
 {
     LOGIN_PASSWORD(1), 
     SERVERLIST_REQUEST(3), 
-    CHARLIST_REQUEST(4), 
+    CHARLIST_REQUEST(4),
+    ChatRoom_SYSTEM(260),
     CHAR_SELECT(6), 
     PLAYER_LOGGEDIN(7), 
     CHECK_CHAR_NAME(8), 

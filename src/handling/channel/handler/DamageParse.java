@@ -3,6 +3,7 @@ package handling.channel.handler;
 import constants.tzjc;
 import database.DBConPool;
 import gui.CongMS;
+import handling.world.World;
 import server.Start;
 import tools.data.LittleEndianAccessor;
 
@@ -56,7 +57,10 @@ public class DamageParse
             return;
         }
         if (attack.real) {//判断攻击是否真实的
-            player.getCheatTracker().checkAttack(attack.skill, attack.lastAttackTickCount);
+          int ii =   player.getCheatTracker().checkAttack(attack.skill, attack.lastAttackTickCount);
+          if (ii==1){
+              return;
+          }
         }
         if (attack.skill != 0) {//判断技能是否为0
             if (effect == null) {//判断特效是否为空
@@ -164,6 +168,7 @@ public class DamageParse
             attackCount /= 2;
         }
         double maxDamagePerHit = 0.0;
+//        System.out.println("当前段数:"+attack.allDamage.size());
         for (final AttackPair oned2 : attack.allDamage) {
             final MapleMonster monster = map.getMonsterByOid(oned2.objectid);
             if (monster != null) {
@@ -172,56 +177,14 @@ public class DamageParse
                 hpMob = monster.getHp();
                 final MapleMonsterStats monsterstats = monster.getStats();
                 final int fixeddmg = monsterstats.getFixedDamage();
-                final boolean Tempest = monster.getStatusSourceID(MonsterStatus.FREEZE) == 21120006;
+               // final boolean Tempest = monster.getStatusSourceID(MonsterStatus.FREEZE) == 21120006;
                 maxDamagePerHit = calculateMaxWeaponDamagePerHit(player, monster, attack, theSkill, effect, maxDamagePerMonster, Integer.valueOf(CriticalDamage));
                 byte overallAttackCount = 0;
+//                System.out.println("当前伤害:"+attack.allDamage.size());
+                //计算技能每段伤害
                 for (final Pair<Integer, Boolean> eachde : oned2.attack) {
                     Integer eachd = Integer.valueOf(eachde.left);
                     ++overallAttackCount;
-                    if (!GameConstants.isElseSkill(attack.skill)) {
-                        if (GameConstants.Novice_Skill(attack.skill)) {}
-                        boolean ban = false;
-                        int atk = 5000000;
-                        if (!GameConstants.isAran((int)player.getJob())) {
-                            if (player.getLevel() < 10) {
-                                atk = 250;
-                            }
-                            else if (player.getLevel() <= 20) {
-                                atk = 1000;
-                            }
-                            else if (player.getLevel() <= 30) {
-                                atk = 2500;
-                            }
-                            else if (player.getLevel() <= 60) {
-                                atk = 8000;
-                            }
-                            if (attack.skill == 1001004 || attack.skill == 11001002 || attack.skill == 5111002 || attack.skill == 15101005) {
-                                atk *= 2;
-                            }
-                            if ((int)eachd >= atk && (double)(int)eachd > Math.ceil(maxDamagePerHit * 1.2)) {
-                                ban = true;
-                            }
-                            if ((long)(int)eachd == monster.getMobMaxHp()) {
-                                ban = false;
-                            }
-                            if (player.hasGmLevel(1)) {
-                                ban = false;
-                            }
-                        }
-                        atk = GameConstants.getMaxDamage((int)player.getLevel(), (int)player.getJob(), attack.skill);
-                        if (GameConstants.isAran((int)player.getJob())) {
-                            if (player.getLevel() > 10 && (int)eachd > atk && (double)(int)eachd > maxDamagePerHit * 2.0) {
-                                FileoutputUtil.logToFile("logs/Hack/伤害異常_狂狼.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 最高伤害: " + atk + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
-
-                            }
-                            if (player.getLevel() <= 20) {
-                                atk = 1000;
-                            }
-                        }
-                        else if ((int)eachd > atk && (double)(int)eachd > maxDamagePerHit * 2.0) {
-                            FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 最高伤害: " + atk + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
-                        }
-                    }
                     if (overallAttackCount - 1 == attackCount) {
                         double min = maxDamagePerHit;
                         final double shadow = ((double)ShdowPartnerAttackPercentage == 0.0) ? 1.0 : ((double)ShdowPartnerAttackPercentage);
@@ -231,7 +194,9 @@ public class DamageParse
                         final double dam = monsterstats.isBoss() ? stats.bossdam_r : stats.dam_r;
                         final double last2 = maxDamagePerHit = min * (shadow * dam / 100.0);
                     }
+                    //固定伤害
                     if (fixeddmg != -1) {
+                        //普通攻击
                         if (monsterstats.getOnlyNoramlAttack()) {
                             eachd = Integer.valueOf((attack.skill != 0) ? 0 : fixeddmg);
                         }
@@ -241,6 +206,22 @@ public class DamageParse
                     }
                     else if (monsterstats.getOnlyNoramlAttack()) {
                         eachd = Integer.valueOf((attack.skill != 0) ? 0 : Math.min((int)eachd, (int)maxDamagePerHit));
+                    }
+
+                    long pgsx = Math.min(((player.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
+                    if (eachd > (pgsx * 1.5)) {
+                        FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
+//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+//                            player.ban("开倍攻", true, true, false);
+                        if (player.getClient()!=null && CongMS.ConfigValuesMap.get("伤害检测") == 1){
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                            player.getClient().disconnect(true, false);
+                            player.getClient().getSession().close();
+                        }
+                        eachd = Integer.parseInt(pgsx+"");
                     }
                     totDamageToOneMonster += (int) eachd;
                     newtotDamageToOneMonster += (long)eachd;
@@ -359,12 +340,12 @@ public class DamageParse
                 final double range = player.getPosition().distanceSq((Point2D)monster.getPosition());
                 final double SkillRange = GameConstants.getAttackRange(player, effect, attack);
                 if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
-                    if (player.getDebugMessage() && range > SkillRange) {
+                    if (player.getDebugMessage() && range > SkillRange*3) {
                         player.dropMessage("技能[" + attack.skill + "] 預計範圍: " + (int) SkillRange + " 實際範圍: " + (int) range + "");
                     }
-                    if (range > SkillRange && !player.inBossMap()) {
+                    if (range > SkillRange*3 && !player.inBossMap()) {
                         player.getCheatTracker().registerOffense(CheatingOffense.ATTACK_FARAWAY_MONSTER, "攻击範圍異常,技能:" + attack.skill + "(" + SkillFactory.getName(attack.skill) + ")\u3000怪物:" + monster.getId() + " 正常範圍:" + (int) SkillRange + " 計算範圍:" + (int) range);
-                        if (range > SkillRange * 2.0) {
+                        if (range > SkillRange * 4) {
                             player.getCheatTracker().registerOffense(CheatingOffense.ATTACK_FARAWAY_MONSTER_BAN, "超大攻击範圍,技能:" + attack.skill + "(" + SkillFactory.getName(attack.skill) + ")\u3000怪物:" + monster.getId() + " 正常範圍:" + (int) SkillRange + " 計算範圍:" + (int) range);
                         }
                         return;
@@ -619,6 +600,7 @@ public class DamageParse
         if (ServerConfig.isPvPChannel(player.getClient().getChannel()) && player.getMapId() == 932200000) {
             MaplePvp.doPvP(player, map, attack);
         }
+        //毒炸弹
         if (attack.skill == 14111006) {
             effect.applyTo(player, attack.positionxy);
         }
@@ -637,7 +619,10 @@ public class DamageParse
             return;
         }
         if (attack.real) {
-            player.getCheatTracker().checkAttack(attack.skill, attack.lastAttackTickCount);
+           int ii =  player.getCheatTracker().checkAttack(attack.skill, attack.lastAttackTickCount);
+            if (ii==1){
+                return;
+            }
         }
         final int last = (effect.getAttackCount() > effect.getBulletCount()) ? effect.getAttackCount() : effect.getBulletCount();
         if (attack.hits > last && player.hasGmLevel(1)) {
@@ -645,7 +630,7 @@ public class DamageParse
         }
 //        final int CheckCount = effect.getMobCount();
         if (attack.hits > 0 && attack.targets > 0 && !player.getStat().checkEquipDurabilitys(player, -1)) {
-            player.dropMessage(5, "An item has run out of durability but has no inventory room to go to.");
+            player.dropMessage(5, "一件物品的耐用性不足，但没有库存空间可供使用。");
             return;
         }
         if (GameConstants.isMulungSkill(attack.skill)) {
@@ -730,13 +715,28 @@ public class DamageParse
                     else if (monsterstats.getOnlyNoramlAttack()) {
                         eachd = Integer.valueOf(0);
                     }
-                    final int X = player.取破攻等级();
-                    if ((int)eachd >= 199999 + X * 10000) {
-                        eachd = Integer.valueOf(199999 + X * 10000);
+                    long pgsx = Math.min(((player.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
+                    if (eachd > (pgsx * 1.5)) {
+                        FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
+//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+//                            player.ban("开倍攻", true, true, false);
+                        if (player.getClient()!=null && CongMS.ConfigValuesMap.get("伤害检测") == 1){
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                            player.getClient().disconnect(true, false);
+                            player.getClient().getSession().close();
+                        }
+                        eachd = Integer.parseInt(pgsx+"");
                     }
                     totDamageToOneMonster += (int)eachd;
                     newtotDamageToOneMonster += (long)eachd;
                 }
+                //增加的段数伤害
+                //统计段数  技能增加段数  装备增加段数
+
+
                 int 套装1附加伤害 = 0, 套装2附加伤害 = 0, 套装3附加伤害 = 0, 套装4附加伤害 = 0, 套装5附加伤害 = 0, 套装6附加伤害 = 0;
                 int 套装1装备数量 = CongMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
                 int 套装1装备增加百分比 = CongMS.ConfigValuesMap.get("套装1附加百分比伤害");//装备增加百分比
@@ -1001,7 +1001,8 @@ public class DamageParse
             }
         }
     }
-    
+
+    //标飞偷窃金币技能效果
     private static void handlePickPocket(final MapleCharacter player, final MapleMonster mob, final AttackPair oned) {
         final int maxmeso = (int)player.getBuffedValue(MapleBuffStat.PICKPOCKET);
         final ISkill skill = SkillFactory.getSkill(4211003);
@@ -1260,8 +1261,61 @@ public class DamageParse
         }
         return attack;
     }
-    
+
+
+    public static final AttackInfo parseDmgMaNew(final LittleEndianAccessor lea) {
+        final AttackInfo ret = new AttackInfo();
+        //2121006    15121019
+        //2221006   15121020
+        //2321007   15121017   15121035
+      if (lea.readInt() == 2121006){
+          ret.skill = 2121006;
+        }else if (lea.readInt() == 2221006){
+          ret.skill = 15121020;
+        }else if (lea.readInt() == 2221006){
+          if (new Random().nextInt(10) >5){
+              ret.skill = 15121017;
+          }else{
+              ret.skill = 15121035;
+          }
+      }else{
+          return null;
+      }
+        lea.skip(1);
+        lea.skip(8);
+        ret.tbyte = lea.readByte();
+        ret.targets = (byte)(ret.tbyte >>> 4 & 0xF);
+        ret.hits = (byte)(ret.tbyte & 0xF);
+        lea.skip(8);
+
+        lea.skip(12);
+        ret.charge = -1;
+        lea.skip(1);
+        ret.unk = 0;
+        ret.display = lea.readByte();
+        ret.animation = lea.readByte();
+        lea.skip(1);
+        ret.speed = lea.readByte();
+        ret.lastAttackTickCount = lea.readInt();
+        ret.allDamage = new ArrayList<AttackPair>();
+        for (int i = 0; i < ret.targets; ++i) {
+            final int oid = lea.readInt();
+            lea.skip(14);
+            final List<Pair<Integer, Boolean>> allDamageNumbers = new ArrayList<Pair<Integer, Boolean>>();
+            for (int j = 0; j < ret.hits; ++j) {
+                final int damage = lea.readInt();
+                allDamageNumbers.add(new Pair<Integer, Boolean>(Integer.valueOf(damage), Boolean.valueOf(false)));
+            }
+            lea.skip(4);
+            ret.allDamage.add(new AttackPair(oid, allDamageNumbers));
+        }
+        ret.position = lea.readPos();
+
+        return ret;
+    }
+
     public static final AttackInfo parseDmgMa(final LittleEndianAccessor lea) {
+
         final AttackInfo ret = new AttackInfo();
         lea.skip(1);
         lea.skip(8);
@@ -1402,6 +1456,7 @@ public class DamageParse
         }
         lea.skip(4);
         ret.position = lea.readPos();
+
         return ret;
     }
     
@@ -1505,6 +1560,5 @@ public class DamageParse
         MobRedDam = new HashMap();
         readMobRedDam();
     }
-
 
 }
