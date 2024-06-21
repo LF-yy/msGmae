@@ -6,10 +6,11 @@ import java.sql.Connection;
 import database.DBConPool;
 import java.awt.geom.Point2D;
 
+import gui.LtMS;
 import scripting.NPCConversationManager;
+import server.*;
 import tools.packet.UIPacket;
 import constants.MapConstants;
-import server.MaplePortal;
 
 import java.util.*;
 
@@ -18,14 +19,13 @@ import server.maps.AnimatedMapleMapObject;
 import server.movement.LifeMovementFragment;
 import server.maps.MapleMapObject;
 import gui.CongMS;
-import server.MapleInventoryManipulator;
+
 import java.lang.ref.WeakReference;
 import server.Timer.CloneTimer;
 import server.events.MapleSnowball.MapleSnowballs;
 import client.anticheat.CheatingOffense;
 import java.awt.Point;
-import server.MapleStatEffect;
-import server.MapleItemInformationProvider;
+
 import client.ISkill;
 import server.life.MobSkill;
 import server.life.MobAttackInfo;
@@ -33,8 +33,6 @@ import client.PlayerStats;
 import server.life.MapleMonster;
 import client.SkillFactory;
 import tools.packet.MobPacket;
-import server.Randomizer;
-import server.AutobanManager;
 import server.life.MobSkillFactory;
 import server.life.MobAttackInfoFactory;
 import io.netty.channel.Channel;
@@ -622,7 +620,6 @@ public class PlayerHandler
             chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
         }
-        System.out.println();
         final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
         double maxdamage = (double)chr.getStat().getCurrentMaxBaseDamage();
 //        System.out.println("1:"+maxdamage);
@@ -761,11 +758,8 @@ public class PlayerHandler
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
         //伤害计算
         DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
-        if (CongMS.ConfigValuesMap.get("重复释放")==1){
-            //发起攻击封包推送
-            chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
-            //伤害计算
-            DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
+        if(LtMS.ConfigValuesMap.get("记录攻击信息")>0){
+            Start.saveAttackInfo(attack);
         }
         //身外化身处理
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
@@ -777,7 +771,7 @@ public class PlayerHandler
                 final int attackCount2 = attackCount;
                 final double maxdamage2 = maxdamage;
                 final MapleStatEffect eff2 = effect;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
+                final AttackInfo attack2 = DamageParse.DivideAttack(attack, 1);//chr.isGM() ? 1 : 4
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -809,7 +803,7 @@ public class PlayerHandler
                 return;
             }
             skill = SkillFactory.getSkill(GameConstants.getLinkedSkill(attack.skill));
-            if(CongMS.ConfigValuesMap.get("开启封包调试") >0 && skill!=null){
+            if(LtMS.ConfigValuesMap.get("开启封包调试") >0 && skill!=null){
                 System.out.println("释放技能编码:"+ skill.getId());
             }
             skillLevel = chr.getSkillLevel(skill);
@@ -976,10 +970,10 @@ public class PlayerHandler
         chr.checkFollow();
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.rangedAttack(chr.getId(), attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, visProjectile, attack.allDamage, attack.position, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk), chr.getPosition());
         DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
-        if (CongMS.ConfigValuesMap.get("重复释放")==1){
-            chr.getMap().broadcastMessage(chr, MaplePacketCreator.rangedAttack(chr.getId(), attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, visProjectile, attack.allDamage, attack.position, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk), chr.getPosition());
-            DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
-        }
+       if(LtMS.ConfigValuesMap.get("记录攻击信息")>0){
+                   Start.saveAttackInfo(attack);
+       }
+
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
         for (int i = 0; i < clones.length; ++i) {
             if (clones[i].get() != null) {
@@ -990,7 +984,7 @@ public class PlayerHandler
                 final int bulletCount2 = bulletCount;
                 final int visProjectile2 = visProjectile;
                 final int skillLevel2 = skillLevel;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
+                final AttackInfo attack2 = DamageParse.DivideAttack(attack, 1);//chr.isGM() ? 1 : 4
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -1043,17 +1037,19 @@ public class PlayerHandler
         chr.checkFollow();
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());
         DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
-
+        if(LtMS.ConfigValuesMap.get("记录攻击信息")>0){
+            Start.saveAttackInfo(attack);
+        }
 
         final WeakReference<MapleCharacter>[] clones = chr.getClones();
-        AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? chr.getCloneDamgeRate() : chr.getCloneDamgeRate());
+
         for (int i = 0; i < clones.length; ++i) {
             if (clones[i].get() != null) {
                 final MapleCharacter clone = (MapleCharacter)clones[i].get();
                 final ISkill skil2 = skill;
                 final MapleStatEffect eff2 = effect;
                 final int skillLevel2 = skillLevel;
-               // final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.isGM() ? 1 : 4);
+                final AttackInfo attack2 = DamageParse.DivideAttack(attack, 1);//chr.isGM() ? 1 : 4
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -1065,36 +1061,9 @@ public class PlayerHandler
         }
     }
 
-
-    public static  void triggeredMagicDamage(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
-        if (chr == null) {
-            return;
-        }
-        if (!chr.isAlive() || chr.getMap() == null) {
-            chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
-            return;
-        }
-        AttackInfo attackInfo = DamageParse.parseDmgMaNew(slea);
-        if (attackInfo==null){
-            return;
-        }
-        final AttackInfo attack = DamageParse.Modify_AttackCrit(attackInfo, chr, 3);
-        final ISkill skill = SkillFactory.getSkill(GameConstants.getLinkedSkill(attack.skill));
-        final int skillLevel = chr.getSkillLevel(skill);
-        final MapleStatEffect effect = attack.getAttackEffect(chr, skillLevel, skill);
-        if (effect == null) {
-            return;
-        }
-        chr.checkFollow();
-        chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());
-        DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
-    }
-
-
-
     public static final void DropMeso(final int meso, final MapleCharacter chr) {
-        final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
-        if (丢出金币开关 > 0) {
+        final int 丢出金币开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"丢出金币开关"));
+        if (丢出金币开关 == 0) {
             chr.dropMessage(1, "管理员已经从后台禁止丢出金币");
             chr.getClient().sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -1191,10 +1160,20 @@ public class PlayerHandler
             final List<LifeMovementFragment> res2 = new ArrayList<LifeMovementFragment>((Collection<? extends LifeMovementFragment>)res);
             final MapleMap map = c.getPlayer().getMap();
             if (chr.isHidden()) {
+                if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                    System.out.println("isHidden");
+                }
                 chr.setLastRes(res2);
                 c.getPlayer().getMap().broadcastGMMessage(chr, MaplePacketCreator.movePlayer(chr.getId(), res, Original_Pos), false);
             }
             else {
+                if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                    System.out.println("isHidden2");
+                    res.forEach(lifeMovementFragment -> {
+                        System.out.println("X轴:"+ lifeMovementFragment.getPosition().getX()+"----Y轴:"+ lifeMovementFragment.getPosition().getY());
+                    });
+                }
+
                 c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.movePlayer(chr.getId(), res, Original_Pos), false);
             }
             MovementParse.updatePosition(res, (AnimatedMapleMapObject)chr, 0);
@@ -1202,13 +1181,24 @@ public class PlayerHandler
             map.movePlayer(chr, pos);
             if (chr.getFollowId() > 0 && chr.isFollowOn() && chr.isFollowInitiator()) {
                 final MapleCharacter fol = map.getCharacterById(chr.getFollowId());
+                if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+
+                    System.out.println("getCharacterById");
+                }
                 if (fol != null) {
+                    if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+
+                        System.out.println("getFollowId");
+                    }
                     final Point original_pos = fol.getPosition();
                     fol.getClient().sendPacket(MaplePacketCreator.moveFollow(Original_Pos, original_pos, pos, res));
                     MovementParse.updatePosition(res, (AnimatedMapleMapObject)fol, 0);
                     map.broadcastMessage(fol, MaplePacketCreator.movePlayer(fol.getId(), res, original_pos), false);
                 }
                 else {
+                    if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                        System.out.println("checkFollow");
+                    }
                     chr.checkFollow();
                 }
             }
@@ -1239,6 +1229,10 @@ public class PlayerHandler
             }
             int count = c.getPlayer().getFallCounter();
             if (map.getFootholds().findBelow(c.getPlayer().getPosition()) == null && c.getPlayer().getPosition().y > c.getPlayer().getOldPosition().y && c.getPlayer().getPosition().x == c.getPlayer().getOldPosition().x) {
+                if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                    System.out.println("findBelow");
+                }
+
                 if (count > 10) {
                     if (map.getId() == 926010010 || map.getId() == 926010030 || map.getId() == 926010050 || map.getId() == 926010070) {
                         c.getPlayer().changeMap(926010000);
@@ -1246,13 +1240,22 @@ public class PlayerHandler
                     else {
                         c.getPlayer().changeMap(map, map.getPortal(0));
                         c.getPlayer().setFallCounter(0);
+                        if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                            System.out.println("setFallCounter");
+                        }
                     }
                 }
                 else {
                     c.getPlayer().setFallCounter(++count);
+                    if (LtMS.ConfigValuesMap.get("开启封包调试") > 0){
+                        System.out.println("setFallCounter(++count)");
+                }
                 }
             }
             else if (count > 0) {
+                if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                    System.out.println("setFallCounter(0);");
+                }
                 c.getPlayer().setFallCounter(0);
             }
             c.getPlayer().setOldPosition(new Point(c.getPlayer().getPosition()));

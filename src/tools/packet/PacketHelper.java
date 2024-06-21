@@ -291,7 +291,9 @@ public class PacketHelper
     public static final void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition) {
         addItemInfo(mplew, item, zeroPosition);
     }
-    
+    public static void addItemInfo(MaplePacketLittleEndianWriter mplew, Item item) {
+        addItemInfo(mplew, item, false);
+    }
     public static final void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition, final boolean leaveOut) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final boolean isPet = item.getPet() != null && item.getPet().getUniqueId() > -1;

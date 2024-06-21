@@ -19,7 +19,7 @@ import tools.StringUtil;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-public class ServerProperties
+    public class ServerProperties
 {
     private static Properties props;
     

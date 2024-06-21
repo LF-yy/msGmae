@@ -1,10 +1,9 @@
 package scripting;
 // 汉化方法库
-import bean.BreakthroughMechanism;
-import bean.FiveTurn;
-import bean.UserAttraction;
+import bean.*;
 import com.alibaba.druid.util.StringUtils;
 import constants.tzjc;
+import gui.LtMS;
 import merchant.merchant_main;
 import gui.CongMS;
 
@@ -98,7 +97,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     private static List<String> 特殊宠物吸物无法使用地图;
 
     static {
-        NPCConversationManager.特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("CongMS.吸怪无法使用地图").split(","));
+        NPCConversationManager.特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("LtMS.吸怪无法使用地图").split(","));
     }
     public NPCConversationManager(final MapleClient c, final int npc, final int questid, final int mode, final String npcscript, final byte type, final Invocable iv) {
         super(c);
@@ -126,11 +125,255 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 这么屌读我GM权限,走你。"));
             this.getPlayer().ban("读GM权限", true, true, false);
         }
-
     }
+
+
+    public void 移除领域技能(int userId,int skillId) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        BreakthroughMechanism su = new BreakthroughMechanism();
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("DELETE FROM lt_field_skills WHERE characterid = ? AND skillid = ?");
+            ps.setInt(1, userId);
+            ps.setInt(1, skillId);
+            ps.executeUpdate();
+            ps.close();
+            Start.GetFieldSkills();
+        } catch (SQLException ex) {
+            System.out.println("移除领域技能异常：" + ex.getMessage());
+        }
+    }
+    public void 移除超级技能(int userId,int skillId) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        BreakthroughMechanism su = new BreakthroughMechanism();
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("DELETE FROM lt_super_skills WHERE characterid = ? AND skillid = ?");
+            ps.setInt(1, userId);
+            ps.setInt(1, skillId);
+            ps.executeUpdate();
+            ps.close();
+            Start.GetFieldSkills();
+        } catch (SQLException ex) {
+            System.out.println("移除超级技能异常：" + ex.getMessage());
+        }
+    }
+    public List<FieldSkills> 查询领域技能(int userId,int skillId) {
+        if (skillId>0 && ListUtil.isNotEmpty(Start.fieldSkillsMap.get(userId))){
+            List<FieldSkills> fieldSkills = Start.fieldSkillsMap.get(userId);
+            Map<Integer, List<FieldSkills>> collect = fieldSkills.stream().collect(Collectors.groupingBy(FieldSkills::getSkillid));
+            List<FieldSkills> fieldSkills1 = collect.get(skillId);
+            if (ListUtil.isNotEmpty(fieldSkills1)){
+                return fieldSkills1;
+            }
+        }else {
+            return ListUtil.isNotEmpty(Start.fieldSkillsMap.get(userId)) ? Start.fieldSkillsMap.get(userId) : null;
+        }
+        return null;
+    }
+    public List<SuperSkills> 查询超级技能(int userId,int skillId) {
+        if (skillId>0 && ListUtil.isNotEmpty(Start.superSkillsMap.get(userId))){
+            List<SuperSkills> superSkills = Start.superSkillsMap.get(userId);
+            Map<Integer, List<SuperSkills>> collect = superSkills.stream().collect(Collectors.groupingBy(SuperSkills::getSkillid));
+            List<SuperSkills> superSkills1 = collect.get(skillId);
+            if (ListUtil.isNotEmpty(superSkills1)){
+                return superSkills1;
+            }
+        }else {
+            return ListUtil.isNotEmpty(Start.superSkillsMap.get(userId)) ? Start.superSkillsMap.get(userId) : null;
+        }
+        return null;
+    }
+public void 学习领域技能(int characterid,int skillid,String skillName,int skillLeve,int injuryinterval,int injurydelaytime,int damagedestructiontime,int skillLX,int skillLY,int skillRX,int skillRY,int range,double harm) {
+
+      try{
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("INSERT INTO lt_field_skills (characterid,skillid,skill_name,skill_leve,injuryinterval,injurydelaytime,damagedestructiontime,skillLX,skillLY,skillRX,skillRY,ranges,harm) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                ps1.setInt(1, characterid);
+                ps1.setInt(2, skillid);
+              ps1.setString(3,skillName);
+                 ps1.setInt(4, skillLeve);
+                 ps1.setInt(5, injuryinterval);
+                 ps1.setInt(6, injurydelaytime);
+                 ps1.setInt(7, damagedestructiontime);
+                 ps1.setInt(8, skillLX);
+                 ps1.setInt(9, skillLY);
+                ps1.setInt(10, skillRX);
+                ps1.setInt(11, skillRY);
+                ps1.setInt(12, range);
+             ps1.setDouble(13, harm);
+                ps1.execute();
+                ps1.close();
+            Start.GetFieldSkills();
+        } catch (SQLException ex) {
+            System.out.println("境界提升异常：" + ex.getMessage());
+        }
+    }
+    public void 提升超级技能(int Characterid,int Skillid,int Itemid,int Injuryinterval,int Injurydelaytime,int SkillLX,int SkillLY,int SkillRX,int SkillRY,int Damagedestructiontime,String CombinatorialCodingId,String Skill_name,int Skill_leve,int Range,int SkillCount,int StackingDistance,double Harm) {
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        SuperSkills su = new SuperSkills();
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT id,characterid ,skillid,itemid,injuryinterval,injurydelaytime,skillLX,skillLY,skillRX,skillRY,damagedestructiontime,combinatorialCodingId,skill_name,skill_leve,ranges,skillCount,stackingDistance,harm FROM lt_super_skills where characterid = ? and skillid = ?");
+            ps.setInt(1, Characterid);
+            ps.setInt(2, Skillid);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                su.setId(rs.getLong("id"));
+                su.setCharacterid(rs.getInt("characterid"));
+                su.setSkillid(rs.getInt("skillid"));
+                su.setItemid(rs.getInt("itemid"));
+                su.setInjuryinterval(rs.getInt("injuryinterval"));
+                su.setInjurydelaytime(rs.getInt("injurydelaytime"));
+                su.setSkillLX(rs.getInt("skillLX"));
+                su.setSkillLY(rs.getInt("skillLY"));
+                su.setSkillRX(rs.getInt("skillRX"));
+                su.setSkillRY(rs.getInt("skillRY"));
+                su.setDamagedestructiontime(rs.getInt("damagedestructiontime"));
+                su.setCombinatorialCodingId(rs.getString("combinatorialCodingId"));
+                su.setSkill_name(rs.getString("skill_name"));
+                su.setSkill_leve(rs.getInt("skill_leve"));
+                su.setRange(rs.getInt("range"));
+                su.setSkillCount(rs.getInt("skillCount"));
+                su.setStackingDistance(rs.getInt("stackingDistance"));
+                su.setHarm(rs.getInt("harm"));
+            }
+            ps.execute();
+            ps.close();
+            if(su.getCharacterid() >0 ){
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("update lt_super_skills set  characterid = ? ,skillid = ? ,itemid = ? ,injuryinterval = ? ,injurydelaytime = ? ,skillLX = ? ,skillLY = ? ,skillRX = ? ,skillRY = ? ,damagedestructiontime = ?,combinatorialCodingId = ?,skill_name = ?,skill_leve = ?,ranges = ?,skillCount = ?,stackingDistance = ?,harm = ? FROM lt_super_skills where id = ?");
+                ps1.setInt(1, Characterid);
+                ps1.setInt(2, Skillid);
+                ps1.setInt(3, Itemid);
+                ps1.setInt(4, Injuryinterval);
+                ps1.setInt(5, Injurydelaytime);
+                ps1.setInt(6, SkillLX);
+                ps1.setInt(7, SkillLY);
+                ps1.setInt(8, SkillRX);
+                ps1.setInt(9, SkillRY);
+                ps1.setInt(10, Damagedestructiontime);
+                ps1.setString(11, CombinatorialCodingId);
+                ps1.setString(12, Skill_name);
+                ps1.setInt(13, Skill_leve);
+                ps1.setInt(14, Range);
+                ps1.setInt(15, SkillCount);
+                ps1.setInt(16, StackingDistance);
+                ps1.setDouble(17, Harm);
+                ps1.setLong(18, su.getId());
+                ps1.execute();
+                ps1.close();
+            }else{
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement(
+                        "INSERT INTO lt_super_skills (characterid ,skillid,itemid,injuryinterval,injurydelaytime,skillLX,skillLY,skillRX,skillRY,damagedestructiontime,combinatorialCodingId,skill_name,skill_leve,ranges,skillCount,stackingDistance,harm) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                ps1.setInt(1, Characterid);
+                ps1.setInt(2, Skillid);
+                ps1.setInt(3, Itemid);
+                ps1.setInt(4, Injuryinterval);
+                ps1.setInt(5, Injurydelaytime);
+                ps1.setInt(6, SkillLX);
+                ps1.setInt(7, SkillLY);
+                ps1.setInt(8, SkillRX);
+                ps1.setInt(9, SkillRY);
+                ps1.setInt(10, Damagedestructiontime);
+                ps1.setString(11, CombinatorialCodingId);
+                ps1.setString(12, Skill_name);
+                ps1.setInt(13, Skill_leve);
+                ps1.setInt(14, Range);
+                ps1.setInt(15, SkillCount);
+                ps1.setInt(16, StackingDistance);
+                ps1.setDouble(17, Harm);
+                ps1.execute();
+                ps1.close();
+            }
+            Start.GetSuperSkills();
+        } catch (SQLException ex) {
+            System.out.println("境界提升异常：" + ex.getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
     public BreakthroughMechanism 查询境界(int userId) {
         return ListUtil.isNotEmpty(Start.breakthroughMechanism.get(userId)) ? Start.breakthroughMechanism.get(userId).get(0) : null;
     }
+    public void 修改境界特性(int userId,String type,int count) {
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        BreakthroughMechanism su = new BreakthroughMechanism();
+        try  {
+            final Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT name,characterid,equal_order,localstr,localdex,localluk,localint,all_quality,harm,crit,crit_harm,boss_harm,hp,mp,pad,matk,customize_attribute,customize_smash_roll FROM lt_breakthrough_mechanism where characterid = ?");
+            ps.setInt(1, userId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                su.setName(rs.getString("name"));
+                su.setCharacterid(rs.getInt("characterid"));
+                su.setEqualOrder(rs.getString("equal_order"));
+                su.setLocalstr(rs.getInt("localstr"));
+                su.setLocaldex(rs.getInt("localdex"));
+                su.setLocalluk(rs.getInt("localluk"));
+                su.setLocalint(rs.getInt("localint"));
+                su.setAllQuality(rs.getInt("all_quality"));
+                su.setHarm(rs.getInt("harm"));
+                su.setCrit(rs.getInt("crit"));
+                su.setCritHarm(rs.getInt("crit_harm"));
+                su.setBossHarm(rs.getInt("boss_harm"));
+                su.setHp(rs.getInt("hp"));
+                su.setMp(rs.getInt("mp"));
+                su.setPad(rs.getInt("pad"));
+                su.setMatk(rs.getInt("matk"));
+                su.setCustomizeAttribute(rs.getInt("matk"));
+                su.setCustomizeSmashRoll(rs.getInt("matk"));
+                su.setCustomizeAttribute(rs.getInt("customize_attribute"));
+                su.setCustomizeSmashRoll(rs.getInt("customize_smash_roll"));
+            }
+            ps.execute();
+            ps.close();
+            if(su.getCharacterid() >0 ){
+                PreparedStatement ps1 = null;
+                ResultSet rs1 = null;
+                if("customizeAttribute".equals(type)){
+                    su.setCustomizeAttribute(su.getCustomizeAttribute()+count);
+                }
+                if("customizeSmashRoll".equals(type)){
+                    su.setCustomizeSmashRoll(su.getCustomizeSmashRoll()+count);
+                }
+                final Connection con1 = DatabaseConnection.getConnection();
+                ps1 = con1.prepareStatement("update lt_breakthrough_mechanism set customize_attribute = ? ,customize_smash_roll = ?  where characterid = ? ");
+                ps1.setInt(1, su.getCustomizeAttribute());
+                ps1.setInt(2, su.getCustomizeSmashRoll());
+                ps1.setInt(3, userId);
+                ps1.execute();
+                ps1.close();
+            }
+
+            List<BreakthroughMechanism> list = new ArrayList<>();
+            list.add(su);
+            Start.breakthroughMechanism.remove(userId);
+            Start.breakthroughMechanism.put(userId,list);
+        } catch (SQLException ex) {
+            System.out.println("消耗境界特性异常：" + ex.getMessage());
+        }
+    }
+
     public void 提升境界(int userId,String name,String equalOrder,int allQuality) {
 
         PreparedStatement ps = null;
@@ -174,12 +417,13 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                 su.setCustomizeAttribute(su.getCustomizeAttribute()+1);
                 su.setCustomizeSmashRoll(su.getCustomizeSmashRoll()+1);
                 final Connection con1 = DatabaseConnection.getConnection();
-                ps1 = con1.prepareStatement("update lt_breakthrough_mechanism set name,characterid,equal_order,customize_attribute,customize_smash_roll  where characterid = ? ");
+                ps1 = con1.prepareStatement("update lt_breakthrough_mechanism set name = ? ,equal_order = ? ,all_quality = ? ,customize_attribute = ?,customize_smash_roll = ?  where characterid = ? ");
                 ps1.setString(1, su.getName());
-                ps1.setInt(2, su.getCharacterid());
-                ps1.setString(3, su.getEqualOrder());
+                ps1.setString(2, su.getEqualOrder());
+                ps1.setInt(3, su.getAllQuality());
                 ps1.setInt(4, su.getCustomizeAttribute());
                 ps1.setInt(5, su.getCustomizeSmashRoll());
+                ps1.setInt(6, userId);
                 ps1.execute();
                 ps1.close();
             }else{
@@ -210,7 +454,6 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         } catch (SQLException ex) {
             System.out.println("境界提升异常：" + ex.getMessage());
         }
-
     }
 
     public void 五转转职(final int id,final int job,final String jobName){
@@ -323,7 +566,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         return numbOld;
     }
     public String 自助爆率(int hours,int drop) {
-        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.dropRate"));
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate"));
         if (drop==0){
             drop = 2;
         }
@@ -344,7 +587,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         return "开启成功";
     }
     public String 自助经验(int hours,int drop) {
-        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.expRate"));
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("LtMS.expRate"));
         if (drop==0){
             drop = 2;
         }
@@ -366,7 +609,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     }
 
     public String 自助金币(int hours,int drop) {
-        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.mesoRate"));
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("LtMS.mesoRate"));
         if (drop==0){
             drop = 2;
         }
@@ -387,7 +630,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         return "开启成功";
     }
     public int 获取配置(final String param) {
-        return CongMS.ConfigValuesMap.get(param);
+        return LtMS.ConfigValuesMap.get(param);
     }
 
     public int 查装备赋能(final IItem item,final String name){
@@ -470,6 +713,12 @@ public class NPCConversationManager extends AbstractPlayerInteraction
 
     public  void gain开启吸怪(final MapleCharacter player){
         int mapId = player.getMapId();
+        for ( MapleMonster monstermo : player.getMap().getAllMonster()) {
+            if (monstermo.getPosition() != null && monstermo.getStats().isBoss()) {
+                c.getPlayer().dropMessage(1, "该地图有BOSS不允许吸怪.");
+                return;
+            }
+        }
         if (特殊宠物吸物无法使用地图.stream().anyMatch(s-> {return mapId == Integer.parseInt(s);})){
             c.getPlayer().dropMessage(1, "该地图不允许吸怪.");
         }else {
@@ -5093,7 +5342,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") < (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限")) && rs.getInt("level") > 30) {
+                if (rs.getInt("level") < (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限")) && rs.getInt("level") > 30) {
                     if (名次 < 10) {
                         final String 玩家名字 = rs.getString("name");
                         final String 职业 = this.职业(rs.getInt("job"));
@@ -5158,7 +5407,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") == (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
+                if (rs.getInt("level") == (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
                     final String 玩家名字 = rs.getString("name");
                     final String 职业 = this.职业(rs.getInt("job"));
                     final int 家族编号 = rs.getInt("guildid");
@@ -5188,7 +5437,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM monsterbook   order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt("level") == (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
+                if (rs.getInt("level") == (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限"))) {
                     final String 玩家名字 = rs.getString("name");
                     final String 职业 = this.职业(rs.getInt("job"));
                     final int 家族编号 = rs.getInt("guildid");
@@ -5869,7 +6118,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
 
     int temp;
     class xiguai extends Thread{
-        long time = CongMS.ConfigValuesMap.get("吸怪延迟").longValue();
+        long time = LtMS.ConfigValuesMap.get("吸怪延迟").longValue();
         public void run()
         {
 

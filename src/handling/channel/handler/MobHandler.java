@@ -2,7 +2,7 @@ package handling.channel.handler;
 
 import bean.UserAttraction;
 import gui.CongMS;
-import gui.GuaiMS;
+import gui.LtMS;
 import scripting.NPCConversationManager;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
@@ -112,16 +112,6 @@ public class MobHandler
 
         final MapleCharacter controller = monster.getController();
 
-        if ( CongMS.ConfigValuesMap.get("怪物多倍地图倍率") < 1) {
-
-            try {
-                CheckMobVac(c, monster, res, startPos);
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-
         if (chr.getMapId() != 926013100 && chr.getMapId() != 926013200 && chr.getMapId() != 926013300 && chr.getMapId() != 926013400 && chr.getMapId() != 926013500) {
             try {
                 final boolean fly = monster.getStats().getFly();
@@ -185,10 +175,11 @@ public class MobHandler
                     if (GeneallyDistance_x > max_x) {
                         max_x = GeneallyDistance_x;
                     }
-                    if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
+                    if(LtMS.ConfigValuesMap.get("启用吸怪") ==0) {
                         if (((reduce_x > GeneallyDistance_x || reduce_y > GeneallyDistance_y) && reduce_y != 0) || (reduce_x > Check_x && reduce_y == 0) || reduce_x > max_x) {
                             chr.add吸怪();
                             if (c.getPlayer().get吸怪() % 50 == 0 || reduce_x > max_x) {
+                                chr.attractValue++;
                                 c.getPlayer().getCheatTracker().registerOffense(CheatingOffense.MOB_VAC, "(地图: " + chr.getMapId() + " 怪物數量:" + chr.get吸怪() + ")");
                                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chr.getName() + " (編號: " + chr.getId() + ")使用吸怪(" + chr.get吸怪() + ")! - 地图:" + chr.getMapId() + "(" + chr.getMap().getMapName() + ")"), true);
                                 final StringBuilder sb = new StringBuilder();
@@ -217,7 +208,7 @@ public class MobHandler
                                 sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_x), ' ', 4));
                                 sb.append(",");
                                 sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_y), ' ', 4));
-                                //FileoutputUtil.logToFile("logs/Hack/吸怪.txt", sb.toString());
+                                FileoutputUtil.logToFile("logs/Hack/吸怪.txt", sb.toString());
                                 if (!chr.hasGmLevel(1)) {
                                     for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
                                         //获取玩家
@@ -231,7 +222,30 @@ public class MobHandler
                                 } else {
 //                                c.getPlayer().dropMessage("觸發吸怪 --  x: " + reduce_x + ", y: " + reduce_y);
                                 }
+                                //处理吸怪
+                                if (chr.attractValue>LtMS.ConfigValuesMap.get("吸怪检测次数")) {
+                                    if ((LtMS.ConfigValuesMap.get("开启封锁")) > 0) {
+                                        if ((LtMS.ConfigValuesMap.get("封停账号")) > 0) {
+
+                                            if (chr.getClient() != null) {
+                                                chr.getClient().disconnect(true, false);
+                                                chr.getClient().getPlayer().ban("使用吸怪", true, true, false);
+                                                FileoutputUtil.logToFile("logs/Hack/吸怪封号.txt", sb.toString());
+//                                            chr.getClient().getSession().close();
+                                            }
+                                            chr.noAttractValue = 0;
+                                        }
+                                    }
+                                }
                             }
+                        }else{
+                            //有吸怪次数归零
+                            if (chr.noAttractValue>LtMS.ConfigValuesMap.get("吸怪误检测次数")){
+                                chr.attractValue=0;
+                            }else{
+                                chr.noAttractValue++;
+                            }
+
                         }
                     }
                 }

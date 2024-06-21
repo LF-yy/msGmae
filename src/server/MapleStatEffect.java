@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
 
+import bean.FieldSkills;
+import bean.SuperSkills;
 import client.ISkill;
 import client.MapleBuffStat;
 import client.MapleCharacter;
@@ -23,6 +25,7 @@ import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import constants.GameConstants;
 import gui.CongMS;
+import gui.LtMS;
 import handling.channel.ChannelServer;
 import provider.MapleData;
 import provider.MapleDataTool;
@@ -38,6 +41,7 @@ import server.maps.MapleSummon;
 import server.maps.SummonMovementType;
 import tools.MaplePacketCreator;
 import tools.Pair;
+import util.ListUtil;
 
 public class MapleStatEffect implements Serializable
 {
@@ -192,19 +196,19 @@ public class MapleStatEffect implements Serializable
         }
         final ArrayList<Pair<MapleBuffStat, Integer>> statups = new ArrayList<Pair<MapleBuffStat, Integer>>();
         ret.mastery = (byte)MapleDataTool.getInt("mastery", source, 0);
-        ret.watk = (short)MapleDataTool.getInt("pad", source, 0);
-        ret.wdef = (short)MapleDataTool.getInt("pdd", source, 0);
-        ret.matk = (short)MapleDataTool.getInt("mad", source, 0);
-        ret.mdef = (short)MapleDataTool.getInt("mdd", source, 0);
-        ret.ehp = (short)MapleDataTool.getInt("emhp", source, 0);
-        ret.emp = (short)MapleDataTool.getInt("emmp", source, 0);
-        ret.ewatk = (short)MapleDataTool.getInt("epad", source, 0);
-        ret.ewdef = (short)MapleDataTool.getInt("epdd", source, 0);
-        ret.emdef = (short)MapleDataTool.getInt("emdd", source, 0);
-        ret.acc = (short)MapleDataTool.getIntConvert("acc", source, 0);
-        ret.avoid = (short)MapleDataTool.getInt("eva", source, 0);
-        ret.speed = (short)MapleDataTool.getInt("speed", source, 0);
-        ret.jump = (short)MapleDataTool.getInt("jump", source, 0);
+        ret.watk = (short)MapleDataTool.getInt("pad", source, 0);//物理攻击
+        ret.wdef = (short)MapleDataTool.getInt("pdd", source, 0);//物理防御
+        ret.matk = (short)MapleDataTool.getInt("mad", source, 0);//魔法攻击
+        ret.mdef = (short)MapleDataTool.getInt("mdd", source, 0);//魔法防御
+        ret.ehp = (short)MapleDataTool.getInt("emhp", source, 0);//增强HP
+        ret.emp = (short)MapleDataTool.getInt("emmp", source, 0);//增强MP
+        ret.ewatk = (short)MapleDataTool.getInt("epad", source, 0);//增强_物理攻击
+        ret.ewdef = (short)MapleDataTool.getInt("epdd", source, 0);//增强_物理防御
+        ret.emdef = (short)MapleDataTool.getInt("emdd", source, 0);//增强_魔法防御
+        ret.acc = (short)MapleDataTool.getIntConvert("acc", source, 0);//命中率
+        ret.avoid = (short)MapleDataTool.getInt("eva", source, 0);//回避率
+        ret.speed = (short)MapleDataTool.getInt("speed", source, 0);//移动速度
+        ret.jump = (short)MapleDataTool.getInt("jump", source, 0);//跳跃力
         ret.expBuff = MapleDataTool.getInt("expBuff", source, 0);
         ret.range = MapleDataTool.getInt("range", source, 0);
         ret.cashup = MapleDataTool.getInt("cashBuff", source, 0);
@@ -212,7 +216,7 @@ public class MapleStatEffect implements Serializable
         ret.mesoup = MapleDataTool.getInt("mesoupbyitem", source, 0);
         ret.berserk = MapleDataTool.getInt("berserk", source, 0);
         ret.berserk2 = MapleDataTool.getInt("berserk2", source, 0);
-        ret.booster = MapleDataTool.getInt("booster", source, 0);
+        ret.booster = MapleDataTool.getInt("booster", source, 0);//攻击加速
         ret.illusion = MapleDataTool.getInt("illusion", source, 0);
         final List<MapleDisease> cure = new ArrayList<MapleDisease>(5);
         if (MapleDataTool.getInt("poison", source, 0) > 0) {
@@ -649,6 +653,7 @@ public class MapleStatEffect implements Serializable
                     break;
                 }
                 case 1321007:
+                case 1321011:
                 case 2221005:
                 case 2311006:
                 case 2321003:
@@ -807,6 +812,23 @@ public class MapleStatEffect implements Serializable
             applyto.getClient().sendPacket(MaplePacketCreator.enableActions());
             return false;
         }
+
+       if (this.getSuperSkillsStatus(applyfrom.getId(),this.sourceid)) {
+            //超级技能处理
+            List<SuperSkills> superSkills = Start.superSkillsMap.get(applyfrom.getId());
+            SuperSkills superSkills1 = superSkills.get(0);
+            final Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(superSkills1.getSkillLX(),superSkills1.getSkillLY()), new Point(superSkills1.getSkillRX(),superSkills1.getSkillRY()),superSkills1.getRange() );
+            //System.out.println("释放超级技能");
+            applyfrom.getMap().spawnSkill(applyfrom,applyfrom.isFacingLeft(),this,bounds,superSkills1);
+        }else if (this.getFieldSkillsStatus(applyfrom.getId(),this.sourceid)) {
+            //光环处理
+            List<FieldSkills> fieldSkills = Start.fieldSkillsMap.get(applyfrom.getId());
+            FieldSkills fieldSkills1 = fieldSkills.get(0);
+            Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(fieldSkills1.getSkillLX(),fieldSkills1.getSkillLY()), new Point(fieldSkills1.getSkillRX(),fieldSkills1.getSkillRY()),fieldSkills1.getRange() );
+            //System.out.println("释放随身光环");
+            applyfrom.getMap().spawnCoronaSkill(applyfrom,applyfrom.isFacingLeft(),this,bounds,fieldSkills1);
+        }
+
         int hpchange = this.calcHPChange(applyfrom, primary, dc);
         int mpchange = this.calcMPChange(applyfrom, primary, dc);
         final PlayerStats stat = applyto.getStat();
@@ -951,12 +973,13 @@ public class MapleStatEffect implements Serializable
                 applyto.dropMessage(5, "無法使用時空門，村莊不可容納。");
             }
         }
-        else if (this.isMist()) {
+        else if (this.isMist() && !this.getSuperSkillsStatus(applyfrom.getId(),this.sourceid)) {
             //致命毒雾处理
             final int addx = 0;
             final Rectangle bounds = this.calculateBoundingBox((pos != null) ? pos : applyfrom.getPosition(), applyfrom.isFacingLeft(), addx);
             final MapleMist mist = new MapleMist(bounds, applyfrom, this);//设置毒雾对象
-            applyfrom.getMap().spawnMist(mist, this.getDuration(), false);
+            //System.out.println("释放死亡毒雾");
+            applyfrom.getMap().spawnMist(mist,this.getDuration(), false);
         }
         else if (this.isTimeLeap()) {
             for (final MapleCoolDownValueHolder j : applyto.getCooldowns()) {
@@ -975,7 +998,22 @@ public class MapleStatEffect implements Serializable
         }
         return true;
     }
-    
+
+    boolean getFieldSkillsStatus(int userId,int skillId){
+        List<FieldSkills> fieldSkills = Start.fieldSkillsMap.get(userId);
+        if (ListUtil.isNotEmpty(fieldSkills)){
+            return fieldSkills.stream().anyMatch(f -> f.getSkillid() == skillId);
+        }
+        return false;
+    }
+    boolean getSuperSkillsStatus(int userId,int skillId){
+        List<SuperSkills> superSkills = Start.superSkillsMap.get(userId);
+        if (ListUtil.isNotEmpty(superSkills)){
+            return superSkills.stream().anyMatch(f -> f.getSkillid() == skillId);
+        }
+        return false;
+    }
+
     public final boolean applyReturnScroll(final MapleCharacter applyto) {
         if (this.moveTo != -1) {
             MapleMap target;
@@ -1163,7 +1201,7 @@ public class MapleStatEffect implements Serializable
     
     private void applyBuffEffect(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final int newDuration, final boolean dc) {
 //        int localDuration = newDuration;
-        int localDuration = (CongMS.ConfigValuesMap.get("无限BUFF") > 0) ? 8480832 : newDuration;
+        int localDuration = (LtMS.ConfigValuesMap.get("无限BUFF") > 0) ? 8480832 : newDuration;
         if (primary && applyto.getBuffedValue(MapleBuffStat.MORPH) == null) {
             localDuration = (dc ? newDuration : this.alchemistModifyVal(applyfrom, localDuration, false));
             applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.showBuffeffect(applyto.getId(), this.sourceid, 1), false);
@@ -1706,6 +1744,9 @@ public class MapleStatEffect implements Serializable
     public final boolean isBeholder() {
         return this.skill && this.sourceid == 1321007;
     }
+    public final boolean isBeholder1() {
+     return this.skill && this.sourceid == 1321011;
+    }
     
     public final boolean isMPRecovery() {
         return this.skill && this.sourceid == 5101005;
@@ -1971,6 +2012,7 @@ public class MapleStatEffect implements Serializable
                 return SummonMovementType.WALK_STATIONARY;
             }
             case 1321007:
+            case 1321011:
             case 2121005:
             case 2221005:
             case 2321003:

@@ -24,24 +24,24 @@ public class 活动野外通缉
 //            MapleParty.通缉地图 = 通缉[a][1];
             System.out.println("进入世界BOSS1");
             //获取地图
-            final MapleMap mapleMap = ChannelServer.getInstance(2).getMapFactory().getMap(CongMS.ConfigValuesMap.get("世界BOSS地图"));
+            final MapleMap mapleMap = ChannelServer.getInstance(2).getMapFactory().getMap(LtMS.ConfigValuesMap.get("世界BOSS地图"));
             System.out.println("进入世界BOSS2");
             for (MapleMonster mapleMonster : mapleMap.getAllMonster()) {
-                if (CongMS.ConfigValuesMap.get("世界BOSS") == mapleMonster.getId()) {
+                if (LtMS.ConfigValuesMap.get("世界BOSS") == mapleMonster.getId()) {
                     return;
                 }
             }
             System.out.println("进入世界BOSS3");
             //刷新怪物
-            //final MapleMonster mobName = MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS"));
-            for (int i = 0; i < CongMS.ConfigValuesMap.get("世界BOSS刷新数量"); i++) {
-                mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
+            //final MapleMonster mobName = MapleLifeFactory.getMonster(LtMS.ConfigValuesMap.get("世界BOSS"));
+            for (int i = 0; i < LtMS.ConfigValuesMap.get("世界BOSS刷新数量"); i++) {
+                mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(LtMS.ConfigValuesMap.get("世界BOSS")), new Point(LtMS.ConfigValuesMap.get("世界BOSSX坐标"), LtMS.ConfigValuesMap.get("世界BOSSY坐标")));
             }
-            //mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
-            //mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(CongMS.ConfigValuesMap.get("世界BOSS")), new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
+            //mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(LtMS.ConfigValuesMap.get("世界BOSS")), new Point(LtMS.ConfigValuesMap.get("世界BOSSX坐标"), LtMS.ConfigValuesMap.get("世界BOSSY坐标")));
+            //mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(LtMS.ConfigValuesMap.get("世界BOSS")), new Point(LtMS.ConfigValuesMap.get("世界BOSSX坐标"), LtMS.ConfigValuesMap.get("世界BOSSY坐标")));
             if (mapleMap.getAllMonster().size()>0) {
-//                mobName.setPosition(new Point(CongMS.ConfigValuesMap.get("世界BOSSX坐标"), CongMS.ConfigValuesMap.get("世界BOSSY坐标")));
-//                mobName.setHp(CongMS.ConfigValuesMap.get( "世界BOSS血量") * 100000000);
+//                mobName.setPosition(new Point(LtMS.ConfigValuesMap.get("世界BOSSX坐标"), LtMS.ConfigValuesMap.get("世界BOSSY坐标")));
+//                mobName.setHp(LtMS.ConfigValuesMap.get( "世界BOSS血量") * 100000000);
 //                mapleMap.spawnMonster(mobName, -2);
                 final String 信息 = "[世界BOSS] : 系统发布了一份通缉令，请前往2频道" + mapleMap.getMapName() + "击杀 世界BOSS,获取大量宝物";
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, 信息));

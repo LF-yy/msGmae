@@ -37,7 +37,7 @@ public class NPCScriptManager extends AbstractScriptManager
     public final void start(final MapleClient c, final int npc, final String script) {
         this.start(c, npc, 0, script);
     }
-    
+    //脚本开始
     public final void start(final MapleClient c, final int npc, final int mode, final String script) {
         final Lock lock = c.getNPCLock();
         lock.lock();

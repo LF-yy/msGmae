@@ -4,8 +4,9 @@ import io.netty.util.AttributeKey;
 import server.ServerProperties;
 import database.DatabaseConnection;
 import tools.MaplePacketCreator;
-import java.util.Collections;
-import java.util.ArrayList;
+
+import java.util.*;
+
 import constants.ServerConstants.PlayerGMRank;
 import server.Timer.PingTimer;
 import tools.packet.LoginPacket;
@@ -41,16 +42,10 @@ import java.sql.SQLException;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.ScheduledFuture;
 import javax.script.ScriptEngine;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.Calendar;
+
 import io.netty.channel.Channel;
 import tools.MapleAESOFB;
 
@@ -1096,7 +1091,20 @@ public class MapleClient
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
         }
     }
-    
+    public final void useSkill(final int skill, final int level) {
+        if (level <= 0) {
+            return;
+        }
+        if (Objects.nonNull(SkillFactory.getSkill(skill))) {
+            return;
+        }
+        try {
+            SkillFactory.getSkill(skill).getEffect(level).applyTo(this.player);
+        } catch (Exception e) {
+            System.out.println("Error using skill " + skill + " with level " + level + " on " + this.player.getName() + ": " + e);
+        }
+
+    }
     public int getVip() {
         return this.vip;
     }
@@ -1890,7 +1898,7 @@ public class MapleClient
     }
     
     static {
-        MapleClient.离线挂机 = Boolean.parseBoolean(ServerProperties.getProperty("CongMS.离线挂机"));
+        MapleClient.离线挂机 = Boolean.parseBoolean(ServerProperties.getProperty("LtMS.离线挂机"));
         CLIENT_KEY = AttributeKey.valueOf("Client");
         loginMutex = new ReentrantLock(true);
     }

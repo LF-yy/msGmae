@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Arrays;
 
 import gui.CongMS;
+import gui.LtMS;
 import handling.channel.handler.BeanGame;
 import handling.channel.handler.FamilyHandler;
 import handling.channel.handler.HiredMerchantHandler;
@@ -190,8 +191,10 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                     return;
                 }
                 if (c.getPlayer() != null && c.isMonitored() && !MapleServerHandler.blocked.contains((Object)recv)) {
-                    FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object)recv) + " (" + Integer.toHexString((int)header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
-                }
+                    if(LtMS.ConfigValuesMap.get("开启监测") == 1) {
+                        FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object) recv) + " (" + Integer.toHexString((int) header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
+                    }
+               }
                 try {
                     handlePacket(recv, slea, c, this.channel == -10);
                 }
@@ -240,7 +243,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
      * @throws Exception
      */
     public static final void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea, final MapleClient c, final boolean cs) throws Exception {
-        if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+        if(LtMS.ConfigValuesMap.get("开启封包调试") == 1 && header != RecvPacketOpcode.NPC_ACTION){
             System.out.println("封包编码:"+ header );
         }
         switch (header) {
@@ -263,34 +266,42 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 CharLoginHandler.handleLogin(slea, c);
                 break;
             }
+            //聊天室
             case ChatRoom_SYSTEM: {
                 PlayersHandler.ChatRoomHandler(slea, c);
                 break;
             }
+            //服务器列表请求
             case SERVERLIST_REQUEST: {
                 CharLoginHandler.ServerListRequest(c);
                 break;
             }
+            //查列表请求
             case CHARLIST_REQUEST: {
                 CharLoginHandler.CharlistRequest(slea, c);
                 break;
             }
+            //服务器状态请求
             case SERVERSTATUS_REQUEST: {
                 CharLoginHandler.ServerStatusRequest(c);
                 break;
             }
+            //检查字符名称
             case CHECK_CHAR_NAME: {
                 CharLoginHandler.checkCharName(slea.readMapleAsciiString(), c);
                 break;
             }
-            case CREATE_CHAR: {//创建角色
+            //创建角色
+            case CREATE_CHAR: {
                 CharLoginHandler.handleCreateCharacter(slea, c);
                 break;
             }
-            case DELETE_CHAR: {//删除角色
+            //删除角色
+            case DELETE_CHAR: {
                 CharLoginHandler.handleDeleteCharacter(slea, c);
                 break;
             }
+            //字符选择
             case CHAR_SELECT: {
                 CharLoginHandler.handleSecectCharacter(slea, c);
                 break;
@@ -447,10 +458,12 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             case LIE_DETECTOR_RESPONSE: {
                 PlayersHandler.LieDetectorResponse(slea, c);
             }
-            case ARAN_COMBO: { //增加战神连击点数
+            //增加战神连击点数
+            case ARAN_COMBO: {
                 PlayerHandler.AranCombo(c, c.getPlayer(), 1);
                 break;
             }
+            //技能宏
             case SKILL_MACRO: {
                 PlayerHandler.ChangeSkillMacro(slea, c.getPlayer());
                 break;
@@ -504,6 +517,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case USE_CASH_ITEM: {
+                //使用现金道具
                 InventoryHandler.UseCashItem(slea, c);
                 break;
             }
@@ -523,6 +537,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 InventoryHandler.UseReturnScroll(slea, c, c.getPlayer());
                 break;
             }
+            //正向
             case USE_UPGRADE_SCROLL: {
                 c.getPlayer().updateTick(slea.readInt());
                 InventoryHandler.UseUpgradeScroll((byte)slea.readShort(), (byte)slea.readShort(), (byte)slea.readShort(), c, c.getPlayer());
@@ -598,14 +613,17 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 NPCHandler.handleNPCShop(slea, c);
                 break;
             }
+            //打开脚本 NPC交流
             case NPC_TALK: {
                 NPCHandler.handleNPCTalk(slea, c, c.getPlayer());
                 break;
             }
+            //NPC 下一步交流
             case NPC_TALK_MORE: {
                 NPCHandler.NPCMoreTalk(slea, c);
                 break;
             }
+            //NPC动作
             case NPC_ACTION: {
                 NPCHandler.handleNPCAnimation(slea, c);
                 break;
@@ -949,8 +967,11 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 CharLoginHandler.LicenseRequest(slea, c);
                 break;
             }
+            case STRANGE_DATA:{
+                break;
+            }
             default:
-                if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+                if(LtMS.ConfigValuesMap.get("开启封包调试") == 1){
                     System.out.println("未知封包封包编码:"+ header );
                 }
         }

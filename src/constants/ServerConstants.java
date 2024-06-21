@@ -37,13 +37,13 @@ public class ServerConstants
     }
     
     public static void loadSetting() {
-        final String[] x = ServerProperties.getProperty("CongMS.cashshop.HotSell", "10000007, 10000008, 10000009, 10000010, 10000011").split(",");
+        final String[] x = ServerProperties.getProperty("LtMS.cashshop.HotSell", "10000007, 10000008, 10000009, 10000010, 10000011").split(",");
         final int[] y = new int[x.length];
         for (int i = 0; i < x.length; ++i) {
             y[i] = Integer.parseInt(x[i].replace((CharSequence)" ", (CharSequence)""));
         }
         ServerConstants.hot_sell = y;
-        ServerConstants.TESPIA = ServerProperties.getProperty("CongMS.tespia", ServerConstants.TESPIA);
+        ServerConstants.TESPIA = ServerProperties.getProperty("LtMS.tespia", ServerConstants.TESPIA);
         ServerConstants.Use_Fixed_IV = ServerProperties.getProperty("server.crypt", ServerConstants.Use_Fixed_IV);
     }
     

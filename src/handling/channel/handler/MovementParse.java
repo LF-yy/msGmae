@@ -2,6 +2,8 @@ package handling.channel.handler;
 
 import java.util.*;
 
+import gui.CongMS;
+import gui.LtMS;
 import scripting.NPCConversationManager;
 import server.movement.LifeMovement;
 import server.maps.AnimatedMapleMapObject;
@@ -22,6 +24,9 @@ public class MovementParse {
         }
         for (byte i = 0; i < numCommands; ++i) {
             final byte command = lea.readByte();
+            if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
+                System.out.println(command);
+            }
             switch (command) {
                 case 0:
                 case 5:

@@ -3,6 +3,7 @@ package client;
 import abc.套装系统完善版;
 import bean.SuitSystem;
 import gui.CongMS;
+import gui.LtMS;
 import server.*;
 import tools.data.MaplePacketLittleEndianWriter;
 import client.inventory.MapleWeaponType;
@@ -300,12 +301,12 @@ public class PlayerStats implements Serializable
     //角色属性整合
     public void recalcLocalStats(final boolean first_login) {
 
-        int 套装1装备数量 = CongMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
-        int 套装2装备数量 = CongMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
-        int 套装3装备数量 = CongMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
-        int 套装4装备数量 = CongMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
-        int 套装5装备数量 = CongMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
-        int 套装6装备数量 = CongMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
+        int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
+        int 套装2装备数量 = LtMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
+        int 套装3装备数量 = LtMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
+        int 套装4装备数量 = LtMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
+        int 套装5装备数量 = LtMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
+        int 套装6装备数量 = LtMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
         套装1是否共存 = true;
         套装2是否共存 = true;
         套装3是否共存 = true;
@@ -432,7 +433,7 @@ public class PlayerStats implements Serializable
             this.watk += equip.getWatk();
             speed += equip.getSpeed();
             jump += equip.getJump();
-            if (CongMS.ConfigValuesMap.get("套装系统开关") >= 1) {//开启
+            if (LtMS.ConfigValuesMap.get("套装系统开关") >= 1) {//开启
                 if (自定义套装1(equip.getItemId())) {
                     TZ1 += 1;
                 } else if (自定义套装2(equip.getItemId())) {
@@ -763,7 +764,7 @@ public class PlayerStats implements Serializable
         chra.TZ4 = chra.getStat().TZ4;
         chra.TZ5 = chra.getStat().TZ5;
         chra.TZ6 = chra.getStat().TZ6;
-        if (CongMS.ConfigValuesMap.get("套装叠加开关") == 0) {
+        if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {
             if (TZ1 >= 套装1装备数量 && TZ1 >= TZ2 || TZ1 >= 套装1装备数量 && TZ1 >= TZ3 || TZ1 >= 套装1装备数量 && TZ1 >= TZ4 || TZ1 >= 套装1装备数量 && TZ1 >= TZ5 || TZ1 >= 套装1装备数量 && TZ1 >= TZ6) {
                 chra.TZ2 = 0;
                 chra.TZ3 = 0;
@@ -1070,6 +1071,9 @@ public class PlayerStats implements Serializable
 //                this.dropBuff *= 4.0;
             }
             else {
+                if (buff>200){
+                    buff=200;
+                }
                 this.realDropBuff += (double)buff;
                 this.dropBuff *= (double)buff / 100.0;
             }
@@ -1299,7 +1303,1014 @@ public class PlayerStats implements Serializable
         }
         
     }
-    
+
+
+
+    //角色属性整合
+    public void recalcLocalStats1(final boolean first_login,final MapleCharacter chra) {
+
+        int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
+        int 套装2装备数量 = LtMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
+        int 套装3装备数量 = LtMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
+        int 套装4装备数量 = LtMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
+        int 套装5装备数量 = LtMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
+        int 套装6装备数量 = LtMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
+        套装1是否共存 = true;
+        套装2是否共存 = true;
+        套装3是否共存 = true;
+        套装4是否共存 = true;
+        套装5是否共存 = true;
+        套装6是否共存 = true;
+        if (chra.isClone()) {
+            return;
+        }
+        if (this.isRecalc) {
+            return;
+        }
+        this.isRecalc = true;
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        final int oldmaxhp = this.localmaxhp;
+        int localmaxhp_ = this.getMaxHp();
+        int localmaxmp_ = this.getMaxMp();
+        this.localdex = this.getDex();
+        this.localint_ = this.getInt();
+        this.localstr = this.getStr();
+        this.localluk = this.getLuk();
+        int speed = 100;
+        int jump = 100;
+        this.dotTime = 0;
+        int percent_hp = 0;//Hp增加x%
+        int percent_mp = 0;//Mp增加x%
+        int percent_str = 0; //力量增加x%
+        int percent_dex = 0;//敏捷增加x%
+        int percent_int = 0;//智力增加x%
+        int percent_luk = 0;//运气增加x%
+        int percent_acc = 0; //命中增加x%
+        int percent_atk = 0;//物理攻击力增加x%
+        int percent_matk = 0;//魔法攻击力增加x%
+        int added_sharpeye_rate = 0;//添加暴击率
+        int added_sharpeye_dmg = 0;//添加暴击伤害
+        this.magic = this.localint_;
+        this.watk = 0;
+        if (chra.getJob() == 500 || (chra.getJob() >= 520 && chra.getJob() <= 522)) {
+            this.watk = 20;
+        }
+        else if (chra.getJob() == 400 || (chra.getJob() >= 410 && chra.getJob() <= 412) || (chra.getJob() >= 1400 && chra.getJob() <= 1412)) {
+            this.watk = 30;
+        }
+        suitSys = new Hashtable<>();
+        suitSys.putAll(Start.suitSystemsMap);
+
+        this.dam_r = 100.0;//伤害
+        this.bossdam_r = 100.0;//boss伤害
+        this.realExpBuff = 100.0;
+        this.realCashBuff = 100.0;
+        this.realDropBuff = 100.0;
+        this.realMesoBuff = 100.0;
+        this.expBuff = 100.0;
+        this.cashBuff = 100.0;
+        this.dropBuff = 100.0;
+        this.mesoBuff = 100.0;
+        this.recoverHP = 0;
+        this.recoverMP = 0;
+        this.mpconReduce = 0;
+        this.incMesoProp = 0;
+        this.incRewardProp = 0;
+        this.DAMreflect = 0;
+        this.DAMreflect_rate = 0;
+        this.hpRecover = 0;
+        this.hpRecoverProp = 0;
+        this.mpRecover = 0;
+        this.mpRecoverProp = 0;
+        this.mpRestore = 0;
+        this.equippedWelcomeBackRing = false;
+        this.equippedRing = false;
+        this.equippedFairy = false;
+        this.hasMeso = false;
+        this.hasItem = false;
+        this.hasPartyBonus = false;
+        this.hasVac = false;
+        this.hasClone = false;
+        final boolean canEquipLevel = chra.getLevel() >= 120 && !GameConstants.isKOC((int)chra.getJob());
+        this.equipmentBonusExp = 0;
+        this.RecoveryUP = 0;
+        this.dropMod = 1;
+        this.dropm = 1.0;
+        this.expMod = 1;
+        this.expm = 1.0;
+
+        this.cashMod = 1;
+        this.TZ1 = 0;
+        this.TZ2 = 0;
+        this.TZ3 = 0;
+        this.TZ4 = 0;
+        this.TZ5 = 0;
+        this.TZ6 = 0;
+        this.精灵吊坠 = false;
+        this.levelBonus = 0;
+        this.incAllskill = 0;
+        this.durabilityHandling.clear();
+        this.equipLevelHandling.clear();
+        this.setHandling.clear();
+        this.element_fire = 100;
+        this.element_ice = 100;
+        this.element_light = 100;
+        this.element_psn = 100;
+        this.def = 100;
+        this.defRange = 0;
+        //装备属性合并
+        for (final IItem item : chra.getInventory(MapleInventoryType.EQUIPPED)) {
+            final IEquip equip = (IEquip)item;
+            if (equip.getPosition() == -11 && GameConstants.isMagicWeapon(equip.getItemId())) {
+                final Map<String, Integer> eqstat = MapleItemInformationProvider.getInstance().getEquipStats(equip.getItemId());
+                this.element_fire = (int)Integer.valueOf(eqstat.get((Object)"incRMAF"));
+                this.element_ice = (int)Integer.valueOf(eqstat.get((Object)"incRMAI"));
+                this.element_light = (int)Integer.valueOf(eqstat.get((Object)"incRMAL"));
+                this.element_psn = (int)Integer.valueOf(eqstat.get((Object)"incRMAS"));
+                this.def = (int)Integer.valueOf(eqstat.get((Object)"elemDefault"));
+            }
+            this.accuracy += equip.getAcc();
+            localmaxhp_ += equip.getHp();
+            localmaxmp_ += equip.getMp();
+            this.localdex += equip.getDex();
+            this.localint_ += equip.getInt();
+            this.localstr += equip.getStr();
+            this.localluk += equip.getLuk();
+            this.magic += equip.getMatk() + equip.getInt();
+            this.watk += equip.getWatk();
+            speed += equip.getSpeed();
+            jump += equip.getJump();
+            if (LtMS.ConfigValuesMap.get("套装系统开关") >= 1) {//开启
+                if (自定义套装1(equip.getItemId())) {
+                    TZ1 += 1;
+                } else if (自定义套装2(equip.getItemId())) {
+                    TZ2 += 1;
+                } else if (自定义套装3(equip.getItemId())) {
+                    TZ3 += 1;
+                } else if (自定义套装4(equip.getItemId())) {
+                    TZ4 += 1;
+                } else if (自定义套装5(equip.getItemId())) {
+                    TZ5 += 1;
+                } else if (自定义套装6(equip.getItemId())) {
+                    TZ6 += 1;
+                }
+                //统计套装
+                if (suitSys.keySet().stream().anyMatch(s -> s.contains("*"+equip.getItemId()+"*"))){
+                    suitSys.forEach((s, suitSystems) -> {
+                        if (s.contains("*"+equip.getItemId()+"*")){
+                            suitSystems.get(0).setHaveNub(suitSystems.get(0).getHaveNub()+1);
+                            if (suitSystems.get(0).getHaveNub()>=suitSystems.get(0).getTriggerNumber()){
+                                suitSystems.get(0).setEffective(true);
+                            }
+                        }
+                    });
+                }
+            }
+
+            switch (equip.getItemId()) {
+                case 1122017: {
+                    this.精灵吊坠 = true;
+                    this.equippedFairy = true;
+                    break;
+                }
+                case 1112427: {
+                    added_sharpeye_rate += 5;
+                    added_sharpeye_dmg += 20;
+                    break;
+                }
+                case 1112428: {
+                    added_sharpeye_rate += 10;
+                    added_sharpeye_dmg += 10;
+                    break;
+                }
+                case 1112429: {
+                    added_sharpeye_rate += 5;
+                    added_sharpeye_dmg += 20;
+                    break;
+                }
+                case 1112127: {
+                    this.equippedWelcomeBackRing = true;
+                    break;
+                }
+                case 1114000: {
+                    this.equippedRing = true;
+                    break;
+                }
+                case 1122086:
+                case 1122207:
+                case 1122215: {
+                    this.equippedFairy = true;
+                    break;
+                }
+                case 1812000: {
+                    this.hasMeso = true;
+                    break;
+                }
+                case 1812001: {
+                    this.hasItem = true;
+                    break;
+                }
+                default: {
+                    for (final int eb_bonus : GameConstants.Equipments_Bonus) {
+                        if (equip.getItemId() == eb_bonus) {
+                            this.equipmentBonusExp += GameConstants.Equipment_Bonus_EXP(eb_bonus);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            percent_hp += equip.getHpR();
+            percent_mp += equip.getMpR();
+            final int set = ii.getSetItemID(equip.getItemId());
+            if (set > 0) {
+                int value = 1;
+                if (this.setHandling.get((Object)Integer.valueOf(set)) != null) {
+                    value += (int)Integer.valueOf(this.setHandling.get((Object)Integer.valueOf(set)));
+                }
+                this.setHandling.put(Integer.valueOf(set), Integer.valueOf(value));
+            }
+
+            //潜能
+            if (equip.getState() > 1) {
+                final int[] array;
+                final int[] potentials = array = new int[] { equip.getPotential1(), equip.getPotential2(), equip.getPotential3() };
+                for (final int i : array) {
+                    if (i > 0) {
+                        final StructPotentialItem pot = (StructPotentialItem)ii.getPotentialInfo(i).get(ii.getReqLevel(equip.getItemId()) / 10);
+                        if (pot != null) {
+                            this.localstr += pot.incSTR;
+                            this.localdex += pot.incDEX;
+                            this.localint_ += pot.incINT;
+                            this.localluk += pot.incLUK;
+                            this.localmaxhp += pot.incMHP;
+                            this.localmaxmp += pot.incMMP;
+                            this.watk += pot.incPAD;
+                            this.magic += pot.incINT + pot.incMAD;
+                            speed += pot.incSpeed;
+                            jump += pot.incJump;
+                            this.accuracy += pot.incACC;
+                            this.incAllskill += pot.incAllskill;
+                            percent_hp += pot.incMHPr;
+                            percent_mp += pot.incMMPr;
+                            percent_str += pot.incSTRr;
+                            percent_dex += pot.incDEXr;
+                            percent_int += pot.incINTr;
+                            percent_luk += pot.incLUKr;
+                            percent_acc += pot.incACCr;
+                            percent_atk += pot.incPADr;
+                            percent_matk += pot.incMADr;
+                            added_sharpeye_rate += pot.incCr;
+                            added_sharpeye_dmg += pot.incCr;
+                            if (!pot.boss) {
+                                this.dam_r = Math.max((double)pot.incDAMr, this.dam_r);
+                            }
+                            else {
+                                this.bossdam_r = Math.max((double)pot.incDAMr, this.bossdam_r);
+                            }
+                            this.recoverHP += pot.RecoveryHP;
+                            this.recoverMP += pot.RecoveryMP;
+                            this.RecoveryUP += pot.RecoveryUP;
+                            if (pot.HP > 0) {
+                                this.hpRecover += pot.HP;
+                                this.hpRecoverProp += pot.prop;
+                            }
+                            if (pot.MP > 0) {
+                                this.mpRecover += pot.MP;
+                                this.mpRecoverProp += pot.prop;
+                            }
+                            this.mpconReduce += pot.mpconReduce;
+                            this.incMesoProp += pot.incMesoProp;
+                            this.incRewardProp += pot.incRewardProp;
+                            if (pot.DAMreflect > 0) {
+                                this.DAMreflect += pot.DAMreflect;
+                                this.DAMreflect_rate += pot.prop;
+                            }
+                            this.mpRestore += pot.mpRestore;
+                            if (!first_login && pot.skillID > 0) {
+                                chra.changeSkillLevel_Skip(SkillFactory.getSkill(this.getSkillByJob((int)pot.skillID, (int)chra.getJob())), (byte)1, (byte)1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (equip.getDurability() > 0) {
+                this.durabilityHandling.add((Equip)equip);
+            }
+            if (canEquipLevel && GameConstants.getMaxLevel(equip.getItemId()) > 0) {
+                if (GameConstants.getStatFromWeapon(equip.getItemId()) == null) {
+                    if (equip.getEquipLevel() > GameConstants.getMaxLevel(equip.getItemId())) {
+                        continue;
+                    }
+                }
+                else if (equip.getEquipLevel() >= GameConstants.getMaxLevel(equip.getItemId())) {
+                    continue;
+                }
+                this.equipLevelHandling.add((Equip)equip);
+            }
+
+        }
+        //套装属性设置
+        AtomicInteger hp = new AtomicInteger();
+        AtomicInteger mp = new AtomicInteger();
+        AtomicInteger rate = new AtomicInteger();
+        AtomicInteger dmg = new AtomicInteger();
+        suitSys.forEach((s, suitSystems) -> {
+            if (suitSystems.get(0).isEffective()){
+                localstr += suitSystems.get(0).getLocalstr();
+                localdex += suitSystems.get(0).getLocaldex();
+                localint_ += suitSystems.get(0).getLocalint();
+                localluk += suitSystems.get(0).getLocalluk();
+
+                localstr += suitSystems.get(0).getAllQuality();
+                localdex += suitSystems.get(0).getAllQuality();
+                localint_ += suitSystems.get(0).getAllQuality();
+                localluk += suitSystems.get(0).getAllQuality();
+
+                watk += suitSystems.get(0).Pad();
+                magic += suitSystems.get(0).getLocalint() + suitSystems.get(0).getMatk();
+                hp.addAndGet( suitSystems.get(0).getHp());
+                mp.addAndGet(suitSystems.get(0).getMp());
+
+                rate.addAndGet(suitSystems.get(0).getCrit());
+                dmg.addAndGet(suitSystems.get(0).getCritHarm());
+                dam_r +=  suitSystems.get(0).getHarm();
+                bossdam_r += suitSystems.get(0).getBossHarm() ;
+            }
+        });
+        localmaxhp += hp.get();
+        localmaxmp += mp.get();
+        passive_sharpeye_rate += rate.get();
+        passive_sharpeye_percent += dmg.get();
+        if (localmaxhp>=30000){
+            localmaxhp = 30000;
+        }
+        if (localmaxmp>=30000){
+            localmaxmp = 30000;
+        }
+        if(passive_sharpeye_rate>=100){
+            passive_sharpeye_rate = 100;
+        }
+
+        for (final Entry<Integer, Integer> entry : this.setHandling.entrySet()) {
+            final StructSetItem set2 = ii.getSetItem((int)Integer.valueOf(entry.getKey()));
+            if (set2 != null) {
+                final Map<Integer, SetItem> itemz = set2.getItems();
+                for (final Entry<Integer, SetItem> ent : itemz.entrySet()) {
+                    if ((int)Integer.valueOf(ent.getKey()) <= (int)Integer.valueOf(entry.getValue())) {
+                        final SetItem se = (SetItem)ent.getValue();
+                        this.localstr += se.incSTR;
+                        this.localdex += se.incDEX;
+                        this.localint_ += se.incINT;
+                        this.localluk += se.incLUK;
+                        this.watk += se.incPAD;
+                        this.magic += se.incINT + se.incMAD;
+                        speed += se.incSpeed;
+                        this.accuracy += se.incACC;
+                        localmaxhp_ += se.incMHP;
+                        localmaxmp_ += se.incMMP;
+                    }
+                }
+            }
+        }
+        final int hour = Calendar.getInstance().get(11);
+        final int weekDay = Calendar.getInstance().get(7);
+        if (chra.getMarriageId() > 0) {
+            this.expm = 1.1;
+            this.dropm = 1.1;
+        }
+
+        this.expMod = 1;
+        this.dropMod = 1;
+        //背包物品经验卡
+        for (final IItem item2 : chra.getInventory(MapleInventoryType.CASH)) {
+            if (this.expMod < 3 && (item2.getItemId() == 5211060 || item2.getItemId() == 5211050 || item2.getItemId() == 5211051 || item2.getItemId() == 5211052 || item2.getItemId() == 5211053 || item2.getItemId() == 5211054)) {
+                this.expMod = 3;
+            }
+            else if (this.expMod < 2 && (item2.getItemId() == 5211061 || item2.getItemId() == 5211000 || item2.getItemId() == 5211001 || item2.getItemId() == 5211002 || item2.getItemId() == 5211003 || item2.getItemId() == 5211046 || item2.getItemId() == 5211047 || item2.getItemId() == 5211048 || item2.getItemId() == 5211049)) {
+                this.expMod = 2;
+            }
+            else if (this.expMod < 2 && (item2.getItemId() == 5210002 || item2.getItemId() == 5210003) && ((hour >= 6 && hour <= 18 && weekDay >= 2 && weekDay <= 6) || weekDay == 1 || weekDay == 7)) {
+                this.expMod = 2;
+            }
+            else if (this.expMod < 2 && (item2.getItemId() == 5210004 || item2.getItemId() == 5210005 || item2.getItemId() == 521000) && (((hour >= 18 || hour <= 6) && weekDay >= 2 && weekDay <= 6) || weekDay == 1 || weekDay == 7)) {
+                this.expMod = 2;
+            }
+            else if (this.expMod < 2 && (item2.getItemId() == 5210000 || item2.getItemId() == 5210001) && ((hour >= 10 && hour <= 22 && weekDay >= 2 && weekDay <= 6) || weekDay == 1 || weekDay == 7)) {
+                this.expMod = 2;
+            }
+            if (this.dropMod == 1) {
+                if (item2.getItemId() == 5360015) {//双倍爆率卡
+                    this.dropMod = 2;
+                }
+                else if (item2.getItemId() == 5360000 && hour >= 0 && hour <= 6) {
+                    this.dropMod = 2;
+                }
+                else if (item2.getItemId() == 5360001 && hour >= 6 && hour <= 12) {
+                    this.dropMod = 2;
+                }
+                else if (item2.getItemId() == 5360002 && hour >= 12 && hour <= 18) {
+                    this.dropMod = 2;
+                }
+                else if (item2.getItemId() == 5360003 && hour >= 18 && hour <= 24) {
+                    this.dropMod = 2;
+                }
+            }
+            if (item2.getItemId() == 5650000) {
+                this.hasPartyBonus = true;
+            }
+            else if (item2.getItemId() == 5590001) {
+                this.levelBonus = 10;
+            }
+            else {
+                if (this.levelBonus != 0 || item2.getItemId() != 5590000) {
+                    continue;
+                }
+                this.levelBonus = 5;
+            }
+        }
+        if (chra.getHiredChannel() > 0) {
+            this.expMod_H = 10;
+        }
+        //梯级经验设置
+        if (chra.getLevel() >= 1 && chra.getLevel() <= 120) {
+            this.expMod *= ServerConfig.BeiShu1;
+        }
+        else if (chra.getLevel() > 120 && chra.getLevel() <= 200) {
+            this.expMod *= ServerConfig.BeiShu2;
+        }
+        else if (chra.getLevel() > 200 && chra.getLevel() <= 250) {
+            this.expMod *= ServerConfig.BeiShu3;
+        }
+        for (final IItem item2 : chra.getInventory(MapleInventoryType.ETC)) {
+            switch (item2.getItemId()) {
+                case 5062000: {
+                    this.hasVac = true;
+                    continue;
+                }
+                case 4030004: {
+                    this.hasClone = true;
+                    continue;
+                }
+                case 4030005: {
+                    this.cashMod = 2;
+                    continue;
+                }
+                case 4101000:
+                case 4101002: {
+                    this.equippedFairy = true;
+                    chra.setFairyExp((byte)30);
+                    continue;
+                }
+            }
+        }
+        chra.TZ1 = chra.getStat().TZ1;
+        chra.TZ2 = chra.getStat().TZ2;
+        chra.TZ3 = chra.getStat().TZ3;
+        chra.TZ4 = chra.getStat().TZ4;
+        chra.TZ5 = chra.getStat().TZ5;
+        chra.TZ6 = chra.getStat().TZ6;
+        if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {
+            if (TZ1 >= 套装1装备数量 && TZ1 >= TZ2 || TZ1 >= 套装1装备数量 && TZ1 >= TZ3 || TZ1 >= 套装1装备数量 && TZ1 >= TZ4 || TZ1 >= 套装1装备数量 && TZ1 >= TZ5 || TZ1 >= 套装1装备数量 && TZ1 >= TZ6) {
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = true;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ2 >= 套装2装备数量 && TZ2 >= TZ1 || TZ2 >= 套装2装备数量 && TZ2 >= TZ3 || TZ2 >= 套装2装备数量 && TZ2 >= TZ4 || TZ2 >= 套装2装备数量 && TZ2 >= TZ5 || TZ2 >= 套装2装备数量 && TZ2 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = true;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ3 >= 套装3装备数量 && TZ3 >= TZ1 || TZ3 >= 套装3装备数量 && TZ3 >= TZ2 || TZ3 >= 套装3装备数量 && TZ3 >= TZ4 || TZ3 >= 套装3装备数量 && TZ3 >= TZ5 || TZ3 >= 套装3装备数量 && TZ3 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = true;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ4 >= 套装4装备数量 && TZ4 >= TZ1 || TZ4 >= 套装4装备数量 && TZ4 >= TZ2 || TZ4 >= 套装4装备数量 && TZ4 >= TZ3 || TZ4 >= 套装4装备数量 && TZ4 >= TZ5 || TZ4 >= 套装4装备数量 && TZ4 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ5 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ5 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = true;
+                套装5是否共存 = false;
+                套装6是否共存 = false;
+            } else if (TZ5 >= 套装5装备数量 && TZ5 >= TZ1 || TZ5 >= 套装5装备数量 && TZ5 >= TZ2 || TZ5 >= 套装5装备数量 && TZ5 >= TZ3 || TZ5 >= 套装5装备数量 && TZ5 >= TZ4 || TZ5 >= 套装5装备数量 && TZ5 >= TZ6) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ6 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ6 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = true;
+                套装6是否共存 = false;
+            } else if (TZ6 >= 套装6装备数量 && TZ6 >= TZ1 || TZ6 >= 套装6装备数量 && TZ6 >= TZ2 || TZ6 >= 套装6装备数量 && TZ6 >= TZ3 || TZ6 >= 套装6装备数量 && TZ6 >= TZ4 || TZ6 >= 套装6装备数量 && TZ6 >= TZ5) {
+                chra.TZ1 = 0;
+                chra.TZ2 = 0;
+                chra.TZ3 = 0;
+                chra.TZ4 = 0;
+                chra.TZ5 = 0;
+                chra.getStat().TZ1 = 0;
+                chra.getStat().TZ2 = 0;
+                chra.getStat().TZ3 = 0;
+                chra.getStat().TZ4 = 0;
+                chra.getStat().TZ5 = 0;
+                套装1是否共存 = false;
+                套装2是否共存 = false;
+                套装3是否共存 = false;
+                套装4是否共存 = false;
+                套装5是否共存 = false;
+                套装6是否共存 = true;
+            }
+        }
+        chra.套装1是否共存 = 套装1是否共存;
+        chra.套装2是否共存 = 套装2是否共存;
+        chra.套装3是否共存 = 套装3是否共存;
+        chra.套装4是否共存 = 套装4是否共存;
+        chra.套装5是否共存 = 套装5是否共存;
+        chra.套装6是否共存 = 套装6是否共存;
+        for (final IItem item2 : chra.getInventory(MapleInventoryType.CASH)) {
+            switch (item2.getItemId()) {
+                case 5062000: {
+                    this.hasVac = true;
+                    continue;
+                }
+            }
+        }
+        this.magic += chra.getSkillLevel(SkillFactory.getSkill(22000000));
+        this.localstr = (int)((float)this.localstr + (float)(percent_str * this.localstr) / 100.0f);
+        this.localdex = (int)((float)this.localdex + (float)(percent_dex * this.localdex) / 100.0f);
+        final int before_ = this.localint_;
+        this.localint_ = (int)((float)this.localint_ + (float)(percent_int * this.localint_) / 100.0f);
+        this.magic += this.localint_ - before_;
+        this.localluk = (int)((float)this.localluk + (float)(percent_luk * this.localluk) / 100.0f);
+        this.accuracy = (int)((float)this.accuracy + (float)(percent_acc * this.accuracy) / 100.0f);
+        this.watk = (int)((float)this.watk + (float)(percent_atk * this.watk) / 100.0f);
+        this.magic = (int)((float)this.magic + (float)(percent_matk * this.magic) / 100.0f);
+        localmaxhp_ = (int)((float)localmaxhp_ + (float)(percent_hp * localmaxhp_) / 100.0f);
+        localmaxmp_ = (int)((float)localmaxmp_ + (float)(percent_mp * localmaxmp_) / 100.0f);
+        this.magic = Math.min(this.magic, 1999);
+        Integer buff = chra.getBuffedValue(MapleBuffStat.MAPLE_WARRIOR);
+        if (buff != null) {
+            final double d = (double)buff / 100.0;
+            this.localstr = (int)((double)this.localstr + d * (double)this.str);
+            this.localdex = (int)((double)this.localdex + d * (double)this.dex);
+            this.localluk = (int)((double)this.localluk + d * (double)this.luk);
+            final int before = this.localint_;
+            this.localint_ = (int)((double)this.localint_ + d * (double)this.int_);
+            this.magic += this.localint_ - before;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.ECHO_OF_HERO);
+        if (buff != null) {
+            final double d = (double)buff / 100.0;
+            this.watk += (int)((double)this.watk * d);
+            this.magic += (int)((double)this.magic * d);
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.ARAN_COMBO);
+        if (buff != null) {
+            this.watk += (int)buff / 10;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.MAXHP);
+        if (buff != null) {
+            localmaxhp_ = (int)((double)localmaxhp_ + (double)buff / 100.0 * (double)localmaxhp_);
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.MAXMP);
+        if (buff != null) {
+            localmaxmp_ = (int)((double)localmaxmp_ + (double)buff / 100.0 * (double)localmaxmp_);
+        }
+        switch (chra.getJob()) {
+            case 322: {
+                final ISkill expert = SkillFactory.getSkill(3220004);
+                final int boostLevel = chra.getSkillLevel(expert);
+                if (boostLevel > 0) {
+                    this.watk += expert.getEffect(boostLevel).getX();
+                    break;
+                }
+                break;
+            }
+            case 312: {
+                final ISkill expert = SkillFactory.getSkill(3120005);
+                final int boostLevel = chra.getSkillLevel(expert);
+                if (boostLevel > 0) {
+                    this.watk += expert.getEffect(boostLevel).getX();
+                    break;
+                }
+                break;
+            }
+            case 211:
+            case 212: {
+                final ISkill amp = SkillFactory.getSkill(2110001);
+                final int level = chra.getSkillLevel(amp);
+                if (level > 0) {
+                    this.dam_r *= (double)amp.getEffect(level).getY() / 100.0;
+                    this.bossdam_r *= (double)amp.getEffect(level).getY() / 100.0;
+                    break;
+                }
+                break;
+            }
+            case 221:
+            case 222: {
+                final ISkill amp = SkillFactory.getSkill(2210001);
+                final int level = chra.getSkillLevel(amp);
+                if (level > 0) {
+                    this.dam_r *= (double)amp.getEffect(level).getY() / 100.0;
+                    this.bossdam_r *= (double)amp.getEffect(level).getY() / 100.0;
+                    break;
+                }
+                break;
+            }
+            case 1211:
+            case 1212: {
+                final ISkill amp = SkillFactory.getSkill(12110001);
+                final int level = chra.getSkillLevel(amp);
+                if (level > 0) {
+                    this.dam_r *= (double)amp.getEffect(level).getY() / 100.0;
+                    this.bossdam_r *= (double)amp.getEffect(level).getY() / 100.0;
+                    break;
+                }
+                break;
+            }
+            case 2112: {
+                final ISkill expert = SkillFactory.getSkill(21120001);
+                final int boostLevel = chra.getSkillLevel(expert);
+                if (boostLevel > 0) {
+                    this.watk += expert.getEffect(boostLevel).getX();
+                    break;
+                }
+                break;
+            }
+        }
+        final ISkill blessoffairy = SkillFactory.getSkill(GameConstants.getBofForJob((int)chra.getJob()));
+        final int boflevel = chra.getSkillLevel(blessoffairy);
+        if (boflevel > 0) {
+            this.watk += blessoffairy.getEffect(boflevel).getX();
+            this.magic += blessoffairy.getEffect(boflevel).getY();
+            this.accuracy += blessoffairy.getEffect(boflevel).getX();
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.EXPRATE);
+        if (buff != null) {
+            this.expBuff *= (double)buff / 100.0;
+            this.realExpBuff += (double)buff;
+        }
+        if (chra.isBuffedValue(2382046)) {
+//            this.realMesoBuff += 100.0;
+//            this.mesoBuff *= 2.0;
+//            this.realDropBuff += 200.0;
+//            this.dropBuff *= 3.0;
+        }
+        else if (chra.isBuffedValue(2382028)) {
+//            this.realMesoBuff += 100.0;
+//            this.mesoBuff *= 2.0;
+//            this.realDropBuff += 200.0;
+//            this.dropBuff *= 3.0;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.DROP_RATE);
+        if (buff != null) {
+            if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2022462) {
+                this.realDropBuff += 50.0;
+                this.dropBuff *= 1.5;
+            }
+            else
+            if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382028) {
+                switch (chra.getMapId()) {
+                    case 100040101:
+                    case 100040102:
+                    case 100040103:
+                    case 100040104:
+                    case 107000401:
+                    case 107000402:
+                    case 107000403:
+                    case 191000000: {
+                        this.realDropBuff += (double)buff;
+                        this.dropBuff *= (double)buff / 100.0;
+                        break;
+                    }
+                }
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382028) {
+                switch (chra.getMapId()) {
+                    case 222020100:
+                    case 222020200:
+                    case 222020300: {
+                        this.realDropBuff += (double)buff;
+                        this.dropBuff *= (double)buff / 100.0;
+                        break;
+                    }
+                }
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382001) {
+//                this.realMesoBuff += 100.0;
+//                this.mesoBuff *= 2.0;
+//                this.realDropBuff += 200.0;
+//                this.dropBuff *= 3.0;
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2382040) {
+//                this.realMesoBuff += 100.0;
+//                this.mesoBuff *= 2.0;
+//                this.realDropBuff += 200.0;
+//                this.dropBuff *= 3.0;
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2383003) {
+//                this.realMesoBuff += 100.0;
+//                this.mesoBuff *= 2.0;
+//                this.realDropBuff += 200.0;
+//                this.dropBuff *= 3.0;
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2383006) {
+//                this.realDropBuff += 300.0;
+//                this.dropBuff *= 4.0;
+            }
+            else if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2383010) {
+//                this.realDropBuff += 300.0;
+//                this.dropBuff *= 4.0;
+            }
+            else {
+                if (buff>200){
+                    buff=200;
+                }
+                this.realDropBuff += (double)buff;
+                this.dropBuff *= (double)buff / 100.0;
+            }
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.ACASH_RATE);
+        if (buff != null) {
+            this.realCashBuff += (double)buff;
+            this.cashBuff *= (double)buff / 100.0;
+        }
+
+        buff = chra.getBuffedValue(MapleBuffStat.MESO_RATE);
+        if (buff != null) {
+            if (chra.getBuffSource(MapleBuffStat.MESO_RATE) == 2382005 || chra.getBuffSource(MapleBuffStat.MESO_RATE) == 2382016) {
+                if (chra.getMapId() >= 221020000 && chra.getMapId() <= 221024400) {
+                    this.mesoBuff *= (double)buff / 100.0;
+                    this.realMesoBuff += (double)buff;
+                }
+            }
+            else if (chra.getBuffSource(MapleBuffStat.MESO_RATE) == 2022459) {
+                this.realMesoBuff += 30.0;
+                this.mesoBuff *= 1.3;
+            }
+            else if (chra.getBuffSource(MapleBuffStat.MESO_RATE) == 2022460) {
+                this.realMesoBuff += 50.0;
+                this.mesoBuff *= 1.5;
+            }
+            else {
+                this.realMesoBuff += (double)buff;
+                this.mesoBuff *= (double)buff / 100.0;
+            }
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.MESOUP);
+        if (buff != null) {
+            this.realMesoBuff += (double)buff;
+            this.mesoBuff *= (double)buff / 100.0;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.ACC);
+        if (buff != null) {
+            this.accuracy += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.WATK);
+        if (buff != null) {
+            this.watk += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.MATK);
+        if (buff != null) {
+            this.magic += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.SPEED);
+        if (buff != null) {
+            speed += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.JUMP);
+        if (buff != null) {
+            jump += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.DASH_SPEED);
+        if (buff != null) {
+            speed += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.DASH_JUMP);
+        if (buff != null) {
+            jump += (int)buff;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.WIND_WALK);
+        if (buff != null) {
+            final MapleStatEffect eff = chra.getStatForBuff(MapleBuffStat.WIND_WALK);
+            this.dam_r *= (double)eff.getDamage() / 100.0;
+            this.bossdam_r *= (double)eff.getDamage() / 100.0;
+        }
+        buff = chra.getBuffedSkill_Y(MapleBuffStat.OWL_SPIRIT);
+        if (buff != null) {
+            this.dam_r *= (double)buff / 100.0;
+            this.bossdam_r *= (double)buff / 100.0;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.BERSERK_FURY);
+        if (buff != null) {
+            this.dam_r *= 2.0;
+            this.bossdam_r *= 2.0;
+        }
+        final ISkill bx = SkillFactory.getSkill(1320006);
+        if (chra.getSkillLevel(bx) > 0) {
+            this.dam_r *= (double)bx.getEffect((int)chra.getSkillLevel(bx)).getDamage() / 100.0;
+            this.bossdam_r *= (double)bx.getEffect((int)chra.getSkillLevel(bx)).getDamage() / 100.0;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.WK_CHARGE);
+        if (buff != null) {
+            final MapleStatEffect eff2 = chra.getStatForBuff(MapleBuffStat.WK_CHARGE);
+            this.dam_r *= (double)eff2.getDamage() / 100.0;
+            this.bossdam_r *= (double)eff2.getDamage() / 100.0;
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.MONSTER_RIDING);
+        if (buff != null) {
+            final MapleStatEffect eff2 = chra.getStatForBuff(MapleBuffStat.MONSTER_RIDING);
+            this.pickRate = eff2.getProb();
+        }
+        buff = chra.getBuffedValue(MapleBuffStat.LIGHTNING_CHARGE);
+        if (buff != null) {
+            final MapleStatEffect eff2 = chra.getStatForBuff(MapleBuffStat.LIGHTNING_CHARGE);
+            this.dam_r *= (double)eff2.getDamage() / 100.0;
+            this.bossdam_r *= (double)eff2.getDamage() / 100.0;
+        }
+        buff = chra.getBuffedSkill_X(MapleBuffStat.SHARP_EYES);
+        if (buff != null) {
+            added_sharpeye_rate += (int)buff;
+        }
+        buff = chra.getBuffedSkill_Y(MapleBuffStat.SHARP_EYES);
+        if (buff != null) {
+            added_sharpeye_dmg += (int)buff - 100;
+        }
+        if (speed > 140) {
+            speed = 140;
+        }
+        if (jump > 123) {
+            jump = 123;
+        }
+        this.speedMod = (float)speed / 100.0f;
+        this.jumpMod = (float)jump / 100.0f;
+        final Integer mount = chra.getBuffedValue(MapleBuffStat.MONSTER_RIDING);
+        if (mount != null) {
+            this.jumpMod = 1.23f;
+            switch ((int)mount) {
+                case 1: {
+                    this.speedMod = 1.5f;
+                    break;
+                }
+                case 2: {
+                    this.speedMod = 1.7f;
+                    break;
+                }
+                case 3: {
+                    this.speedMod = 1.8f;
+                    break;
+                }
+                default: {
+                    System.err.println("Unhandeled monster riding level, Speedmod = " + this.speedMod + "");
+                    break;
+                }
+            }
+        }
+        this.hands = this.localdex + this.localint_ + this.localluk;
+        this.localmaxhp = (short)Math.min(30000, Math.abs(Math.max(-30000, localmaxhp_)));
+        this.localmaxmp = (short)Math.min(30000, Math.abs(Math.max(-30000, localmaxmp_)));
+        this.CalcPassive_SharpEye(chra, added_sharpeye_rate, added_sharpeye_dmg);
+        this.CalcPassive_Mastery(chra);
+        this.CalcPassive_Range(chra);
+        if (first_login) {
+            chra.silentEnforceMaxHpMp();
+        }
+        else {
+            chra.enforceMaxHpMp();
+        }
+        this.localmaxbasedamage = this.calculateMaxBaseDamage(this.magic, this.watk);
+        if (oldmaxhp != 0 && oldmaxhp != this.localmaxhp) {
+            chra.updatePartyMemberHP();
+        }
+        this.isRecalc = false;
+
+
+        switch (chra.getJob()){
+            //战士
+            case 110:
+            case 111:
+            case 112:
+            case 120:
+            case 121:
+            case 122:
+            case 130:
+            case 131:
+            case 132:
+            case 2000:
+            case 2100:
+            case 2110:
+            case 2111:
+            case 2112:
+                damage = (long) ((this.localstr*4L+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //法师
+            case 200:
+            case 210:
+            case 211:
+            case 212:
+            case 220:
+            case 221:
+            case 222:
+            case 230:
+            case 231:
+            case 232:
+                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_*4L)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //射手
+            case 300:
+            case 310:
+            case 311:
+            case 312:
+            case 320:
+            case 321:
+            case 322:
+
+                damage = (long) ((this.localstr+this.localdex*4L+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //飞侠
+            case 400:
+            case 410:
+            case 411:
+            case 412:
+            case 420:
+            case 421:
+            case 422:
+
+                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            //海盗
+            case 500:
+            case 510:
+            case 511:
+            case 512:
+            case 520:
+            case 521:
+            case 522:
+                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+            default:
+                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                break;
+
+        }
+
+    }
+
     public boolean checkEquipLevels(final MapleCharacter chr, final int gain) {
         boolean changed = false;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();

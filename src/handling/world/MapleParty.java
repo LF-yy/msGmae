@@ -105,6 +105,9 @@ public class MapleParty implements Serializable
     public static boolean 蘑菇剧情第一阶段启动状态;
     public static long 蘑菇剧情第一阶段时间;
     public static int 蘑菇第一阶段配置设定间隔时间;
+    public static boolean 怪物倍怪;
+    public static int 怪物倍率;
+
     private void calculateAverageLevel() {
         int value = 0;
         for (final MaplePartyCharacter chr : this.members) {
@@ -209,7 +212,7 @@ public class MapleParty implements Serializable
     
     static {
         MapleParty.开服名字 = "冒险岛";
-        MapleParty.IP地址 = ServerProperties.getProperty("CongMS.CustomIP");
+        MapleParty.IP地址 = ServerProperties.getProperty("LtMS.CustomIP");
         MapleParty.互相伤害 = 0;
         MapleParty.活动经验倍率 = 1;
         MapleParty.活动爆率倍率 = 1;

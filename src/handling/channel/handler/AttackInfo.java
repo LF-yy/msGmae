@@ -63,4 +63,140 @@ public class AttackInfo
             return skill_.getEffect(skillLevel);
         }
     }
+
+    public int getSkill() {
+        return skill;
+    }
+
+    public void setSkill(int skill) {
+        this.skill = skill;
+    }
+
+    public int getCharge() {
+        return charge;
+    }
+
+    public void setCharge(int charge) {
+        this.charge = charge;
+    }
+
+    public int getLastAttackTickCount() {
+        return lastAttackTickCount;
+    }
+
+    public void setLastAttackTickCount(int lastAttackTickCount) {
+        this.lastAttackTickCount = lastAttackTickCount;
+    }
+
+    public List<AttackPair> getAllDamage() {
+        return allDamage;
+    }
+
+    public void setAllDamage(List<AttackPair> allDamage) {
+        this.allDamage = allDamage;
+    }
+
+    public Point getPosition() {
+        return position;
+    }
+
+    public void setPosition(Point position) {
+        this.position = position;
+    }
+
+    public Point getPositionxy() {
+        return positionxy;
+    }
+
+    public void setPositionxy(Point positionxy) {
+        this.positionxy = positionxy;
+    }
+
+    public byte getHits() {
+        return hits;
+    }
+
+    public void setHits(byte hits) {
+        this.hits = hits;
+    }
+
+    public byte getTargets() {
+        return targets;
+    }
+
+    public void setTargets(byte targets) {
+        this.targets = targets;
+    }
+
+    public byte getTbyte() {
+        return tbyte;
+    }
+
+    public void setTbyte(byte tbyte) {
+        this.tbyte = tbyte;
+    }
+
+    public byte getDisplay() {
+        return display;
+    }
+
+    public void setDisplay(byte display) {
+        this.display = display;
+    }
+
+    public byte getAnimation() {
+        return animation;
+    }
+
+    public void setAnimation(byte animation) {
+        this.animation = animation;
+    }
+
+    public byte getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(byte speed) {
+        this.speed = speed;
+    }
+
+    public byte getCsstar() {
+        return csstar;
+    }
+
+    public void setCsstar(byte csstar) {
+        this.csstar = csstar;
+    }
+
+    public byte getAOE() {
+        return AOE;
+    }
+
+    public void setAOE(byte AOE) {
+        this.AOE = AOE;
+    }
+
+    public byte getSlot() {
+        return slot;
+    }
+
+    public void setSlot(byte slot) {
+        this.slot = slot;
+    }
+
+    public byte getUnk() {
+        return unk;
+    }
+
+    public void setUnk(byte unk) {
+        this.unk = unk;
+    }
+
+    public boolean isReal() {
+        return real;
+    }
+
+    public void setReal(boolean real) {
+        this.real = real;
+    }
 }

@@ -40,8 +40,14 @@ public class ServerConfig
     public static int maxlevel;
     public static int kocmaxlevel;
     public static int BeiShu1;
+    public static int BeiShu1Minlevel = (ServerProperties.getProperty("LtMS.BeiShu1Minlevel", ServerConfig.BeiShu1Minlevel));
+    public static int BeiShu1Maxlevel = (ServerProperties.getProperty("LtMS.BeiShu1Maxlevel", ServerConfig.BeiShu1Maxlevel));
     public static int BeiShu2;
+    public static int BeiShu2Minlevel = (ServerProperties.getProperty("LtMS.BeiShu2Minlevel", ServerConfig.BeiShu2Minlevel));
+    public static int BeiShu2Maxlevel = (ServerProperties.getProperty("LtMS.BeiShu2Maxlevel", ServerConfig.BeiShu2Maxlevel));
     public static int BeiShu3;
+    public static int BeiShu3Minlevel = (ServerProperties.getProperty("LtMS.BeiShu3Minlevel", ServerConfig.BeiShu3Minlevel));
+    public static int BeiShu3Maxlevel = (ServerProperties.getProperty("LtMS.BeiShu3Maxlevel", ServerConfig.BeiShu3Maxlevel));
     public static String[] ipStr;
     public static final byte[] Gateway_IP;
     public static final byte[] Gateway_IP2;
@@ -167,20 +173,21 @@ public class ServerConfig
     }
     
     public static void loadSetting() {
-        ServerConfig.LOG_MRECHANT = ServerProperties.getProperty("CongMS.merchantLog", ServerConfig.LOG_MRECHANT);
-        ServerConfig.LOG_MEGA = ServerProperties.getProperty("CongMS.megaLog", ServerConfig.LOG_MEGA);
-        ServerConfig.LOG_CSBUY = ServerProperties.getProperty("CongMS.csLog", ServerConfig.LOG_CSBUY);
-        ServerConfig.LOG_DAMAGE = ServerProperties.getProperty("CongMS.damLog", ServerConfig.LOG_DAMAGE);
-        ServerConfig.LOG_CHAT = ServerProperties.getProperty("CongMS.chatLog", ServerConfig.LOG_CHAT);
-        ServerConfig.LOG_PACKETS = ServerProperties.getProperty("CongMS.packetLog", ServerConfig.LOG_PACKETS);
-        ServerConfig.AUTO_REGISTER = ServerProperties.getProperty("CongMS.autoRegister", ServerConfig.AUTO_REGISTER);
-        ServerConfig.SERVERNAME = ServerProperties.getProperty("CongMS.serverName", ServerConfig.SERVERNAME);
-        ServerConfig.DEBUG_MODE = ServerProperties.getProperty("CongMS.debug", ServerConfig.DEBUG_MODE);
-        ServerConfig.BeiShu1 = ServerProperties.getProperty("CongMS.BeiShu1", ServerConfig.BeiShu1);
-        ServerConfig.BeiShu2 = ServerProperties.getProperty("CongMS.BeiShu2", ServerConfig.BeiShu2);
-        ServerConfig.BeiShu3 = ServerProperties.getProperty("CongMS.BeiShu3", ServerConfig.BeiShu3);
-        ServerConfig.BeiShu3 = ServerProperties.getProperty("CongMS.BeiShu3", ServerConfig.BeiShu3);
-        ServerConfig.IP =  ServerProperties.getProperty("CongMS.ip.listen", Game.IP地址);
+        ServerConfig.LOG_MRECHANT = ServerProperties.getProperty("LtMS.merchantLog", ServerConfig.LOG_MRECHANT);
+        ServerConfig.LOG_MEGA = ServerProperties.getProperty("LtMS.megaLog", ServerConfig.LOG_MEGA);
+        ServerConfig.LOG_CSBUY = ServerProperties.getProperty("LtMS.csLog", ServerConfig.LOG_CSBUY);
+        ServerConfig.LOG_DAMAGE = ServerProperties.getProperty("LtMS.damLog", ServerConfig.LOG_DAMAGE);
+        ServerConfig.LOG_CHAT = ServerProperties.getProperty("LtMS.chatLog", ServerConfig.LOG_CHAT);
+        ServerConfig.LOG_PACKETS = ServerProperties.getProperty("LtMS.packetLog", ServerConfig.LOG_PACKETS);
+        ServerConfig.AUTO_REGISTER = ServerProperties.getProperty("LtMS.autoRegister", ServerConfig.AUTO_REGISTER);
+        ServerConfig.SERVERNAME = ServerProperties.getProperty("LtMS.serverName", ServerConfig.SERVERNAME);
+        ServerConfig.DEBUG_MODE = ServerProperties.getProperty("LtMS.debug", ServerConfig.DEBUG_MODE);
+        ServerConfig.BeiShu1 = ServerProperties.getProperty("LtMS.BeiShu1", ServerConfig.BeiShu1);
+        ServerConfig.BeiShu2 = ServerProperties.getProperty("LtMS.BeiShu2", ServerConfig.BeiShu2);
+        ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
+        ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
+        ServerConfig.IP =  ServerProperties.getProperty("LtMS.ip.listen", Game.IP地址);
+        //ServerConfig.IP =  "101.34.216.55";
     }
     
     static {
@@ -209,6 +216,7 @@ public class ServerConfig
         ServerConfig.version = "1.7版本[ 黑金用户版 ]";
         ServerConfig.TOUDING = "Ver.079版本";
         ServerConfig.IP = Game.IP地址;
+        //ServerConfig.IP = "101.34.216.55";
         ServerConfig.wzpath = "E:\\新建文件夹 (2)\\ms079\\wz";
         ServerConfig.EVENTS = null;
         ServerConfig.DEBUG_MODE = false;

@@ -36,14 +36,14 @@ public class 活动倍率活动
     }
     
     public static void 经验倍率活动() {
-        final int 原始经验 = Integer.parseInt(ServerProperties.getProperty("CongMS.expRate"));
+        final int 原始经验 = Integer.parseInt(ServerProperties.getProperty("LtMS.expRate"));
         final int 经验活动 = 原始经验 * 2;
         final int seconds = 0;
         final int mins = 0;
         final int hours = 24;
         final int time = seconds + mins * 60 + hours * 60 * 60;
         final String rate = "经验";
-        World.scheduleRateDelay("经验", (long)time);
+        World.scheduleRateDelay(rate, (long)time);
         for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
             cservs.setExpRate(经验活动);
         }
@@ -51,14 +51,14 @@ public class 活动倍率活动
     }
     
     public static void 爆率倍率活动() {
-        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("CongMS.dropRate"));
+        final int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate"));
         final int 爆率活动 = 原始爆率 * 2;
         final int seconds = 0;
         final int mins = 0;
         final int hours = 24;
         final int time = seconds + mins * 60 + hours * 60 * 60;
         final String rate = "爆率";
-        World.scheduleRateDelay("爆率", (long)time);
+        World.scheduleRateDelay(rate, (long)time);
         for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
             cservs.setDropRate(爆率活动);
         }

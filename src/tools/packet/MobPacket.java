@@ -63,7 +63,8 @@ public class MobPacket
         mplew.write(animation);
         return mplew.getPacket();
     }
-    
+
+    //治愈怪物
     public static byte[] healMonster(final int oid, final int heal) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.DAMAGE_MONSTER.getValue());

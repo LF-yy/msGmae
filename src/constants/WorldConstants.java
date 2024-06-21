@@ -1,6 +1,7 @@
 package constants;
 
 import gui.CongMS;
+import gui.LtMS;
 import server.ServerProperties;
 
 public class WorldConstants
@@ -57,19 +58,19 @@ public class WorldConstants
     }
     
     public static void loadSetting() {
-        WorldConstants.ADMIN_ONLY = ServerProperties.getProperty("CongMS.admin", WorldConstants.ADMIN_ONLY);
-        WorldConstants.FLAG = ServerProperties.getProperty("CongMS.flag", WorldConstants.FLAG);
-        WorldConstants.EXP_RATE = ServerProperties.getProperty("CongMS.expRate", WorldConstants.EXP_RATE);
-        WorldConstants.MESO_RATE = ServerProperties.getProperty("CongMS.mesoRate", WorldConstants.MESO_RATE);
-        WorldConstants.DROP_RATE = ServerProperties.getProperty("CongMS.dropRat", WorldConstants.DROP_RATE);
-        WorldConstants.WORLD_TIP = ServerProperties.getProperty("CongMS.eventMessage", WorldConstants.WORLD_TIP);
-        WorldConstants.SCROLL_MESSAGE = ServerProperties.getProperty("CongMS.serverMessage", WorldConstants.SCROLL_MESSAGE);
-        WorldConstants.CHANNEL_COUNT = ServerProperties.getProperty("CongMS.channel.count", WorldConstants.CHANNEL_COUNT);
-        WorldConstants.USER_LIMIT = ServerProperties.getProperty("CongMS.userlimit", WorldConstants.USER_LIMIT);
-       // WorldConstants.USER_LIMIT = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"服务端最大人数"));
-        WorldConstants.MAX_CHAR_VIEW = ServerProperties.getProperty("CongMS.maxCharView", WorldConstants.MAX_CHAR_VIEW);
-        WorldConstants.GMITEMS = ServerProperties.getProperty("CongMS.gmitems", WorldConstants.GMITEMS);
-        WorldConstants.CS_ENABLE = ServerProperties.getProperty("CongMS.cashshop.enable", WorldConstants.CS_ENABLE);
+        WorldConstants.ADMIN_ONLY = ServerProperties.getProperty("LtMS.admin", WorldConstants.ADMIN_ONLY);
+        WorldConstants.FLAG = ServerProperties.getProperty("LtMS.flag", WorldConstants.FLAG);
+        WorldConstants.EXP_RATE = ServerProperties.getProperty("LtMS.expRate", WorldConstants.EXP_RATE);
+        WorldConstants.MESO_RATE = ServerProperties.getProperty("LtMS.mesoRate", WorldConstants.MESO_RATE);
+        WorldConstants.DROP_RATE = ServerProperties.getProperty("LtMS.dropRate", WorldConstants.DROP_RATE);
+        WorldConstants.WORLD_TIP = ServerProperties.getProperty("LtMS.eventMessage", WorldConstants.WORLD_TIP);
+        WorldConstants.SCROLL_MESSAGE = ServerProperties.getProperty("LtMS.serverMessage", WorldConstants.SCROLL_MESSAGE);
+        WorldConstants.CHANNEL_COUNT = ServerProperties.getProperty("LtMS.channel.count", WorldConstants.CHANNEL_COUNT);
+        //WorldConstants.USER_LIMIT = ServerProperties.getProperty("LtMS.userlimit", WorldConstants.USER_LIMIT);
+        WorldConstants.USER_LIMIT = Integer.valueOf(LtMS.ConfigValuesMap.get("服务端最大人数"));
+        WorldConstants.MAX_CHAR_VIEW = ServerProperties.getProperty("LtMS.maxCharView", WorldConstants.MAX_CHAR_VIEW);
+        WorldConstants.GMITEMS = ServerProperties.getProperty("LtMS.gmitems", WorldConstants.GMITEMS);
+        WorldConstants.CS_ENABLE = ServerProperties.getProperty("LtMS.cashshop.enable", WorldConstants.CS_ENABLE);
     }
     
     static {

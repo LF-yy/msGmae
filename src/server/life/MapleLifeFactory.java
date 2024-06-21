@@ -1,20 +1,19 @@
 package server.life;
 
-import java.util.HashMap;
+import java.util.*;
 
+import bean.MobInfo;
 import provider.MapleDataProviderFactory;
+import server.Start;
 import tools.Pair;
-import java.util.LinkedList;
 import provider.WzXML.MapleDataType;
 import tools.StringUtil;
-import java.util.ArrayList;
 import provider.MapleDataFileEntry;
 import provider.MapleDataDirectoryEntry;
 import provider.MapleDataTool;
-import java.util.List;
-import java.util.Map;
 import provider.MapleData;
 import provider.MapleDataProvider;
+import util.ListUtil;
 
 public class MapleLifeFactory
 {
@@ -88,48 +87,25 @@ public class MapleLifeFactory
             }
             final MapleData monsterInfoData = monsterData.getChildByPath("info");
             stats = new MapleMonsterStats();
-            if (mid == 9400296) {
-                stats.setHp((long)Math.ceil((double)MapleDataTool.getIntConvert("maxHP", monsterInfoData) * 1.5));
-            }
-            else if (mid == 9900000) {
-                stats.setHp(9999999999999L);
-            }
-            else if (mid == 9900001) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 9900002) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 9900003) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 9900004) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 8800100) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 8800101) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 8800102) {
-                stats.setHp(99999999999L);
-            }
-            else if (mid == 9870039) {
-                stats.setHp(50000000000L);
-            }
-            else if (mid == 9870042) {
-                stats.setHp(50000000000L);
-            }
-            else if (mid == 9895101) {
-                stats.setHp(50000000000L);
-            }
-            else {
+            if(ListUtil.isNotEmpty(Start.mobInfoMap.get(mid))){
+                MobInfo mobInfos = Start.mobInfoMap.get(mid).get(0);
+                stats.setHp(mobInfos.getHp());
+                stats.setMp(mobInfos.getMp());
+                stats.setExp(mobInfos.getExp());
+                stats.setLevel((short)(Math.min(mobInfos.getLevel(), 250)));
+                stats.setEva((short)(Math.min(mobInfos.getEva(), 10000)));
+                stats.setPhysicalDefense((short)(Math.min(mobInfos.getDamage(),30000)));
+                stats.setMagicDefense((short)(Math.min(mobInfos.getDamage(), 30000)));
+            }else{
                 stats.setHp((long)MapleDataTool.getIntConvert("maxHP", monsterInfoData));
+                stats.setMp(MapleDataTool.getIntConvert("maxMP", monsterInfoData, 0));
+                stats.setExp(MapleDataTool.getIntConvert("exp", monsterInfoData, 0));
+                stats.setLevel((short)MapleDataTool.getIntConvert("level", monsterInfoData));
+                stats.setEva((short)MapleDataTool.getIntConvert("eva", monsterInfoData, 0));
+                stats.setPhysicalDefense((short)MapleDataTool.getIntConvert("PDDamage", monsterInfoData, 0));
+                stats.setMagicDefense((short)MapleDataTool.getIntConvert("MDDamage", monsterInfoData, 0));
             }
-            stats.setMp(MapleDataTool.getIntConvert("maxMP", monsterInfoData, 0));
-            stats.setExp(MapleDataTool.getIntConvert("exp", monsterInfoData, 0));
-            stats.setLevel((short)MapleDataTool.getIntConvert("level", monsterInfoData));
+
             stats.setRemoveAfter(MapleDataTool.getIntConvert("removeAfter", monsterInfoData, 0));
             stats.setrareItemDropLevel((byte)MapleDataTool.getIntConvert("rareItemDropLevel", monsterInfoData, 0));
             stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));
@@ -147,9 +123,6 @@ public class MapleLifeFactory
             stats.setCP((byte)MapleDataTool.getIntConvert("getCP", monsterInfoData, 0));
             stats.setPoint(MapleDataTool.getIntConvert("point", monsterInfoData, 0));
             stats.setDropItemPeriod(MapleDataTool.getIntConvert("dropItemPeriod", monsterInfoData, 0));
-            stats.setPhysicalDefense((short)MapleDataTool.getIntConvert("PDDamage", monsterInfoData, 0));
-            stats.setMagicDefense((short)MapleDataTool.getIntConvert("MDDamage", monsterInfoData, 0));
-            stats.setEva((short)MapleDataTool.getIntConvert("eva", monsterInfoData, 0));
             final boolean hideHP = MapleDataTool.getIntConvert("HPgaugeHide", monsterInfoData, 0) > 0 || MapleDataTool.getIntConvert("hideHP", monsterInfoData, 0) > 0;
             final MapleData selfd = monsterInfoData.getChildByPath("selfDestruction");
             if (selfd != null) {

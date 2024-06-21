@@ -241,6 +241,19 @@ public abstract class Timer
             instance = new PingTimer();
         }
     }
+
+    public static class GuiTimer extends Timer {
+
+        private static GuiTimer instance = new GuiTimer();
+
+        private GuiTimer() {
+            name = "GuiTimer";
+        }
+
+        public static GuiTimer getInstance() {
+            return instance;
+        }
+    }
     
     private static class LoggingSaveRunnable implements Runnable
     {

@@ -5,6 +5,7 @@ import client.MapleCharacter;
 import client.MapleStat;
 import client.inventory.IItem;
 import gui.CongMS;
+import gui.LtMS;
 import server.Start;
 import server.life.MapleMonster;
 import tools.FileoutputUtil;
@@ -39,13 +40,31 @@ public class tzjc {
         }
         return totDamageToOneMonster;
     }
-
+    public long damage(MapleCharacter player, long totDamageToOneMonster, double damage) {
+        try {
+            if (player.get套装伤害加成() > 0.0) {
+                double jc_damage = totDamageToOneMonster * player.get套装伤害加成()*damage;
+                if(jc_damage>100000000L){
+                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/100000000L) + "亿");
+                }else if(jc_damage>10000){
+                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/10000) + "万");
+                }else{
+                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage)  + "");
+                }
+                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
+            }
+        } catch (Exception e) {
+            FileoutputUtil.outError("logs/套装伤害异常.txt", e);
+            return totDamageToOneMonster;
+        }
+        return totDamageToOneMonster;
+    }
     public static void sr_tz() {
         tzjc.tz_list.clear();
        // tzjc.tz_map.clear();
         System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][========================================]");
         System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][信息]:初始化赋能装备加成");
-        if (((Integer) CongMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0) {
+        if (((Integer) LtMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0) {
             for (int i = 0; i < Start.套装加成表.size(); ++i) {
                 if (((Integer) (Start.套装加成表.get(i)).getLeft()).intValue() == 0) {
                     tz_model tz = new tz_model();
@@ -58,7 +77,7 @@ public class tzjc {
                 }
             }
 
-            for (int b = 1; b < ((Integer) CongMS.ConfigValuesMap.get("套装个数")).intValue(); ++b) {
+            for (int b = 1; b < ((Integer) LtMS.ConfigValuesMap.get("套装个数")).intValue(); ++b) {
                 List<Integer> 套装 = (List<Integer>) new ArrayList();
                 int 加成 = 0;
                 String 套装名 = "";
@@ -82,7 +101,7 @@ public class tzjc {
             }
 
         }
-        if (((Integer) CongMS.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
+        if (((Integer) LtMS.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
             tzMap.putAll(Start.新套装加成表);
         }
         sbMap.putAll(Start.双爆加成);
@@ -120,7 +139,7 @@ public class tzjc {
         } catch (Exception e) {
             System.out.println("双爆装备装备加载异常");
         }
-        if ( CongMS.ConfigValuesMap.get("赋能属性加成开关") > 0) {
+        if ( LtMS.ConfigValuesMap.get("赋能属性加成开关") > 0) {
             for (final tz_model tz : tzjc.tz_list) {
                 final int[] list = tz.getList();
                 boolean is_tz = true;
@@ -135,7 +154,7 @@ public class tzjc {
                 }
             }
         }
-        if ( CongMS.ConfigValuesMap.get("个人赋能属性加成开关") > 0) {
+        if ( LtMS.ConfigValuesMap.get("个人赋能属性加成开关") > 0) {
             List<String> list = new ArrayList<>();
             hasEquipped.forEach(iItem -> {
                 Double integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");

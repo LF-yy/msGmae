@@ -7,8 +7,6 @@ import java.awt.image.ImageObserver;
 import constants.tzjc;
 import database.DBConPool;
 import gui.tools.*;
-import handling.channel.handler.AttackInfo;
-import handling.channel.handler.DamageParse;
 import server.*;
 import server.Timer.EventTimer;
 import provider.MapleDataProvider;
@@ -55,11 +53,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.rmi.NotBoundException;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
-import client.inventory.MaplePet;
 import client.inventory.Equip;
 import client.inventory.MapleInventoryType;
 import client.MapleCharacter;
@@ -86,8 +82,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.Map;
 
 import org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper;
-import tools.data.ByteArrayByteStream;
-import tools.data.LittleEndianAccessor;
 import tools.wztosql.*;
 
 public class CongMS extends JFrame
@@ -954,7 +948,7 @@ public class CongMS extends JFrame
     private void 刷新魔族突袭开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族突袭开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "开启";
         }
         else {
@@ -962,11 +956,11 @@ public class CongMS extends JFrame
         }
         this.魔族突袭开关.setText(显示);
     }
-    
+
     private void 刷新魔族攻城开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"魔族攻城开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "开启";
         }
         else {
@@ -974,11 +968,11 @@ public class CongMS extends JFrame
         }
         this.魔族攻城开关.setText(显示);
     }
-    
+
     private void 刷新幸运职业开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"幸运职业开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "开启";
         }
         else {
@@ -986,11 +980,11 @@ public class CongMS extends JFrame
         }
         this.幸运职业开关.setText(显示);
     }
-    
+
     private void 刷新神秘商人开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"神秘商人开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "开启";
         }
         else {
@@ -998,7 +992,7 @@ public class CongMS extends JFrame
         }
         this.神秘商人开关.setText(显示);
     }
-    
+
     private void 刷新公告广播() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.广播信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.广播信息.getModel()).removeRow(i);
@@ -1027,7 +1021,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷物品() {
         try {
             String 名字;
@@ -1118,11 +1112,11 @@ public class CongMS extends JFrame
         }
         catch (Exception ex) {}
     }
-    
+
     public static final CongMS getInstance() {
         return CongMS.instance;
     }
-    
+
     public CongMS() {
         this.bgImg = new ImageIcon(this.getClass().getClassLoader().getResource("image/qqq.jpg"));
         this.imgLabel = new JLabel((Icon)this.bgImg);
@@ -1244,19 +1238,19 @@ public class CongMS extends JFrame
         this.刷新经验加成表();
         this.刷新屠令广播开关();
     }
-    
+
     @Override
     public void setVisible(final boolean bln) {
         final Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
         this.setLocation((int)(size.getWidth() - (double)this.getWidth()) / 2, (int)(size.getHeight() - (double)this.getHeight()) / 2);
         super.setVisible(bln);
     }
-    
+
     public void actionPerformed(final ActionEvent e) {
         final Dis tt = new Dis();
         tt.start();
     }
-    
+
     public static void GetConfigValues() {
         final Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT name, val FROM ConfigValues")) {
@@ -1273,7 +1267,7 @@ public class CongMS extends JFrame
             System.err.println("读取动态数据库出错：" + ex.getMessage());
         }
     }
-    
+
     public void initview() {
         try {
             final LoopedStreams ls = new LoopedStreams();
@@ -1288,7 +1282,7 @@ public class CongMS extends JFrame
         ((JPanel)this.getContentPane()).setOpaque(true);
         UIManager.put((Object)"TabbedPane.contentOpaque", (Object)Boolean.valueOf(true));
     }
-    
+
     void startConsoleReaderThread(final InputStream inStream) {
         final BufferedReader br = new BufferedReader((Reader)new InputStreamReader(inStream));
         new Thread((Runnable)new Runnable() {
@@ -1311,7 +1305,7 @@ public class CongMS extends JFrame
             }
         }).start();
     }
-    
+
     private void initComponents() {
          this.jPanel90t = new JPanel();
          this.jPanel91t = new JPanel();
@@ -2368,7 +2362,7 @@ public class CongMS extends JFrame
         this.经验加成表.setForeground(new Color(102, 102, 255));
         this.经验加成表.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "类型", "数值" }) {
             boolean[] canEdit = { false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -2512,7 +2506,7 @@ public class CongMS extends JFrame
         this.广播信息.setFont(new Font("宋体", 0, 14));
         this.广播信息.setModel((TableModel)new DefaultTableModel(new Object[][] { { null, null }, { null, null }, { null, null }, { null, null } }, new String[] { "序号", "5分钟一次随机广播内容" }) {
             boolean[] canEdit = { false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -2865,7 +2859,7 @@ public class CongMS extends JFrame
         this.jTextArea1.setFont(new Font("新宋体", 0, 12));
         this.jTextArea1.setRows(5);
         this.jTextArea1.setText(
-                "感谢使用CongMs079商业服务端\r\n " +
+                "感谢使用LtMs079商业服务端\r\n " +
                         "1.修复队长变身技能受击取消问题.\r\n" +
                         "2.添加装备全局赋能伤害机制.\r\n" +
                         "3.添加个人装备赋能机制.\r\n" +
@@ -3370,7 +3364,7 @@ public class CongMS extends JFrame
         this.在线泡点设置.setFont(new Font("幼圆", 0, 20));
         this.在线泡点设置.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "类型", "数值" }) {
             boolean[] canEdit = { false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -3478,7 +3472,7 @@ public class CongMS extends JFrame
         this.反应堆.setFont(new Font("幼圆", 0, 15));
         this.反应堆.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序列号", "反应堆", "物品代码", "概率", "物品名字" }) {
             boolean[] canEdit = { false, false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -3613,7 +3607,7 @@ public class CongMS extends JFrame
         this.怪物爆物.setFont(new Font("幼圆", 0, 15));
         this.怪物爆物.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序列号", "怪物代码", "物品代码", "爆率", "物品名字" }) {
             boolean[] canEdit = { false, false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -3728,7 +3722,7 @@ public class CongMS extends JFrame
         this.世界爆物.setFont(new Font("幼圆", 0, 15));
         this.世界爆物.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序列号", "物品代码", "爆率", "物品名" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -3866,7 +3860,7 @@ public class CongMS extends JFrame
         this.钓鱼物品.setFont(new Font("幼圆", 0, 15));
         this.钓鱼物品.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "代码", "概率", "物品名称" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -3970,12 +3964,12 @@ public class CongMS extends JFrame
         this.账号信息.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "账号ID", "账号", "IP地址", "MAC地址", "绑定QQ", "点券", "抵用", "最近上线", "在线", "封号", "GM" }) {
             Class[] types = { Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, String.class, Object.class };
             boolean[] canEdit = { false, false, false, false, false, false, false, false, false, false, false };
-            
+
             @Override
             public Class getColumnClass(final int columnIndex) {
                 return this.types[columnIndex];
             }
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4167,7 +4161,7 @@ public class CongMS extends JFrame
         this.角色信息.setFont(new Font("幼圆", 0, 12));
         this.角色信息.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "角色ID", "账号ID", "角色昵称", "职业", "等级", "力量", "敏捷", "智力", "运气", "MaxHP", "MaxMP", "金币", "所在地图", "状态", "GM", "发型", "脸型" }) {
             boolean[] canEdit = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4450,7 +4444,7 @@ public class CongMS extends JFrame
         this.角色背包穿戴.setFont(new Font("幼圆", 0, 15));
         this.角色背包穿戴.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字" }) {
             boolean[] canEdit = { false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4507,7 +4501,7 @@ public class CongMS extends JFrame
         this.角色装备背包.setFont(new Font("幼圆", 0, 15));
         this.角色装备背包.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字" }) {
             boolean[] canEdit = { false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4564,7 +4558,7 @@ public class CongMS extends JFrame
         this.角色消耗背包.setFont(new Font("幼圆", 0, 15));
         this.角色消耗背包.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4621,7 +4615,7 @@ public class CongMS extends JFrame
         this.角色设置背包.setFont(new Font("幼圆", 0, 15));
         this.角色设置背包.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4678,7 +4672,7 @@ public class CongMS extends JFrame
         this.角色其他背包.setFont(new Font("幼圆", 0, 15));
         this.角色其他背包.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4735,7 +4729,7 @@ public class CongMS extends JFrame
         this.角色特殊背包.setFont(new Font("幼圆", 0, 15));
         this.角色特殊背包.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4792,7 +4786,7 @@ public class CongMS extends JFrame
         this.角色游戏仓库.setFont(new Font("幼圆", 0, 15));
         this.角色游戏仓库.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4849,7 +4843,7 @@ public class CongMS extends JFrame
         this.角色商城仓库.setFont(new Font("幼圆", 0, 15));
         this.角色商城仓库.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4905,7 +4899,7 @@ public class CongMS extends JFrame
         this.角色点券拍卖行.setFont(new Font("幼圆", 0, 15));
         this.角色点券拍卖行.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字", "物品数量" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -4962,7 +4956,7 @@ public class CongMS extends JFrame
         this.角色金币拍卖行.setFont(new Font("幼圆", 0, 15));
         this.角色金币拍卖行.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "物品代码", "物品名字" }) {
             boolean[] canEdit = { false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5022,7 +5016,7 @@ public class CongMS extends JFrame
         this.技能信息.setFont(new Font("幼圆", 0, 15));
         this.技能信息.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "技能名字", "技能代码", "目前等级", "最高等级" }) {
             boolean[] canEdit = { false, false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5100,7 +5094,7 @@ public class CongMS extends JFrame
         this.家族信息.setFont(new Font("幼圆", 0, 15));
         this.家族信息.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "家族ID", "家族名称", "族长/角色ID", "成员2", "成员3", "成员4", "成员5", "家族GP" }) {
             boolean[] canEdit = { false, false, false, false, false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5206,7 +5200,7 @@ public class CongMS extends JFrame
         this.封IP.setFont(new Font("幼圆", 0, 15));
         this.封IP.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序列号", "IP地址" }) {
             boolean[] canEdit = { false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5216,7 +5210,7 @@ public class CongMS extends JFrame
         this.封MAC.setFont(new Font("幼圆", 0, 15));
         this.封MAC.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序列号", "MAC地址" }) {
             boolean[] canEdit = { false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5585,12 +5579,12 @@ public class CongMS extends JFrame
         this.charTable.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "商品编码", "物品代码", "道具名称", "数量", "价格", "限时/天", "出售状态", "上/下架", "已售出", "库存", "反馈/%", "每日限购" }) {
             Class[] types = { String.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class, Object.class };
             boolean[] canEdit = { false, false, false, false, false, false, false, false, false, false, false, false };
-            
+
             @Override
             public Class getColumnClass(final int columnIndex) {
                 return this.types[columnIndex];
             }
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5657,7 +5651,7 @@ public class CongMS extends JFrame
         this.商城扩充价格.setFont(new Font("幼圆", 0, 14));
         this.商城扩充价格.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "背包扩充价格" }) {
             boolean[] canEdit = { false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5865,7 +5859,7 @@ public class CongMS extends JFrame
         this.游戏商店2.setFont(new Font("幼圆", 0, 15));
         this.游戏商店2.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "序号", "商店ID", "物品代码", "销售金币", "物品名称" }) {
             boolean[] canEdit = { false, false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -5946,7 +5940,7 @@ public class CongMS extends JFrame
         this.游戏道具.setFont(new Font("幼圆", 0, 15));
         this.游戏道具.setModel((TableModel)new DefaultTableModel(new Object[0][], new String[] { "角色ID", "角色名字", "道具ID", "道具名字" }) {
             boolean[] canEdit = { false, false, false, false };
-            
+
             @Override
             public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return this.canEdit[columnIndex];
@@ -6289,7 +6283,7 @@ public class CongMS extends JFrame
 
         this.pack();
     }
-    
+
     private void 删除道具4ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -6317,7 +6311,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你想要删除的<物品代码>");
         }
     }
-    
+
     private void 查找道具4ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.游戏道具代码.getText().matches("[0-9]+");
         if (result1) {
@@ -6342,7 +6336,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的<物品代码>");
         }
     }
-    
+
     private void 删除道具3ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -6370,7 +6364,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你想要删除的<物品代码>");
         }
     }
-    
+
     private void 查找道具3ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.游戏道具代码.getText().matches("[0-9]+");
         if (result1) {
@@ -6395,7 +6389,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的<物品代码>");
         }
     }
-    
+
     private void 删除道具2ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -6423,7 +6417,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你想要删除的<物品代码>");
         }
     }
-    
+
     private void 查找道具2ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.游戏道具代码.getText().matches("[0-9]+");
         if (result1) {
@@ -6448,7 +6442,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的<物品代码>");
         }
     }
-    
+
     private void 删除道具1ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -6476,7 +6470,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你想要删除的<物品代码>");
         }
     }
-    
+
     private void 查找道具1ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.游戏道具代码.getText().matches("[0-9]+");
         if (result1) {
@@ -6501,7 +6495,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的<物品代码>");
         }
     }
-    
+
     private void 删除道具ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -6529,7 +6523,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你想要删除的<物品代码>");
         }
     }
-    
+
     private void 查找道具ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.游戏道具代码.getText().matches("[0-9]+");
         if (result1) {
@@ -6554,47 +6548,47 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的<物品代码>");
         }
     }
-    
+
     private void jButton45ActionPerformed(final ActionEvent evt) {
         this.sendNotice(4);
         System.out.println("[公告系统] 发送公告成功！");
         JOptionPane.showMessageDialog(null, (Object)"发送公告成功！");
     }
-    
+
     private void 公告发布喇叭代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void sendNpcTalkNoticeActionPerformed(final ActionEvent evt) {
         this.sendNotice(3);
         System.out.println("[公告系统] 发送黄色滚动公告成功！");
         JOptionPane.showMessageDialog(null, (Object)"发送黄色滚动公告成功！");
     }
-    
+
     private void sendMsgNoticeActionPerformed(final ActionEvent evt) {
         this.sendNotice(2);
         System.out.println("[公告系统] 发送红色提示公告成功！");
         JOptionPane.showMessageDialog(null, (Object)"发送红色提示公告成功！");
     }
-    
+
     private void sendWinNoticeActionPerformed(final ActionEvent evt) {
         this.sendNotice(1);
         System.out.println("[公告系统] 发送弹窗公告成功！");
         JOptionPane.showMessageDialog(null, (Object)"发送弹窗公告成功！");
     }
-    
+
     private void sendNoticeActionPerformed(final ActionEvent evt) {
         this.sendNotice(0);
         System.out.println("[公告系统] 发送蓝色公告事项公告成功！");
         JOptionPane.showMessageDialog(null, (Object)"发送蓝色公告事项公告成功！");
     }
-    
+
     private void jButton33ActionPerformed(final ActionEvent evt) {
         this.查询商店(0);
     }
-    
+
     private void 商品名称ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 修改商品ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -6636,10 +6630,10 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:选择你要修改的商品,并填写<商店ID><物品代码><售价金币>。");
         }
     }
-    
+
     private void 商店代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 新增商品ActionPerformed(final ActionEvent evt) {
         final boolean result = this.商品物品代码.getText().matches("[0-9]+");
         final boolean result2 = this.商店代码.getText().matches("[0-9]+");
@@ -6670,7 +6664,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:输入<商店ID><物品代码><售价>。");
         }
     }
-    
+
     private void 删除商品ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -6696,11 +6690,11 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择你要删除的商品。");
         }
     }
-    
+
     private void 查询商店2ActionPerformed(final ActionEvent evt) {
         this.查询商店(1);
     }
-    
+
     private void 修改背包扩充价格ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.商城扩充价格修改.getText().matches("[0-9]+");
         if (result1) {
@@ -6737,7 +6731,7 @@ public class CongMS extends JFrame
             }
         }
     }
-    
+
     private void 修改ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.商品编码.getText().matches("[0-9]+");
         final boolean result2 = this.商品数量.getText().matches("[0-9]+");
@@ -6864,7 +6858,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void jButton2ActionPerformed(final ActionEvent evt) {
         final int n = JOptionPane.showConfirmDialog((Component)this, (Object)"是否刷新？\r\n刷新所耗时间会根据物品数量，服务器配置决定。", "信息", 0);
         if (n == 0) {
@@ -6872,7 +6866,7 @@ public class CongMS extends JFrame
         }
         JOptionPane.showMessageDialog(null, (Object)"[信息]:刷新商城物品列表。");
     }
-    
+
     private void 添加ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.商品编码.getText().matches("[0-9]+");
         final boolean result2 = this.商品数量.getText().matches("[0-9]+");
@@ -6978,14 +6972,14 @@ public class CongMS extends JFrame
             Logger.getLogger(CongMS.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void jButton28ActionPerformed(final ActionEvent evt) {
         final int n = JOptionPane.showConfirmDialog((Component)this, (Object)("确定为[ " + this.商品编码.getText() + " 商品]    下架?"), "上架商品提示消息", 0);
         if (n == 0) {
             this.下架();
         }
     }
-    
+
     private void jButton27ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -7013,14 +7007,14 @@ public class CongMS extends JFrame
             this.刷新();
         }
     }
-    
+
     private void jButton25ActionPerformed(final ActionEvent evt) {
         final int n = JOptionPane.showConfirmDialog((Component)this, (Object)("确定为[ " + this.商品编码.getText() + " 商品]    上架?"), "上架商品提示消息", 0);
         if (n == 0) {
             this.上架();
         }
     }
-    
+
     private void jButton3ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:商城重载开始。");
         CashItemFactory.getInstance().clearCashShop();
@@ -7029,132 +7023,132 @@ public class CongMS extends JFrame
         }
         JOptionPane.showMessageDialog(null, (Object)"[信息]:商城重载成功。");
     }
-    
+
     private void 显示类型ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 商品出售状态ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 商品编码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 其他ActionPerformed(final ActionEvent evt) {
         this.读取商品(60200000, 60300000, 5, 3);
     }
-    
+
     private void 宠物服饰ActionPerformed(final ActionEvent evt) {
         this.读取商品(60100000, 60200000, 5, 2);
     }
-    
+
     private void 宠物ActionPerformed(final ActionEvent evt) {
         this.读取商品(60000000, 60100000, 5, 1);
     }
-    
+
     private void 效果ActionPerformed(final ActionEvent evt) {
         this.读取商品(50500000, 50600000, 4, 4);
     }
-    
+
     private void 游戏ActionPerformed(final ActionEvent evt) {
         this.读取商品(50400000, 50500000, 4, 5);
     }
-    
+
     private void 纪念日ActionPerformed(final ActionEvent evt) {
         this.读取商品(50300000, 50400000, 4, 6);
     }
-    
+
     private void 个人商店ActionPerformed(final ActionEvent evt) {
         this.读取商品(50200000, 50300000, 4, 3);
     }
-    
+
     private void 表情ActionPerformed(final ActionEvent evt) {
         this.读取商品(50100000, 50200000, 4, 2);
     }
-    
+
     private void 会员卡ActionPerformed(final ActionEvent evt) {
         this.读取商品(50000000, 50100000, 4, 1);
     }
-    
+
     private void 卷轴ActionPerformed(final ActionEvent evt) {
         this.读取商品(30200000, 30300000, 3, 3);
     }
-    
+
     private void 通讯物品ActionPerformed(final ActionEvent evt) {
         this.读取商品(30100000, 30200000, 3, 2);
     }
-    
+
     private void 喜庆物品ActionPerformed(final ActionEvent evt) {
         this.读取商品(30000000, 30100000, 3, 1);
     }
-    
+
     private void 骑宠ActionPerformed(final ActionEvent evt) {
         this.读取商品(21200000, 21300000, 2, 8);
     }
-    
+
     private void 披风ActionPerformed(final ActionEvent evt) {
         this.读取商品(21100000, 21200000, 2, 3);
     }
-    
+
     private void 飞镖ActionPerformed(final ActionEvent evt) {
         this.读取商品(21000000, 21100000, 2, 4);
     }
-    
+
     private void 戒指ActionPerformed(final ActionEvent evt) {
         this.读取商品(20900000, 21000000, 2, 9);
     }
-    
+
     private void 武器ActionPerformed(final ActionEvent evt) {
         this.读取商品(20800000, 20900000, 2, 12);
     }
-    
+
     private void 手套ActionPerformed(final ActionEvent evt) {
         this.读取商品(20700000, 20800000, 2, 11);
     }
-    
+
     private void 鞋子ActionPerformed(final ActionEvent evt) {
         this.读取商品(20600000, 20700000, 2, 7);
     }
-    
+
     private void 裙裤ActionPerformed(final ActionEvent evt) {
         this.读取商品(20500000, 20600000, 2, 2);
     }
-    
+
     private void 上衣ActionPerformed(final ActionEvent evt) {
         this.读取商品(20400000, 20500000, 2, 13);
     }
-    
+
     private void 长袍ActionPerformed(final ActionEvent evt) {
         this.读取商品(20300000, 20400000, 2, 5);
     }
-    
+
     private void 眼饰ActionPerformed(final ActionEvent evt) {
         this.读取商品(20200000, 20300000, 2, 10);
     }
-    
+
     private void 脸饰ActionPerformed(final ActionEvent evt) {
         this.读取商品(20100000, 20200000, 2, 6);
     }
-    
+
     private void 帽子ActionPerformed(final ActionEvent evt) {
         this.读取商品(20000000, 20100000, 2, 1);
     }
-    
+
     private void jButton9ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:未启用。");
     }
-    
+
     private void 活动ActionPerformed(final ActionEvent evt) {
         this.读取商品(10200000, 10300000, 1, 3);
     }
-    
+
     private void 读取热销产品ActionPerformed(final ActionEvent evt) {
         this.读取商品(10000000, 10100000, 1, 1);
     }
-    
+
     private void 主题馆ActionPerformed(final ActionEvent evt) {
         this.读取商品(10100000, 10200000, 1, 2);
     }
-    
+
     private void 删除IPActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7181,7 +7175,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入数字 ");
         }
     }
-    
+
     private void 删除MACActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7208,15 +7202,15 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入数字 ");
         }
     }
-    
+
     private void 刷新封MACActionPerformed(final ActionEvent evt) {
         this.刷新封MAC();
     }
-    
+
     private void 刷新封IPActionPerformed(final ActionEvent evt) {
         this.刷新封IP();
     }
-    
+
     private void jButton34ActionPerformed(final ActionEvent evt) {
         try {
             final Connection con = DatabaseConnection.getConnection();
@@ -7230,40 +7224,40 @@ public class CongMS extends JFrame
             ex.getStackTrace();
         }
     }
-    
+
     private void 家族GPActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族成员5ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族成员4ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族成员3ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族成员2ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族族长ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族名称ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 家族IDActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 刷新家族信息ActionPerformed(final ActionEvent evt) {
         this.刷新家族信息();
     }
-    
+
     private void 修改技能1ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:查看玩家技能信息。");
         this.刷新技能信息();
     }
-    
+
     private void 删除技能ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7290,7 +7284,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的技能");
         }
     }
-    
+
     private void 修改技能ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -7322,34 +7316,34 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要修改的技能");
         }
     }
-    
+
     private void 技能名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除拍卖行ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 拍卖行物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 角色金币拍卖行序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 拍卖行物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除拍卖行1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 拍卖行物品代码1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 角色点券拍卖行序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 拍卖行物品名字1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除商城仓库ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7373,28 +7367,28 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 商城仓库物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 商城仓库物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 商城仓库物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除游戏仓库ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 游戏仓库物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 游戏仓库物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 游戏仓库物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除特殊背包ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7418,16 +7412,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 特殊背包物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 特殊背包物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 特殊背包物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除其他背包ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7451,16 +7445,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 其他背包物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 其他背包物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 其他背包物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除设置背包ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7484,16 +7478,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 设置背包物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 设置背包物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 设置背包物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除消耗背包ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7517,16 +7511,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 消耗背包物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 消耗背包物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 消耗背包物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除装备背包ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7550,16 +7544,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 装备背包物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 装备背包物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 装备背包物品名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除穿戴装备ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -7583,16 +7577,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品");
         }
     }
-    
+
     private void 背包物品代码1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 身上穿戴序号1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 背包物品名字1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 在线角色ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).getRowCount() - 1; i >= 0; --i) {
@@ -7615,7 +7609,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void 离线角色ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).getRowCount() - 1; i >= 0; --i) {
@@ -7638,13 +7632,13 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void 发型ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 脸型ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 卡家族解救ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         PreparedStatement ps = null;
@@ -7681,7 +7675,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择卡家族的角色。");
         }
     }
-    
+
     private void 查看背包ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         final boolean result1 = this.角色ID.getText().matches("[0-9]+");
@@ -7704,12 +7698,12 @@ public class CongMS extends JFrame
         this.刷新角色商城仓库();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:请转到角色道具信息面板查看。");
     }
-    
+
     private void 查看技能ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:查看玩家技能信息。");
         this.刷新技能信息();
     }
-    
+
     private void 卡号自救2ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         final String 输出 = "";
@@ -7740,7 +7734,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择要38处理的角色。");
         }
     }
-    
+
     private void 卡号自救1ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         PreparedStatement ps = null;
@@ -7777,43 +7771,43 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择卡发型脸型的角色。");
         }
     }
-    
+
     private void 角色IDActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void GMActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 地图ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 金币1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void MPActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void HPActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 运气ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 智力ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 敏捷ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 力量ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 等级ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 角色昵称ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除角色ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -7856,7 +7850,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择删除的角色。");
         }
     }
-    
+
     private void jButton38ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -7949,7 +7943,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void 显示管理角色ActionPerformed(final ActionEvent evt) {
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).getRowCount() - 1; i >= 0; --i) {
@@ -7977,18 +7971,18 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void 刷新角色信息ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:显示游戏所有玩家角色信息。");
         this.刷新角色信息();
         this.显示在线玩家.setText("在线玩家; " + 在线玩家() + "");
     }
-    
+
     private void jButton12ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         this.查找账号();
     }
-    
+
     private void 解卡ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         if (this.账号操作.getText().equals((Object)"")) {
@@ -8010,7 +8004,7 @@ public class CongMS extends JFrame
         this.账号提示语言.setText("[信息]:解卡账号 " + this.账号操作.getText() + " 成功。");
         this.刷新账号信息();
     }
-    
+
     private void 封锁账号ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         if (this.账号操作.getText().equals((Object)"")) {
@@ -8032,7 +8026,7 @@ public class CongMS extends JFrame
         this.账号提示语言.setText("[信息]:封锁账号 " + this.账号操作.getText() + " 成功。");
         this.刷新账号信息();
     }
-    
+
     private void 删除账号ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         PreparedStatement ps1 = null;
@@ -8054,7 +8048,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     private void 在线账号ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         this.账号提示语言.setText("[信息]:显示游戏所有在线玩家账号信息。");
@@ -8098,7 +8092,7 @@ public class CongMS extends JFrame
         }
         this.读取显示账号();
     }
-    
+
     private void 已封账号ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         this.账号提示语言.setText("[信息]:显示游戏所有已被封禁的玩家账号信息。");
@@ -8141,7 +8135,7 @@ public class CongMS extends JFrame
         }
         this.读取显示账号();
     }
-    
+
     private void 解封ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         if (this.账号操作.getText().equals((Object)"")) {
@@ -8163,7 +8157,7 @@ public class CongMS extends JFrame
         this.账号提示语言.setText("[信息]:解封账号 " + account + " 成功。");
         this.刷新账号信息();
     }
-    
+
     private void 离线账号ActionPerformed(final ActionEvent evt) {
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
         this.账号提示语言.setText("[信息]:显示游戏所有离线玩家账号信息。");
@@ -8206,27 +8200,27 @@ public class CongMS extends JFrame
         }
         this.读取显示账号();
     }
-    
+
     private void 刷新账号信息ActionPerformed(final ActionEvent evt) {
         this.账号提示语言.setText("[信息]:显示游戏所有玩家账号信息。");
         this.刷新账号信息();
         this.显示在线账号.setText("账号在线; " + 在线账号() + "");
     }
-    
+
     private void jButton32ActionPerformed(final ActionEvent evt) {
         this.ChangePassWord();
     }
-    
+
     private void jButton35ActionPerformed(final ActionEvent evt) {
         this.注册新账号();
     }
-    
+
     private void 注册的密码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 注册的账号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 修改账号点券抵用ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.点券.getText().matches("[0-9]+");
         final boolean result2 = this.抵用.getText().matches("[0-9]+");
@@ -8270,10 +8264,10 @@ public class CongMS extends JFrame
             this.账号提示语言.setText("[信息]:请选择要修改的账号,数据不能为空，或者数值填写不对。");
         }
     }
-    
+
     private void 钓鱼物品序号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除钓鱼物品ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -8302,7 +8296,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择你要删除的钓鱼物品。");
         }
     }
-    
+
     private void 新增钓鱼物品ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.钓鱼物品代码.getText().matches("[0-9]+");
         final boolean result2 = this.钓鱼物品概率.getText().matches("[0-9]+");
@@ -8328,15 +8322,15 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入<物品代码><概率>。");
         }
     }
-    
+
     private void 钓鱼物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 刷新钓鱼物品ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:刷新钓鱼奖励成功。");
         this.刷新钓鱼();
     }
-    
+
     private void 修改钓鱼物品ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -8369,7 +8363,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:输入<物品代码><概率>。");
         }
     }
-    
+
     private void 删除指定的掉落按键ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -8396,7 +8390,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入你要查找的物品代码。");
         }
     }
-    
+
     private void 查询物品掉落ActionPerformed(final ActionEvent evt) {
         final boolean result = this.查询物品掉落代码.getText().matches("[0-9]+");
         if (result) {
@@ -8439,15 +8433,15 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入你要查找的物品代码。");
         }
     }
-    
+
     private void 查询物品掉落代码1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 刷新世界爆物ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:刷新世界物品掉落数据。");
         this.刷新世界爆物();
     }
-    
+
     private void 修改世界爆物ActionPerformed(final ActionEvent evt) {
         final boolean result2 = this.世界爆物物品代码.getText().matches("[0-9]+");
         final boolean result3 = this.世界爆物爆率.getText().matches("[0-9]+");
@@ -8481,10 +8475,10 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择你要修改的数据。");
         }
     }
-    
+
     private void 世界爆物名称ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 删除世界爆物ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -8510,7 +8504,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择你要删除的物品。");
         }
     }
-    
+
     private void 添加世界爆物ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.世界爆物物品代码.getText().matches("[0-9]+");
         final boolean result2 = this.世界爆物爆率.getText().matches("[0-9]+");
@@ -8542,16 +8536,16 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入<物品代码>，<物品爆率> 。");
         }
     }
-    
+
     private void 世界爆物爆率ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 世界爆物物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 世界爆物序列号ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 查询怪物掉落ActionPerformed(final ActionEvent evt) {
         final boolean result = this.查询怪物掉落代码.getText().matches("[0-9]+");
         if (result) {
@@ -8596,11 +8590,11 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入你要查找的怪物代码。");
         }
     }
-    
+
     private void 刷新怪物卡片ActionPerformed(final ActionEvent evt) {
         this.刷新怪物卡片();
     }
-    
+
     private void 删除指定的掉落按键1ActionPerformed(final ActionEvent evt) {
         final String 输出 = "";
         PreparedStatement ps1 = null;
@@ -8627,7 +8621,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入你要查找的物品代码。");
         }
     }
-    
+
     private void 查询物品掉落1ActionPerformed(final ActionEvent evt) {
         final boolean result = this.查询物品掉落代码.getText().matches("[0-9]+");
         if (result) {
@@ -8670,15 +8664,15 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入你要查找的物品代码。");
         }
     }
-    
+
     private void 查询物品掉落代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 刷新怪物爆物ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"[信息]:刷新怪物物品掉落数据。");
         this.刷新怪物爆物();
     }
-    
+
     private void 修改怪物爆物ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.怪物爆物怪物代码.getText().matches("[0-9]+");
         final boolean result2 = this.怪物爆物物品代码.getText().matches("[0-9]+");
@@ -8716,7 +8710,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请选择你要修改的数据。");
         }
     }
-    
+
     private void 删除怪物爆物ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -8742,7 +8736,7 @@ public class CongMS extends JFrame
             }
         }
     }
-    
+
     private void 添加怪物爆物ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.怪物爆物怪物代码.getText().matches("[0-9]+");
         final boolean result2 = this.怪物爆物物品代码.getText().matches("[0-9]+");
@@ -8770,7 +8764,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入<怪物代码><物品代码><物品爆率>的格式来添加。");
         }
     }
-    
+
     private void 删除反应堆物品ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -8798,13 +8792,13 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要删除的反应堆代码 ");
         }
     }
-    
+
     private void 重载箱子反应堆按钮ActionPerformed(final ActionEvent evt) {
         ReactorScriptManager.getInstance().clearDrops();
         System.out.println("[重载系统] 箱子反应堆重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"箱子反应堆重载成功。");
     }
-    
+
     private void 修改反应堆物品ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -8845,7 +8839,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要修改的数据");
         }
     }
-    
+
     private void jButton37ActionPerformed(final ActionEvent evt) {
         final boolean result2 = this.查找反应堆掉落.getText().matches("[0-9]+");
         if (result2) {
@@ -8898,7 +8892,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入你要查找的反应堆 ");
         }
     }
-    
+
     private void 删除反应堆物品1ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -8922,7 +8916,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要删除的物品 ");
         }
     }
-    
+
     private void 新增反应堆物品ActionPerformed(final ActionEvent evt) {
         final boolean result2 = this.反应堆代码.getText().matches("[0-9]+");
         if (result2) {
@@ -8943,17 +8937,17 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入反应堆代码，物品代码，掉落概率 ");
         }
     }
-    
+
     private void 反应堆概率ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void jButton26ActionPerformed(final ActionEvent evt) {
         this.刷新反应堆();
     }
-    
+
     private void 泡点豆豆开关ActionPerformed(final ActionEvent evt) {
         final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
-        if (泡点豆豆开关 <= 0) {
+        if (泡点豆豆开关 >= 1) {
             this.按键开关("泡点豆豆开关", 711);
             this.刷新泡点豆豆开关();
         }
@@ -8962,10 +8956,10 @@ public class CongMS extends JFrame
             this.刷新泡点豆豆开关();
         }
     }
-    
+
     private void 泡点抵用开关ActionPerformed(final ActionEvent evt) {
         final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
-        if (泡点抵用开关 <= 0) {
+        if (泡点抵用开关 >= 1) {
             this.按键开关("泡点抵用开关", 707);
             this.刷新泡点抵用开关();
         }
@@ -8974,10 +8968,10 @@ public class CongMS extends JFrame
             this.刷新泡点抵用开关();
         }
     }
-    
+
     private void 泡点点券开关ActionPerformed(final ActionEvent evt) {
         final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
-        if (泡点点券开关 <= 0) {
+        if (泡点点券开关 >= 1) {
             this.按键开关("泡点点券开关", 703);
             this.刷新泡点点券开关();
         }
@@ -8986,10 +8980,10 @@ public class CongMS extends JFrame
             this.刷新泡点点券开关();
         }
     }
-    
+
     private void 泡点经验开关ActionPerformed(final ActionEvent evt) {
         final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
-        if (泡点经验开关 <= 0) {
+        if (泡点经验开关 >= 1) {
             this.按键开关("泡点经验开关", 705);
             this.刷新泡点经验开关();
         }
@@ -8998,10 +8992,10 @@ public class CongMS extends JFrame
             this.刷新泡点经验开关();
         }
     }
-    
+
     private void 泡点金币开关ActionPerformed(final ActionEvent evt) {
         final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
-        if (泡点金币开关 <= 0) {
+        if (泡点金币开关 >= 1) {
             this.按键开关("泡点金币开关", 701);
             this.刷新泡点金币开关();
         }
@@ -9010,7 +9004,7 @@ public class CongMS extends JFrame
             this.刷新泡点金币开关();
         }
     }
-    
+
     private void 泡点值修改ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -9040,154 +9034,154 @@ public class CongMS extends JFrame
             this.福利提示语言2.setText("[信息]:请选择你要修改的值。");
         }
     }
-    
+
     private void 给予物品ActionPerformed(final ActionEvent evt) {
         this.刷物品();
     }
-    
+
     private void 个人发送物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 个人发送物品玩家名字ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 个人发送物品数量ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 给予装备2ActionPerformed(final ActionEvent evt) {
         this.刷装备2(1);
     }
-    
+
     private void 发送装备玩家姓名ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 给予装备1ActionPerformed(final ActionEvent evt) {
         this.刷装备2(2);
     }
-    
+
     private void 全服发送装备装备物理防御ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备魔法防御ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备魔法力ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备物品IDActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备敏捷ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备可否交易ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备给予时间ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备攻击力ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备HPActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备运气ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备智力ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备MPActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备力量ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备制作人ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送装备装备加卷ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 给予物品1ActionPerformed(final ActionEvent evt) {
         this.刷物品2();
     }
-    
+
     private void 全服发送物品代码ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 全服发送物品数量ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void a1ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void z6ActionPerformed(final ActionEvent evt) {
         this.发送福利(6);
     }
-    
+
     private void z5ActionPerformed(final ActionEvent evt) {
         this.发送福利(5);
     }
-    
+
     private void z4ActionPerformed(final ActionEvent evt) {
         this.发送福利(4);
     }
-    
+
     private void z1ActionPerformed(final ActionEvent evt) {
         this.发送福利(1);
     }
-    
+
     private void z3ActionPerformed(final ActionEvent evt) {
         this.发送福利(3);
     }
-    
+
     private void z2ActionPerformed(final ActionEvent evt) {
         this.发送福利(2);
     }
-    
+
     private void 重载任务ActionPerformed(final ActionEvent evt) {
         MapleQuest.clearQuests();
         System.out.println("[重载系统] 任务重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"任务重载成功。");
     }
-    
+
     private void 重载包头按钮ActionPerformed(final ActionEvent evt) {
         System.out.println("[重载系统] 包头重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"包头重载成功。");
     }
-    
+
     private void 重载商店按钮ActionPerformed(final ActionEvent evt) {
         MapleShopFactory.getInstance().clear();
         System.out.println("[重载系统] 商店重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"商店重载成功。");
     }
-    
+
     private void 重载商城按钮ActionPerformed(final ActionEvent evt) {
         CashItemFactory.getInstance().clearCashShop();
         System.out.println("[重载系统] 商城重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"商城重载成功。");
     }
-    
+
     private void 重载传送门按钮ActionPerformed(final ActionEvent evt) {
         PortalScriptManager.getInstance().clearScripts();
         System.out.println("[重载系统] 传送门重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"传送门重载成功。");
     }
-    
+
     private void 重载反应堆按钮ActionPerformed(final ActionEvent evt) {
         ReactorScriptManager.getInstance().clearDrops();
         System.out.println("[重载系统] 反应堆重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"反应堆重载成功。");
     }
-    
+
     private void 重载爆率按钮ActionPerformed(final ActionEvent evt) {
         MapleMonsterInformationProvider.getInstance().clearDrops();
         System.out.println("[重载系统] 爆率重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"爆率重载成功。");
     }
-    
+
     private void 重载副本按钮ActionPerformed(final ActionEvent evt) {
         for (final ChannelServer instance1 : ChannelServer.getAllInstances()) {
             if (instance1 != null) {
@@ -9197,11 +9191,11 @@ public class CongMS extends JFrame
         System.out.println("[重载系统] 副本重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"副本重载成功。");
     }
-    
+
     private void jButton46ActionPerformed(final ActionEvent evt) {
         this.openWindow(Windows.活动控制台);
     }
-    
+
     private void jButton8ActionPerformed(final ActionEvent evt) {
         int p = 0;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
@@ -9213,7 +9207,7 @@ public class CongMS extends JFrame
         JOptionPane.showMessageDialog(null, (Object)("雇佣商人保存" + p + "个频道成功"));
         this.printChatLog(输出);
     }
-    
+
     private void jButton7ActionPerformed(final ActionEvent evt) {
         int p = 0;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
@@ -9226,26 +9220,26 @@ public class CongMS extends JFrame
         JOptionPane.showMessageDialog(null, (Object)输出);
         this.printChatLog(输出);
     }
-    
+
     private void jButton39ActionPerformed(final ActionEvent evt) {
         this.openWindow(Windows.删除自添加NPC工具);
     }
-    
+
     private void jButton44ActionPerformed(final ActionEvent evt) {
         this.openWindow(Windows.游戏抽奖工具);
     }
-    
+
     private void jButton29ActionPerformed(final ActionEvent evt) {
         this.openWindow(Windows.一键还原);
     }
-    
+
     private void jButton31ActionPerformed(final ActionEvent evt) {
         this.openWindow(Windows.代码查询工具);
         if (!LoginServer.isShutdown() || this.searchServer) {
             return;
         }
     }
-    
+
     private void startserverbuttonActionPerformed(final ActionEvent evt) {
         if (!this.开启服务端) {
             this.开启服务端 = true;
@@ -9265,136 +9259,136 @@ public class CongMS extends JFrame
         }
         System.out.println("CongMs服务端正在运行中！");
     }
-    
+
     private void jTextField22ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void jButton16ActionPerformed(final ActionEvent evt) {
         this.重启服务器();
     }
-    
+
     private void 屠令广播开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("屠令广播开关", 2016);
         this.刷新屠令广播开关();
     }
-    
+
     private void jButton13ActionPerformed(final ActionEvent evt) {
         this.sendNoticeGG();
     }
-    
+
     private void jTextField2ActionPerformed(final ActionEvent evt) {
     }
-    
+
     private void 吸怪检测开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("吸怪检测开关", 2130);
         this.刷新吸怪检测开关();
     }
-    
+
     private void 指令通知开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("指令通知开关", 2028);
         this.刷新指令通知开关();
     }
-    
+
     private void 过图存档开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("过图存档开关", 2140);
         this.刷新过图存档时间();
     }
-    
+
     private void 地图名称开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("地图名称开关", 2136);
         this.刷新地图名称开关();
     }
-    
+
     private void 怪物状态开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("怪物状态开关", 2061);
         this.刷新怪物状态开关();
     }
-    
+
     private void 越级打怪开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("越级打怪开关", 2125);
         this.刷新越级打怪开关();
     }
-    
+
     private void 登陆帮助开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("登陆帮助开关", 2058);
         this.刷新登陆帮助();
     }
-    
+
     private void 欢迎弹窗开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("欢迎弹窗开关", 2015);
         this.刷新欢迎弹窗开关();
     }
-    
+
     private void 雇佣商人开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("雇佣商人开关", 2020);
         this.刷新雇佣商人开关();
     }
-    
+
     private void 玩家交易开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("玩家交易开关", 2011);
         this.刷新玩家交易开关();
     }
-    
+
     private void 游戏喇叭开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("游戏喇叭开关", 2009);
         this.刷新游戏喇叭开关();
     }
-    
+
     private void 管理加速开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("管理加速开关", 2007);
         this.刷新管理加速开关();
     }
-    
+
     private void 管理隐身开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("管理隐身开关", 2006);
         this.刷新管理隐身开关();
     }
-    
+
     private void 回收地图开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("回收地图开关", 2029);
         this.刷新回收地图开关();
     }
-    
+
     private void 上线提醒开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("上线提醒开关", 2021);
         this.刷新上线提醒开关();
     }
-    
+
     private void 游戏指令开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("游戏指令开关", 2008);
         this.刷新游戏指令开关();
     }
-    
+
     private void 丢出物品开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("丢出物品开关", 2012);
         this.刷新丢出物品开关();
     }
-    
+
     private void 丢出金币开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("丢出金币开关", 2010);
         this.刷新丢出金币开关();
     }
-    
+
     private void 游戏升级快讯ActionPerformed(final ActionEvent evt) {
         this.按键开关("升级快讯开关", 2003);
         this.刷新升级快讯();
     }
-    
+
     private void 玩家聊天开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("玩家聊天开关", 2024);
         this.刷新玩家聊天开关();
     }
-    
+
     private void 滚动公告开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("滚动公告开关", 2026);
         this.刷新滚动公告开关();
     }
-    
+
     private void 禁止登陆开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("禁止登陆开关", 2013);
         this.刷新禁止登陆开关();
     }
-    
+
     private void 修改广播ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -9415,7 +9409,7 @@ public class CongMS extends JFrame
         }
         catch (SQLException ex) {}
     }
-    
+
     private void 发布广告ActionPerformed(final ActionEvent evt) {
         if (this.广播文本.getText().equals((Object)"")) {
             JOptionPane.showMessageDialog(null, (Object)"请填写广告信息哦。");
@@ -9432,7 +9426,7 @@ public class CongMS extends JFrame
         this.刷新公告广播();
         JOptionPane.showMessageDialog(null, (Object)"发布完成。");
     }
-    
+
     private void 删除广播ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps1 = null;
         ResultSet rs = null;
@@ -9453,11 +9447,11 @@ public class CongMS extends JFrame
             }
         }
     }
-    
+
     private void 刷新广告ActionPerformed(final ActionEvent evt) {
         this.刷新公告广播();
     }
-    
+
     private void 开启三倍金币ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.三倍金币持续时间.getText().matches("[0-9]+");
         if (result1) {
@@ -9483,7 +9477,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"持续时间输入不正确");
         }
     }
-    
+
     private void 开启三倍爆率ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.三倍爆率持续时间.getText().matches("[0-9]+");
         if (result1) {
@@ -9509,7 +9503,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"持续时间输入不正确");
         }
     }
-    
+
     private void 开启三倍经验ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.三倍经验持续时间.getText().matches("[0-9]+");
         if (result1) {
@@ -9535,7 +9529,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"持续时间输入不正确");
         }
     }
-    
+
     private void 开启双倍金币ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.双倍金币持续时间.getText().matches("[0-9]+");
         if (result1) {
@@ -9561,7 +9555,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"持续时间输入不正确");
         }
     }
-    
+
     private void 开启双倍爆率ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.双倍爆率持续时间.getText().matches("[0-9]+");
         if (result1) {
@@ -9587,7 +9581,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"持续时间输入不正确");
         }
     }
-    
+
     private void 开启双倍经验ActionPerformed(final ActionEvent evt) {
         final boolean result1 = this.双倍经验持续时间.getText().matches("[0-9]+");
         if (result1) {
@@ -9613,11 +9607,11 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"持续时间输入不正确");
         }
     }
-    
+
     private void 游戏经验加成说明ActionPerformed(final ActionEvent evt) {
         JOptionPane.showMessageDialog(null, (Object)"<相关说明文>\r\n\r\n1:相对应数值为0则为关闭经验加成。\r\n2:人气经验 = 人气 * 人气经验加成数值。\r\n\r\n");
     }
-    
+
     private void 经验加成表修改ActionPerformed(final ActionEvent evt) {
         PreparedStatement ps = null;
         PreparedStatement ps2 = null;
@@ -9647,42 +9641,42 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请选择你要修改的值");
         }
     }
-    
+
     private void 神秘商人开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("神秘商人开关", 2406);
         this.刷新神秘商人开关();
     }
-    
+
     private void 幸运职业开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("幸运职业开关", 749);
         this.刷新幸运职业开关();
     }
-    
+
     private void 魔族攻城开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("魔族攻城开关", 2404);
         this.刷新魔族攻城开关();
     }
-    
+
     private void 魔族突袭开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("魔族突袭开关", 2400);
         this.刷新魔族突袭开关();
     }
-    
+
     private void 骑士团职业开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("骑士团职业开关", 2001);
         this.刷新骑士团职业开关();
     }
-    
+
     private void 战神职业开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("战神职业开关", 2002);
         this.刷新战神职业开关();
     }
-    
+
     private void 冒险家职业开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("冒险家职业开关", 2000);
         this.刷新冒险家职业开关();
     }
-    
+
     private void 修改骑士团等级上限ActionPerformed(final ActionEvent evt) {
         if (this.骑士团等级上限.getText().equals((Object)"")) {
             JOptionPane.showMessageDialog(null, (Object)"不能为空");
@@ -9713,7 +9707,7 @@ public class CongMS extends JFrame
             }
         }
     }
-    
+
     private void 修改冒险家等级上限ActionPerformed(final ActionEvent evt) {
         if (this.冒险家等级上限.getText().equals((Object)"")) {
             JOptionPane.showMessageDialog(null, (Object)"不能为空");
@@ -9744,7 +9738,7 @@ public class CongMS extends JFrame
             }
         }
     }
-    
+
     private void 花蘑菇开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("花蘑菇开关", 2219);
 //        this.刷新花蘑菇开关();
@@ -9753,7 +9747,7 @@ public class CongMS extends JFrame
         DumpMobSkills.main(null);
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 青鳄鱼开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("青鳄鱼开关", 2218);
 //        this.刷新青鳄鱼开关();
@@ -9761,7 +9755,7 @@ public class CongMS extends JFrame
         重载套装加成列表();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 小白兔开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("小白兔开关", 2215);
 //        this.刷新小白兔开关();
@@ -9770,7 +9764,7 @@ public class CongMS extends JFrame
         DumpItems.main(strings);
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 火野猪开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("火野猪开关", 2217);
 //        this.刷新火野猪开关();
@@ -9779,7 +9773,7 @@ public class CongMS extends JFrame
         DumpMobSkills.main(null);
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 喷火龙开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("喷火龙开关", 2216);
 //        this.刷新喷火龙开关();
@@ -9788,7 +9782,7 @@ public class CongMS extends JFrame
         DumpItems.main(strings);
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 大灰狼开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("大灰狼开关", 2214);
 //        this.刷新大灰狼开关();
@@ -9797,7 +9791,7 @@ public class CongMS extends JFrame
         DumpQuests.main(strings);
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 紫色猫开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("紫色猫开关", 2213);
 //        this.刷新紫色猫开关();
@@ -9806,7 +9800,7 @@ public class CongMS extends JFrame
         DumpQuests.main(strings);
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 石头人开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("石头人开关", 2212);
 //        this.刷新石头人开关();
@@ -9821,31 +9815,31 @@ public class CongMS extends JFrame
         }
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 白雪人开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("白雪人开关", 2211);
         this.刷新白雪人开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 胖企鹅开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("胖企鹅开关", 2210);
         this.刷新胖企鹅开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 星精灵开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("星精灵开关", 2209);
         this.刷新星精灵开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 顽皮猴开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("顽皮猴开关", 2208);
         this.刷新顽皮猴开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 章鱼怪开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("章鱼怪开关", 2207);
 //        this.刷新章鱼怪开关();
@@ -9869,13 +9863,13 @@ public class CongMS extends JFrame
 //        }
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 大海龟开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("大海龟开关", 2206);
         this.刷新大海龟开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 红螃蟹开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("红螃蟹开关", 2205);
 //        this.刷新红螃蟹开关();
@@ -9888,7 +9882,7 @@ public class CongMS extends JFrame
         }
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 小青蛇开关ActionPerformed(final ActionEvent evt) {
 //        this.按键开关("小青蛇开关", 2204);
         String actionCommand = evt.getActionCommand();
@@ -9897,31 +9891,31 @@ public class CongMS extends JFrame
         this.刷新小青蛇开关();
         //JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 漂漂猪开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("漂漂猪开关", 2203);
         this.刷新漂漂猪开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 绿水灵开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("绿水灵开关", 2202);
         this.刷新绿水灵开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 蘑菇仔开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("蘑菇仔开关", 2201);
         this.刷新蘑菇仔开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 蓝蜗牛开关ActionPerformed(final ActionEvent evt) {
         this.按键开关("蓝蜗牛开关", 2200);
         this.刷新蓝蜗牛开关();
         JOptionPane.showMessageDialog(null, (Object)"[信息]:修改成功!");
     }
-    
+
     private void 刷物品2() {
         try {
             final int 物品ID = Integer.parseInt(this.全服发送物品代码.getText());
@@ -10008,7 +10002,7 @@ public class CongMS extends JFrame
 
 
     }
-    
+
     private void 刷装备2(final int a) {
         try {
             int 物品ID;
@@ -10265,7 +10259,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)("[信息]:错误!" + (Object)e));
         }
     }
-    
+
     private void 发送福利(final int a) {
         final boolean result1 = this.a1.getText().matches("[0-9]+");
         if (result1) {
@@ -10325,7 +10319,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入要发送数量。");
         }
     }
-    
+
     public void 刷新反应堆() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.反应堆.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.反应堆.getModel()).removeRow(i);
@@ -10358,7 +10352,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     public void openWindow(final Windows w) {
         if (!this.windows.containsKey((Object)w)) {
             switch (w) {
@@ -10371,11 +10365,11 @@ public class CongMS extends JFrame
                     break;
                 }
                 case 活动控制台: {
-                    this.windows.put(w, new 活动控制台());
+                    this.windows.put(w, new 活动控制台1());
                     break;
                 }
                 case 游戏抽奖工具: {
-                    this.windows.put(w, new 游戏抽奖工具());
+                    this.windows.put(w, new 游戏抽奖工具1());
                     break;
                 }
                 case 删除自添加NPC工具: {
@@ -10393,7 +10387,7 @@ public class CongMS extends JFrame
         }
         ((JFrame)this.windows.get((Object)w)).setVisible(true);
     }
-    
+
     public void 刷新封MAC() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.封MAC.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.封MAC.getModel()).removeRow(i);
@@ -10412,7 +10406,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 刷新封IP() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.封IP.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.封IP.getModel()).removeRow(i);
@@ -10431,7 +10425,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 删除SN库存() {
         PreparedStatement ps2 = null;
         ResultSet rs2 = null;
@@ -10448,7 +10442,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 删除SN库存2() {
         PreparedStatement ps2 = null;
         ResultSet rs2 = null;
@@ -10465,7 +10459,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 删除SN库存3() {
         PreparedStatement ps2 = null;
         ResultSet rs2 = null;
@@ -10482,7 +10476,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 删除SN库存4() {
         PreparedStatement ps2 = null;
         ResultSet rs2 = null;
@@ -10499,7 +10493,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public static void Gaincharacter7(final String Name, final int Channale, final int Piot) {
         try {
             int ret = Getcharacter7(Name, Channale);
@@ -10548,7 +10542,7 @@ public class CongMS extends JFrame
             System.err.println("Getcharacter7!!55" + (Object)sql);
         }
     }
-    
+
     public static int Getcharacter7(final String Name, final int Channale) {
         int ret = -1;
         try {
@@ -10565,7 +10559,7 @@ public class CongMS extends JFrame
         catch (SQLException ex) {}
         return ret;
     }
-    
+
     public static int Get商城物品() {
         int ret = -1;
         try {
@@ -10582,7 +10576,7 @@ public class CongMS extends JFrame
         catch (SQLException ex) {}
         return ret;
     }
-    
+
     public static void Gain商城物品(final int Piot, final int Piot1) {
         try {
             int ret = Get商城物品();
@@ -10631,7 +10625,7 @@ public class CongMS extends JFrame
             System.err.println("獲取錯誤!!55" + (Object)sql);
         }
     }
-    
+
     public void 刷新商城扩充价格() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.商城扩充价格.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.商城扩充价格.getModel()).removeRow(i);
@@ -10650,7 +10644,7 @@ public class CongMS extends JFrame
             Logger.getLogger(CongMS.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 上架() {
         try {
             final int SN_ = Integer.parseInt(String.valueOf(this.charTable.getValueAt(this.charTable.getSelectedRow(), 0)));
@@ -10673,7 +10667,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:上架失败，请选中你要上架的道具。");
         }
     }
-    
+
     public void 下架() {
         try {
             final int SN_ = Integer.parseInt(String.valueOf(this.charTable.getValueAt(this.charTable.getSelectedRow(), 0)));
@@ -10696,7 +10690,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:下架失败，请选中你要上架的道具。");
         }
     }
-    
+
     public static int update上下架(final CashItemInfo merchandise) {
         PreparedStatement ps = null;
         int resulet = 0;
@@ -10713,7 +10707,7 @@ public class CongMS extends JFrame
         }
         return resulet;
     }
-    
+
     public void 读取商品(final int a, final int b, final int c, final int d) {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.charTable.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.charTable.getModel()).removeRow(i);
@@ -10903,7 +10897,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX。");
         }
     }
-    
+
     public void 刷新() {
         if ("热销产品".equals((Object)this.显示类型.getText())) {
             this.读取商品(10000000, 10100000, 1, 1);
@@ -10993,7 +10987,7 @@ public class CongMS extends JFrame
             this.initCharacterPannel();
         }
     }
-    
+
     public void initCharacterPannel() {
         final long start = System.currentTimeMillis();
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.charTable.getModel()).getRowCount() - 1; i >= 0; --i) {
@@ -11134,7 +11128,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     public void 查询商店(final int lx) {
         boolean result = this.查询商店.getText().matches("[0-9]+");
         if (lx == 0) {
@@ -11186,7 +11180,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请输入你需要查询的商店ID。");
         }
     }
-    
+
     public static int 在线玩家() {
         int p = 0;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
@@ -11198,7 +11192,7 @@ public class CongMS extends JFrame
         }
         return p;
     }
-    
+
     public void 读取显示账号() {
         this.账号信息.addMouseListener((MouseListener)new MouseAdapter() {
             @Override
@@ -11222,7 +11216,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     public static int 在线账号() {
         int data = 0;
         int p = 0;
@@ -11242,7 +11236,7 @@ public class CongMS extends JFrame
         }
         return p;
     }
-    
+
     private void ChangePassWord() {
         final String account = this.注册的账号.getText();
         final String password = this.注册的密码.getText();
@@ -11267,7 +11261,7 @@ public class CongMS extends JFrame
         }
         this.账号提示语言.setText("[信息]:修改密码成功。账号: " + account + " 密码: " + password + "");
     }
-    
+
     public void 注册新账号() {
         final boolean result1 = this.注册的账号.getText().matches("[0-9]+");
         final boolean result2 = this.注册的密码.getText().matches("[0-9]+");
@@ -11305,7 +11299,7 @@ public class CongMS extends JFrame
             System.out.println((Object)ex2);
         }
     }
-    
+
     private void 刷新账号信息() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
@@ -11347,7 +11341,7 @@ public class CongMS extends JFrame
         }
         this.读取显示账号();
     }
-    
+
     private void 查找QQ() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
@@ -11404,7 +11398,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 查找账号() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
@@ -11454,7 +11448,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新技能信息() {
         final boolean result1 = this.角色ID.getText().matches("[0-9]+");
         if (result1) {
@@ -11503,7 +11497,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"[信息]:请先点击你想查看的角色。");
         }
     }
-    
+
     private void 刷新角色信息() {
         final String 输出 = "";
         try {
@@ -11566,7 +11560,7 @@ public class CongMS extends JFrame
 
         }
     }
-    
+
     private void 刷新角色背包穿戴() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色背包穿戴.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色背包穿戴.getModel()).removeRow(i);
@@ -11597,7 +11591,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色装备背包() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色装备背包.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色装备背包.getModel()).removeRow(i);
@@ -11628,7 +11622,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色消耗背包() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色消耗背包.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色消耗背包.getModel()).removeRow(i);
@@ -11657,7 +11651,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色特殊背包() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色特殊背包.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色特殊背包.getModel()).removeRow(i);
@@ -11686,7 +11680,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色游戏仓库() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色游戏仓库.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色游戏仓库.getModel()).removeRow(i);
@@ -11715,7 +11709,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色商城仓库() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色商城仓库.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色商城仓库.getModel()).removeRow(i);
@@ -11744,7 +11738,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色点券拍卖行() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色点券拍卖行.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色点券拍卖行.getModel()).removeRow(i);
@@ -11771,7 +11765,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色金币拍卖行() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色金币拍卖行.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色金币拍卖行.getModel()).removeRow(i);
@@ -11798,7 +11792,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色其他背包() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色其他背包.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色其他背包.getModel()).removeRow(i);
@@ -11827,7 +11821,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色设置背包() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色设置背包.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色设置背包.getModel()).removeRow(i);
@@ -11858,7 +11852,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新角色信息2() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
@@ -11918,7 +11912,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     public void 刷新怪物卡片() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
@@ -11951,7 +11945,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     public void 刷新世界爆物() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.世界爆物.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.世界爆物.getModel()).removeRow(i);
@@ -11982,7 +11976,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
     }
-    
+
     public void 刷新指定怪物爆物() {
         final boolean result = this.查询怪物掉落代码.getText().matches("[0-9]+");
         if (result) {
@@ -12026,7 +12020,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请输入要查询的怪物代码 ");
         }
     }
-    
+
     public void 刷新怪物爆物() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
@@ -12059,7 +12053,7 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     public void 刷新泡点设置() {
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.在线泡点设置.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.在线泡点设置.getModel()).removeRow(i);
@@ -12090,11 +12084,11 @@ public class CongMS extends JFrame
             }
         });
     }
-    
+
     private void 刷新泡点金币开关() {
         String 泡点金币开关显示 = "";
         final int 泡点金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点金币开关"));
-        if (泡点金币开关 <= 0) {
+        if (泡点金币开关 >= 1) {
             泡点金币开关显示 = "泡点金币:开启";
         }
         else {
@@ -12102,11 +12096,11 @@ public class CongMS extends JFrame
         }
         this.泡点金币开关(泡点金币开关显示);
     }
-    
+
     private void 刷新泡点点券开关() {
         String 泡点点券开关显示 = "";
         final int 泡点点券开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点点券开关"));
-        if (泡点点券开关 <= 0) {
+        if (泡点点券开关 >= 1) {
             泡点点券开关显示 = "泡点点券:开启";
         }
         else {
@@ -12114,11 +12108,11 @@ public class CongMS extends JFrame
         }
         this.泡点点券开关(泡点点券开关显示);
     }
-    
+
     private void 刷新泡点经验开关() {
         String 泡点经验开关显示 = "";
         final int 泡点经验开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点经验开关"));
-        if (泡点经验开关 <= 0) {
+        if (泡点经验开关 >= 1) {
             泡点经验开关显示 = "泡点经验:开启";
         }
         else {
@@ -12126,11 +12120,11 @@ public class CongMS extends JFrame
         }
         this.泡点经验开关(泡点经验开关显示);
     }
-    
+
     private void 刷新泡点抵用开关() {
         String 泡点抵用开关显示 = "";
         final int 泡点抵用开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
-        if (泡点抵用开关 <= 0) {
+        if (泡点抵用开关 >= 1) {
             泡点抵用开关显示 = "泡点抵用:开启";
         }
         else {
@@ -12138,11 +12132,11 @@ public class CongMS extends JFrame
         }
         this.泡点抵用开关(泡点抵用开关显示);
     }
-    
+
     private void 刷新泡点豆豆开关() {
         String 泡点豆豆开关显示 = "";
         final int 泡点豆豆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
-        if (泡点豆豆开关 <= 0) {
+        if (泡点豆豆开关 >= 1) {
             泡点豆豆开关显示 = "泡点豆豆:开启";
         }
         else {
@@ -12150,107 +12144,107 @@ public class CongMS extends JFrame
         }
         this.泡点豆豆开关(泡点豆豆开关显示);
     }
-    
+
     private void 泡点点券开关(final String str) {
         this.泡点点券开关.setText(str);
     }
-    
+
     private void 泡点经验开关(final String str) {
         this.泡点经验开关.setText(str);
     }
-    
+
     private void 泡点抵用开关(final String str) {
         this.泡点抵用开关.setText(str);
     }
-    
+
     private void 泡点金币开关(final String str) {
         this.泡点金币开关.setText(str);
     }
-    
+
     private void 泡点豆豆开关(final String str) {
         this.泡点豆豆开关.setText(str);
     }
-    
+
     private void 蓝蜗牛开关(final String str) {
         this.蓝蜗牛开关.setText(str);
     }
-    
+
     private void 蘑菇仔开关(final String str) {
         this.蘑菇仔开关.setText(str);
     }
-    
+
     private void 绿水灵开关(final String str) {
         this.绿水灵开关.setText(str);
     }
-    
+
     private void 漂漂猪开关(final String str) {
         this.漂漂猪开关.setText(str);
     }
-    
+
     private void 小青蛇开关(final String str) {
         this.小青蛇开关.setText(str);
     }
-    
+
     private void 红螃蟹开关(final String str) {
         this.红螃蟹开关.setText(str);
     }
-    
+
     private void 大海龟开关(final String str) {
         this.大海龟开关.setText(str);
     }
-    
+
     private void 章鱼怪开关(final String str) {
         this.章鱼怪开关.setText(str);
     }
-    
+
     private void 顽皮猴开关(final String str) {
         this.顽皮猴开关.setText(str);
     }
-    
+
     private void 星精灵开关(final String str) {
         this.星精灵开关.setText(str);
     }
-    
+
     private void 胖企鹅开关(final String str) {
         this.胖企鹅开关.setText(str);
     }
-    
+
     private void 白雪人开关(final String str) {
         this.白雪人开关.setText(str);
     }
-    
+
     private void 紫色猫开关(final String str) {
         this.紫色猫开关.setText(str);
     }
-    
+
     private void 大灰狼开关(final String str) {
         this.大灰狼开关.setText(str);
     }
-    
+
     private void 小白兔开关(final String str) {
         this.小白兔开关.setText(str);
     }
-    
+
     private void 喷火龙开关(final String str) {
         this.喷火龙开关.setText(str);
     }
-    
+
     private void 火野猪开关(final String str) {
         this.火野猪开关.setText(str);
     }
-    
+
     private void 青鳄鱼开关(final String str) {
         this.青鳄鱼开关.setText(str);
     }
-    
+
     private void 花蘑菇开关(final String str) {
         this.花蘑菇开关.setText(str);
     }
-    
+
     private void 刷新花蘑菇开关() {
         String 花蘑菇显示 = "";
         final int 花蘑菇 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"花蘑菇开关"));
-        if (花蘑菇 <= 0) {
+        if (花蘑菇 >= 1) {
             花蘑菇显示 = "重载刷新怪物技能";
         }
         else {
@@ -12258,11 +12252,11 @@ public class CongMS extends JFrame
         }
         this.花蘑菇开关(花蘑菇显示);
     }
-    
+
     private void 刷新火野猪开关() {
         String 火野猪显示 = "";
         final int 火野猪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"火野猪开关"));
-        if (火野猪 <= 0) {
+        if (火野猪 >= 1) {
             火野猪显示 = "重载修改怪物技能:开";
         }
         else {
@@ -12270,11 +12264,11 @@ public class CongMS extends JFrame
         }
         this.火野猪开关(火野猪显示);
     }
-    
+
     private void 刷新青鳄鱼开关() {
         String 青鳄鱼显示 = "";
         final int 青鳄鱼 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"青鳄鱼开关"));
-        if (青鳄鱼 <= 0) {
+        if (青鳄鱼 >= 1) {
             青鳄鱼显示 = "重载配置";
         }
         else {
@@ -12282,11 +12276,11 @@ public class CongMS extends JFrame
         }
         this.青鳄鱼开关(青鳄鱼显示);
     }
-    
+
     private void 刷新喷火龙开关() {
         String 喷火龙显示 = "";
         final int 喷火龙 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"喷火龙开关"));
-        if (喷火龙 <= 0) {
+        if (喷火龙 >= 1) {
             喷火龙显示 = "重载修改item:开";
         }
         else {
@@ -12294,11 +12288,11 @@ public class CongMS extends JFrame
         }
         this.喷火龙开关(喷火龙显示);
     }
-    
+
     private void 刷新小白兔开关() {
         String 小白兔显示 = "";
         final int 小白兔 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"小白兔开关"));
-        if (小白兔 <= 0) {
+        if (小白兔 >= 1) {
             小白兔显示 = "重载新增item:开";
         }
         else {
@@ -12306,11 +12300,11 @@ public class CongMS extends JFrame
         }
         this.小白兔开关(小白兔显示);
     }
-    
+
     private void 刷新大灰狼开关() {
         String 大灰狼显示 = "";
         final int 大灰狼 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大灰狼开关"));
-        if (大灰狼 <= 0) {
+        if (大灰狼 >= 1) {
             大灰狼显示 = "重载修改任务:开";
         }
         else {
@@ -12318,11 +12312,11 @@ public class CongMS extends JFrame
         }
         this.大灰狼开关(大灰狼显示);
     }
-    
+
     private void 刷新紫色猫开关() {
         String 紫色猫显示 = "";
         final int 紫色猫 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"紫色猫开关"));
-        if (紫色猫 <= 0) {
+        if (紫色猫 >= 1) {
             紫色猫显示 = "重载任务:开";
         }
         else {
@@ -12330,15 +12324,15 @@ public class CongMS extends JFrame
         }
         this.紫色猫开关(紫色猫显示);
     }
-    
+
     private void 石头人开关(final String str) {
         this.石头人开关.setText(str);
     }
-    
+
     private void 刷新石头人开关() {
         String 石头人显示 = "";
         final int 石头人 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"石头人开关"));
-        if (石头人 <= 0) {
+        if (石头人 >= 1) {
             石头人显示 = "重载怪物掉落:开";
         }
         else {
@@ -12346,11 +12340,11 @@ public class CongMS extends JFrame
         }
         this.石头人开关(石头人显示);
     }
-    
+
     private void 刷新白雪人开关() {
         String 白雪人显示 = "";
         final int 白雪人 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"白雪人开关"));
-        if (白雪人 <= 0) {
+        if (白雪人 >= 1) {
             白雪人显示 = "白雪人:开";
         }
         else {
@@ -12358,11 +12352,11 @@ public class CongMS extends JFrame
         }
         this.白雪人开关(白雪人显示);
     }
-    
+
     private void 刷新胖企鹅开关() {
         String 胖企鹅显示 = "";
         final int 胖企鹅 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"胖企鹅开关"));
-        if (胖企鹅 <= 0) {
+        if (胖企鹅 >= 1) {
             胖企鹅显示 = "胖企鹅:开";
         }
         else {
@@ -12370,11 +12364,11 @@ public class CongMS extends JFrame
         }
         this.胖企鹅开关(胖企鹅显示);
     }
-    
+
     private void 刷新星精灵开关() {
         String 星精灵显示 = "";
         final int 星精灵 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"星精灵开关"));
-        if (星精灵 <= 0) {
+        if (星精灵 >= 1) {
             星精灵显示 = "星精灵:开";
         }
         else {
@@ -12382,11 +12376,11 @@ public class CongMS extends JFrame
         }
         this.星精灵开关(星精灵显示);
     }
-    
+
     private void 刷新顽皮猴开关() {
         String 顽皮猴显示 = "";
         final int 顽皮猴 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"顽皮猴开关"));
-        if (顽皮猴 <= 0) {
+        if (顽皮猴 >= 1) {
             顽皮猴显示 = "顽皮猴:开";
         }
         else {
@@ -12394,11 +12388,11 @@ public class CongMS extends JFrame
         }
         this.顽皮猴开关(顽皮猴显示);
     }
-    
+
     private void 刷新章鱼怪开关() {
         String 章鱼怪显示 = "";
         final int 章鱼怪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"章鱼怪开关"));
-        if (章鱼怪 <= 0) {
+        if (章鱼怪 >= 1) {
             章鱼怪显示 = "重置发型脸:开";
         }
         else {
@@ -12406,11 +12400,11 @@ public class CongMS extends JFrame
         }
         this.章鱼怪开关(章鱼怪显示);
     }
-    
+
     private void 刷新大海龟开关() {
         String 大海龟显示 = "";
         final int 大海龟 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"大海龟开关"));
-        if (大海龟 <= 0) {
+        if (大海龟 >= 1) {
             大海龟显示 = "大海龟:开";
         }
         else {
@@ -12418,11 +12412,11 @@ public class CongMS extends JFrame
         }
         this.大海龟开关(大海龟显示);
     }
-    
+
     private void 刷新红螃蟹开关() {
         String 红螃蟹显示 = "";
         final int 红螃蟹 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"红螃蟹开关"));
-        if (红螃蟹 <= 0) {
+        if (红螃蟹 >= 1) {
             红螃蟹显示 = "提取WZ文件内容:开";
         }
         else {
@@ -12430,11 +12424,11 @@ public class CongMS extends JFrame
         }
         this.红螃蟹开关(红螃蟹显示);
     }
-    
+
     private void 刷新小青蛇开关() {
         String 小青蛇显示 = "";
         final int 小青蛇 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战力修正"));
-        if (小青蛇 <= 0) {
+        if (小青蛇 >= 1) {
             小青蛇显示 = "战力修正:开";
         }
         else {
@@ -12442,11 +12436,11 @@ public class CongMS extends JFrame
         }
         this.小青蛇开关(小青蛇显示);
     }
-    
+
     private void 刷新蓝蜗牛开关() {
         String 蓝蜗牛显示 = "";
         final int 蓝蜗牛 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蓝蜗牛开关"));
-        if (蓝蜗牛 <= 0) {
+        if (蓝蜗牛 >= 1) {
             蓝蜗牛显示 = "蓝蜗牛:开";
         }
         else {
@@ -12454,11 +12448,11 @@ public class CongMS extends JFrame
         }
         this.蓝蜗牛开关(蓝蜗牛显示);
     }
-    
+
     private void 刷新漂漂猪开关() {
         String 漂漂猪显示 = "";
         final int 漂漂猪 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"漂漂猪开关"));
-        if (漂漂猪 <= 0) {
+        if (漂漂猪 >= 1) {
             漂漂猪显示 = "漂漂猪:开";
         }
         else {
@@ -12466,11 +12460,11 @@ public class CongMS extends JFrame
         }
         this.漂漂猪开关(漂漂猪显示);
     }
-    
+
     private void 刷新绿水灵开关() {
         String 绿水灵显示 = "";
         final int 绿水灵 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"绿水灵开关"));
-        if (绿水灵 <= 0) {
+        if (绿水灵 >= 1) {
             绿水灵显示 = "绿水灵:开";
         }
         else {
@@ -12478,11 +12472,11 @@ public class CongMS extends JFrame
         }
         this.绿水灵开关(绿水灵显示);
     }
-    
+
     private void 刷新蘑菇仔开关() {
         String 蘑菇仔显示 = "";
         final int 蘑菇仔 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"蘑菇仔开关"));
-        if (蘑菇仔 <= 0) {
+        if (蘑菇仔 >= 1) {
             蘑菇仔显示 = "蘑菇仔:开";
         }
         else {
@@ -12490,11 +12484,11 @@ public class CongMS extends JFrame
         }
         this.蘑菇仔开关(蘑菇仔显示);
     }
-    
+
     private void 刷新指令通知开关() {
         String 刷新指令通知开关显示 = "";
         final int 指令通知开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"指令通知开关"));
-        if (指令通知开关 <= 0) {
+        if (指令通知开关 >= 1) {
             刷新指令通知开关显示 = "指令通知:开启";
         }
         else {
@@ -12502,11 +12496,11 @@ public class CongMS extends JFrame
         }
         this.指令通知开关(刷新指令通知开关显示);
     }
-    
+
     private void 刷新玩家聊天开关() {
         String 刷新玩家聊天开关显示 = "";
         final int 玩家聊天开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家聊天开关"));
-        if (玩家聊天开关 <= 0) {
+        if (玩家聊天开关 >= 1) {
             刷新玩家聊天开关显示 = "玩家聊天:开启";
         }
         else {
@@ -12514,23 +12508,23 @@ public class CongMS extends JFrame
         }
         this.玩家聊天开关(刷新玩家聊天开关显示);
     }
-    
+
     private void 刷新禁止登陆开关() {
         String 刷新禁止登陆开关显示 = "";
         final int 禁止登陆开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"禁止登陆开关"));
-        if (禁止登陆开关 <= 0) {
-            刷新禁止登陆开关显示 = "游戏登陆:禁止";
+        if (禁止登陆开关 == 0) {
+            刷新禁止登陆开关显示 = "游戏登陆:通行";
         }
         else {
-            刷新禁止登陆开关显示 = "游戏登陆:通行";
+           刷新禁止登陆开关显示 = "游戏登陆:禁止";
         }
         this.禁止登陆开关(刷新禁止登陆开关显示);
     }
-    
+
     private void 刷新升级快讯() {
         String 升级快讯显示 = "";
         final int 升级快讯 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"升级快讯开关"));
-        if (升级快讯 <= 0) {
+        if (升级快讯 >= 1) {
             升级快讯显示 = "升级快讯:开启";
         }
         else {
@@ -12538,11 +12532,11 @@ public class CongMS extends JFrame
         }
         this.游戏升级快讯(升级快讯显示);
     }
-    
+
     private void 刷新丢出金币开关() {
         String 刷新丢出金币开关显示 = "";
         final int 丢出金币开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出金币开关"));
-        if (丢出金币开关 <= 0) {
+        if (丢出金币开关 >= 1) {
             刷新丢出金币开关显示 = "丢出金币:开启";
         }
         else {
@@ -12550,11 +12544,11 @@ public class CongMS extends JFrame
         }
         this.丢出金币开关(刷新丢出金币开关显示);
     }
-    
+
     private void 刷新玩家交易开关() {
         String 刷新玩家交易开关显示 = "";
         final int 玩家交易开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家交易开关"));
-        if (玩家交易开关 <= 0) {
+        if (玩家交易开关 >= 1) {
             刷新玩家交易开关显示 = "玩家交易:开启";
         }
         else {
@@ -12562,11 +12556,11 @@ public class CongMS extends JFrame
         }
         this.玩家交易开关(刷新玩家交易开关显示);
     }
-    
+
     private void 刷新丢出物品开关() {
         String 刷新丢出物品开关显示 = "";
         final int 丢出物品开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出物品开关"));
-        if (丢出物品开关 <= 0) {
+        if (丢出物品开关 >= 1) {
             刷新丢出物品开关显示 = "丢出物品:开启";
         }
         else {
@@ -12574,11 +12568,11 @@ public class CongMS extends JFrame
         }
         this.丢出物品开关(刷新丢出物品开关显示);
     }
-    
+
     private void 刷新游戏指令开关() {
         String 刷新游戏指令开关显示 = "";
         final int 游戏指令开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏指令开关"));
-        if (游戏指令开关 <= 0) {
+        if (游戏指令开关 >= 1) {
             刷新游戏指令开关显示 = "游戏指令:关闭";
         }
         else {
@@ -12586,11 +12580,11 @@ public class CongMS extends JFrame
         }
         this.游戏指令开关(刷新游戏指令开关显示);
     }
-    
+
     private void 刷新上线提醒开关() {
         String 刷新上线提醒开关显示 = "";
         final int 上线提醒开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"上线提醒开关"));
-        if (上线提醒开关 <= 0) {
+        if (上线提醒开关 >= 1) {
             刷新上线提醒开关显示 = "登录公告:开启";
         }
         else {
@@ -12598,11 +12592,11 @@ public class CongMS extends JFrame
         }
         this.上线提醒开关(刷新上线提醒开关显示);
     }
-    
+
     private void 刷新回收地图开关() {
         String 刷新回收地图开关显示 = "";
         final int 回收地图开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"回收地图开关"));
-        if (回收地图开关 <= 0) {
+        if (回收地图开关 >= 1) {
             刷新回收地图开关显示 = "回收地图:开启";
         }
         else {
@@ -12610,11 +12604,11 @@ public class CongMS extends JFrame
         }
         this.回收地图开关(刷新回收地图开关显示);
     }
-    
+
     private void 刷新管理隐身开关() {
         String 刷新管理隐身开关显示 = "";
         final int 管理隐身开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理隐身开关"));
-        if (管理隐身开关 <= 0) {
+        if (管理隐身开关 >= 1) {
             刷新管理隐身开关显示 = "管理隐身:开启";
         }
         else {
@@ -12622,11 +12616,11 @@ public class CongMS extends JFrame
         }
         this.管理隐身开关(刷新管理隐身开关显示);
     }
-    
+
     private void 刷新管理加速开关() {
         String 刷新管理加速开关显示 = "";
         final int 管理加速开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"管理加速开关"));
-        if (管理加速开关 <= 0) {
+        if (管理加速开关 >= 1) {
             刷新管理加速开关显示 = "管理加速:开启";
         }
         else {
@@ -12634,11 +12628,11 @@ public class CongMS extends JFrame
         }
         this.管理加速开关(刷新管理加速开关显示);
     }
-    
+
     private void 刷新雇佣商人开关() {
         String 刷新雇佣商人开关显示 = "";
         final int 雇佣商人开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"雇佣商人开关"));
-        if (雇佣商人开关 <= 0) {
+        if (雇佣商人开关 >= 1) {
             刷新雇佣商人开关显示 = "雇佣商人:开启";
         }
         else {
@@ -12646,11 +12640,11 @@ public class CongMS extends JFrame
         }
         this.雇佣商人开关(刷新雇佣商人开关显示);
     }
-    
+
     private void 刷新欢迎弹窗开关() {
         String 刷新欢迎弹窗开关显示 = "";
         final int 欢迎弹窗开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"欢迎弹窗开关"));
-        if (欢迎弹窗开关 <= 0) {
+        if (欢迎弹窗开关 >= 1) {
             刷新欢迎弹窗开关显示 = "欢迎弹窗:开启";
         }
         else {
@@ -12658,11 +12652,11 @@ public class CongMS extends JFrame
         }
         this.欢迎弹窗开关(刷新欢迎弹窗开关显示);
     }
-    
+
     private void 刷新滚动公告开关() {
         String 刷新滚动公告开关显示 = "";
         final int 滚动公告开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"滚动公告开关"));
-        if (滚动公告开关 <= 0) {
+        if (滚动公告开关 >= 1) {
             刷新滚动公告开关显示 = "滚动公告:开启";
         }
         else {
@@ -12670,11 +12664,11 @@ public class CongMS extends JFrame
         }
         this.滚动公告开关(刷新滚动公告开关显示);
     }
-    
+
     private void 刷新游戏喇叭开关() {
         String 刷新游戏喇叭开关显示 = "";
         final int 游戏喇叭开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-        if (游戏喇叭开关 <= 0) {
+        if (游戏喇叭开关 >= 1) {
             刷新游戏喇叭开关显示 = "游戏喇叭:开启";
         }
         else {
@@ -12682,99 +12676,99 @@ public class CongMS extends JFrame
         }
         this.游戏喇叭开关(刷新游戏喇叭开关显示);
     }
-    
+
     private void 滚动公告开关(final String str) {
         this.滚动公告开关.setText(str);
     }
-    
+
     private void 回收地图开关(final String str) {
         this.回收地图开关.setText(str);
     }
-    
+
     private void 玩家聊天开关(final String str) {
         this.玩家聊天开关.setText(str);
     }
-    
+
     private void 上线提醒开关(final String str) {
         this.上线提醒开关.setText(str);
     }
-    
+
     private void 指令通知开关(final String str) {
         this.指令通知开关.setText(str);
     }
-    
+
     private void 雇佣商人开关(final String str) {
         this.雇佣商人开关.setText(str);
     }
-    
+
     private void 欢迎弹窗开关(final String str) {
         this.欢迎弹窗开关.setText(str);
     }
-    
+
     private void 管理隐身开关(final String str) {
         this.管理隐身开关.setText(str);
     }
-    
+
     private void 管理加速开关(final String str) {
         this.管理加速开关.setText(str);
     }
-    
+
     private void 游戏指令开关(final String str) {
         this.游戏指令开关.setText(str);
     }
-    
+
     private void 游戏喇叭开关(final String str) {
         this.游戏喇叭开关.setText(str);
     }
-    
+
     private void 丢出金币开关(final String str) {
         this.丢出金币开关.setText(str);
     }
-    
+
     private void 玩家交易开关(final String str) {
         this.玩家交易开关.setText(str);
     }
-    
+
     private void 丢出物品开关(final String str) {
         this.丢出物品开关.setText(str);
     }
-    
+
     private void 禁止登陆开关(final String str) {
         this.禁止登陆开关.setText(str);
     }
-    
+
     private void 游戏升级快讯(final String str) {
         this.游戏升级快讯.setText(str);
     }
-    
+
     private void 冒险家等级上限(final String str) {
         this.冒险家等级上限.setText(str);
     }
-    
+
     private void 骑士团等级上限(final String str) {
         this.骑士团等级上限.setText(str);
     }
-    
+
     private void 游戏冒险家职业开关(final String str) {
         this.冒险家职业开关.setText(str);
     }
-    
+
     private void 游戏骑士团职业开关(final String str) {
         this.骑士团职业开关.setText(str);
     }
-    
+
     private void 游戏战神职业开关(final String str) {
         this.战神职业开关.setText(str);
     }
-    
+
     private void 屠令广播开关(final String str) {
         this.屠令广播开关.setText(str);
     }
-    
+
     private void 刷新登陆帮助() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"登陆帮助开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "登陆帮助:开启";
         }
         else {
@@ -12782,11 +12776,11 @@ public class CongMS extends JFrame
         }
         this.登陆帮助开关.setText(显示);
     }
-    
+
     private void 刷新怪物状态开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"怪物状态开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "怪物状态:开启";
         }
         else {
@@ -12794,11 +12788,11 @@ public class CongMS extends JFrame
         }
         this.怪物状态开关.setText(显示);
     }
-    
+
     private void 刷新越级打怪开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"越级打怪开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "越级打怪:开启";
         }
         else {
@@ -12806,11 +12800,11 @@ public class CongMS extends JFrame
         }
         this.越级打怪开关.setText(显示);
     }
-    
+
     private void 刷新地图名称开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"地图名称开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "地图名称:显示";
         }
         else {
@@ -12818,11 +12812,11 @@ public class CongMS extends JFrame
         }
         this.地图名称开关.setText(显示);
     }
-    
+
     private void 刷新过图存档时间() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"过图存档开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "过图存档:开启";
         }
         else {
@@ -12830,11 +12824,11 @@ public class CongMS extends JFrame
         }
         this.过图存档开关.setText(显示);
     }
-    
+
     private void 刷新吸怪检测开关() {
         String 显示 = "";
         final int S = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"吸怪检测开关"));
-        if (S <= 0) {
+        if (S >= 1) {
             显示 = "吸怪检测:开启";
         }
         else {
@@ -12842,25 +12836,25 @@ public class CongMS extends JFrame
         }
         this.吸怪检测开关.setText(显示);
     }
-    
+
     private void 刷新冒险家等级上限() {
         String 冒险家等级上限显示 = "";
         final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
         冒险家等级上限显示 = "" + 冒险家等级上限;
         this.冒险家等级上限(冒险家等级上限显示);
     }
-    
+
     private void 刷新骑士团等级上限() {
         String 骑士团等级上限显示 = "";
         final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
         骑士团等级上限显示 = "" + 骑士团等级上限;
         this.骑士团等级上限(骑士团等级上限显示);
     }
-    
+
     private void 刷新冒险家职业开关() {
         String 冒险家职业开关显示 = "";
         final int 冒险家职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家职业开关"));
-        if (冒险家职业开关 <= 0) {
+        if (冒险家职业开关 >= 1) {
             冒险家职业开关显示 = "冒险家:开启";
         }
         else {
@@ -12868,11 +12862,11 @@ public class CongMS extends JFrame
         }
         this.游戏冒险家职业开关(冒险家职业开关显示);
     }
-    
+
     private void 刷新骑士团职业开关() {
         String 骑士团职业开关显示 = "";
         final int 骑士团职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团职业开关"));
-        if (骑士团职业开关 <= 0) {
+        if (骑士团职业开关 >= 1) {
             骑士团职业开关显示 = "骑士团:开启";
         }
         else {
@@ -12880,11 +12874,11 @@ public class CongMS extends JFrame
         }
         this.游戏骑士团职业开关(骑士团职业开关显示);
     }
-    
+
     private void 刷新战神职业开关() {
         String 战神职业开关显示 = "";
         final int 战神职业开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"战神职业开关"));
-        if (战神职业开关 <= 0) {
+        if (战神职业开关 >= 1) {
             战神职业开关显示 = "战   神:开启";
         }
         else {
@@ -12892,11 +12886,11 @@ public class CongMS extends JFrame
         }
         this.游戏战神职业开关(战神职业开关显示);
     }
-    
+
     private void 刷新屠令广播开关() {
         String 屠令广播显示 = "";
         final int 屠令广播 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"屠令广播开关"));
-        if (屠令广播 <= 0) {
+        if (屠令广播 >= 1) {
             屠令广播显示 = "屠令广播:开启";
         }
         else {
@@ -12942,14 +12936,14 @@ public class CongMS extends JFrame
         if (检测开关 > 0) {
             try {
                 ps = DatabaseConnection.getConnection().prepareStatement("UPDATE configvalues SET Val = ? WHERE id = ?");
-                ps2 = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM configvalues WHERE id = ?");
-                ps2.setInt(1, b);
+                ps2 = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM configvalues WHERE name = ?");
+                ps2.setString(1, a);
                 rs = ps2.executeQuery();
                 if (rs.next()) {
                     String sqlString2 = null;
                     final String sqlString3 = null;
                     final String sqlString4 = null;
-                    sqlString2 = "update configvalues set Val= '0' where id= '" + b + "';";
+                    sqlString2 = "update configvalues set Val= '1' where name= '" + a + "';";
                     final PreparedStatement dropperid = DatabaseConnection.getConnection().prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
@@ -12961,14 +12955,14 @@ public class CongMS extends JFrame
         else {
             try {
                 ps = DatabaseConnection.getConnection().prepareStatement("UPDATE configvalues SET Val = ? WHERE id = ?");
-                ps2 = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM configvalues WHERE id = ?");
-                ps2.setInt(1, b);
+                ps2 = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM configvalues WHERE name = ?");
+                ps2.setString(1, a);
                 rs = ps2.executeQuery();
                 if (rs.next()) {
                     String sqlString2 = null;
                     final String sqlString3 = null;
                     final String sqlString4 = null;
-                    sqlString2 = "update configvalues set Val= '1' where id='" + b + "';";
+                    sqlString2 = "update configvalues set Val= '0' where name='" + a + "';";
                     final PreparedStatement dropperid = DatabaseConnection.getConnection().prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
@@ -13317,6 +13311,10 @@ public class CongMS extends JFrame
         Start.GetSuitSystem();
         Start.GetfiveTurn();
         Start.GetBreakthroughMechanism();
+        Start.GetSuperSkills();
+        Start.GetFieldSkills();
+        Start.getAttackInfo();
+        Start.getMobInfo();
         GetConfigValues();
         tzjc.sr_tz();
 

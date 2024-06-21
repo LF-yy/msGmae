@@ -7,6 +7,8 @@ import javax.script.Invocable;
 import client.MapleClient;
 import java.util.LinkedHashMap;
 import handling.channel.ChannelServer;
+
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 
@@ -31,7 +33,15 @@ public class EventScriptManager extends AbstractScriptManager
             }
         }
     }
-    
+    public final void EventScript(final ChannelServer cserv, final String scripts) {
+            if (Objects.nonNull(scripts)) {
+                final Invocable iv = this.getInvocable("事件/" + scripts + ".js", null);
+                if (iv != null) {
+                    this.events.put(scripts, new EventEntry(scripts, iv, new EventManager(cserv, iv, scripts)));
+                }
+            }
+        }
+
     public final EventManager getEventManager(final String event) {
         final EventEntry entry = (EventEntry)this.events.get((Object)event);
         if (entry == null) {

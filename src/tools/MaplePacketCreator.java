@@ -5,6 +5,8 @@ import java.sql.ResultSet;
 
 import bean.BreakthroughMechanism;
 import bean.FiveTurn;
+import gui.CongMS;
+import gui.LtMS;
 import server.*;
 import server.maps.MapleDragon;
 import client.MapleBeans;
@@ -861,24 +863,45 @@ public class MaplePacketCreator
         mplew.write((int)chr.getLevel());
         mplew.writeMapleAsciiString(chr.getName());
         if (chr.getGuildId() <= 0) {
-            mplew.writeMapleAsciiString("");
+            mplew.writeMapleAsciiString(ServerConfig.SERVERNAME);
             mplew.writeZeroBytes(6);
         }
         else {
             final MapleGuild gs = Guild.getGuild(chr.getGuildId());
+//            if (gs != null) {
+//                List<FiveTurn> fiveTurns = Start.fiveTurn.get(chr.getId());
+//                if(ListUtil.isNotEmpty(fiveTurns)){
+//                    List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(chr.getId());
+//                    if(ListUtil.isNotEmpty(breakthroughMechanisms)){
+//                        mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
+//
+//                    }else{
+//                        mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
+//                    }
+//                }else{
+//                    mplew.writeMapleAsciiString("[" + gs.getName() + "]||战力 :" + chr.getCombat());
+//                }
+//                mplew.writeShort(gs.getLogoBG());
+//                mplew.write(gs.getLogoBGColor());
+//                mplew.writeShort(gs.getLogo());
+//                mplew.write(gs.getLogoColor());
+//            }
+//            else {
+//                mplew.writeMapleAsciiString("战力 :" + chr.getCombat());
+//                mplew.writeZeroBytes(6);
+//            }
             if (gs != null) {
                 List<FiveTurn> fiveTurns = Start.fiveTurn.get(chr.getId());
-
                 if(ListUtil.isNotEmpty(fiveTurns)){
                     List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(chr.getId());
                     if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-                        mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
+                        mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]");
 
                     }else{
-                        mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
+                        mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"[" + fiveTurns.get(0).getOccupationName() + "]");
                     }
                 }else{
-                    mplew.writeMapleAsciiString("[" + gs.getName() + "]||战力 :" + chr.getCombat());
+                    mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"[" + gs.getName() + "]");
                 }
                 mplew.writeShort(gs.getLogoBG());
                 mplew.write(gs.getLogoBGColor());
@@ -886,7 +909,7 @@ public class MaplePacketCreator
                 mplew.write(gs.getLogoColor());
             }
             else {
-                mplew.writeMapleAsciiString("战力 :" + chr.getCombat());
+                mplew.writeMapleAsciiString(ServerConfig.SERVERNAME);
                 mplew.writeZeroBytes(6);
             }
         }
@@ -1104,7 +1127,8 @@ public class MaplePacketCreator
         }
         return mplew.getPacket();
     }
-    
+
+    //近距离攻击封包发送
     public static byte[] closeRangeAttack(final int cid, final int tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final List<AttackPair> damage, final boolean energy, final int lvl, final byte mastery, final byte unk, final int charge) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)(energy ? SendPacketOpcode.ENERGY_ATTACK.getValue() : SendPacketOpcode.CLOSE_RANGE_ATTACK.getValue()));
@@ -1154,7 +1178,7 @@ public class MaplePacketCreator
         }
         return mplew.getPacket();
     }
-    
+    //远程攻击封包发送
     public static byte[] rangedAttack(final int cid, final byte tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final int itemid, final List<AttackPair> damage, final Point pos, final int lvl, final byte mastery, final byte unk) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.RANGED_ATTACK.getValue());
@@ -1191,7 +1215,8 @@ public class MaplePacketCreator
         mplew.writePos(pos);
         return mplew.getPacket();
     }
-    
+
+    //魔法攻击封包发送
     public static byte[] magicAttack(final int cid, final int tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final List<AttackPair> damage, final int charge, final int lvl, final byte unk) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MAGIC_ATTACK.getValue());
@@ -2617,10 +2642,25 @@ public class MaplePacketCreator
         mplew.writeInt(mist.getBox().y);
         mplew.writeInt(mist.getBox().x + mist.getBox().width);
         mplew.writeInt(mist.getBox().y + mist.getBox().height);
+        mplew.writeInt(LtMS.ConfigValuesMap.get("方向"));
+        return mplew.getPacket();
+    }
+    public static byte[] spawnSkill(final MapleMist mist,int opCode) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(opCode);
+        mplew.writeInt(mist.getObjectId());
+        mplew.writeInt(LtMS.ConfigValuesMap.get("技能类型"));
+        mplew.writeInt(mist.getOwnerId());
+        mplew.writeInt(mist.getSourceSkill().getId());
+        mplew.write(mist.getSkillLevel());
+        mplew.writeShort(mist.getSkillDelay());
+        mplew.writeInt(mist.getBox().x);
+        mplew.writeInt(mist.getBox().y);
+        mplew.writeInt(mist.getBox().x + mist.getBox().width);
+        mplew.writeInt(mist.getBox().y + mist.getBox().height);
         mplew.writeInt(0);
         return mplew.getPacket();
     }
-    
     public static byte[] removeMist(final int oid, final boolean eruption) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.REMOVE_MIST.getValue());
@@ -2864,18 +2904,32 @@ public class MaplePacketCreator
             if(ListUtil.isNotEmpty(fiveTurns)){
                 List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(c.getClient().getPlayer().getId());
                 if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
-
+                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]");
                 }else{
-                    mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
+                    mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]");
                 }
             }else{
-                mplew.writeMapleAsciiString("[" + guild.getName() + "]||战力 :" + c.getCombat());
+                mplew.writeMapleAsciiString("[" + guild.getName() + "]");
             }
         } else {
             mplew.writeMapleAsciiString("[" + guild.getName() + "]");
         }
-
+//        if (c != null) {
+//            List<FiveTurn> fiveTurns = Start.fiveTurn.get(c.getClient().getPlayer().getId());
+//
+//            if(ListUtil.isNotEmpty(fiveTurns)){
+//                List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(c.getClient().getPlayer().getId());
+//                if(ListUtil.isNotEmpty(breakthroughMechanisms)){
+//                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
+//                }else{
+//                    mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
+//                }
+//            }else{
+//                mplew.writeMapleAsciiString("[" + guild.getName() + "]||战力 :" + c.getCombat());
+//            }
+//        } else {
+//            mplew.writeMapleAsciiString("[" + guild.getName() + "]");
+//        }
 
         for (int i = 1; i <= 5; ++i) {
             mplew.writeMapleAsciiString(guild.getRankTitle(i));
@@ -4638,7 +4692,7 @@ public class MaplePacketCreator
         PacketHelper.addItemInfo(mplew, item, true, false);
         return mplew.getPacket();
     }
-    
+
     public static byte[] updateInventorySlot(final MapleInventoryType type, final IItem item, final boolean fromDrop) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MODIFY_INVENTORY_ITEM.getValue());
@@ -4650,7 +4704,32 @@ public class MaplePacketCreator
         mplew.writeShort((int)item.getQuantity());
         return mplew.getPacket();
     }
-    
+    public static byte[] addInventorySlot(MapleInventoryType type, Item item, boolean fromDrop) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        mplew.writeShort(SendPacketOpcode.MODIFY_INVENTORY_ITEM.getValue());
+        mplew.write(fromDrop ? 1 : 0);
+        mplew.write(1);
+        //mplew.write(0);
+        mplew.write(GameConstants.isInBag(item.getPosition(), type.getType()) ? 9 : 0);
+        mplew.write(type.getType());
+        mplew.writeShort(item.getPosition());
+        PacketHelper.addItemInfo(mplew, item);
+        return mplew.getPacket();
+    }
+    public static byte[] sendHammer效果(boolean start, int hammered) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        mplew.writeShort(SendPacketOpcode.VICIOUS_HAMMER.getValue());
+        mplew.write(start ? 52 : 51);
+        mplew.writeInt(0);
+        if (start) {
+            mplew.writeInt(hammered);
+        } else {
+            mplew.writeInt(0);
+        }
+        return mplew.getPacket();
+    }
     public static byte[] openWeb(final String web) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.OPEN_WEB.getValue());

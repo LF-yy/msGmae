@@ -26,11 +26,11 @@ public class DBConPool
     private static String dbPort;
     
     public static void InitDB() {
-        DBConPool.dbName = ServerProperties.getProperty("CongMS.db.name", DBConPool.dbName);
-        DBConPool.dbIp = ServerProperties.getProperty("CongMS.db.ip", DBConPool.dbIp);
-        DBConPool.dbport = ServerProperties.getProperty("CongMS.db.port", DBConPool.dbport);
-        DBConPool.dbUser = ServerProperties.getProperty("CongMS.db.user", DBConPool.dbUser);
-        DBConPool.dbPass = ServerProperties.getProperty("CongMS.db.password", DBConPool.dbPass);
+        DBConPool.dbName = ServerProperties.getProperty("LtMS.db.name", DBConPool.dbName);
+        DBConPool.dbIp = ServerProperties.getProperty("LtMS.db.ip", DBConPool.dbIp);
+        DBConPool.dbport = ServerProperties.getProperty("LtMS.db.port", DBConPool.dbport);
+        DBConPool.dbUser = ServerProperties.getProperty("LtMS.db.user", DBConPool.dbUser);
+        DBConPool.dbPass = ServerProperties.getProperty("LtMS.db.password", DBConPool.dbPass);
     }
     
     public static DBConPool getInstance() {
@@ -56,11 +56,11 @@ public class DBConPool
         catch (IOException ex) {
             System.err.println("加载数据库配置出错，请检查" + (Object)ex);
         }
-        DBConPool.dbName = DBConPool.dbProps.getProperty("CongMS.db.name");
-        DBConPool.dbHost = DBConPool.dbProps.getProperty("CongMS.db.host");
-        DBConPool.dbPort = DBConPool.dbProps.getProperty("CongMS.db.port");
-        DBConPool.dbUser = DBConPool.dbProps.getProperty("CongMS.db.user");
-        DBConPool.dbPass = DBConPool.dbProps.getProperty("CongMS.db.password");
+        DBConPool.dbName = DBConPool.dbProps.getProperty("LtMS.db.name");
+        DBConPool.dbHost = DBConPool.dbProps.getProperty("LtMS.db.host");
+        DBConPool.dbPort = DBConPool.dbProps.getProperty("LtMS.db.port");
+        DBConPool.dbUser = DBConPool.dbProps.getProperty("LtMS.db.user");
+        DBConPool.dbPass = DBConPool.dbProps.getProperty("LtMS.db.password");
         (DBConPool.dataSource = new DruidDataSource()).setName("mysql_pool");
         DBConPool.dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         DBConPool.dataSource.setUrl("jdbc:mysql://" + DBConPool.dbHost + ":" + DBConPool.dbport + "/" + DBConPool.dbName + "?useUnicode=true&characterEncoding=UTF8");

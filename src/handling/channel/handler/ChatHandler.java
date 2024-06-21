@@ -1,5 +1,6 @@
 package handling.channel.handler;
 
+import gui.LtMS;
 import handling.world.World.Find;
 import handling.world.World;
 import handling.world.MapleMessenger;
@@ -29,7 +30,7 @@ public class ChatHandler
 {
     public static final void GeneralChat(final String text, final byte unk, final MapleClient c, final MapleCharacter chr) {
         if (chr != null && !CommandProcessor.processCommand(c, text, CommandType.NORMAL)) {
-            if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"玩家聊天开关")) > 0) {
+            if (LtMS.ConfigValuesMap.get("玩家聊天开关") == 0 ) {
                 c.sendPacket(MaplePacketCreator.serverNotice(1, "管理员从后台关闭了聊天功能"));
                 return;
             }

@@ -1,6 +1,7 @@
 package server;
 
 import constants.tzjc;
+import gui.LtMS;
 import server.maps.MapleMapObject;
 import java.awt.Point;
 import constants.WorldConstants;
@@ -64,6 +65,10 @@ public class MapleInventoryManipulator
             c.sendPacket(MaplePacketCreator.modifyInventory(true, new ModifyInventory(0, item)));
         }
         c.getPlayer().havePartyQuest(item.getItemId());
+        //处理复制物品
+        if (!fromcs && type.equals(MapleInventoryType.EQUIP)) {
+            c.getPlayer().checkCopyItems();
+        }
         return newSlot;
     }
     
@@ -792,7 +797,9 @@ public class MapleInventoryManipulator
         if (c.getPlayer().getGMLevel() > 0) {
             c.getPlayer().dropMessage("移动物品代码ID：" + source.getItemId());
         }
-        c.getPlayer().dropMessage("移动物品代码ID：" + source.getItemId());
+        if (LtMS.ConfigValuesMap.get("显示物品编码")==1){
+            c.getPlayer().dropMessage("移动物品代码ID：" + source.getItemId());
+        }
         short olddstQ = -1;
         if (initialTarget != null) {
             olddstQ = initialTarget.getQuantity();
@@ -995,12 +1002,13 @@ public class MapleInventoryManipulator
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
             }
-        final int 丢出物品开关 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"丢出物品开关"));
-        if (丢出物品开关 > 0) {
+        final int 丢出物品开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"丢出物品开关"));
+        if (丢出物品开关 == 0) {
             c.getPlayer().dropMessage(1, "管理员从后台关闭了物品丢出功能。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return false;
         }
+
         try {
             if (src < 0) {
                 type = MapleInventoryType.EQUIPPED;
@@ -1013,6 +1021,14 @@ public class MapleInventoryManipulator
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
             }
+            //检测是否丢出超过数量的物品
+            if(!c.getPlayer().haveItem(source.getItemId(),quantity)){
+                c.getPlayer().dropMessage(1, "你想干什么警告一次,再来就封了。");
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 强丢物品 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity));
+                FileoutputUtil.logToFile("logs/Data/强丢物品.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity);
+                return false;
+            }
+
             if (source.getItemId() == 4110010) {
                 c.getPlayer().dropMessage(1, "無法丟落該物品。");
                 c.sendPacket(MaplePacketCreator.enableActions());
@@ -1106,14 +1122,14 @@ public class MapleInventoryManipulator
             return;
         }
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        final IItem copyEquipItems = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItemByInventoryItemId(Long.valueOf(inventoryitemid));
+        final IItem copyEquipItems = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItemByInventoryItemId(inventoryitemid);
         if (copyEquipItems != null) {
             removeFromSlot(c, MapleInventoryType.EQUIP, copyEquipItems.getPosition(), copyEquipItems.getQuantity(), true, false);
             final String msgtext = "玩家" + c.getPlayer().getName() + " ID: " + c.getPlayer().getId() + " (等級" + (int)c.getPlayer().getLevel() + ") 地图: " + c.getPlayer().getMapId() + " 在玩家背包中發現复制装备[" + ii.getName(copyEquipItems.getItemId()) + "]已經將其刪除。";
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + msgtext));
             FileoutputUtil.log("Hack/复制装备_已刪除.txt", msgtext + " 道具唯一ID: " + copyEquipItems.getEquipOnlyId());
         }
-        final IItem copyEquipedItems = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItemByInventoryItemId(Long.valueOf(inventoryitemid));
+        final IItem copyEquipedItems = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItemByInventoryItemId(inventoryitemid);
         if (copyEquipedItems != null) {
             removeFromSlot(c, MapleInventoryType.EQUIPPED, copyEquipedItems.getPosition(), copyEquipedItems.getQuantity(), true, false);
             final String msgtext2 = "玩家" + c.getPlayer().getName() + " ID: " + c.getPlayer().getId() + " (等級" + (int)c.getPlayer().getLevel() + ") 地图: " + c.getPlayer().getMapId() + " 在玩家穿戴中發現复制装备[" + ii.getName(copyEquipedItems.getItemId()) + "]已經將其刪除。";
@@ -1127,5 +1143,52 @@ public class MapleInventoryManipulator
                 FileoutputUtil.logToFile("Hack/复制装备_已刪除.txt", msgtext3 + " 道具唯一ID: " + copyStorageItem.getEquipOnlyId() + "\r\n");
             }
         }
+        final List<IItem> copyEquipList = c.getPlayer().getInventory(MapleInventoryType.EQUIP).listByEquipOnlyId((int)inventoryitemid);
+        boolean locked = false;
+        for (final IItem item : copyEquipList) {
+            if (item != null) {
+                if (!locked) {
+                    short flag = item.getFlag();
+                    flag |= (short)ItemFlag.LOCK.getValue();
+                    flag |= (short)ItemFlag.UNTRADEABLE.getValue();
+                    item.setFlag((byte) flag);
+                    item.setOwner("复制装备");
+                    c.getPlayer().forceUpdateItem(item);
+                    c.getPlayer().dropMessage(-11, "在背包中发现复制装备[" + ii.getName(item.getItemId()) + "]已经将其锁定。");
+                    final String msgtext = "玩家 " + c.getPlayer().getName() + " ID: " + c.getPlayer().getId() + " (等级 " + c.getPlayer().getLevel() + ") 地图: " + c.getPlayer().getMapId() + " 在玩家背包中发现复制装备[" + ii.getName(item.getItemId()) + "]已经将其锁定。";
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM Message] " + msgtext));
+                    FileoutputUtil.log("log\\复制装备.log", msgtext + " 道具唯一ID: " + item.getEquipOnlyId());
+                    locked = true;
+                }
+                else {
+                    removeFromSlot(c, MapleInventoryType.EQUIP, item.getPosition(), item.getQuantity(), true, false);
+                    c.getPlayer().dropMessage(-11, "在背包中发现复制装备[" + ii.getName(item.getItemId()) + "]已经将其删除。");
+                }
+            }
+        }
+        final List<IItem> copyEquipedList= c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).listByEquipOnlyId((int)inventoryitemid);
+        for (final IItem item2 : copyEquipedList) {
+            if (item2 != null) {
+                if (!locked) {
+                    short flag2 = item2.getFlag();
+                    flag2 |= (short)ItemFlag.LOCK.getValue();
+                    flag2 |= (short)ItemFlag.UNTRADEABLE.getValue();
+                    item2.setFlag((byte) flag2);
+                    item2.setOwner("复制装备");
+                    c.getPlayer().forceUpdateItem(item2);
+                    c.getPlayer().dropMessage(-11, "在穿戴中发现复制装备[" + ii.getName(item2.getItemId()) + "]已经将其锁定。");
+                    final String msgtext2 = "玩家 " + c.getPlayer().getName() + " ID: " + c.getPlayer().getId() + " (等级 " + c.getPlayer().getLevel() + ") 地图: " + c.getPlayer().getMapId() + " 在玩家穿戴中发现复制装备[" + ii.getName(item2.getItemId()) + "]已经将其锁定。";
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM Message] " + msgtext2));
+                    FileoutputUtil.log("log\\复制装备.log", msgtext2 + " 道具唯一ID: " + item2.getEquipOnlyId());
+                    locked = true;
+                }
+                else {
+                    removeFromSlot(c, MapleInventoryType.EQUIPPED, item2.getPosition(), item2.getQuantity(), true, false);
+                    c.getPlayer().dropMessage(-11, "在穿戴中发现复制装备[" + ii.getName(item2.getItemId()) + "]已经将其删除。");
+                    c.getPlayer().equipChanged();
+                }
+            }
+        }
+
     }
 }

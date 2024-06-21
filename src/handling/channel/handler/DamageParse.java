@@ -1,8 +1,10 @@
 package handling.channel.handler;
 
+import bean.SuperSkills;
 import constants.tzjc;
 import database.DBConPool;
 import gui.CongMS;
+import gui.LtMS;
 import handling.world.World;
 import server.Start;
 import tools.data.LittleEndianAccessor;
@@ -46,6 +48,7 @@ import server.MapleStatEffect;
 import client.MapleCharacter;
 import client.ISkill;
 import tools.packet.MobPacket;
+import util.ListUtil;
 
 public class DamageParse
 {
@@ -215,9 +218,9 @@ public class DamageParse
 //                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
 //                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
 //                            player.ban("开倍攻", true, true, false);
-                        if (player.getClient()!=null && CongMS.ConfigValuesMap.get("伤害检测") == 1){
-                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
-                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                        if (player.getClient()!=null && LtMS.ConfigValuesMap.get("伤害检测") == 1){
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
                             player.getClient().disconnect(true, false);
                             player.getClient().getSession().close();
                         }
@@ -230,27 +233,27 @@ public class DamageParse
                     }
                 }
                 int 套装1附加伤害 = 0, 套装2附加伤害 = 0, 套装3附加伤害 = 0, 套装4附加伤害 = 0, 套装5附加伤害 = 0, 套装6附加伤害 = 0;
-                int 套装1装备数量 = CongMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
-                int 套装1装备增加百分比 = CongMS.ConfigValuesMap.get("套装1附加百分比伤害");//装备增加百分比
-                int 套装1一件附加 = CongMS.ConfigValuesMap.get("套装1多穿一件附加");//附加
-                int 套装2装备数量 = CongMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
-                int 套装2装备增加百分比 = CongMS.ConfigValuesMap.get("套装2附加百分比伤害");//装备增加百分比
-                int 套装2一件附加 = CongMS.ConfigValuesMap.get("套装2多穿一件附加");//附加
-                int 套装3装备数量 = CongMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
-                int 套装3装备增加百分比 = CongMS.ConfigValuesMap.get("套装3附加百分比伤害");//装备增加百分比
-                int 套装3一件附加 = CongMS.ConfigValuesMap.get("套装3多穿一件附加");//附加
-                int 套装4装备数量 = CongMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
-                int 套装4装备增加百分比 = CongMS.ConfigValuesMap.get("套装4附加百分比伤害");//装备增加百分比
-                int 套装4一件附加 = CongMS.ConfigValuesMap.get("套装4多穿一件附加");//附加
-                int 套装5装备数量 = CongMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
-                int 套装5装备增加百分比 = CongMS.ConfigValuesMap.get("套装5附加百分比伤害");//装备增加百分比
-                int 套装5一件附加 = CongMS.ConfigValuesMap.get("套装5多穿一件附加");//附加
-                int 套装6装备数量 = CongMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
-                int 套装6装备增加百分比 = CongMS.ConfigValuesMap.get("套装6附加百分比伤害");//装备增加百分比
-                int 套装6一件附加 = CongMS.ConfigValuesMap.get("套装6多穿一件附加");//附加
+                int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
+                int 套装1装备增加百分比 = LtMS.ConfigValuesMap.get("套装1附加百分比伤害");//装备增加百分比
+                int 套装1一件附加 = LtMS.ConfigValuesMap.get("套装1多穿一件附加");//附加
+                int 套装2装备数量 = LtMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
+                int 套装2装备增加百分比 = LtMS.ConfigValuesMap.get("套装2附加百分比伤害");//装备增加百分比
+                int 套装2一件附加 = LtMS.ConfigValuesMap.get("套装2多穿一件附加");//附加
+                int 套装3装备数量 = LtMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
+                int 套装3装备增加百分比 = LtMS.ConfigValuesMap.get("套装3附加百分比伤害");//装备增加百分比
+                int 套装3一件附加 = LtMS.ConfigValuesMap.get("套装3多穿一件附加");//附加
+                int 套装4装备数量 = LtMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
+                int 套装4装备增加百分比 = LtMS.ConfigValuesMap.get("套装4附加百分比伤害");//装备增加百分比
+                int 套装4一件附加 = LtMS.ConfigValuesMap.get("套装4多穿一件附加");//附加
+                int 套装5装备数量 = LtMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
+                int 套装5装备增加百分比 = LtMS.ConfigValuesMap.get("套装5附加百分比伤害");//装备增加百分比
+                int 套装5一件附加 = LtMS.ConfigValuesMap.get("套装5多穿一件附加");//附加
+                int 套装6装备数量 = LtMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
+                int 套装6装备增加百分比 = LtMS.ConfigValuesMap.get("套装6附加百分比伤害");//装备增加百分比
+                int 套装6一件附加 = LtMS.ConfigValuesMap.get("套装6多穿一件附加");//附加
 
-                if (CongMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
-                    if (CongMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
+                if (LtMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
+                    if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
                         if (player.TZ1 >= 套装1装备数量) {
                             int a;
                             for (a = 0; a < player.TZ1 - 套装1装备数量;) {
@@ -339,7 +342,7 @@ public class DamageParse
                 player.checkMonsterAggro(monster);
                 final double range = player.getPosition().distanceSq((Point2D)monster.getPosition());
                 final double SkillRange = GameConstants.getAttackRange(player, effect, attack);
-                if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
+                if(LtMS.ConfigValuesMap.get("启用吸怪") ==0) {
                     if (player.getDebugMessage() && range > SkillRange*3) {
                         player.dropMessage("技能[" + attack.skill + "] 預計範圍: " + (int) SkillRange + " 實際範圍: " + (int) range + "");
                     }
@@ -391,7 +394,9 @@ public class DamageParse
                     }
                 }
                 else if (attack.skill == 3221007) {
-                    newtotDamageToOneMonster = DamageParse.固定伤害;
+                    if (LtMS.ConfigValuesMap.get("一击要害伤害限制")==1){
+                        newtotDamageToOneMonster = DamageParse.固定伤害;
+                    }
                     final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
                     player.dropTopMsg("伤害技能造成 " + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
                 }
@@ -414,6 +419,20 @@ public class DamageParse
                 } else {
                     monster.damage(player, monster.getStats().isBoss() ? 500000L : (monster.getHp() - 1L), true, attack.skill);
                 }
+                //触发特效技能
+                List<SuperSkills> superSkills = Start.superSkillsMap.get(player.getId());
+                if (ListUtil.isNotEmpty(superSkills)) {
+                    SuperSkills superSkills1 = superSkills.get(0);
+                    if (player.getHasEquipped().stream().anyMatch(iItem -> iItem.getItemId() == superSkills1.getItemid())) {
+                        //按技能等级概率触发
+                        if (Randomizer.nextInt(100) <= superSkills1.getSkill_leve()) {
+                            //触发技能
+                            player.getClient().useSkill(superSkills1.getSkillid(), superSkills1.getSkill_leve());
+                        }
+                    }
+                }
+
+
                 if (monster.isBuffed(MonsterStatus.WEAPON_DAMAGE_REFLECT)) {
                     player.addHP(-(7000 + Randomizer.nextInt(8000)));
                 }
@@ -423,9 +442,17 @@ public class DamageParse
                 if (stats.mpRecoverProp > 0 && Randomizer.nextInt(100) <= stats.mpRecoverProp) {
                     player.healMP(stats.mpRecover);
                 }
+                //战神吸血
                 if (player.getBuffedValue(MapleBuffStat.COMBO_DRAIN) != null) {
                     stats.setHp(stats.getHp() + (int)Math.min(monster.getMobMaxHp(), (long)Math.min((int)((double)totDamage * (double)player.getStatForBuff(MapleBuffStat.COMBO_DRAIN).getX() / 100.0), stats.getMaxHp() / 2)), true);
                 }
+                if (player.getBuffedValue(MapleBuffStat.COMBO_DRAIN) != null) {
+                    stats.setHp(stats.getHp() + (int)Math.min(monster.getMobMaxHp(), (long)Math.min((int)((double)totDamage * (double)player.getStatForBuff(MapleBuffStat.COMBO_DRAIN).getX() / 100.0), stats.getMaxHp() / 2)), true);
+                }
+                if(attack.skill  == 14101006){
+                    if(totDamage > 0) {stats.setHp(stats.getHp() +(int) Math.min(monster.getMobMaxHp(), Math.min(((int) ((double) totDamage * (double) effect.getX() / 100.0)), stats.getMaxHp() / 2)));}
+                }
+
                 final int[] array;
                 final int[] skillsl = array = new int[] { 4120005, 4220005, 14110004 };
                 final int length = array.length;
@@ -722,7 +749,7 @@ public class DamageParse
 //                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
 //                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
 //                            player.ban("开倍攻", true, true, false);
-                        if (player.getClient()!=null && CongMS.ConfigValuesMap.get("伤害检测") == 1){
+                        if (player.getClient()!=null && LtMS.ConfigValuesMap.get("伤害检测") == 1){
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
                             player.getClient().disconnect(true, false);
@@ -738,26 +765,26 @@ public class DamageParse
 
 
                 int 套装1附加伤害 = 0, 套装2附加伤害 = 0, 套装3附加伤害 = 0, 套装4附加伤害 = 0, 套装5附加伤害 = 0, 套装6附加伤害 = 0;
-                int 套装1装备数量 = CongMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
-                int 套装1装备增加百分比 = CongMS.ConfigValuesMap.get("套装1附加百分比伤害");//装备增加百分比
-                int 套装1一件附加 = CongMS.ConfigValuesMap.get("套装1多穿一件附加");//附加
-                int 套装2装备数量 = CongMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
-                int 套装2装备增加百分比 = CongMS.ConfigValuesMap.get("套装2附加百分比伤害");//装备增加百分比
-                int 套装2一件附加 = CongMS.ConfigValuesMap.get("套装2多穿一件附加");//附加
-                int 套装3装备数量 = CongMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
-                int 套装3装备增加百分比 = CongMS.ConfigValuesMap.get("套装3附加百分比伤害");//装备增加百分比
-                int 套装3一件附加 = CongMS.ConfigValuesMap.get("套装3多穿一件附加");//附加
-                int 套装4装备数量 = CongMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
-                int 套装4装备增加百分比 = CongMS.ConfigValuesMap.get("套装4附加百分比伤害");//装备增加百分比
-                int 套装4一件附加 = CongMS.ConfigValuesMap.get("套装4多穿一件附加");//附加
-                int 套装5装备数量 = CongMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
-                int 套装5装备增加百分比 = CongMS.ConfigValuesMap.get("套装5附加百分比伤害");//装备增加百分比
-                int 套装5一件附加 = CongMS.ConfigValuesMap.get("套装5多穿一件附加");//附加
-                int 套装6装备数量 = CongMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
-                int 套装6装备增加百分比 = CongMS.ConfigValuesMap.get("套装6附加百分比伤害");//装备增加百分比
-                int 套装6一件附加 = CongMS.ConfigValuesMap.get("套装6多穿一件附加");//附加
-                if (CongMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
-                    if (CongMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
+                int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
+                int 套装1装备增加百分比 = LtMS.ConfigValuesMap.get("套装1附加百分比伤害");//装备增加百分比
+                int 套装1一件附加 = LtMS.ConfigValuesMap.get("套装1多穿一件附加");//附加
+                int 套装2装备数量 = LtMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
+                int 套装2装备增加百分比 = LtMS.ConfigValuesMap.get("套装2附加百分比伤害");//装备增加百分比
+                int 套装2一件附加 = LtMS.ConfigValuesMap.get("套装2多穿一件附加");//附加
+                int 套装3装备数量 = LtMS.ConfigValuesMap.get("套装3最少触发件数");//装备数量
+                int 套装3装备增加百分比 = LtMS.ConfigValuesMap.get("套装3附加百分比伤害");//装备增加百分比
+                int 套装3一件附加 = LtMS.ConfigValuesMap.get("套装3多穿一件附加");//附加
+                int 套装4装备数量 = LtMS.ConfigValuesMap.get("套装4最少触发件数");//装备数量
+                int 套装4装备增加百分比 = LtMS.ConfigValuesMap.get("套装4附加百分比伤害");//装备增加百分比
+                int 套装4一件附加 = LtMS.ConfigValuesMap.get("套装4多穿一件附加");//附加
+                int 套装5装备数量 = LtMS.ConfigValuesMap.get("套装5最少触发件数");//装备数量
+                int 套装5装备增加百分比 = LtMS.ConfigValuesMap.get("套装5附加百分比伤害");//装备增加百分比
+                int 套装5一件附加 = LtMS.ConfigValuesMap.get("套装5多穿一件附加");//附加
+                int 套装6装备数量 = LtMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
+                int 套装6装备增加百分比 = LtMS.ConfigValuesMap.get("套装6附加百分比伤害");//装备增加百分比
+                int 套装6一件附加 = LtMS.ConfigValuesMap.get("套装6多穿一件附加");//附加
+                if (LtMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
+                    if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
                         if (player.TZ1 >= 套装1装备数量) {
                             int a;
                             for (a = 0; a < player.TZ1 - 套装1装备数量;) {
@@ -845,7 +872,7 @@ public class DamageParse
                 player.checkMonsterAggro(monster);
                 final double range = player.getPosition().distanceSq((Point2D)monster.getPosition());
                 final double SkillRange = GameConstants.getAttackRange(player, effect, attack);
-                if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
+                if(LtMS.ConfigValuesMap.get("启用吸怪") ==0) {
                     if (player.getDebugMessage() && range > SkillRange) {
                         player.dropMessage("技能[" + attack.skill + "] 預計範圍: " + (int) SkillRange + " 實際範圍: " + (int) range);
                     }
@@ -1218,10 +1245,11 @@ public class DamageParse
         if (rate <= 1) {
             return attack;
         }
+
         for (final AttackPair p : attack.allDamage) {
             if (p.attack != null) {
                 for (final Pair<Integer, Boolean> pair : p.attack) {
-                    final Pair<Integer, Boolean> eachd = pair;
+//                    final Pair<Integer, Boolean> eachd = pair;
                     pair.left = Integer.valueOf((int)Integer.valueOf(pair.left) / rate);
                 }
             }
@@ -1494,22 +1522,22 @@ public class DamageParse
     public static long 额外伤害(MapleCharacter play, long damage, MapleMonster monster) {
         long 数值 = 0L;
         try {
-            if (((Integer) CongMS.ConfigValuesMap.get("自定义伤害加成开关")).intValue() < 1) {
+            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成开关")).intValue() < 1) {
                 return 数值;
             }
-            if (damage >= (long) ((Integer) CongMS.ConfigValuesMap.get("伤害高于次数值")).intValue() || (((Integer) CongMS.ConfigValuesMap.get("道具加成自定义伤害开关")).intValue() > 0 && play.getItemQuantity(((Integer) CongMS.ConfigValuesMap.get("自定义伤害加成道具代码")).intValue(), false) > 0)) {
-                数值 = (long) play.getComStr() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义力量加成比例")).intValue() + (long) play.getComDex() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义敏捷加成比例")).intValue() + (long) play.getComInt() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义智力加成比例")).intValue() + (long) play.getComLuk() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义运气加成比例")).intValue() + (long) play.getComWatk() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义物攻加成比例")).intValue() + (long) play.getComMatk() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义魔攻加成比例")).intValue() + (long) play.getComWdef() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义物防加成比例")).intValue() + (long) play.getComMdef() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义魔防加成比例")).intValue() + (long) play.getComHp() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义血量加成比例")).intValue() + (long) play.getComMp() * (long) ((Integer) CongMS.ConfigValuesMap.get("自定义魔量加成比例")).intValue();
+            if (damage >= (long) ((Integer) LtMS.ConfigValuesMap.get("伤害高于次数值")).intValue() || (((Integer) LtMS.ConfigValuesMap.get("道具加成自定义伤害开关")).intValue() > 0 && play.getItemQuantity(((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成道具代码")).intValue(), false) > 0)) {
+                数值 = (long) play.getComStr() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义力量加成比例")).intValue() + (long) play.getComDex() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义敏捷加成比例")).intValue() + (long) play.getComInt() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义智力加成比例")).intValue() + (long) play.getComLuk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义运气加成比例")).intValue() + (long) play.getComWatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物攻加成比例")).intValue() + (long) play.getComMatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔攻加成比例")).intValue() + (long) play.getComWdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物防加成比例")).intValue() + (long) play.getComMdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔防加成比例")).intValue() + (long) play.getComHp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义血量加成比例")).intValue() + (long) play.getComMp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔量加成比例")).intValue();
             }
-            if (((Integer) CongMS.ConfigValuesMap.get("扣除21E伤害")).intValue() > 0) {
+            if (((Integer) LtMS.ConfigValuesMap.get("扣除21E伤害")).intValue() > 0) {
                 数值 -= 2147483647L;
             }
-            if (((Integer) CongMS.ConfigValuesMap.get("自定义伤害气泡显示")).intValue() > 0) {
+            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害气泡显示")).intValue() > 0) {
                 play.showInstruction("【#r额外伤害 → " + 数值 + "#k】", 240, 10);
             }
-            if (((Integer) CongMS.ConfigValuesMap.get("自定义伤害黄字喇叭显示")).intValue() > 0) {
+            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害黄字喇叭显示")).intValue() > 0) {
                 play.dropMessage(-1, "【额外伤害 →" + 数值 + "】");
             }
-            if (((Integer) CongMS.ConfigValuesMap.get("自定义伤害段数显示")).intValue() > 0) {
+            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害段数显示")).intValue() > 0) {
                 while (数值 > 2147483647L) {
                     play.getMap().broadcastMessage(MobPacket.damageMonster(monster.getObjectId(), 2147483647L));
                     数值 -= 2147483647L;
@@ -1524,7 +1552,7 @@ public class DamageParse
     }
     public static long 伤害减伤(int mobid, long damage) {
         long 数值 = 0L;
-        if (((Integer) CongMS.ConfigValuesMap.get("怪物减伤开关")).intValue() > 0) {
+        if (((Integer) LtMS.ConfigValuesMap.get("怪物减伤开关")).intValue() > 0) {
             数值 = (long) Math.floor((double) (damage / (long) getMobRedDam(mobid)));
         } else {
             数值 = damage;

@@ -434,7 +434,8 @@ public class NPCHandler
             }
         }
     }
-    
+
+    //脚本处理
     public static final void NPCMoreTalk(final LittleEndianAccessor slea, final MapleClient c) {
         final byte lastMsg = slea.readByte();
         final byte action = slea.readByte();

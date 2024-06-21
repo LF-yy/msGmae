@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 import constants.ItemConstants;
 import gui.CongMS;
+import gui.LtMS;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import client.inventory.MaplePet.PetFlag;
@@ -45,7 +46,7 @@ public class MapleItemInformationProvider
     protected final MapleData petStringData;
     protected Map<Integer, Boolean> onEquipUntradableCache;
     protected final Map<Integer, List<Integer>> scrollReqCache;
-    protected final Map<Integer, Short> slotMaxCache;
+    public static final Map<Integer, Short> slotMaxCache = new HashMap<Integer, Short>();
     protected final Map<Integer, List<StructPotentialItem>> potentialCache;
     protected final Map<Integer, MapleStatEffect> itemEffects;
     protected final Map<Integer, Map<String, Integer>> equipStatsCache;
@@ -88,6 +89,7 @@ public class MapleItemInformationProvider
     protected Map<Integer, MapleInventoryType> inventoryTypeCache;
     protected final Map<Integer, Integer> chairMountId;
     protected Map<Integer, Boolean> floatCashItem = new HashMap<>(); //拥有漂浮效果的道具
+
     protected MapleItemInformationProvider() {
         this.etcData = MapleDataProviderFactory.getDataProvider("Etc.wz");
         this.itemData = MapleDataProviderFactory.getDataProvider("Item.wz");
@@ -101,7 +103,6 @@ public class MapleItemInformationProvider
         this.petStringData = this.stringData.getData("Pet.img");
         this.onEquipUntradableCache = new HashMap<Integer, Boolean>();
         this.scrollReqCache = new HashMap<Integer, List<Integer>>();
-        this.slotMaxCache = new HashMap<Integer, Short>();
         this.potentialCache = new HashMap<Integer, List<StructPotentialItem>>();
         this.itemEffects = new HashMap<Integer, MapleStatEffect>();
         this.equipStatsCache = new HashMap<Integer, Map<String, Integer>>();
@@ -441,15 +442,15 @@ public class MapleItemInformationProvider
             final MapleData smEntry = item.getChildByPath("info/slotMax");
             if (smEntry == null) {
                 if (GameConstants.getInventoryType(itemId) == MapleInventoryType.EQUIP) {
-                    ret = 1;
+                    ret = Short.parseShort(LtMS.ConfigValuesMap.get((Object)"物品额外数量")+"");
                 }
                 else {
-                    ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+                    ret = Short.parseShort(LtMS.ConfigValuesMap.get((Object)"物品额外数量")+"");
                 }
             }
             else {
 //                ret = (short)MapleDataTool.getInt(smEntry);
-                ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+                ret = Short.parseShort(LtMS.ConfigValuesMap.get((Object)"物品额外数量")+"");
             }
         }
         this.slotMaxCache.put(Integer.valueOf(itemId), Short.valueOf(ret));

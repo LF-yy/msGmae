@@ -1,6 +1,7 @@
 package handling.channel.handler;
 
 import database.DatabaseConnection;
+import gui.LtMS;
 import server.*;
 import tools.packet.PlayerShopPacket;
 import server.shops.IMaplePlayerShop;
@@ -187,7 +188,7 @@ public class InventoryHandler
     //自定义箱子，礼包箱子，双击箱子打开NPC
     public static final boolean UseRewardItem(final byte slot, final int itemId, final MapleClient c, final MapleCharacter chr) {
         final IItem toUse = c.getPlayer().getInventory(GameConstants.getInventoryType(itemId)).getItem((short)slot);
-        if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+        if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
             System.out.println("使用物品:"+ itemId + "---slot:"+slot);
         }
         // 点击物品打开拍卖
@@ -196,134 +197,139 @@ public class InventoryHandler
             NPCScriptManager.getInstance().start(c, 9310100, "拍卖功能");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子")) {//2021-8-14开始
+        if (Objects.nonNull(LtMS.ConfigValuesMap.get(toUse.getItemId()+"")) && toUse.getItemId() == LtMS.ConfigValuesMap.get(toUse.getItemId()+"")) {//全局适配
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get(toUse.getItemId()+"")+"");
             return true;
         }
-         if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子1")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子")) {//2021-8-14开始
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子1")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子2")) {
+         if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子1")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子2")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子1")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子3")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子2")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子3")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子2")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子4")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子3")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子4")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子3")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子5")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子4")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子5")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子4")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子6")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子5")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子6")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子5")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子7")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子6")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子7")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子6")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子8")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子7")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子8")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子7")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子9")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子8")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子9")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子8")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子10")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子9")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子10")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子9")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子11")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子10")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子11")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子10")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子12")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子11")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子12")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子11")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子13")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子12")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子13")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子12")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子14")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子13")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子14")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子13")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子15")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子14")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子15")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子14")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子16")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子15")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子16")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子15")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子17")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子16")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子17")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子16")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子18")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子17")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子18")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子17")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子19")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子18")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子19")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子18")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子20")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子19")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子20")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子19")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子21")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子20")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子21")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子20")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子22")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子21")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子22")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子21")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子23")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子22")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子23")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子22")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子24")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子23")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子24")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子23")+"");
             return true;
         }
-        if (toUse.getItemId() == CongMS.ConfigValuesMap.get("预留箱子25")) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子24")) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9900004, CongMS.ConfigValuesMap.get("预留箱子25")+"");
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子24")+"");
+            return true;
+        }
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("预留箱子25")) {
+            c.sendPacket(MaplePacketCreator.enableActions());
+            NPCScriptManager.getInstance().start(c, 9900004, LtMS.ConfigValuesMap.get("预留箱子25")+"");
             return true;
         }
         //2021-8-14结尾
@@ -575,6 +581,7 @@ public class InventoryHandler
             toScroll = (IEquip)chr.getInventory(MapleInventoryType.EQUIP).getItem((short)dst);
         }
         if (toScroll == null) {
+            System.out.println("toScroll=null");
             return false;
         }
         final byte oldLevel = toScroll.getLevel();
@@ -585,44 +592,53 @@ public class InventoryHandler
         final IItem scroll = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (scroll == null) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println("            c.sendPacket(MaplePacketCreator.getInventoryFull());");
             return false;
         }
         if (!GameConstants.isSpecialScroll(scroll.getItemId()) && !GameConstants.isCleanSlate(scroll.getItemId()) && !GameConstants.isEquipScroll(scroll.getItemId()) && !GameConstants.isPotentialScroll(scroll.getItemId())) {
             if (toScroll.getUpgradeSlots() < 1) {
                 c.sendPacket(MaplePacketCreator.getInventoryFull());
+                System.out.println(1);
                 return false;
             }
         }
         else if (GameConstants.isEquipScroll(scroll.getItemId())) {
             if (toScroll.getUpgradeSlots() >= 1 || toScroll.getEnhance() >= 100 || vegas > 0 || ii.isCash(toScroll.getItemId())) {
                 c.sendPacket(MaplePacketCreator.getInventoryFull());
+                System.out.println(2);
                 return false;
             }
         }
         else if (GameConstants.isPotentialScroll(scroll.getItemId()) && (toScroll.getState() >= 1 || (toScroll.getLevel() == 0 && toScroll.getUpgradeSlots() == 0) || vegas > 0 || ii.isCash(toScroll.getItemId()))) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println(3);
             return false;
         }
         if (!GameConstants.canScroll(toScroll.getItemId()) && !GameConstants.isChaosScroll(toScroll.getItemId())) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println(4);
             return false;
         }
         if ((GameConstants.isCleanSlate(scroll.getItemId()) || GameConstants.isTablet(scroll.getItemId()) || GameConstants.isChaosScroll(scroll.getItemId())) && (vegas > 0 || ii.isCash(toScroll.getItemId()))) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println(5);
             return false;
         }
         if (GameConstants.isTablet(scroll.getItemId()) && toScroll.getDurability() < 0) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println(6);
             return false;
         }
         if (!GameConstants.isTablet(scroll.getItemId()) && toScroll.getDurability() >= 0) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println(7);
             return false;
         }
         IItem wscroll = null;
         final List<Integer> scrollReqs = ii.getScrollReqs(scroll.getItemId());
         if (scrollReqs.size() > 0 && !scrollReqs.contains((Object)Integer.valueOf(toScroll.getItemId()))) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
+            System.out.println(8);
             return false;
         }
         if (whiteScroll) {
@@ -662,19 +678,24 @@ public class InventoryHandler
                 }
             }
         }
-        else if (!GameConstants.isAccessoryScroll(scroll.getItemId()) && !GameConstants.isChaosScroll(scroll.getItemId()) && !GameConstants.isCleanSlate(scroll.getItemId()) && !GameConstants.isEquipScroll(scroll.getItemId()) && !GameConstants.isPotentialScroll(scroll.getItemId()) && !ii.canScroll(scroll.getItemId(), toScroll.getItemId())) {
+        else if (!GameConstants.isForwardScroll(scroll.getItemId()) && !GameConstants.isAccessoryScroll(scroll.getItemId()) && !GameConstants.isChaosScroll(scroll.getItemId()) && !GameConstants.isCleanSlate(scroll.getItemId()) && !GameConstants.isEquipScroll(scroll.getItemId()) && !GameConstants.isPotentialScroll(scroll.getItemId()) && !ii.canScroll(scroll.getItemId(), toScroll.getItemId())) {
+            System.out.println(9);
             return false;
         }
         if (GameConstants.isAccessoryScroll(scroll.getItemId()) && !GameConstants.isAccessory(toScroll.getItemId())) {
+            System.out.println(10);
             return false;
         }
         if (scroll.getQuantity() <= 0) {
+            System.out.println(11);
             return false;
         }
         if (legendarySpirit && vegas == 0 && chr.getSkillLevel(SkillFactory.getSkill(1003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(10001003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(20001003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(20011003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(30001003)) <= 0) {
             AutobanManager.getInstance().addPoints(c, 50, 120000L, "Using the Skill 'Legendary Spirit' without having it.");
+            System.out.println(12);
             return false;
         }
+        //上卷
         final IEquip scrolled = (IEquip)ii.scrollEquipWithId((IItem)toScroll, scroll, whiteScroll, chr, vegas);
         ScrollResult scrollSuccess;
         if (scrolled == null) {
@@ -1671,20 +1692,26 @@ public class InventoryHandler
             }
             case 5570000: {
                 slea.readInt();
-                final Equip item3 = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)(byte)slea.readInt());
+                final Equip item3 = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short) (byte) slea.readInt());
                 if (item3 == null) {
                     break;
                 }
-                if (GameConstants.canHammer(item3.getItemId()) && MapleItemInformationProvider.getInstance().getSlots(item3.getItemId()) > 0 && item3.getViciousHammer() <= 2) {
-                    item3.setViciousHammer((byte)(item3.getViciousHammer() + 1));
-                    item3.setUpgradeSlots((byte)(item3.getUpgradeSlots() + 1));
-                    c.getPlayer().forceReAddItem((IItem)item3, MapleInventoryType.EQUIP);
-                    used = true;
-                    cc = true;
-                    break;
+                if (!GameConstants.canHammer(item3.getItemId()) || item3.getViciousHammer() >= 2) {
+                    c.getPlayer().dropMessage(5, "此道具无法使用金锤子");
+                    return;
                 }
-                c.getPlayer().dropMessage(5, "可能不能使用在這個道具上。");
-                cc = true;
+                final int 随机数 = (int) Math.floor(Math.random() * 100.0);
+                if (随机数 <= ((Integer) LtMS.ConfigValuesMap.get("金锤子提升成功率")).intValue()) {
+                    MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, itemId, 1, true, false);//扣掉金锤子
+                    item3.setViciousHammer((byte) (item3.getViciousHammer() + 1));
+                    item3.setUpgradeSlots((byte) (item3.getUpgradeSlots() + 1));
+                    c.getPlayer().forceReAddItem1(item3, MapleInventoryType.EQUIP);
+                    c.getPlayer().getClient().sendPacket(MaplePacketCreator.sendHammer效果(true, item3.getViciousHammer()));//成功
+                } else {
+                    MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, itemId, 1, true, false);//扣掉金锤子
+                    c.getPlayer().getClient().sendPacket(MaplePacketCreator.sendHammer效果(false, item3.getViciousHammer()));//失败
+
+                }
                 break;
             }
             case 5610000:
@@ -1763,8 +1790,8 @@ public class InventoryHandler
                 break;
             }
             case 5070000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if (游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -1803,8 +1830,8 @@ public class InventoryHandler
                 break;
             }
             case 5071000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -1843,8 +1870,8 @@ public class InventoryHandler
                 break;
             }
             case 5077000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -1885,8 +1912,8 @@ public class InventoryHandler
                 break;
             }
             case 5072000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -1925,8 +1952,8 @@ public class InventoryHandler
                 break;
             }
             case 5073000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -1964,8 +1991,8 @@ public class InventoryHandler
                 break;
             }
             case 5074000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -2034,8 +2061,8 @@ public class InventoryHandler
                 break;
             }
             case 5076000: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -2348,8 +2375,8 @@ public class InventoryHandler
             case 5390004:
             case 5390005:
             case 5390006: {
-                final int 游戏喇叭 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
-                if (游戏喇叭 > 0) {
+                final int 游戏喇叭 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"游戏喇叭开关"));
+                if ( 游戏喇叭 == 0) {
                     c.getPlayer().dropMessage(1, "目前喇叭功能从后台关闭了，无法广播喇叭");
                     break;
                 }
@@ -2492,6 +2519,7 @@ public class InventoryHandler
     }
     
     public static final void PlayerPickup(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+        //拾取物品
         if (World.isShutDown) {
             c.getPlayer().dropMessage(1, "目前無法撿物品。");
             c.sendPacket(MaplePacketCreator.enableActions());
@@ -2698,6 +2726,9 @@ public class InventoryHandler
     }
     
     public static final boolean useItem(final MapleClient c, final int id) {
+        if (LtMS.ConfigValuesMap.get("开启卡片buff")==0 && GameConstants.isMonsterCard(id)){
+            return false;
+        }
         if (GameConstants.isUse(id)) {
             final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
             final byte consumeval = ii.isConsumeOnPickup(id);

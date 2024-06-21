@@ -2,6 +2,7 @@ package handling.world;
 
 import constants.ServerConfig;
 import gui.CongMS;
+import gui.LtMS;
 import scripting.ReactorScriptManager;
 import server.life.MapleMonsterInformationProvider;
 import handling.world.family.MapleFamilyCharacter;
@@ -160,9 +161,11 @@ public class World
     }
     
     public static void registerRespawn() {
-        WorldTimer.getInstance().register((Runnable)new Respawn(),  (long)((Integer) CongMS.ConfigValuesMap.get("怪物刷新频率设定")));
+        WorldTimer.getInstance().register((Runnable)new Respawn(),  (long)((Integer) LtMS.ConfigValuesMap.get("怪物刷新频率设定")));
     }
-    
+    public static void registerRespawn1() {//备用刷怪线程
+        WorldTimer.getInstance().register((Runnable)new Respawn1(), LtMS.ConfigValuesMap.get("地图刷新频率"));
+    }
     public static void handleMap(final MapleMap map, final int numTimes, final int size) {
         if (map.getItemsSize() > 0) {
             for (final MapleMapItem item : map.getAllItemsThreadsafe()) {
@@ -207,21 +210,21 @@ public class World
                 final String rate = type;
                 if (rate.equals((Object)"经验")) {
                     for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                        cservs.setExpRate(Integer.parseInt(ServerProperties.getProperty("CongMS.expRate")));
+                        cservs.setExpRate(Integer.parseInt(ServerProperties.getProperty("LtMS.expRate")));
                         cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "[系统公告]：经验倍率活动已经结束，已经恢复正常值。"));
                         ServerProperties.setProperty("expRate","0");
                     }
                 }
                 else if (rate.equals((Object)"爆率")) {
                     for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                        cservs.setDropRate(Integer.parseInt(ServerProperties.getProperty("CongMS.dropRate")));
+                        cservs.setDropRate(Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate")));
                         cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "[系统公告]：爆物倍率活动已经结束，已经恢复正常值。"));
                         ServerProperties.setProperty("dropRate","0");
                     }
                 }
                 else if (rate.equals((Object)"金币")) {
                     for (final ChannelServer cservs : ChannelServer.getAllInstances()) {
-                        cservs.setMesoRate(Integer.parseInt(ServerProperties.getProperty("CongMS.mesoRate")));
+                        cservs.setMesoRate(Integer.parseInt(ServerProperties.getProperty("LtMS.mesoRate")));
                         cservs.broadcastPacket(MaplePacketCreator.serverNotice(6, "[系统公告]：金币倍率活动已经结束，已经恢复正常值。"));
                         ServerProperties.setProperty("mesoRate","0");
                     }
@@ -1634,7 +1637,23 @@ public class World
             }
         }
     }
-
+    public static class Respawn1 implements Runnable {
+        private int numTimes = 0;
+        @Override
+        public void run() {
+            numTimes++;
+            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                for (MapleMap map : cserv.getMapFactory().getAllInstanceMaps()) {
+                    handleMap2(map, numTimes, map.getCharactersSize());
+                }
+            }
+        }
+    }
+    public static void handleMap2(final MapleMap map, final int numTimes, final int size) {
+        if (map.characterSize() > 0) {
+            map.respawn(false);
+        }
+    }
     public static void scheduleRateDelay1(final String type, final long delay) {
         WorldTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override

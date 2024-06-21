@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.Map;
 import constants.GameConstants;
+import gui.LtMS;
 import server.maps.MapleMist;
 import client.MapleDisease;
 import server.maps.MapleMapObject;
@@ -135,11 +136,7 @@ public class MobSkill
         MapleDisease disease = null;
         final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
         final List<Integer> reflection = new LinkedList<Integer>();
-        if (CongMS.ConfigValuesMap.get("怪物状态开关") > 0) {
-            if (this.skillId == 140 || this.skillId == 141 ||  this.skillId == 145 ||  this.skillId == 129 ){
-                return;
-            }
-
+        if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"怪物状态开关")) >= 1) {
             switch (this.skillId) {
                 case 102:
                 case 112:
@@ -185,7 +182,7 @@ public class MobSkill
                     break;
                 }
                 case 120: {
-                    if (CongMS.ConfigValuesMap.get((Object)"启用封印")==0 ){
+                    if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 ){
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
                     monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
@@ -322,7 +319,10 @@ public class MobSkill
             case 135:
             case 136:
             case 137: {
-                if (CongMS.ConfigValuesMap.get((Object)"启用封印")==0 && this.skillId ==120){
+                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                    return;
+                }
+                if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 && this.skillId ==120){
                     break;
                 }
                 disease = MapleDisease.getByMobSkill(this.skillId);
@@ -369,10 +369,16 @@ public class MobSkill
                 break;
             }
             case 140: {
+                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                    return;
+                }
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 break;
             }
             case 141: {
+                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                    return;
+                }
                 stats.put(MonsterStatus.MAGIC_IMMUNITY, Integer.valueOf(this.x));
                 break;
             }
@@ -381,6 +387,9 @@ public class MobSkill
                 break;
             }
             case 143: {
+                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                    return;
+                }
                 stats.put(MonsterStatus.WEAPON_DAMAGE_REFLECT, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 reflection.add(Integer.valueOf(this.x));
@@ -395,6 +404,9 @@ public class MobSkill
                 break;
             }
             case 144: {
+                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                    return;
+                }
                 stats.put(MonsterStatus.MAGIC_DAMAGE_REFLECT, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.MAGIC_IMMUNITY, Integer.valueOf(this.x));
                 reflection.add(Integer.valueOf(this.x));
@@ -409,6 +421,9 @@ public class MobSkill
                 break;
             }
             case 145: {
+                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                    return;
+                }
                 stats.put(MonsterStatus.WEAPON_DAMAGE_REFLECT, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.MAGIC_DAMAGE_REFLECT, Integer.valueOf(this.x));

@@ -1,9 +1,9 @@
 package constants;
 
 import gui.CongMS;
-import gui.GuaiMS;
+import gui.LtMS;
+import handling.world.MapleParty;
 import server.maps.MapleMapObject;
-import java.util.Iterator;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
 
@@ -136,14 +136,14 @@ public class MapConstants
             }
         }
         boolean 判定 = false;
-        if (((Integer) CongMS.ConfigValuesMap.get("怪物多倍地图开关")).intValue() > 0) {
-            for (int i = 0; i < CongMS.mobmaptable.size(); ++i) {
-                if (map.getId() == Integer.parseInt((String)CongMS.mobmaptable.get(i)) || ((Integer)CongMS.ConfigValuesMap.get("怪物地图多倍怪物开关")).intValue() > 0) {
+            if (MapleParty.怪物倍怪 = true) {
+            for (int i = 0; i < LtMS.mobmaptable.size(); ++i) {
+                if (map.getId() == Integer.parseInt((String)LtMS.mobmaptable.get(i))) {
                     判定 = true;
                 }
             }
             if (判定) {
-                return ((Integer)CongMS.ConfigValuesMap.get("怪物多倍地图倍率")).intValue();
+                return MapleParty.怪物倍率;
             }
         }
         switch (map.getId()) {

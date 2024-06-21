@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import database.DBConPool;
 import gui.CongMS;
+import gui.LtMS;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -522,7 +523,7 @@ public class MapleMapFactory
         Point pos3 = null;
         switch (map.getId()) {
             case 104000400: {
-                mobtime = CongMS.ConfigValuesMap.get("红蜗牛王刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("红蜗牛王刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("红蜗牛王刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("红蜗牛王刷新时间")*60;
                 monsterid = 2220000;
                 msg = "红蜗牛王出現了！";
                 pos1 = new Point(439, 185);
@@ -531,7 +532,7 @@ public class MapleMapFactory
                 break;
             }
             case 101030404: {
-                mobtime = CongMS.ConfigValuesMap.get("树妖王刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("树妖王刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("树妖王刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("树妖王刷新时间")*60;
                 monsterid = 3220000;
                 msg = "树妖王出現了！";
                 pos1 = new Point(867, 1282);
@@ -540,7 +541,7 @@ public class MapleMapFactory
                 break;
             }
             case 110040000: {
-                mobtime = CongMS.ConfigValuesMap.get("巨居蟹刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("巨居蟹刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("巨居蟹刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("巨居蟹刷新时间")*60;
                 monsterid = 5220001;
                 msg = "巨居蟹出現了！";
                 pos1 = new Point(-355, 179);
@@ -549,7 +550,7 @@ public class MapleMapFactory
                 break;
             }
             case 250010304: {
-                mobtime = CongMS.ConfigValuesMap.get("肯德熊刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("肯德熊刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("肯德熊刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("肯德熊刷新时间")*60;
                 monsterid = 7220000;
                 msg = "流浪熊出現了！";
                 pos1 = new Point(-210, 33);
@@ -558,7 +559,7 @@ public class MapleMapFactory
                 break;
             }
             case 200010300: {
-                mobtime = CongMS.ConfigValuesMap.get("艾利杰刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("艾利杰刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("艾利杰刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("艾利杰刷新时间")*60;
                 monsterid = 8220000;
                 msg = "艾莉傑出現了！";
                 pos1 = new Point(665, 83);
@@ -567,7 +568,7 @@ public class MapleMapFactory
                 break;
             }
             case 250010503: {
-                mobtime = CongMS.ConfigValuesMap.get("妖怪禅师刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("妖怪禅师刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("妖怪禅师刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("妖怪禅师刷新时间")*60;
                 monsterid = 7220002;
                 msg = "喵仙怪人出現了！";
                 pos1 = new Point(-303, 543);
@@ -576,7 +577,7 @@ public class MapleMapFactory
                 break;
             }
             case 222010310: {
-                mobtime = CongMS.ConfigValuesMap.get("九尾狐刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("九尾狐刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("九尾狐刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("九尾狐刷新时间")*60;
                 monsterid = 7220001;
                 msg = "九尾妖狐出現了！";
                 pos1 = new Point(-169, -147);
@@ -585,7 +586,7 @@ public class MapleMapFactory
                 break;
             }
                 case 107000300: {
-                mobtime = CongMS.ConfigValuesMap.get("沼泽巨鳄鱼刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("沼泽巨鳄鱼刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("沼泽巨鳄鱼刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("沼泽巨鳄鱼刷新时间")*60;
                 monsterid = 6220000;
                 msg = "沼澤巨鱷出現了！";
                 pos1 = new Point(710, 118);
@@ -594,7 +595,7 @@ public class MapleMapFactory
                 break;
             }
             case 100040105: {
-                mobtime = CongMS.ConfigValuesMap.get("浮士德刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("浮士德刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("浮士德刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("浮士德刷新时间")*60;
                 monsterid = 5220002;
                 msg = "殭屍猴出現了！";
                 pos1 = new Point(1000, 278);
@@ -603,7 +604,7 @@ public class MapleMapFactory
                 break;
             }
             case 100040106: {
-                mobtime = CongMS.ConfigValuesMap.get("浮士德刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("浮士德刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("浮士德刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("浮士德刷新时间")*60;
                 monsterid = 5220002;
                 msg = "藍色的霧氣變得更暗時出現了殭屍猴王";
                 pos1 = new Point(1000, 278);
@@ -612,7 +613,7 @@ public class MapleMapFactory
                 break;
             }
             case 220050100: {
-                mobtime = CongMS.ConfigValuesMap.get("提莫刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("提莫刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("提莫刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("提莫刷新时间")*60;
                 monsterid = 5220003;
                 msg = "滴答滴答....咕咕鐘出現了!";
                 pos1 = new Point(-467, 1032);
@@ -630,7 +631,7 @@ public class MapleMapFactory
                 break;
             }
             case 240040401: {
-                mobtime = CongMS.ConfigValuesMap.get("大海兽刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("大海兽刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("大海兽刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("大海兽刷新时间")*60;
                 monsterid = 8220003;
                 msg = "寒霜冰龍出現了！";
                 pos1 = new Point(-15, 2481);
@@ -639,7 +640,7 @@ public class MapleMapFactory
                 break;
             }
             case 260010201: {
-                mobtime = CongMS.ConfigValuesMap.get("大宇刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("大宇刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("大宇刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("大宇刷新时间")*60;
                 monsterid = 3220001;
                 msg = "大宇出現了！";
                 pos1 = new Point(-215, 275);
@@ -648,7 +649,7 @@ public class MapleMapFactory
                 break;
             }
             case 261030000: {
-                mobtime = CongMS.ConfigValuesMap.get("吉米拉刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("吉米拉刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("吉米拉刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("吉米拉刷新时间")*60;
                 monsterid = 8220002;
                 msg = "吉米拉王出現了！";
                 pos1 = new Point(-1094, -405);
@@ -657,7 +658,7 @@ public class MapleMapFactory
                 break;
             }
             case 230020100: {
-                mobtime = CongMS.ConfigValuesMap.get("歇尔夫刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("歇尔夫刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("歇尔夫刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("歇尔夫刷新时间")*60;
                 monsterid = 4220000;
                 msg = "歇尔夫出現了！";
                 pos1 = new Point(-291, -20);
@@ -666,7 +667,7 @@ public class MapleMapFactory
                 break;
             }
             case 273020400: {
-                mobtime = CongMS.ConfigValuesMap.get("变形树妖王刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("变形树妖王刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("变形树妖王刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("变形树妖王刷新时间")*60;
                 monsterid = 8620012;
                 msg = "变形树妖王出現了！";
                 pos1 = new Point(179, -264);
@@ -675,7 +676,7 @@ public class MapleMapFactory
                 break;
             }
             case 240020401: {
-                mobtime = CongMS.ConfigValuesMap.get("火龙刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("火龙刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("火龙刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("火龙刷新时间")*60;
                 monsterid = 8180000;
                 msg = "火龙出現了！";
                 pos1 = new Point(-7, 451);
@@ -684,7 +685,7 @@ public class MapleMapFactory
                 break;
             }
             case 240020101: {
-                mobtime = CongMS.ConfigValuesMap.get("天鹰刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("天鹰刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("天鹰刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("天鹰刷新时间")*60;
                 monsterid = 8180001;
                 msg = "天鹰出現了！";
                 pos1 = new Point(-63, 451);
@@ -693,7 +694,7 @@ public class MapleMapFactory
                 break;
             }
             case 270010500: {
-                mobtime = CongMS.ConfigValuesMap.get("时间多多刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("时间多多刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("时间多多刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("时间多多刷新时间")*60;
                 monsterid = 8220004;
                 msg = "多多出現了！";
                 pos1 = new Point(343, -878);
@@ -702,7 +703,7 @@ public class MapleMapFactory
                 break;
             }
             case 270020500: {
-                mobtime = CongMS.ConfigValuesMap.get("冰独角兽刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("冰独角兽刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("冰独角兽刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("冰独角兽刷新时间")*60;
                 monsterid = 8220005;
                 msg = "冰独角兽出現了！";
                 pos1 = new Point(55, -530);
@@ -711,7 +712,7 @@ public class MapleMapFactory
                 break;
             }
             case 270030500: {
-                mobtime = CongMS.ConfigValuesMap.get("神殿雷卡刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("神殿雷卡刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("神殿雷卡刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("神殿雷卡刷新时间")*60;
                 monsterid = 8220006;
                 msg = "雷卡出現了！";
                 pos1 = new Point(-109, -571);
@@ -720,7 +721,7 @@ public class MapleMapFactory
                 break;
             }
             case 230040420: {
-                mobtime = CongMS.ConfigValuesMap.get("皮亚努斯刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("皮亚努斯刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("皮亚努斯刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("皮亚努斯刷新时间")*60;
                 monsterid = 8520000;
                 msg = "皮亚努斯出現了！";
                 pos1 = new Point(-459, 137);
@@ -738,7 +739,7 @@ public class MapleMapFactory
             }
 
             case 860000022: {
-                mobtime = CongMS.ConfigValuesMap.get("深海布波刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("深海布波刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("深海布波刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("深海布波刷新时间")*60;
                 monsterid = 9390002;
                 msg = "深海布波出現了！";
                 pos1 = new Point(580, -211);
@@ -756,7 +757,7 @@ public class MapleMapFactory
                 break;
             }
             case 211040101: {
-                mobtime = CongMS.ConfigValuesMap.get("驮狼雪人刷新时间") == null ? dfTime : CongMS.ConfigValuesMap.get("驮狼雪人刷新时间")*60;
+                mobtime = LtMS.ConfigValuesMap.get("驮狼雪人刷新时间") == null ? dfTime : LtMS.ConfigValuesMap.get("驮狼雪人刷新时间")*60;
                 monsterid = 8220001;
                 msg = "驮狼雪人出現了！";
                 pos1 = new Point(95, 274);

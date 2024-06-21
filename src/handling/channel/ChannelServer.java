@@ -3,6 +3,7 @@ package handling.channel;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import database.DatabaseConnection;
+import gui.LtMS;
 import handling.cashshop.CashShopServer;
 import client.MapleClient;
 import tools.FileoutputUtil;
@@ -78,7 +79,7 @@ public class ChannelServer implements Serializable
     public static ArrayList<离线人偶> clones;
     
     private ChannelServer(final int channel) {
-        this.port = (short)Integer.parseInt(ChannelServer.cf.getConfig("CongMS.channel.port1"));
+        this.port = (short)Integer.parseInt(ChannelServer.cf.getConfig("LtMS.channel.port1"));
         this.running_MerchantID = 0;
         this.running_PlayerShopID = 0;
         this.shutdown = false;
@@ -113,8 +114,9 @@ public class ChannelServer implements Serializable
     public final void setup() {
         this.setChannel(this.channel);
         try {
-            this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("CongMS.events").split(","));
-            this.port = (short)(ServerProperties.getProperty("CongMS.channel.port", ChannelServer.DEFAULT_PORT) + this.channel - 1);
+            System.out.println(ServerProperties.getProperty("LtMS.events"));
+            this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","));
+            this.port = (short)(ServerProperties.getProperty("LtMS.channel.port", ChannelServer.DEFAULT_PORT) + this.channel - 1);
         }
         catch (Exception e) {
             throw new RuntimeException((Throwable)e);
@@ -180,7 +182,7 @@ public class ChannelServer implements Serializable
     
     public final void addPlayer(final MapleCharacter chr) {
         this.getPlayerStorage().registerPlayer(chr);
-        if ((int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"滚动公告开关")) <= 0) {
+        if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"滚动公告开关")) >= 1) {
             chr.getClient().sendPacket(MaplePacketCreator.serverMessage(this.getServerMessage()));
         }
     }
@@ -280,10 +282,14 @@ public class ChannelServer implements Serializable
     public final EventScriptManager getEventSM() {
         return this.eventSM;
     }
-    
+    //重载单个事件
+    public final void setEventSM(String script) {
+         this.eventSM.EventScript(this,script);
+    }
     public final void reloadEvents() {
         this.eventSM.cancel();
-        (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("CongMS.events").split(","))).init();
+        //System.out.println(ServerProperties.getProperty("LtMS.events").split(",")[0]+"事件名称");
+        (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","))).init();
     }
     
     public Map<MapleSquadType, MapleSquad> getAllSquads() {
@@ -747,16 +753,16 @@ public class ChannelServer implements Serializable
     }
     
     static {
-        ChannelServer.离线挂机 = Boolean.parseBoolean(ServerProperties.getProperty("CongMS.离线挂机"));
+        ChannelServer.离线挂机 = Boolean.parseBoolean(ServerProperties.getProperty("LtMS.离线挂机"));
         ChannelServer.cf = new Config();
-        DEFAULT_PORT = (short)Integer.parseInt(ChannelServer.cf.getConfig("CongMS.channel.port1"));
+        DEFAULT_PORT = (short)Integer.parseInt(ChannelServer.cf.getConfig("LtMS.channel.port1"));
         instances = new HashMap<Integer, ChannelServer>();
         ChannelServer.clones = new ArrayList<离线人偶>();
     }
 
     public final void guaiReloadEvents() {
         this.eventSM.cancel();
-        (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("Guai.events").split(","))).init();
+        (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","))).init();
     }
     private EventScriptManager eventSMA;
     private EventScriptManager eventSMB;
@@ -775,16 +781,16 @@ public class ChannelServer implements Serializable
 
     public final void reloadEventsa() {
         this.eventSMA.cancel();
-        (this.eventSMA = new EventScriptManager(this, ServerProperties.getProperty("Guai.活动事件脚本").split(","))).init();
+        (this.eventSMA = new EventScriptManager(this, ServerProperties.getProperty("LtMS.活动事件脚本").split(","))).init();
     }
 
     public final void reloadEventsb() {
         this.eventSMB.cancel();
-        (this.eventSMB = new EventScriptManager(this, ServerProperties.getProperty("Guai.BOSS事件脚本").split(","))).init();
+        (this.eventSMB = new EventScriptManager(this, ServerProperties.getProperty("LtMS.BOSS事件脚本").split(","))).init();
     }
 
     public final void reloadEventsc() {
         this.eventSMC.cancel();
-        (this.eventSMC = new EventScriptManager(this, ServerProperties.getProperty("Guai.自定义事件脚本").split(","))).init();
+        (this.eventSMC = new EventScriptManager(this, ServerProperties.getProperty("LtMS.自定义事件脚本").split(","))).init();
     }
 }

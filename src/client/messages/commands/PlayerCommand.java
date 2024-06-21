@@ -3,6 +3,7 @@ package client.messages.commands;
 import client.MapleCharacter;
 import client.inventory.IItem;
 import gui.CongMS;
+import gui.LtMS;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import scripting.EventManager;
@@ -270,6 +271,19 @@ public class PlayerCommand
         }
     }
 
+    public static class 爆率 extends CommandExecute
+    {
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            NPCScriptManager.getInstance().start(c, 9010000, "怪物爆率");
+            return true;
+        }
+
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("!查询爆率").toString();
+        }
+    }
 //    public static class 吸物 extends xw
 //    {
 //        @Override
@@ -300,15 +314,15 @@ public class PlayerCommand
                 }
             }
             if (rand){
-                coefficient = CongMS.ConfigValuesMap.get("4人组队爆率加成") / 100;
+                coefficient = LtMS.ConfigValuesMap.get("4人组队爆率加成") / 100;
             }
             double jiac = 0;
-            if (CongMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
+            if (LtMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
                 //破功爆率加成机制
                 int 获得破功 = c.getPlayer().取破攻等级();
-                jiac = (获得破功 / CongMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
+                jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
             }
-            if(CongMS.ConfigValuesMap.get("开启封包调试") >0){
+            if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
                System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
                System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
             }

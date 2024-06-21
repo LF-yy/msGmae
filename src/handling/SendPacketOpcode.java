@@ -38,8 +38,8 @@ public enum SendPacketOpcode implements WritableIntValueHolder
     CANCEL_BUFF(31), 
     TEMP_STATS(32), 
     TEMP_STATS_RESET(33), 
-    UPDATE_SKILLS(34), 
-    SKILL_USE_RESULT(35), 
+    UPDATE_SKILLS(34), //更新技能
+    SKILL_USE_RESULT(35), //技能使用结果
     FAME_RESPONSE(36), 
     SHOW_STATUS_INFO(37), 
     SHOW_NOTES(38), 
@@ -50,7 +50,7 @@ public enum SendPacketOpcode implements WritableIntValueHolder
     SET_TAMING_MOB_INFO(45), 
     SHOW_QUEST_COMPLETION(46), 
     ENTRUSTED_SHOP_CHECK_RESULT(47), 
-    USE_SKILL_BOOK(49), 
+    USE_SKILL_BOOK(49), //使用_技能_书籍
     GATHER_ITEM_RESULT(50), 
     SORT_ITEM_RESULT(51), 
     CHAR_INFO(54), 
@@ -104,7 +104,7 @@ public enum SendPacketOpcode implements WritableIntValueHolder
     BBS_OPERATION(104), 
     FISHING_BOARD_UPDATE(105), 
     AVATAR_MEGA(109), 
-    SKILL_MACRO(122), 
+    SKILL_MACRO(122), //技能宏
     SET_FIELD(123), 
     SET_ITC(124), 
     SET_CASH_SHOP(125), 
@@ -221,7 +221,7 @@ public enum SendPacketOpcode implements WritableIntValueHolder
     COOLDOWN, 
     SUMMON_HINT, 
     SUMMON_HINT_MSG, 
-    SUMMON_SKILL, 
+    SUMMON_SKILL, //召唤技能
     ARIANT_PQ_START, 
     CATCH_MONSTER, 
     ARIANT_SCOREBOARD, 

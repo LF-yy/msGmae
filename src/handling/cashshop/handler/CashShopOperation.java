@@ -79,13 +79,13 @@ public class CashShopOperation
             return;
         }
         if (!LoginServer.CanLoginKey(client.getPlayer().getLoginKey(), client.getPlayer().getAccountID()) || (LoginServer.getLoginKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登录KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(client.getPlayer().getAccountID()) + " CongMs079服务端key：" + client.getPlayer().getLoginKey() + " 进入商城1");
+            FileoutputUtil.logToFile("logs/Data/客戶端登录KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(client.getPlayer().getAccountID()) + " LtMs079服务端key：" + client.getPlayer().getLoginKey() + " 进入商城1");
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
         if (!LoginServer.CanServerKey(client.getPlayer().getServerKey(), client.getPlayer().getAccountID()) || (LoginServer.getServerKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getServerKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(client.getPlayer().getAccountID()) + " CongMs079服务端key：" + client.getPlayer().getServerKey() + " 进入商城2");
+            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(client.getPlayer().getAccountID()) + " LtMs079服务端key：" + client.getPlayer().getServerKey() + " 进入商城2");
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;

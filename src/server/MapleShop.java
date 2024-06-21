@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import gui.CongMS;
+import gui.LtMS;
 import tools.FileoutputUtil;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -240,7 +241,7 @@ public class MapleShop
         for (int i = 2330000; i <= 2330005; ++i) {
             MapleShop.rechargeableItems.add(Integer.valueOf(i));
         }
-        if (((Integer) CongMS.ConfigValuesMap.get("子弹扩充开关")).intValue() > 0) {
+        if (((Integer) LtMS.ConfigValuesMap.get("子弹扩充开关")).intValue() > 0) {
             for (int a = 0; a < Start.子弹列表.size(); ++a) {
                 MapleShop.rechargeableItems.add(Integer.valueOf(Integer.parseInt((String)Start.子弹列表.get(a))));
             }

@@ -125,6 +125,9 @@ public class MapleMist extends AbstractMapleMapObject
     public void sendSpawnData(final MapleClient c) {
         c.sendPacket(MaplePacketCreator.spawnMist(this));
     }
+    public void sendSpawnData(final MapleClient c,int opCode) {
+        c.sendPacket(MaplePacketCreator.spawnSkill(this,opCode));
+    }
     
     @Override
     public void sendDestroyData(final MapleClient c) {

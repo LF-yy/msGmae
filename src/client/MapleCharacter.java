@@ -3,9 +3,9 @@ package client;
 import abc.离线人偶;
 import bean.UserAttraction;
 import client.inventory.*;
+import gui.LtMS;
 import scripting.EventManager;
 import server.*;
-import server.Timer;
 import server.Timer.EventTimer;
 import server.maps.MapleMapEffect;
 import handling.world.World.Find;
@@ -322,7 +322,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public static int 记录当前血量;
     public static int 角色无敌指数;
     public static int 地图记录;
-    public static int 吸怪怪值;
+    /**
+     * 吸怪怪值
+     */
+    public  int attractValue;
+    /**
+     * 吸怪误检测次数
+     */
+    public  int noAttractValue;
     public static long 记录范围;
     public static int 记录技能;
     public static int 技能检测惩罚;
@@ -404,6 +411,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int jf9;
     private int jf10;
     private int 等级上限;
+    private int corona;
+    private int coronaMap;
     private Map<Integer, Integer> _equippedFuMoMap;
     private transient List<LifeMovementFragment> 吸怪RES;
 
@@ -416,8 +425,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int TZ6 = 0;
     private double 套装伤害加成;
     private int clonedamgerate;
+
     private MapleCharacter(final boolean ChannelServer) {
         this.clonedamgerate = 0;
+        this.corona = 0;
+        this.coronaMap = 0;
         this.teleportname = "";
         this.nowmacs = "";
         this.nextConsume = 0L;
@@ -437,6 +449,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.coconutteam = 0;
         this.followid = 0;
         this.battleshipHP = 0;
+        this.attractValue = 0;
+        this.noAttractValue = 0;
         this.MSG = 0;
         this.打怪 = 0;
         this.吸怪 = 0;
@@ -611,7 +625,27 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.pets = new ArrayList<MaplePet>();
         }
     }
-    
+
+    public int getCorona() {
+        return corona;
+    }
+
+    public void setCorona(int corona) {
+        this.corona = corona;
+    }
+
+    public int getCoronaMap() {
+        return coronaMap;
+    }
+
+    public void setCoronaMap(int coronaMap) {
+        this.coronaMap = coronaMap;
+    }
+
+    public Map<MapleBuffStat, MapleBuffStatValueHolder> getEffects() {
+        return effects;
+    }
+
     public static MapleCharacter getDefault(final MapleClient client, final int type) {
         final MapleCharacter ret = new MapleCharacter(false);
         ret.client = client;
@@ -2216,7 +2250,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.getMount().startSchedule();
         }
         else if (effect.isBeholder()) {
-            this.prepareBeholderEffect();
+            //召唤技能
+            this.prepareBeholderEffect(1321007);
+        }
+        else if (effect.isBeholder1()) {
+            this.prepareBeholderEffect(1321011);
         }
         else if (effect.isRecovery()) {
             this.prepareRecovery();
@@ -2458,7 +2496,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         final LinkedList<MapleBuffStatValueHolder> allBuffs = new LinkedList<MapleBuffStatValueHolder>((Collection<? extends MapleBuffStatValueHolder>)this.effects.values());
         for (final MapleBuffStatValueHolder mbsvh : allBuffs) {
             if (skillid == 0) {
-                if (mbsvh.effect.isSkill() && (mbsvh.effect.getSourceId() == 4331003 || mbsvh.effect.getSourceId() == 4331002 || mbsvh.effect.getSourceId() == 4341002 || mbsvh.effect.getSourceId() == 22131001 || mbsvh.effect.getSourceId() == 1321007 || mbsvh.effect.getSourceId() == 2121005 || mbsvh.effect.getSourceId() == 2221005 || mbsvh.effect.getSourceId() == 2311006 || mbsvh.effect.getSourceId() == 2321003 || mbsvh.effect.getSourceId() == 3111002 || mbsvh.effect.getSourceId() == 3111005 || mbsvh.effect.getSourceId() == 3211002 || mbsvh.effect.getSourceId() == 3211005 || mbsvh.effect.getSourceId() == 4111002)) {
+                if (mbsvh.effect.isSkill() && (mbsvh.effect.getSourceId() == 4331003 || mbsvh.effect.getSourceId() == 4331002 || mbsvh.effect.getSourceId() == 4341002 || mbsvh.effect.getSourceId() == 22131001 || mbsvh.effect.getSourceId() == 1321007  || mbsvh.effect.getSourceId() == 1321011 || mbsvh.effect.getSourceId() == 2121005 || mbsvh.effect.getSourceId() == 2221005 || mbsvh.effect.getSourceId() == 2311006 || mbsvh.effect.getSourceId() == 2321003 || mbsvh.effect.getSourceId() == 3111002 || mbsvh.effect.getSourceId() == 3111005 || mbsvh.effect.getSourceId() == 3211002 || mbsvh.effect.getSourceId() == 3211005 || mbsvh.effect.getSourceId() == 4111002)) {
                     this.cancelEffect(mbsvh.effect, false, mbsvh.startTime);
                     break;
                 }
@@ -2732,7 +2770,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         return this.mapid;
     }
-    
     public byte getInitialSpawnpoint() {
         return this.initialSpawnPoint;
     }
@@ -3466,10 +3503,24 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void gainExp(final int total, final boolean show, final boolean inChat, final boolean white) {
         try {
+
+            if (等级上限 == 0 ){
+                等级上限 =  this.取限制等级1(getId());
+            }
+            int shijiedengji = this.取限制等级();
+            if (shijiedengji > 等级上限){
+                等级上限 = shijiedengji;
+            }
+            if ( this.level >= 等级上限) {
+                //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
+                if (LtMS.ConfigValuesMap.get("经验叠加开关")==0){
+                    return;
+                }
+            }
             final int prevexp = this.getExp();
             int needed = GameConstants.getExpNeededForLevel((int)this.level);
-            final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
-            final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
+            final int 骑士团等级上限 = LtMS.ConfigValuesMap.get("骑士团等级上限");
+            final int 冒险家等级上限 = LtMS.ConfigValuesMap.get("冒险家等级上限");
             if (total > 0) {
                 this.stats.checkEquipLevels(this, total);
             }
@@ -3549,6 +3600,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this == null) {
             return;
         }
+        if (等级上限 == 0 ){
+            等级上限 =  this.取限制等级1(getId());
+        }
+        int shijiedengji = this.取限制等级();
+        if (shijiedengji > 等级上限){
+            等级上限 = shijiedengji;
+        }
+        if ( this.level >= 等级上限) {
+            //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
+            return;
+        }
         this.expirationTask(true, false);
         if (this.getExpm() > 1.0) {
             gain = (int)((double)gain * this.getExpm());
@@ -3602,8 +3664,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (total > 0) {
             this.stats.checkEquipLevels(this, total);
         }
-        final int 冒险家等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
-        final int 骑士团等级上限 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
+        final int 冒险家等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
+        final int 骑士团等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
         int needed = GameConstants.getExpNeededForLevel((int)this.level);
         if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && this.level >= 骑士团等级上限)) {
             if (this.exp + total > needed) {
@@ -3621,7 +3683,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.exp += total;
             long oexp = (long)this.exp;
             short olevel = this.level;
-            if (CongMS.ConfigValuesMap.get("等级连升开关") ==1) {
+            if (LtMS.ConfigValuesMap.get("等级连升开关") ==1) {
                 while (oexp >= (long) needed) {
                     this.levelUp();
                     leveled = true;
@@ -3682,7 +3744,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.client.sendPacket(MaplePacketCreator.modifyInventory(false, new ModifyInventory(1, item)));
         }
     }
-    
+    public void forceReAddItem_NoUpdate1(Item item, MapleInventoryType type) {
+        getInventory(type).removeSlot(item.getPosition());
+        getInventory(type).addFromDB(item);
+    }
+
+    public void forceReAddItem1(Item item, MapleInventoryType type) {
+        forceReAddItem_NoUpdate1(item, type);
+        type = MapleInventoryType.EQUIP;
+        if (type != MapleInventoryType.UNDEFINED) {
+            client.sendPacket(MTSCSPacket.addInventorySlot(type, item,false));
+        }
+    }
     public void forceReAddItem_Flag(final IItem item, final MapleInventoryType type) {
         this.forceReAddItem_NoUpdate(item, type);
         if (type != MapleInventoryType.UNDEFINED) {
@@ -4134,7 +4207,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void DoLevelMsg() {
-        final int 升级快讯 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"升级快讯开关"));
+        final int 升级快讯 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"升级快讯开关"));
         if (升级快讯 <= 0 && !this.isGM() && this.level >= 1) {
             final String 最高等级玩家 = NPCConversationManager.获取最高等级玩家名字();
             final StringBuilder sb = new StringBuilder("[升级快讯]: 恭喜玩家【");
@@ -5540,7 +5613,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    private void prepareBeholderEffect() {
+    public void prepareBeholderEffect(final int skillId) {
         if (this.beholderHealingSchedule != null) {
             this.beholderHealingSchedule.cancel(false);
         }
@@ -5572,9 +5645,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 @Override
                 public void run() {
                     buffEffect.applyTo(MapleCharacter.this);
-                    client.sendPacket(MaplePacketCreator.showOwnBuffEffect(1321007, 2));
-                    map.broadcastMessage(MaplePacketCreator.summonSkill(MapleCharacter.this.getId(), 1321007, Randomizer.nextInt(3) + 6));
-                    map.broadcastMessage(MapleCharacter.this, MaplePacketCreator.showBuffeffect(MapleCharacter.this.getId(), 1321007, 2), false);
+                    client.sendPacket(MaplePacketCreator.showOwnBuffEffect(skillId, 2));
+                    map.broadcastMessage(MaplePacketCreator.summonSkill(MapleCharacter.this.getId(), skillId, Randomizer.nextInt(3) + 6));
+                    map.broadcastMessage(MapleCharacter.this, MaplePacketCreator.showBuffeffect(MapleCharacter.this.getId(), skillId, 2), false);
                 }
             }, (long)buffInterval, (long)buffInterval);
         }
@@ -6644,13 +6717,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.fairySchedule = null;
         }
         if (exp) {
-            final int 精灵吊坠 = (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"精灵吊坠经验加成"));
+            final int 精灵吊坠 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"精灵吊坠经验加成"));
             this.fairyExp = (byte)精灵吊坠;
         }
     }
     
     public void 人气经验加成() {
-        final int 人气 = this.getFame() * (int)Integer.valueOf(CongMS.ConfigValuesMap.get((Object)"人气经验加成"));
+        final int 人气 = this.getFame() * (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"人气经验加成"));
         this.gainExp(人气, true, false, false);
     }
     
@@ -11187,7 +11260,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public int 取限制等级1(final int cid) {
         try {
-            int 限制等级 = CongMS.ConfigValuesMap.get("等级初始上限");
+            int 限制等级 = LtMS.ConfigValuesMap.get("等级初始上限");
             final Connection con = DatabaseConnection.getConnection();
             PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
 
@@ -11214,7 +11287,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception Ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
-            return CongMS.ConfigValuesMap.get("等级初始上限");
+            return LtMS.ConfigValuesMap.get("等级初始上限");
         }
     }
 
@@ -11406,7 +11479,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         MapleCharacter.记录当前血量 = 0;
         MapleCharacter.角色无敌指数 = 0;
         MapleCharacter.地图记录 = 0;
-        MapleCharacter.吸怪怪值 = 0;
         MapleCharacter.记录范围 = 0L;
         MapleCharacter.记录技能 = 0;
         MapleCharacter.技能检测惩罚 = 0;
@@ -11437,7 +11509,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinStat1(equip);
                 } else {
                     Num += this.RuinStat(equip);
@@ -11453,7 +11525,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinStr(equip) * 10;
                 } else {
                     Num += this.RuinStr(equip);
@@ -11469,7 +11541,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinDex(equip) * 10;
                 } else {
                     Num += this.RuinDex(equip);
@@ -11485,7 +11557,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinInt(equip) * 10;
                 } else {
                     Num += this.RuinInt(equip);
@@ -11501,7 +11573,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinLuk(equip) * 10;
                 } else {
                     Num += this.RuinLuk(equip);
@@ -11517,7 +11589,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinWatk(equip) * 50;
                 } else {
                     Num += this.RuinWatk(equip);
@@ -11533,7 +11605,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinMatk(equip) * 10;
                 } else {
                     Num += this.RuinMatk(equip);
@@ -11549,7 +11621,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinMdef(equip) * 10;
                 } else {
                     Num += this.RuinMdef(equip);
@@ -11565,7 +11637,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinWdef(equip) * 10;
                 } else {
                     Num += this.RuinWdef(equip);
@@ -11581,7 +11653,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinHp(equip) * 10;
                 } else {
                     Num += this.RuinHp(equip);
@@ -11597,7 +11669,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (short i = 0; i < TemporaryGroup.length; ++i) {
             IEquip equip = (IEquip) this.getInventory(MapleInventoryType.EQUIPPED).getItem(TemporaryGroup[i]);
             if (equip != null) {
-                if (((Integer) CongMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
+                if (((Integer) LtMS.ConfigValuesMap.get("战力修正")).intValue() > 0) {
                     Num += this.RuinMp(equip) * 10;
                 } else {
                     Num += this.RuinMp(equip);
@@ -11796,6 +11868,96 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
+    public int getmoneyb() {
+        int moneyb = 0;
+        try (final Connection con = DatabaseConnection.getConnection()) {
+            final int cid = this.getAccountID();
+            ResultSet rs;
+            try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
+                rs = limitCheck.executeQuery();
+                if (rs.next()) {
+                    moneyb = rs.getInt("moneyb");
+                }
+                limitCheck.close();
+            }
+            rs.close();
+            con.close();
+        }catch (SQLException ex) {
+            System.err.println("getmoneyb" + (Object)ex);
+            FileoutputUtil.outputFileError("logs/数据库异常.txt", (Throwable)ex);
+            ex.getStackTrace();
+        }
+        return moneyb;
+    }
+    public void setmoneyb(final int slot) {
+        try (final Connection con = DatabaseConnection.getConnection()) {
+            final int cid = this.getAccountID();
+            try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb = " + slot + " WHERE id = " + cid + "")) {
+                ps.executeUpdate();
+                ps.close();
+            }
+            con.close();
+        }catch (SQLException ex) {
+            System.err.println("setmoneyb" + (Object)ex);
+            FileoutputUtil.outputFileError("logs/数据库异常.txt", (Throwable)ex);
+            ex.getStackTrace();
+        }
+    }
+
+    public void checkCopyItems() {
+        final List<Integer> equipOnlyIds = new ArrayList<Integer>();
+        final Map<Integer, Integer> checkItems = new HashMap<Integer, Integer>();
+
+        for (final IItem item : this.getInventory(MapleInventoryType.EQUIP).list()) {
+            final int equipOnlyId = (int)item.getEquipOnlyId();
+            if (equipOnlyId > 0) {
+                if (checkItems.containsKey(equipOnlyId)) {
+                    if (checkItems.get(equipOnlyId) != item.getItemId()) {
+                        continue;
+                    }
+                    equipOnlyIds.add(equipOnlyId);
+                }
+                else {
+                    checkItems.put(equipOnlyId, item.getItemId());
+                }
+            }
+        }
+        for (final IItem item : this.getInventory(MapleInventoryType.EQUIPPED).list()) {
+            final int equipOnlyId = (int)item.getEquipOnlyId();
+            if (equipOnlyId > 0) {
+                if (checkItems.containsKey(equipOnlyId)) {
+                    if (checkItems.get(equipOnlyId) != item.getItemId()) {
+                        continue;
+                    }
+                    equipOnlyIds.add(equipOnlyId);
+                }
+                else {
+                    checkItems.put(equipOnlyId, item.getItemId());
+                }
+            }
+        }
+        boolean autoban = false;
+        for (final Integer equipOnlyId2 : equipOnlyIds) {
+            MapleInventoryManipulator.removeAllByEquipOnlyId(this.client, equipOnlyId2);
+            autoban = true;
+        }
+        if (autoban) {
+            AutobanManager.getInstance().autoban(this.client, "无理由.");
+        }
+        checkItems.clear();
+        equipOnlyIds.clear();
+    }
+
+    public void forceUpdateItem(final IItem item) {
+        this.forceUpdateItem(item, false);
+    }
+
+    public void forceUpdateItem(final IItem item, final boolean updateTick) {
+        final List<ModifyInventory> mods = new LinkedList<ModifyInventory>();
+        mods.add(new ModifyInventory(3, item));
+        mods.add(new ModifyInventory(0, item));
+        this.client.getSession().write(MaplePacketCreator.modifyInventory(updateTick, mods));
+    }
 //    public int getAccountLog(String log1, int a) {
 //        if (a < 1) {
 //            return this.getAccountidBossLog(log1);

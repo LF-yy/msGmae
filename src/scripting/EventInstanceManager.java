@@ -1,7 +1,10 @@
 package scripting;
 
 import java.util.Calendar;
+
+import bean.MobInfo;
 import constants.ServerConfig;
+import server.Start;
 import tools.packet.UIPacket;
 import server.MapleItemInformationProvider;
 import server.MapleCarnivalParty;
@@ -15,7 +18,6 @@ import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import server.maps.MapleMap;
 import handling.world.MapleParty;
-import java.util.Iterator;
 import tools.MaplePacketCreator;
 import server.Timer.EventTimer;
 import javax.script.ScriptException;
@@ -31,6 +33,8 @@ import java.util.Properties;
 import java.util.Map;
 import server.life.MapleMonster;
 import client.MapleCharacter;
+import util.ListUtil;
+
 import java.util.List;
 
 public class EventInstanceManager
@@ -291,7 +295,8 @@ public class EventInstanceManager
             chr.modifyCSPoints(1, points, true);
         }
     }
-    
+
+    //获取参加活动所有角色信息
     public List<MapleCharacter> getPlayers() {
         if (this.disposed) {
             return Collections.emptyList();
@@ -308,22 +313,52 @@ public class EventInstanceManager
     public List<Integer> getDisconnected() {
         return this.dced;
     }
-    
+
+    /**
+     * 获取参加活动人数
+     * @return
+     */
     public final int getPlayerCount() {
         if (this.disposed) {
             return 0;
         }
         return this.chars.size();
     }
-    
+
+    /**
+     * 注册怪物
+     * @param mob
+     */
     public void registerMonster(final MapleMonster mob) {
         if (this.disposed) {
             return;
         }
+
+        //修改怪物血,蓝,等级
+        if(ListUtil.isNotEmpty(Start.mobInfoMap.get(mob.getId()))){
+            MobInfo mobInfos = Start.mobInfoMap.get(mob.getId()).get(0);
+            mob.setHp(mobInfos.getHp());
+            mob.getStats().setHp(mobInfos.getHp());
+            mob.setMp(mobInfos.getMp());
+            mob.getStats().setMp(mobInfos.getMp());
+            mob.getStats().setExp(mobInfos.getExp());
+            mob.getStats().setLevel((short)(Math.min(mobInfos.getLevel(), 250)));
+            mob.getStats().setEva((short)(Math.min(mobInfos.getEva(), 10000)));
+            mob.getStats().setPhysicalDefense((short)(Math.min(mobInfos.getDamage(),30000)));
+            mob.getStats().setMagicDefense((short)(Math.min(mobInfos.getDamage(), 30000)));
+        }
         this.mobs.add(mob);
         mob.setEventInstance(this);
     }
-    
+
+    /**
+     *
+     * 在活动中取消怪物信息
+     * 或者
+     * 怪物死亡触发和删除这个怪在活动中的信息
+     *
+     * @param mob
+     */
     public void unregisterMonster(final MapleMonster mob) {
         mob.setEventInstance(null);
         if (this.disposed) {
@@ -341,7 +376,11 @@ public class EventInstanceManager
             }
         }
     }
-    
+
+    /**
+     * 在活动角色死亡触发事件
+     * @param chr
+     */
     public void playerKilled(final MapleCharacter chr) {
         if (this.disposed) {
             return;
@@ -355,7 +394,12 @@ public class EventInstanceManager
             System.err.println("Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : playerDead:\n" + (Object)ex4);
         }
     }
-    
+
+    /**
+     * 在活动中角色复活触发事件
+     * @param chr
+     * @return
+     */
     public boolean revivePlayer(final MapleCharacter chr) {
         if (this.disposed) {
             return false;
@@ -373,7 +417,12 @@ public class EventInstanceManager
         }
         return true;
     }
-    
+
+    /**
+     * 在活动中角色断开连接触发
+     * @param chr
+     * @param idz
+     */
     public void playerDisconnected(final MapleCharacter chr, final int idz) {
         if (this.disposed) {
             return;
@@ -416,7 +465,12 @@ public class EventInstanceManager
             this.wL.unlock();
         }
     }
-    
+
+    /**
+     * 活动中角色杀死怪物触发事件
+     * @param chr
+     * @param mob
+     */
     public void monsterKilled(final MapleCharacter chr, final MapleMonster mob) {
         if (this.disposed) {
             return;
@@ -447,7 +501,13 @@ public class EventInstanceManager
         }
         catch (ScriptException ex3) {}
     }
-    
+
+    /**
+     * 在活动中怪物攻击触发
+     * @param chr
+     * @param mob
+     * @param damage
+     */
     public void monsterDamaged(final MapleCharacter chr, final MapleMonster mob, final int damage) {
         if (this.disposed || mob.getId() != 9700037) {
             return;
@@ -480,7 +540,10 @@ public class EventInstanceManager
         }
         return (int)kc;
     }
-    
+
+    /**
+     * 清除活动事件
+     */
     public void dispose_NoLock() {
         if (this.disposed || this.em == null) {
             return;
@@ -549,7 +612,15 @@ public class EventInstanceManager
             chr.getClient().sendPacket(MaplePacketCreator.serverNotice(type, msg));
         }
     }
-    
+
+    /**
+     * 创建1个新的地图模版
+     * int mapid, - 地图ID
+     * boolean respawns, - 是否刷新怪物
+     * boolean npcs, - 是否有NPC
+     * boolean reactors, - 是否有反应堆
+     * int instanceid - 分配的ID
+     */
     public final MapleMap createInstanceMap(final int mapid) {
         if (this.disposed) {
             return null;
@@ -559,7 +630,14 @@ public class EventInstanceManager
         this.isInstanced.add(Boolean.valueOf(true));
         return this.getMapFactory().CreateInstanceMap(mapid, true, true, true, assignedid);
     }
-    
+    /**
+     * 创建1个新的地图模版
+     * int mapid, - 地图ID
+     * boolean respawns, - 是否刷新怪物
+     * boolean npcs, - 是否有NPC
+     * boolean reactors, - 是否有反应堆
+     * int instanceid - 分配的ID
+     */
     public final MapleMap createInstanceMapS(final int mapid) {
         if (this.disposed) {
             return null;
@@ -569,7 +647,10 @@ public class EventInstanceManager
         this.isInstanced.add(Boolean.valueOf(true));
         return this.getMapFactory().CreateInstanceMap(mapid, false, false, false, assignedid);
     }
-    
+    /**
+     * gets instance map from the channelserv
+     * 从频道中获取地图
+     */
     public final MapleMap setInstanceMap(final int mapid) {
         if (this.disposed) {
             return this.getMapFactory().getMap(mapid);
@@ -675,7 +756,11 @@ public class EventInstanceManager
     public final Properties getProperties() {
         return this.props;
     }
-    
+
+    /**
+     * 离开队伍触发
+     * @param chr
+     */
     public final void leftParty(final MapleCharacter chr) {
         if (this.disposed) {
             return;
@@ -688,7 +773,10 @@ public class EventInstanceManager
             FilePrinter.printError("EventInstanceManager.txt", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : leftParty:\n" + (Object)ex);
         }
     }
-    
+
+    /**
+     * 解散队伍触发
+     */
     public final void disbandParty() {
         if (this.disposed) {
             return;
@@ -715,7 +803,11 @@ public class EventInstanceManager
             FilePrinter.printError("EventInstanceManager.txt", "Event name" + this.em.getName() + ", Instance name : " + this.name + ", method Name : clearPQ:\n" + (Object)ex4);
         }
     }
-    
+
+    /**
+     * 角色退出时触发
+     * @param chr
+     */
     public final void removePlayer(final MapleCharacter chr) {
         if (this.disposed) {
             return;
@@ -781,7 +873,13 @@ public class EventInstanceManager
     public boolean isLeader(final MapleCharacter chr) {
         return chr != null && chr.getParty() != null && chr.getParty().getLeader().getId() == chr.getId();
     }
-    
+
+    /**
+     * 用任务ID来记录是否进行过BOSS远征任务
+     * @param squad
+     * @param map
+     * @param questID
+     */
     public void registerSquad(final MapleSquad squad, final MapleMap map, final int questID) {
         if (this.disposed) {
             return;
@@ -799,11 +897,20 @@ public class EventInstanceManager
         squad.setStatus((byte)2);
         squad.getBeginMap().broadcastMessage(MaplePacketCreator.stopClock());
     }
-    
+
+    /**
+     * 检测角色是否在活动中的断开列表中
+     * @param chr
+     * @return
+     */
     public boolean isDisconnected(final MapleCharacter chr) {
         return !this.disposed && this.dced.contains((Object)Integer.valueOf(chr.getId()));
     }
-    
+
+    /**
+     * 删除角色在活动中断开列表中的信息
+     * @param id
+     */
     public void removeDisconnected(final int id) {
         if (this.disposed) {
             return;

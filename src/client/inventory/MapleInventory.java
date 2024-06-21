@@ -248,4 +248,16 @@ public class MapleInventory implements Iterable<IItem>, Serializable
         }
         return null;
     }
+    public List<IItem> listByEquipOnlyId(final int equipOnlyId) {
+        final List<IItem> ret = new ArrayList<IItem>();
+        for (final IItem item : this.inventory.values()) {
+            if (item.getEquipOnlyId() > 0 && item.getEquipOnlyId() == equipOnlyId) {
+                ret.add(item);
+            }
+        }
+        if (ret.size() > 1) {
+            Collections.sort(ret);
+        }
+        return ret;
+    }
 }

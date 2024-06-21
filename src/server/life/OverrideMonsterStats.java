@@ -51,4 +51,8 @@ public class OverrideMonsterStats
     public int getlevel() {
         return this.level;
     }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
 }

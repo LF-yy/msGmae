@@ -1,5 +1,8 @@
 package tools.packet;
 
+import client.inventory.Item;
+import client.inventory.MapleInventoryType;
+import constants.GameConstants;
 import tools.KoreanDateUtil;
 import server.MTSStorage.MTSItemInfo;
 import tools.Pair;
@@ -748,6 +751,23 @@ public class MTSCSPacket
     public static byte[] sendWEB(final MapleClient c) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.CS_WEB.getValue());
+        return mplew.getPacket();
+    }
+    public static byte[] addInventorySlot(MapleInventoryType type, Item item) {
+        return addInventorySlot(type, item, false);
+    }
+
+    public static byte[] addInventorySlot(MapleInventoryType type, Item item, boolean fromDrop) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        mplew.writeShort(SendPacketOpcode.MODIFY_INVENTORY_ITEM.getValue());
+        mplew.write(fromDrop ? 1 : 0);
+        mplew.write(1);
+        //mplew.write(0);
+        mplew.write(GameConstants.isInBag(item.getPosition(), type.getType()) ? 9 : 0);
+        mplew.write(type.getType());
+        mplew.writeShort(item.getPosition());
+        PacketHelper.addItemInfo(mplew, item);
         return mplew.getPacket();
     }
 }

@@ -17,7 +17,7 @@ public class CashShopServer
     private static boolean finishedShutdown;
     
     public static final void setup() {
-        CashShopServer.port = (short)Short.valueOf(ServerProperties.getProperty("CongMS.cashshop.port", "8600"));
+        CashShopServer.port = (short)Short.valueOf(ServerProperties.getProperty("LtMS.cashshop.port", "8600"));
         CashShopServer.ip = ServerConfig.IP + ":" + CashShopServer.port;
         CashShopServer.players = new PlayerStorage(-10);
         CashShopServer.playersMTS = new PlayerStorage(-20);

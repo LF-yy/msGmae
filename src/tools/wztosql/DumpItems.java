@@ -1,6 +1,7 @@
 package tools.wztosql;
 
 import gui.CongMS;
+import gui.LtMS;
 import tools.Pair;
 import server.life.Element;
 import client.inventory.EquipAdditions;
@@ -178,14 +179,14 @@ public class DumpItems
         final MapleData smEntry = iz.getChildByPath("info/slotMax");
         if (smEntry == null) {
             if (GameConstants.getInventoryType(this.id) == MapleInventoryType.EQUIP) {
-                ret = 1;
+                ret = Short.parseShort(LtMS.ConfigValuesMap.get((Object)"物品额外数量")+"");
             }
             else {
-                ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+                ret = Short.parseShort(LtMS.ConfigValuesMap.get((Object)"物品额外数量")+"");
             }
         } else {
 //            ret = (short)MapleDataTool.getIntConvert(smEntry, -1);
-            ret = Short.parseShort(CongMS.ConfigValuesMap.get((Object)"消耗栏叠加数量")+"");
+            ret = Short.parseShort(LtMS.ConfigValuesMap.get((Object)"物品额外数量")+"");
         }
         ps.setInt(5, (int)ret);
         double pEntry = 0.0;

@@ -41,7 +41,7 @@ public class DatabaseConnection
     
     private DatabaseConnection() {
     }
-    
+
     public static Connection getConnection() {
         final Thread cThread = Thread.currentThread();
         final int threadID = (int)cThread.getId();
@@ -120,12 +120,12 @@ public class DatabaseConnection
                 System.err.println("加载数据库配置出错，请检查" + (Object)ex);
             }
             DatabaseConnection.dbDriver = "com.mysql.jdbc.Driver";
-            DatabaseConnection.dbName = DatabaseConnection.dbProps.getProperty("CongMS.db.name");
-            DatabaseConnection.dbHost = DatabaseConnection.dbProps.getProperty("CongMS.db.host");
-            DatabaseConnection.dbPort = DatabaseConnection.dbProps.getProperty("CongMS.db.port");
+            DatabaseConnection.dbName = DatabaseConnection.dbProps.getProperty("LtMS.db.name");
+            DatabaseConnection.dbHost = DatabaseConnection.dbProps.getProperty("LtMS.db.host");
+            DatabaseConnection.dbPort = DatabaseConnection.dbProps.getProperty("LtMS.db.port");
             DatabaseConnection.dbUrl = "jdbc:mysql://" + DatabaseConnection.dbHost + ":" + DatabaseConnection.dbPort + "/" + DatabaseConnection.dbName + "?useUnicode=true&characterEncoding=UTF8";
-            DatabaseConnection.dbUser = DatabaseConnection.dbProps.getProperty("CongMS.db.user");
-            DatabaseConnection.dbPass = DatabaseConnection.dbProps.getProperty("CongMS.db.password");
+            DatabaseConnection.dbUser = DatabaseConnection.dbProps.getProperty("LtMS.db.user");
+            DatabaseConnection.dbPass = DatabaseConnection.dbProps.getProperty("LtMS.db.password");
             try {
                 DatabaseConnection.connectionTimeOut = Long.parseLong(DatabaseConnection.dbProps.getProperty("timeout"));
             }

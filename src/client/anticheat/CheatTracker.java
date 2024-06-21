@@ -3,6 +3,7 @@ package client.anticheat;
 import java.util.*;
 
 import gui.CongMS;
+import gui.LtMS;
 import tools.StringUtil;
 import constants.WorldConstants;
 import client.SkillFactory;
@@ -124,8 +125,8 @@ public class CheatTracker
                     final String reason = "使用违法程式练功";
                     Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "攻击无延续自动封锁。"));
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + ((MapleCharacter)this.chr.get()).getName() + " 攻击无延续自动封锁! "));
-                    if ((CongMS.ConfigValuesMap.get("开启封锁")).intValue() > 0) {
-                        if ((CongMS.ConfigValuesMap.get("封停账号")).intValue() > 0) {
+                    if ((LtMS.ConfigValuesMap.get("开启封锁")).intValue() > 0) {
+                        if ((LtMS.ConfigValuesMap.get("封停账号")).intValue() > 0) {
                             //this.chr.get().ban("攻击速度异常攻", true, true, false);
                             if (Objects.requireNonNull(chr.get()).getClient()!=null){
                                 chr.get().getClient().disconnect(true, false);
@@ -146,9 +147,9 @@ public class CheatTracker
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语开加速]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
                     this.noError = 0;
                     this.error = this.error+1;
-                    if(this.error > CongMS.ConfigValuesMap.get("攻速异常次数").intValue()) {
-                        if (CongMS.ConfigValuesMap.get("开启封锁").intValue() > 0) {
-                            if (CongMS.ConfigValuesMap.get("封停账号").intValue() > 0) {
+                    if(this.error > LtMS.ConfigValuesMap.get("攻速异常次数").intValue()) {
+                        if (LtMS.ConfigValuesMap.get("开启封锁").intValue() > 0) {
+                            if (LtMS.ConfigValuesMap.get("封停账号").intValue() > 0) {
                                 //this.chr.get().ban("攻击速度异常攻", true, true, false);
                                 if (Objects.requireNonNull(chr.get()).getClient()!=null){
                                     chr.get().getClient().disconnect(true, false);
@@ -188,10 +189,6 @@ public class CheatTracker
         }
         final long STime_TC = System.currentTimeMillis() - (long)tickcount;
         if (this.Server_ClientAtkTickDiff - STime_TC > 1000L && GameConstants.getWuYanChi(skillId) && WorldConstants.WUYANCHI) {
-//            try {
-//                Thread.sleep(1000);
-//            } catch (Exception e) {
-//            }
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语延迟]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
         }
         this.Server_ClientAtkTickDiff = STime_TC;
@@ -415,7 +412,7 @@ public class CheatTracker
                 if (this.gm_message % 5 != 0) {
                     break;
                 }
-                if(CongMS.ConfigValuesMap.get("启用吸怪") ==0) {
+                if(LtMS.ConfigValuesMap.get("启用吸怪") ==0) {
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param))));
                     if (log) {
                         FileoutputUtil.logToFile("logs/Hack/" + out_log + ".txt", "\r\n" + FileoutputUtil.NowTime() + " " + chrhardref.getName() + " (编号:" + chrhardref.getId() + ")疑似外挂! " + show + ((param == null) ? "" : (" - " + param)));

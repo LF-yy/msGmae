@@ -19,7 +19,7 @@ public class 活动神秘商人
     }
     
     public static void 随机商人出现条件() {
-        int pind = (int)Math.ceil(Math.random() * (double)Integer.parseInt(ServerProperties.getProperty("CongMS.channel.count")));
+        int pind = (int)Math.ceil(Math.random() * (double)Integer.parseInt(ServerProperties.getProperty("LtMS.channel.count")));
         if (pind == 0) {
             ++pind;
         }
