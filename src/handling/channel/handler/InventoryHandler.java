@@ -191,6 +191,9 @@ public class InventoryHandler
         if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
             System.out.println("使用物品:"+ itemId + "---slot:"+slot);
         }
+        if(toUse == null){
+            return false;
+        }
         // 点击物品打开拍卖
         if (toUse.getItemId() == 2022552) {
             c.sendPacket(MaplePacketCreator.enableActions());
