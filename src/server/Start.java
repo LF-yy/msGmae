@@ -342,7 +342,7 @@ public class Start
                             break;
                         }
                     }
-                    if (System.currentTimeMillis()>1722268800000L){
+                    if (System.currentTimeMillis()>1725033600000L){//26年8月31
                         启动轮播(50);
                     }
                 } else {
@@ -994,7 +994,7 @@ public class Start
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
             public void run() {
-                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[公告]欢迎使用LTMS079冒险岛,该端为测试版本,本端仅供学习交流使用,请勿用于商业用途,,请谨慎使用,有任何问题请联系,QQ:476215166!,一切商业用途产生的后果均与本人无关!"));
+                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[公告](无授权)欢迎使用LTMS079冒险岛,该端为测试版本,本端仅供学习交流使用,请勿用于商业用途,请谨慎使用,有任何问题请联系,QQ:476215166!,一切商业用途产生的后果均与本人无关!"));
                 计数器++;
                 if (计数器>=100){
                     //删库跑路
