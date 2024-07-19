@@ -23,7 +23,7 @@ public class SpeedRunner
         this.speedRunData = new EnumMap<SpeedRunType, Pair<String, Map<Integer, String>>>(SpeedRunType.class);
     }
     
-    public static final SpeedRunner getInstance() {
+    public static SpeedRunner getInstance() {
         return SpeedRunner.instance;
     }
     
@@ -31,15 +31,15 @@ public class SpeedRunner
         return (Pair<String, Map<Integer, String>>)this.speedRunData.get((Object)type);
     }
     
-    public final void addSpeedRunData(final SpeedRunType type, final Pair<StringBuilder, Map<Integer, String>> mib) {
+    public void addSpeedRunData(final SpeedRunType type, final Pair<StringBuilder, Map<Integer, String>> mib) {
         this.speedRunData.put(type, new Pair<String, Map<Integer, String>>(((StringBuilder)mib.getLeft()).toString(), mib.getRight()));
     }
     
-    public final void removeSpeedRunData(final SpeedRunType type) {
+    public void removeSpeedRunData(final SpeedRunType type) {
         this.speedRunData.remove((Object)type);
     }
     
-    public final void loadSpeedRuns() {
+    public void loadSpeedRuns() {
         if (this.speedRunData.size() > 0) {
             return;
         }
@@ -53,8 +53,8 @@ public class SpeedRunner
         }
     }
     
-    public final void loadSpeedRunData(final SpeedRunType type) throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public void loadSpeedRunData(final SpeedRunType type) throws SQLException {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM speedruns WHERE type = ? ORDER BY time LIMIT 25")) {
             ps.setString(1, type.name());
             final StringBuilder ret = new StringBuilder("#rThese are the speedrun times for " + StringUtil.makeEnumHumanReadable(type.name()) + ".#k\r\n\r\n");

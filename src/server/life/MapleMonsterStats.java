@@ -116,7 +116,7 @@ public class MapleMonsterStats
         return this.PhysicalDefense;
     }
     
-    public final void setMagicDefense(final short MagicDefense) {
+    public void setMagicDefense(final short MagicDefense) {
         this.MagicDefense = MagicDefense;
     }
     
@@ -124,7 +124,7 @@ public class MapleMonsterStats
         return this.MagicDefense;
     }
     
-    public final void setEva(final short eva) {
+    public void setEva(final short eva) {
         this.eva = eva;
     }
     

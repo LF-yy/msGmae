@@ -236,7 +236,7 @@ public enum SendPacketOpcode implements WritableIntValueHolder
     UPDATE_HIRED_MERCHANT, 
     DESTROY_HIRED_MERCHANT, 
     FAIRY_PEND_MSG, 
-    VICIOUS_HAMMER, 
+    VICIOUS_HAMMER(387),
     ROLL_SNOWBALL, 
     HIT_SNOWBALL, 
     SNOWBALL_MESSAGE, 
@@ -352,7 +352,7 @@ public enum SendPacketOpcode implements WritableIntValueHolder
         }
     }
     
-    public static final void reloadValues() {
+    public static void reloadValues() {
         final String fileName = "send.ini";
         final Properties props = new Properties();
         try (final FileInputStream fileInputStream = new FileInputStream(fileName);

@@ -7,13 +7,13 @@ public class HexTool
 {
     private static final char[] HEX;
     
-    public static final String toString(final byte byteValue) {
+    public static String toString(final byte byteValue) {
         final int tmp = byteValue << 8;
         final char[] retstr = { HexTool.HEX[tmp >> 12 & 0xF], HexTool.HEX[tmp >> 8 & 0xF] };
         return String.valueOf(retstr);
     }
     
-    public static final String toString(final ByteBuffer buf) {
+    public static String toString(final ByteBuffer buf) {
         buf.flip();
         final byte[] arr = new byte[buf.remaining()];
         buf.get(arr);
@@ -23,11 +23,11 @@ public class HexTool
         return ret;
     }
     
-    public static final String toString(final int intValue) {
+    public static String toString(final int intValue) {
         return Integer.toHexString(intValue);
     }
     
-    public static final String toString(final byte[] bytes) {
+    public static String toString(final byte[] bytes) {
         final StringBuilder hexed = new StringBuilder();
         for (int i = 0; i < bytes.length; ++i) {
             hexed.append(toString(bytes[i]));
@@ -36,7 +36,7 @@ public class HexTool
         return hexed.substring(0, hexed.length() - 1);
     }
     
-    public static final String toStringFromAscii(final byte[] bytes) {
+    public static String toStringFromAscii(final byte[] bytes) {
         final byte[] ret = new byte[bytes.length];
         for (int x = 0; x < bytes.length; ++x) {
             if (bytes[x] < 32 && bytes[x] >= 0) {
@@ -57,7 +57,7 @@ public class HexTool
         }
     }
     
-    public static final String toPaddedStringFromAscii(final byte[] bytes) {
+    public static String toPaddedStringFromAscii(final byte[] bytes) {
         final String str = toStringFromAscii(bytes);
         final StringBuilder ret = new StringBuilder(str.length() * 3);
         for (int i = 0; i < str.length(); ++i) {
@@ -107,7 +107,7 @@ public class HexTool
         return baos.toByteArray();
     }
     
-    public static final String getOpcodeToString(final int op) {
+    public static String getOpcodeToString(final int op) {
         return "0x" + StringUtil.getLeftPaddedStr(Integer.toHexString(op).toUpperCase(), '0', 4);
     }
     

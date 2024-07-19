@@ -11,7 +11,7 @@ import tools.data.LittleEndianAccessor;
 
 public class AllianceHandler
 {
-    public static final void HandleAlliance(final LittleEndianAccessor slea, final MapleClient c, boolean denied) {
+    public static void HandleAlliance(final LittleEndianAccessor slea, final MapleClient c, boolean denied) {
         if (c.getPlayer().getGuildId() <= 0) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -58,7 +58,7 @@ public class AllianceHandler
                 if (newGuild <= 0 || c.getPlayer().getAllianceRank() != 1 || leaderid != c.getPlayer().getId()) {
                     break;
                 }
-                final MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterById(newGuild);
+                MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterById(newGuild);
                 if (chr != null && chr.getGuildId() > 0 && Alliance.canInvite(gs.getAllianceId())) {
                     chr.getClient().sendPacket(MaplePacketCreator.sendAllianceInvite(Alliance.getAlliance(gs.getAllianceId()).getName(), c.getPlayer()));
                     Guild.setInvitedId(chr.getGuildId(), gs.getAllianceId());
@@ -139,12 +139,12 @@ public class AllianceHandler
         }
     }
     
-    public static final void DenyInvite(final MapleClient c, final MapleGuild gs) {
+    public static void DenyInvite(final MapleClient c, final MapleGuild gs) {
         final int inviteid = Guild.getInvitedId(c.getPlayer().getGuildId());
         if (inviteid > 0) {
             final int newAlliance = Alliance.getAllianceLeader(inviteid);
             if (newAlliance > 0) {
-                final MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterById(newAlliance);
+                MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterById(newAlliance);
                 if (chr != null) {
                     chr.dropMessage(5, gs.getName() + " Guild has rejected the Guild Union invitation.");
                 }

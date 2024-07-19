@@ -106,7 +106,7 @@ public class MapleFamilyBuff
             return ret;
         }
         
-        public void applyTo(final MapleCharacter chr) {
+        public void applyTo(MapleCharacter chr) {
             chr.getClient().sendPacket(MaplePacketCreator.giveBuff(-this.getEffectId(), this.duration * 60000, this.effects, null));
             final MapleStatEffect eff = MapleItemInformationProvider.getInstance().getItemEffect(this.getEffectId());
             chr.cancelEffect(eff, true, -1L, this.effects);

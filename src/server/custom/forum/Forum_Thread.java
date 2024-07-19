@@ -152,7 +152,7 @@ public class Forum_Thread
     }
     
     public static ArrayList<Forum_Thread> loadAllThread() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_thread  order by lastreply desc");
             final ResultSet rs = ps.executeQuery();
@@ -190,7 +190,7 @@ public class Forum_Thread
     }
     
     public static Forum_Thread getThreadByNameToSql(final int sid, final String name) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_thread WHERE sid = ? AND tname = ? order by lastReply desc");
             ps.setInt(1, sid);
@@ -207,7 +207,7 @@ public class Forum_Thread
     }
     
     public static boolean addThread(final int sid, final String tname, final int cid, final String cname) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             if (getThreadByName(sid, tname) != null) {
                 return false;
@@ -233,7 +233,7 @@ public class Forum_Thread
     
     public static int updateThreadReply(final int tid) {
         int ret = -1;
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final Forum_Thread thread = getThreadById(0, tid);
             final long now = System.currentTimeMillis();
@@ -262,7 +262,7 @@ public class Forum_Thread
     }
     
     public static boolean deleteThread(final int sid, final int tid, final boolean isAll) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             boolean isExist = false;
             if (isAll) {

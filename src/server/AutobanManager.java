@@ -26,11 +26,11 @@ public class AutobanManager implements Runnable
         this.lock = new ReentrantLock(true);
     }
     
-    public static final AutobanManager getInstance() {
+    public static AutobanManager getInstance() {
         return AutobanManager.instance;
     }
     
-    public final void autoban(final MapleClient c, final String reason) {
+    public void autoban(final MapleClient c, final String reason) {
         if (c.getPlayer().isGM() || c.getPlayer().isClone()) {
             c.getPlayer().dropMessage(5, "[警告] A/b 觸發 原因 : " + reason);
             return;
@@ -38,7 +38,7 @@ public class AutobanManager implements Runnable
         this.addPoints(c, 5000, 0L, reason);
     }
     
-    public final void addPoints(final MapleClient c, final int points, final long expiration, final String reason) {
+    public void addPoints(final MapleClient c, final int points, final long expiration, final String reason) {
         this.lock.lock();
         try {
             final int acc = c.getPlayer().getAccountID();
@@ -85,7 +85,7 @@ public class AutobanManager implements Runnable
     }
     
     @Override
-    public final void run() {
+    public void run() {
         final long now = System.currentTimeMillis();
         for (final ExpirationEntry e : this.expirations) {
             if (e.time > now) {

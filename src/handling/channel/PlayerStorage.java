@@ -81,7 +81,7 @@ public class PlayerStorage
         return ret;
     }
     
-    public final void registerPlayer(final MapleCharacter chr) {
+    public void registerPlayer(MapleCharacter chr) {
         this.writeLock.lock();
         try {
             this.idToChar.put(Integer.valueOf(chr.getId()), chr);
@@ -92,7 +92,7 @@ public class PlayerStorage
         Find.register(chr.getId(), chr.getName(), this.channel);
     }
     
-    public final void registerPendingPlayer(final CharacterTransfer chr, final int playerid) {
+    public void registerPendingPlayer(final CharacterTransfer chr, final int playerid) {
         this.writeLock2.lock();
         try {
             this.PendingCharacter.put(Integer.valueOf(playerid), chr);
@@ -102,7 +102,7 @@ public class PlayerStorage
         }
     }
     
-    public final void deregisterPlayer(final MapleCharacter chr) {
+    public void deregisterPlayer(MapleCharacter chr) {
         this.writeLock.lock();
         try {
             this.idToChar.remove((Object)Integer.valueOf(chr.getId()));
@@ -115,7 +115,7 @@ public class PlayerStorage
     
     public final int pendingCharacterSize(final int world) {
         final Map<Integer, MapleCharacter> chars = new HashMap<Integer, MapleCharacter>();
-        for (final MapleCharacter chr : this.idToChar.values()) {
+        for (MapleCharacter chr : this.idToChar.values()) {
             if (chr.getWorld() == world) {
                 chars.put(Integer.valueOf(chr.getId()), chr);
             }
@@ -127,7 +127,7 @@ public class PlayerStorage
         return this.PendingCharacter.size();
     }
     
-    public final void deregisterPlayer(final int idz, final String namez) {
+    public void deregisterPlayer(final int idz, final String namez) {
         this.writeLock.lock();
         try {
             this.idToChar.remove((Object)Integer.valueOf(idz));
@@ -138,7 +138,7 @@ public class PlayerStorage
         Find.forceDeregister(idz, namez);
     }
     
-    public final void deregisterPendingPlayer(final int charid) {
+    public void deregisterPendingPlayer(final int charid) {
         this.writeLock2.lock();
         try {
             this.PendingCharacter.remove((Object)Integer.valueOf(charid));
@@ -167,7 +167,7 @@ public class PlayerStorage
         MapleCharacter rchr = null;
         this.readLock.lock();
         try {
-            for (final MapleCharacter chr : this.idToChar.values()) {
+            for (MapleCharacter chr : this.idToChar.values()) {
                 if (chr.getName().equalsIgnoreCase(name)) {
                     rchr = chr;
                 }
@@ -197,7 +197,7 @@ public class PlayerStorage
         final List<CheaterData> cheaters = new ArrayList<CheaterData>();
         this.readLock.lock();
         try {
-            for (final MapleCharacter chr : this.idToChar.values()) {
+            for (MapleCharacter chr : this.idToChar.values()) {
                 if (chr.getCheatTracker().getPoints() > 0) {
                     cheaters.add(new CheaterData(chr.getCheatTracker().getPoints(), MapleCharacterUtil.makeMapleReadable(chr.getName()) + "(編號:" + chr.getId() + ") 檢測次數(" + chr.getCheatTracker().getPoints() + ") " + chr.getCheatTracker().getSummary() + " 地图:" + chr.getMap().getMapName()));
                 }
@@ -209,16 +209,16 @@ public class PlayerStorage
         return cheaters;
     }
     
-    public final void disconnectAll() {
+    public void disconnectAll() {
         this.disconnectAll(false);
     }
     
-    public final void disconnectAll(final boolean checkGM) {
+    public void disconnectAll(final boolean checkGM) {
         this.writeLock.lock();
         try {
             final Iterator<MapleCharacter> itr = this.idToChar.values().iterator();
             while (itr.hasNext()) {
-                final MapleCharacter chr = (MapleCharacter)itr.next();
+                MapleCharacter chr = (MapleCharacter)itr.next();
                 if (!chr.isGM() || !checkGM) {
                     chr.getClient().disconnect(false, false, true);
                     chr.getClient().getSession().close();
@@ -232,12 +232,12 @@ public class PlayerStorage
         }
     }
     
-    public final void disconnectAll(final MapleCharacter ch) {
+    public void disconnectAll(final MapleCharacter ch) {
         this.writeLock.lock();
         try {
             final Iterator<MapleCharacter> itr = this.idToChar.values().iterator();
             while (itr.hasNext()) {
-                final MapleCharacter chr = (MapleCharacter)itr.next();
+                MapleCharacter chr = (MapleCharacter)itr.next();
                 if (chr.getGMLevel() < ch.getGMLevel()) {
                     chr.getClient().disconnect(false, false, true);
                     chr.getClient().getSession().close();
@@ -269,7 +269,7 @@ public class PlayerStorage
         else {
             this.readLock.lock();
             try {
-                for (final MapleCharacter chr : this.idToChar.values()) {
+                for (MapleCharacter chr : this.idToChar.values()) {
                     if (!chr.isGM()) {
                         sb.append(MapleCharacterUtil.makeMapleReadable(chr.getName()));
                         sb.append(", ");
@@ -283,7 +283,7 @@ public class PlayerStorage
         return sb.toString();
     }
     
-    public final void broadcastPacket(final byte[] data) {
+    public void broadcastPacket(final byte[] data) {
         this.readLock.lock();
         try {
             final Iterator<MapleCharacter> itr = this.idToChar.values().iterator();
@@ -296,10 +296,10 @@ public class PlayerStorage
         }
     }
     
-    public final void broadcastSmegaPacket(final byte[] data) {
+    public void broadcastSmegaPacket(final byte[] data) {
         this.readLock.lock();
         try {
-            for (final MapleCharacter chr : this.idToChar.values()) {
+            for (MapleCharacter chr : this.idToChar.values()) {
                 if (chr.getClient().isLoggedIn() && chr.getSmega()) {
                     chr.getClient().sendPacket(data);
                 }
@@ -310,10 +310,10 @@ public class PlayerStorage
         }
     }
     
-    public final void broadcastGashponmegaPacket(final byte[] data) {
+    public void broadcastGashponmegaPacket(final byte[] data) {
         this.readLock.lock();
         try {
-            for (final MapleCharacter chr : this.idToChar.values()) {
+            for (MapleCharacter chr : this.idToChar.values()) {
                 if (chr.getClient().isLoggedIn() && chr.getGashponmega()) {
                     chr.getClient().sendPacket(data);
                 }
@@ -324,10 +324,10 @@ public class PlayerStorage
         }
     }
     
-    public final void broadcastGMPacket(final byte[] data) {
+    public void broadcastGMPacket(final byte[] data) {
         this.readLock.lock();
         try {
-            for (final MapleCharacter chr : this.idToChar.values()) {
+            for (MapleCharacter chr : this.idToChar.values()) {
                 if (chr.getClient().isLoggedIn() && chr.isGM()) {
                     chr.getClient().sendPacket(data);
                 }
@@ -338,10 +338,10 @@ public class PlayerStorage
         }
     }
     
-    public final void broadcastGMPacket(final byte[] data, final boolean 吸怪) {
+    public void broadcastGMPacket(final byte[] data, final boolean 吸怪) {
         this.readLock.lock();
         try {
-            for (final MapleCharacter chr : this.idToChar.values()) {
+            for (MapleCharacter chr : this.idToChar.values()) {
                 if (chr.getClient().isLoggedIn() && chr.isGM() && chr.get_control_吸怪信息()) {
                     chr.getClient().sendPacket(data);
                 }
@@ -367,7 +367,7 @@ public class PlayerStorage
         return toreturn;
     }
     
-    public final void registerPendingClient(final MapleClient c, final int playerid) {
+    public void registerPendingClient(final MapleClient c, final int playerid) {
         this.writeLock3.lock();
         try {
             this.PendingClient.put(Integer.valueOf(playerid), c);
@@ -377,7 +377,7 @@ public class PlayerStorage
         }
     }
     
-    public final void deregisterPendingClient(final int charid) {
+    public void deregisterPendingClient(final int charid) {
         this.writeLock3.lock();
         try {
             this.PendingClient.remove((Object)Integer.valueOf(charid));
@@ -387,7 +387,7 @@ public class PlayerStorage
         }
     }
     
-    public final void deregisterPendingPlayerByAccountId(final int accountId) {
+    public void deregisterPendingPlayerByAccountId(final int accountId) {
         this.writeLock2.lock();
         try {
             for (final CharacterTransfer transfer : this.PendingCharacter.values()) {
@@ -421,12 +421,12 @@ public class PlayerStorage
         }
     }
 
-    public final void 断所有人(final boolean checkGM) {
+    public void 断所有人(final boolean checkGM) {
         this.readLock.lock();
         try {
             final Iterator<MapleCharacter> itr = this.idToChar.values().iterator();
             while (itr.hasNext()) {
-                final MapleCharacter chr = (MapleCharacter)itr.next();
+                MapleCharacter chr = (MapleCharacter)itr.next();
                 chr.getClient().disconnect(false, false, true);
                 chr.getClient().getSession().close();
                 Find.forceDeregister(chr.getId(), chr.getName());

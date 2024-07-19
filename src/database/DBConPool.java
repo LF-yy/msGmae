@@ -15,7 +15,7 @@ import com.alibaba.druid.pool.DruidDataSource;
 public class DBConPool
 {
     private static DruidDataSource dataSource;
-    public static final int RETURN_GENERATED_KEYS = 1;
+    public static int RETURN_GENERATED_KEYS = 1;
     public static String dbUser;
     public static String dbPass;
     public static String dbIp;
@@ -99,13 +99,13 @@ public class DBConPool
     
     private static class InstanceHolder
     {
-        public static final DBConPool instance;
+        public static DBConPool instance;
         
         static {
             instance = new DBConPool();
         }
     }
-    public static void cleanUP(final ResultSet rs, final PreparedStatement ps, final Connection con) {
+    public static void cleanUP(final ResultSet rs, final PreparedStatement ps, Connection con) {
         if (rs != null) {
             try {
                 rs.close();

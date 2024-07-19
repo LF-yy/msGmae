@@ -91,7 +91,7 @@ public enum MonsterStatus
         return this.order;
     }
     
-    public static final MapleDisease getLinkedDisease(final MonsterStatus skill) {
+    public static MapleDisease getLinkedDisease(final MonsterStatus skill) {
         switch (skill) {
             case STUN:
             case SHADOW_WEB: {

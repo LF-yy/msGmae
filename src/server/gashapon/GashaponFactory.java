@@ -31,7 +31,7 @@ public class GashaponFactory
     public void reloadGashapons() {
         this.gashapons.clear();
         final long chanceTotal = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM gashapons;");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -53,7 +53,7 @@ public class GashaponFactory
     public void reloadGashapons(final int npcId) {
         getInstance().gashapons.clear();
         final long chanceTotal = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM gashapons WHERE npcId = ?")) {
             ps.setInt(1, npcId);
             final ResultSet rs = ps.executeQuery();

@@ -28,7 +28,7 @@ public class BossRankManager2
     
     public Map<String, BossRankInfo2> getInfoMap(final int cid) {
         final Map<String, BossRankInfo2> info_map = new HashMap<String, BossRankInfo2>();
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -77,7 +77,7 @@ public class BossRankManager2
     
     public BossRankInfo2 getInfo(final int cid, final String bossname) {
         BossRankInfo2 info = null;
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -167,7 +167,7 @@ public class BossRankManager2
         if (info == null) {
             return;
         }
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         try {
             ps = con1.prepareStatement("update bossrank2 set points = ?,count = ?  where cid = ? and bossname = ?");
@@ -204,7 +204,7 @@ public class BossRankManager2
         if (info == null) {
             return;
         }
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         try {
             ps = con1.prepareStatement("insert into bossrank2 (cid,cname,bossname,points,count) values (?,?,?,?,?)");
@@ -240,7 +240,7 @@ public class BossRankManager2
     
     public List<BossRankInfo2> getRank(final String bossname, final int type) {
         final List<BossRankInfo2> list = new LinkedList<BossRankInfo2>();
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -302,7 +302,7 @@ public class BossRankManager2
     
     private static class InstanceHolder
     {
-        public static final BossRankManager2 instance;
+        public static BossRankManager2 instance;
         
         static {
             instance = new BossRankManager2();

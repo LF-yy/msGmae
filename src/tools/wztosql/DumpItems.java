@@ -69,7 +69,7 @@ public class DumpItems
     }
     
     public void dumpItems() throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             if (!this.hadError) {
                 final PreparedStatement psa = con.prepareStatement("INSERT INTO wz_itemadddata(itemid, `key`, value1, value2) VALUES (?, ?, ?, ?)");
                 final PreparedStatement psr = con.prepareStatement("INSERT INTO wz_itemrewarddata(itemid, item, prob, quantity, period, worldMsg, effect) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -101,7 +101,7 @@ public class DumpItems
     }
     
     public void delete(final String sql) throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement(sql);
             ps.executeUpdate();
             ps.close();
@@ -112,7 +112,7 @@ public class DumpItems
     }
     
     public boolean doesExist(final String sql) throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement(sql);
             final ResultSet rs = ps.executeQuery();
             final boolean ret = rs.next();

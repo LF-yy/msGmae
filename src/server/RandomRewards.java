@@ -131,7 +131,7 @@ public class RandomRewards
     public int[] loadFishingRewardFromDb() {
         final List<Integer> data = new ArrayList<Integer>();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT itemid, chance FROM 钓鱼物品 WHERE expiration = 1");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -150,7 +150,7 @@ public class RandomRewards
     private Map<Integer, String> loadFishingRewardsMapFromDb() {
         final Map<Integer, String> data = new HashMap<Integer, String>();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT itemid, name FROM 钓鱼物品 WHERE expiration = 1");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {

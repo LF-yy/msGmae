@@ -6,35 +6,35 @@ public class Randomizer
 {
     private static final Random rand;
     
-    public static final int nextInt() {
+    public static int nextInt() {
         return Randomizer.rand.nextInt();
     }
     
-    public static final int nextInt(final int arg0) {
+    public static int nextInt(final int arg0) {
         return Randomizer.rand.nextInt(arg0);
     }
     
-    public static final void nextBytes(final byte[] bytes) {
+    public static void nextBytes(final byte[] bytes) {
         Randomizer.rand.nextBytes(bytes);
     }
     
-    public static final boolean nextBoolean() {
+    public static boolean nextBoolean() {
         return Randomizer.rand.nextBoolean();
     }
     
-    public static final double nextDouble() {
+    public static double nextDouble() {
         return Randomizer.rand.nextDouble();
     }
     
-    public static final float nextFloat() {
+    public static float nextFloat() {
         return Randomizer.rand.nextFloat();
     }
     
-    public static final long nextLong() {
+    public static long nextLong() {
         return Randomizer.rand.nextLong();
     }
     
-    public static final int rand(final int lbound, final int ubound) {
+    public static int rand(final int lbound, final int ubound) {
         return (int)(Randomizer.rand.nextDouble() * (double)(ubound - lbound + 1) + (double)lbound);
     }
     

@@ -37,7 +37,7 @@ public class FamilyPacket
         return mplew.getPacket();
     }
     
-    public static byte[] getFamilyInfo(final MapleCharacter chr) {
+    public static byte[] getFamilyInfo(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.FAMILY_INFO_RESULT.getValue());
         mplew.writeInt(chr.getCurrentRep());
@@ -78,7 +78,7 @@ public class FamilyPacket
         mplew.writeMapleAsciiString(ldr.getName());
     }
     
-    public static byte[] getFamilyPedigree(final MapleCharacter chr) {
+    public static byte[] getFamilyPedigree(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.FAMILY_CHART_RESULT.getValue());
         mplew.writeInt(chr.getId());

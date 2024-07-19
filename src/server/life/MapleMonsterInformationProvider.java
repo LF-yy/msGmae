@@ -31,7 +31,7 @@ public class MapleMonsterInformationProvider
         this.retrieveGlobal();
     }
     
-    public static final MapleMonsterInformationProvider getInstance() {
+    public static MapleMonsterInformationProvider getInstance() {
         return MapleMonsterInformationProvider.instance;
     }
     
@@ -53,7 +53,7 @@ public class MapleMonsterInformationProvider
     private void retrieveGlobal() {
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             ps = con.prepareStatement("SELECT * FROM drop_data_global WHERE chance > 0");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -100,7 +100,7 @@ public class MapleMonsterInformationProvider
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid = ?");
                 ps.setInt(1, monsterId);
                 rs = ps.executeQuery();
@@ -157,7 +157,7 @@ public class MapleMonsterInformationProvider
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 ps = con.prepareStatement("SELECT itemid FROM drop_data WHERE dropperid = ?");
                 ps.setInt(1, monsterId);
                 rs = ps.executeQuery();
@@ -200,7 +200,7 @@ public class MapleMonsterInformationProvider
         return list;
     }
     
-    public final void clearDrops() {
+    public void clearDrops() {
         this.drops.clear();
         this.globaldrops.clear();
         this.retrieveGlobal();
@@ -208,7 +208,7 @@ public class MapleMonsterInformationProvider
     
     public int getDropQuest(final int monsterId) {
         int quest = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT questid FROM drop_data where dropperid = ?");
             ps.setInt(1, monsterId);
             final ResultSet rs = ps.executeQuery();
@@ -228,7 +228,7 @@ public class MapleMonsterInformationProvider
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 ps = con.prepareStatement("SELECT * FROM drop_data WHERE itemid = ?");
                 ps.setInt(1, itemId);
                 rs = ps.executeQuery();
@@ -291,7 +291,7 @@ public class MapleMonsterInformationProvider
     
     public int getDropChance(final int monsterId) {
         int chance = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT chance FROM drop_data where dropperid = ?");
             ps.setInt(1, monsterId);
             final ResultSet rs = ps.executeQuery();

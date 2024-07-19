@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class MapleGuildCharacter implements Serializable
 {
-    public static final long serialVersionUID = 2058609046116597760L;
+    public static long serialVersionUID = 2058609046116597760L;
     private byte channel;
     private byte guildrank;
     private byte allianceRank;

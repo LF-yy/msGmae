@@ -138,7 +138,7 @@ public class 删除自添加NPC工具 extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.自添加NPC.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM wz_customlife");

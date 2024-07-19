@@ -271,7 +271,7 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getPlayer().getEventInstance();
     }
     
-    public final void warp(final int map) {
+    public void warp(final int map) {
         final MapleMap mapz = this.getWarpMap(map);
         try {
             this.getClient().getPlayer().changeMap(mapz, mapz.getPortal(Randomizer.nextInt(mapz.getPortals().size())));
@@ -281,7 +281,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void warp_Instanced(final int map) {
+    public void warp_Instanced(final int map) {
         final MapleMap mapz = this.getMap_Instanced(map);
         try {
             this.getClient().getPlayer().changeMap(mapz, mapz.getPortal(Randomizer.nextInt(mapz.getPortals().size())));
@@ -291,7 +291,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void instantMapWarp(final int map, final int portal) {
+    public void instantMapWarp(final int map, final int portal) {
         final MapleMap mapz = this.getWarpMap(map);
         if (portal != 0 && map == this.c.getPlayer().getMapId()) {
             final Point portalPos = new Point(this.c.getPlayer().getMap().getPortal(portal).getPosition());
@@ -304,7 +304,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void warp(final int map, final int portal) {
+    public void warp(final int map, final int portal) {
         final MapleMap mapz = this.getWarpMap(map);
         if (portal != 0 && map == this.getClient().getPlayer().getMapId()) {
             final Point portalPos = new Point(this.c.getPlayer().getMap().getPortal(portal).getPosition());
@@ -322,12 +322,12 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void warpS(final int map, final int portal) {
+    public void warpS(final int map, final int portal) {
         final MapleMap mapz = this.getWarpMap(map);
         this.getClient().getPlayer().changeMap(mapz, mapz.getPortal(portal));
     }
     
-    public final void warp(final int map, String portal) {
+    public void warp(final int map, String portal) {
         final MapleMap mapz = this.getWarpMap(map);
         if (map == 109060000 || map == 109060002 || map == 109060004) {
             portal = mapz.getSnowballPortal();
@@ -348,7 +348,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void warpS(final int map, String portal) {
+    public void warpS(final int map, String portal) {
         final MapleMap mapz = this.getWarpMap(map);
         if (map == 109060000 || map == 109060002 || map == 109060004) {
             portal = mapz.getSnowballPortal();
@@ -356,21 +356,21 @@ public abstract class AbstractPlayerInteraction
         this.getClient().getPlayer().changeMap(mapz, mapz.getPortal(portal));
     }
     
-    public final void warpMap(final int mapid, final String portal) {
+    public void warpMap(final int mapid, final String portal) {
         final MapleMap map = this.getMap(mapid);
-        for (final MapleCharacter chr : this.getClient().getPlayer().getMap().getCharactersThreadsafe()) {
+        for (MapleCharacter chr : this.getClient().getPlayer().getMap().getCharactersThreadsafe()) {
             chr.changeMap(map, map.getPortal(portal));
         }
     }
     
-    public final void warpMap(final int mapid, final int portal) {
+    public void warpMap(final int mapid, final int portal) {
         final MapleMap map = this.getMap(mapid);
-        for (final MapleCharacter chr : this.getClient().getPlayer().getMap().getCharactersThreadsafe()) {
+        for (MapleCharacter chr : this.getClient().getPlayer().getMap().getCharactersThreadsafe()) {
             chr.changeMap(map, map.getPortal(portal));
         }
     }
     
-    public final void playPortalSE() {
+    public void playPortalSE() {
         this.getClient().sendPacket(MaplePacketCreator.showOwnBuffEffect(0, 8));
     }
     
@@ -394,22 +394,22 @@ public abstract class AbstractPlayerInteraction
         this.spawnMob(id, qty, new Point(this.c.getPlayer().getPosition()));
     }
     
-    public final void spawnMobOnMap(final int id, final int qty, final int x, final int y, final int map) {
+    public void spawnMobOnMap(final int id, final int qty, final int x, final int y, final int map) {
         for (int i = 0; i < qty; ++i) {
             this.getMap(map).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), new Point(x, y));
         }
     }
-    public final void spawnMobOnMap(int id, int qty, int x, int y, int map, long hp) {
+    public void spawnMobOnMap(int id, int qty, int x, int y, int map, long hp) {
      for (int i = 0; i < qty; i++) {
        this.getMap(map).spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(id), new Point(x, y), hp);
      }
    }
     
-    public final void spawnMob(final int id, final int qty, final int x, final int y) {
+    public void spawnMob(final int id, final int qty, final int x, final int y) {
         this.spawnMob(id, qty, new Point(x, y));
     }
     
-    public final void spawnMob(final int id, final int x, final int y) {
+    public void spawnMob(final int id, final int x, final int y) {
         this.spawnMob(id, 1, new Point(x, y));
     }
     
@@ -419,15 +419,15 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void killMob(final int ids) {
+    public void killMob(final int ids) {
         this.getClient().getPlayer().getMap().killMonster(ids);
     }
     
-    public final void killAllMob() {
+    public void killAllMob() {
         this.getClient().getPlayer().getMap().killAllMonsters(true);
     }
     
-    public final void addHP(final int delta) {
+    public void addHP(final int delta) {
         this.getClient().getPlayer().addHP(delta);
     }
     
@@ -575,15 +575,15 @@ public abstract class AbstractPlayerInteraction
         return this.getQuestStatus(id) == 2;
     }
     
-    public final void showQuestMsg(final String msg) {
+    public void showQuestMsg(final String msg) {
         this.getClient().sendPacket(MaplePacketCreator.showQuestMsg(msg));
     }
     
-    public final void forceStartQuest(final int id, final String data) {
+    public void forceStartQuest(final int id, final String data) {
         MapleQuest.getInstance(id).forceStart(this.c.getPlayer(), 0, data);
     }
     
-    public final void forceStartQuest(final int id, final int data, final boolean filler) {
+    public void forceStartQuest(final int id, final int data, final boolean filler) {
         MapleQuest.getInstance(id).forceStart(this.c.getPlayer(), 0, filler ? String.valueOf(data) : null);
     }
     
@@ -599,19 +599,19 @@ public abstract class AbstractPlayerInteraction
         this.getClient().getPlayer().getMap().spawnNpc(npcId, this.getClient().getPlayer().getPosition());
     }
     
-    public final void spawnNpc(final int npcId, final int x, final int y) {
+    public void spawnNpc(final int npcId, final int x, final int y) {
         this.getClient().getPlayer().getMap().spawnNpc(npcId, new Point(x, y));
     }
     
-    public final void spawnNpc(final int npcId, final Point pos) {
+    public void spawnNpc(final int npcId, final Point pos) {
         this.getClient().getPlayer().getMap().spawnNpc(npcId, pos);
     }
     
-    public final void removeNpc(final int mapid, final int npcId) {
+    public void removeNpc(final int mapid, final int npcId) {
         this.getClient().getChannelServer().getMapFactory().getMap(mapid).removeNpc(npcId);
     }
     
-    public final void forceStartReactor(final int mapid, final int id) {
+    public void forceStartReactor(final int mapid, final int id) {
         final MapleMap map = this.getClient().getChannelServer().getMapFactory().getMap(mapid);
         for (final MapleMapObject remo : map.getAllReactorsThreadsafe()) {
             final MapleReactor react = (MapleReactor)remo;
@@ -622,7 +622,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void destroyReactor(final int mapid, final int id) {
+    public void destroyReactor(final int mapid, final int id) {
         final MapleMap map = this.getClient().getChannelServer().getMapFactory().getMap(mapid);
         for (final MapleMapObject remo : map.getAllReactorsThreadsafe()) {
             final MapleReactor react = (MapleReactor)remo;
@@ -633,7 +633,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void hitReactor(final int mapid, final int id) {
+    public void hitReactor(final int mapid, final int id) {
         final MapleMap map = this.getClient().getChannelServer().getMapFactory().getMap(mapid);
         for (final MapleMapObject remo : map.getAllReactorsThreadsafe()) {
             final MapleReactor react = (MapleReactor)remo;
@@ -648,7 +648,7 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getPlayer().getJob();
     }
     
-    public final void gainPotion(final int type, final int amount) {
+    public void gainPotion(final int type, final int amount) {
         this.getClient().getPlayer().modifyCSPoints(type, amount, true);
     }
     
@@ -656,10 +656,10 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getPlayer().getCSPoints(type);
     }
     
-    public final void gainNX(final int amount) {
+    public void gainNX(final int amount) {
         this.gainPotion(1, amount);
     }
-    public final void gainNXZ(final int amount) {
+    public void gainNXZ(final int amount) {
         if (amount <0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
@@ -669,7 +669,7 @@ public abstract class AbstractPlayerInteraction
             this.gainPotion(1, amount);
         }
     }
-    public final void gainNXF(final int amount) {
+    public void gainNXF(final int amount) {
         if (amount > 0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷点劵而被管理員永久停封。"));
@@ -684,7 +684,7 @@ public abstract class AbstractPlayerInteraction
         return this.getPotion(1);
     }
     
-    public final void gainMaplePoint(final int amount) {
+    public void gainMaplePoint(final int amount) {
         this.gainPotion(2, amount);
     }
     
@@ -692,18 +692,18 @@ public abstract class AbstractPlayerInteraction
         return this.getPotion(2);
     }
     
-    public final void gainItemPeriod(final int id, final short quantity, final int period) {
+    public void gainItemPeriod(final int id, final short quantity, final int period) {
         this.gainItem(id, quantity, false, (long)period, -1, "");
     }
     
-    public final void gainItemPeriod(final int id, final short quantity, final long period, final String owner) {
+    public void gainItemPeriod(final int id, final short quantity, final long period, final String owner) {
         this.gainItem(id, quantity, false, period, -1, owner);
     }
     
-    public final void gainItem(final int id, final short quantity) {
+    public void gainItem(final int id, final short quantity) {
         this.gainItem(id, quantity, false, 0L, -1, "");
     }
-    public final void gainItemF(final int id, final short quantity) {
+    public void gainItemF(final int id, final short quantity) {
         if (quantity >0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
            this.getPlayer().ban("刷物品", true, true, false);
@@ -711,7 +711,7 @@ public abstract class AbstractPlayerInteraction
             this.gainItem(id, quantity, false, 0L, -1, "");
         }
     }
-    public final void gainItemZ(final int id, final short quantity) {
+    public void gainItemZ(final int id, final short quantity) {
         if (quantity<=0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
             this.getPlayer().ban("刷物品", true, true, false);
@@ -720,19 +720,19 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void gainItem(final int id, final short quantity, final boolean randomStats) {
+    public void gainItem(final int id, final short quantity, final boolean randomStats) {
         this.gainItem(id, quantity, randomStats, 0L, -1, "");
     }
     
-    public final void gainItem(final int id, final short quantity, final boolean randomStats, final int slots) {
+    public void gainItem(final int id, final short quantity, final boolean randomStats, final int slots) {
         this.gainItem(id, quantity, randomStats, 0L, slots, "");
     }
     
-    public final void gainItem(final int id, final short quantity, final long period) {
+    public void gainItem(final int id, final short quantity, final long period) {
         this.gainItem(id, quantity, false, period, -1, "");
     }
     
-    public final void gainItemTime(final int id, final short quantity, final long period) {
+    public void gainItemTime(final int id, final short quantity, final long period) {
         if (MapleItemInformationProvider.getInstance().isCash(id)) {
             this.gainItem(id, quantity, false, period, -1, "");
         }
@@ -741,15 +741,15 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void gainItem(final int id, final short quantity, final boolean randomStats, final long period, final int slots) {
+    public void gainItem(final int id, final short quantity, final boolean randomStats, final long period, final int slots) {
         this.gainItem(id, quantity, randomStats, period, slots, "");
     }
     
-    public final void gainItem(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner) {
+    public void gainItem(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner) {
         this.gainItem(id, quantity, randomStats, period, slots, owner, this.c);
     }
     
-    public final void gainItem(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner, final MapleClient cg) {
+    public void gainItem(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner, final MapleClient cg) {
         if (quantity >= 0) {
             final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
             final MapleInventoryType type = GameConstants.getInventoryType(id);
@@ -792,19 +792,19 @@ public abstract class AbstractPlayerInteraction
         cg.sendPacket(MaplePacketCreator.getShowItemGain(id, quantity, true));
     }
     
-    public final void gainItem(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final int time) {
+    public void gainItem(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final int time) {
         this.gainItemS(id, str, dex, luk, Int, hp, mp, watk, matk, wdef, mdef, hb, mz, ty, yd, this.c, time);
     }
     
-    public final void gainItem(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final int time,final String ow) {
+    public void gainItem(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final int time,final String ow) {
         this.gainItemS(id, str, dex, luk, Int, hp, mp, watk, matk, wdef, mdef, hb, mz, ty, yd, this.c, time,ow);
     }
     
-    public final void gainItem(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd) {
+    public void gainItem(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd) {
         this.gainItemS(id, str, dex, luk, Int, hp, mp, watk, matk, wdef, mdef, hb, mz, ty, yd, this.c, 0);
     }
     
-    public final void gainItemS(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final MapleClient cg, final int time) {
+    public void gainItemS(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final MapleClient cg, final int time) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final MapleInventoryType type = GameConstants.getInventoryType(id);
         if (!MapleInventoryManipulator.checkSpace(cg, id, 1, "")) {
@@ -871,7 +871,7 @@ public abstract class AbstractPlayerInteraction
         cg.getSession().write((Object)MaplePacketCreator.getShowItemGain(id, (short)1, true));
     }
     
-    public final void gainItemS(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final MapleClient cg, final int time,final String ow) {
+    public void gainItemS(final int id, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final MapleClient cg, final int time,final String ow) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final MapleInventoryType type = GameConstants.getInventoryType(id);
         if (!MapleInventoryManipulator.checkSpace(cg, id, 1, "")) {
@@ -942,15 +942,15 @@ public abstract class AbstractPlayerInteraction
         cg.getSession().write((Object)MaplePacketCreator.getShowItemGain(id, (short)1, true));
     }
     
-    public final void gainItemStatus(final int id, final short quantity) {
+    public void gainItemStatus(final int id, final short quantity) {
         this.gainItemStatus(id, quantity, false, 0L, -1, "");
     }
     
-    public final void gainItemStatus(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner) {
+    public void gainItemStatus(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner) {
         this.gainItemStatus(id, quantity, randomStats, period, slots, owner, this.c);
     }
     
-    public final void gainItemStatus(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner, final MapleClient cg) {
+    public void gainItemStatus(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner, final MapleClient cg) {
         if (quantity >= 0) {
             final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
             final MapleInventoryType type = GameConstants.getInventoryType(id);
@@ -997,35 +997,35 @@ public abstract class AbstractPlayerInteraction
         cg.sendPacket(MaplePacketCreator.getShowItemGain(id, quantity, true));
     }
     
-    public final void changeMusic(final String songName) {
+    public void changeMusic(final String songName) {
         this.getPlayer().getMap().broadcastMessage(MaplePacketCreator.musicChange(songName));
     }
     
-    public final void worldMessage(final int type, final String message) {
+    public void worldMessage(final int type, final String message) {
         Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(type, message));
     }
     
-    public final void playerMessage(final String message) {
+    public void playerMessage(final String message) {
         this.playerMessage(5, message);
     }
     
-    public final void mapMessage(final String message) {
+    public void mapMessage(final String message) {
         this.mapMessage(5, message);
     }
     
-    public final void guildMessage(final String message) {
+    public void guildMessage(final String message) {
         this.guildMessage(5, message);
     }
     
-    public final void playerMessage(final int type, final String message) {
+    public void playerMessage(final int type, final String message) {
         this.getClient().sendPacket(MaplePacketCreator.serverNotice(type, message));
     }
     
-    public final void mapMessage(final int type, final String message) {
+    public void mapMessage(final int type, final String message) {
         this.getClient().getPlayer().getMap().broadcastMessage(MaplePacketCreator.serverNotice(type, message));
     }
     
-    public final void guildMessage(final int type, final String message) {
+    public void guildMessage(final int type, final String message) {
         if (this.getPlayer().getGuildId() > 0) {
             Guild.guildPacket(this.getPlayer().getGuildId(), MaplePacketCreator.serverNotice(type, message));
         }
@@ -1068,7 +1068,7 @@ public abstract class AbstractPlayerInteraction
             return false;
         }
         for (final MaplePartyCharacter mem : this.getClient().getPlayer().getParty().getMembers()) {
-            final MapleCharacter chr = this.getClient().getPlayer().getMap().getCharacterById(mem.getId());
+            MapleCharacter chr = this.getClient().getPlayer().getMap().getCharacterById(mem.getId());
             if (chr == null) {
                 return false;
             }
@@ -1076,7 +1076,7 @@ public abstract class AbstractPlayerInteraction
         return true;
     }
     
-    public final void warpParty(final int mapId) {
+    public void warpParty(final int mapId) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.warp(mapId, 0);
             return;
@@ -1091,7 +1091,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void warpParty(final int mapId, final int portal) {
+    public void warpParty(final int mapId, final int portal) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             if (portal < 0) {
                 this.warp(mapId);
@@ -1122,7 +1122,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void warpParty_Instanced(final int mapId) {
+    public void warpParty_Instanced(final int mapId) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.warp_Instanced(mapId);
             return;
@@ -1175,8 +1175,8 @@ public abstract class AbstractPlayerInteraction
         this.getClient().getPlayer().gainExp(gain * this.getClient().getChannelServer().getExpRate(), true, true, true);
     }
     
-    public final void givePartyItems(final int id, final short quantity, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void givePartyItems(final int id, final short quantity, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             if (quantity >= 0) {
                 MapleInventoryManipulator.addById(chr.getClient(), id, quantity);
             }
@@ -1187,7 +1187,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void givePartyItems(final int id, final short quantity) {
+    public void givePartyItems(final int id, final short quantity) {
         this.givePartyItems(id, quantity, false);
     }
     
@@ -1206,7 +1206,7 @@ public abstract class AbstractPlayerInteraction
         return false;
     }
     
-    public final void givePartyItems(final int id, final short quantity, final boolean removeAll) {
+    public void givePartyItems(final int id, final short quantity, final boolean removeAll) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainItem(id, (short)(removeAll ? (-this.getPlayer().itemQuantity(id)) : quantity));
             return;
@@ -1219,13 +1219,13 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void givePartyExp(final int amount, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void givePartyExp(final int amount, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             chr.gainExp(amount * this.getClient().getChannelServer().getExpRate(), true, true, true);
         }
     }
     
-    public final void givePartyExp(final int amount) {
+    public void givePartyExp(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainExp(amount * this.getClient().getChannelServer().getExpRate());
             return;
@@ -1238,13 +1238,13 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void givePartyNX(final int amount, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void givePartyNX(final int amount, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             chr.modifyCSPoints(1, amount, true);
         }
     }
     
-    public final void givePartyNX(final int amount) {
+    public void givePartyNX(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainNX(amount);
             return;
@@ -1257,13 +1257,13 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void endPartyQuest(final int amount, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void endPartyQuest(final int amount, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             chr.endPartyQuest(amount);
         }
     }
     
-    public final void endPartyQuest(final int amount) {
+    public void endPartyQuest(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.getPlayer().endPartyQuest(amount);
             return;
@@ -1276,8 +1276,8 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void removeFromParty(final int id, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void removeFromParty(final int id, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             final int possesed = chr.getInventory(GameConstants.getInventoryType(id)).countById(id);
             if (possesed > 0) {
                 MapleInventoryManipulator.removeById(this.c, GameConstants.getInventoryType(id), id, possesed, true, false);
@@ -1286,28 +1286,28 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void removeFromParty(final int id) {
+    public void removeFromParty(final int id) {
         this.givePartyItems(id, (short)0, true);
     }
     
-    public final void useSkill(final int skill, final int level) {
+    public void useSkill(final int skill, final int level) {
         if (level <= 0) {
             return;
         }
         SkillFactory.getSkill(skill).getEffect(level).applyTo(this.c.getPlayer());
     }
     
-    public final void useItem(final int id) {
+    public void useItem(final int id) {
         MapleItemInformationProvider.getInstance().getItemEffect(id).applyTo(this.c.getPlayer());
         this.getClient().sendPacket(UIPacket.getStatusMsg(id));
     }
     
-    public final void useItemEffect(final int id) {
+    public void useItemEffect(final int id) {
         MapleItemInformationProvider.getInstance().getItemEffect(id).applyTo(this.c.getPlayer());
         this.getClient().sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public final void cancelItem(final int id) {
+    public void cancelItem(final int id) {
         this.getClient().getPlayer().cancelEffect(MapleItemInformationProvider.getInstance().getItemEffect(id), false, -1L);
     }
     
@@ -1315,11 +1315,11 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getPlayer().getMorphState();
     }
     
-    public final void removeAll(final int id) {
+    public void removeAll(final int id) {
         this.getClient().getPlayer().removeAll(id, true);
     }
     
-    public final void gainCloseness(final int closeness, final int index) {
+    public void gainCloseness(final int closeness, final int index) {
         final MaplePet pet = this.getPlayer().getPet(index);
         if (pet != null) {
             pet.setCloseness(pet.getCloseness() + closeness);
@@ -1327,7 +1327,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void gainClosenessAll(final int closeness) {
+    public void gainClosenessAll(final int closeness) {
         for (final MaplePet pet : this.getPlayer().getPets()) {
             if (pet != null) {
                 pet.setCloseness(pet.getCloseness() + closeness);
@@ -1336,32 +1336,34 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void resetMap(final int mapid) {
+    public void resetMap(final int mapid) {
         this.getMap(mapid).resetFully();
     }
     
-    public final void openNpc(final int id) {
+    public void openNpc(final int id) {
         this.openNpc(id, null);
     }
     
-    public final void openNpc(final int id, final int mode) {
+    public void openNpc(final int id, final int mode) {
+        NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(this.getClient(), id, mode, null);
     }
     
-    public final void openNpc(final MapleClient cg, final int id) {
+    public void openNpc(final MapleClient cg, final int id) {
         NPCScriptManager.getInstance().dispose(cg);
         this.openNpc(cg, id, 0, null);
     }
     
-    public final void openNpc(final int id, final String script) {
+    public void openNpc(final int id, final String script) {
+        NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(this.getClient(), id, script);
     }
     
-    public final void openNpc(final MapleClient cg, final int id, final String script) {
+    public void openNpc(final MapleClient cg, final int id, final String script) {
         this.openNpc(this.getClient(), id, 0, script);
     }
     
-    public final void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
+    public void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
         cg.removeClickedNPC();
         NPCScriptManager.getInstance().start(cg, id, mode, script);
     }
@@ -1388,11 +1390,11 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getChannelServer().getMapFactory().getMap(mapid).getNumMonsters();
     }
     
-    public final void teachSkill(final int id, final byte level, final byte masterlevel) {
+    public void teachSkill(final int id, final byte level, final byte masterlevel) {
         this.getPlayer().changeSkillLevel(SkillFactory.getSkill(id), level, masterlevel);
     }
     
-    public final void teachSkill(final int id, byte level) {
+    public void teachSkill(final int id, byte level) {
         final ISkill skil = SkillFactory.getSkill(id);
         if (this.getPlayer().getSkillLevel(skil) > level) {
             level = this.getPlayer().getSkillLevel(skil);
@@ -1404,7 +1406,7 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getChannelServer().getMapFactory().getMap(mapid).getCharactersSize();
     }
     
-    public final void dojo_getUp() {
+    public void dojo_getUp() {
         this.getClient().sendPacket(MaplePacketCreator.updateInfoQuest(1207, "pt=1;min=4;belt=1;tuto=1"));
         this.getClient().sendPacket(MaplePacketCreator.Mulung_DojoUp2());
         this.getClient().sendPacket(MaplePacketCreator.instantMapWarp((byte)6));
@@ -1433,37 +1435,37 @@ public abstract class AbstractPlayerInteraction
         return (int)ret;
     }
     
-    public final void saveLocation(final String loc) {
+    public void saveLocation(final String loc) {
         this.getClient().getPlayer().saveLocation(SavedLocationType.fromString(loc));
     }
     
-    public final void saveReturnLocation(final String loc) {
+    public void saveReturnLocation(final String loc) {
         this.getClient().getPlayer().saveLocation(SavedLocationType.fromString(loc), this.getClient().getPlayer().getMap().getReturnMap().getId());
     }
     
-    public final void clearSavedLocation(final String loc) {
+    public void clearSavedLocation(final String loc) {
         this.getClient().getPlayer().clearSavedLocation(SavedLocationType.fromString(loc));
     }
     
-    public final void summonMsg(final String msg) {
+    public void summonMsg(final String msg) {
         if (!this.c.getPlayer().hasSummon()) {
             this.playerSummonHint(true);
         }
         this.getClient().sendPacket(UIPacket.summonMessage(msg));
     }
     
-    public final void summonMsg(final int type) {
+    public void summonMsg(final int type) {
         if (!this.c.getPlayer().hasSummon()) {
             this.playerSummonHint(true);
         }
         this.getClient().sendPacket(UIPacket.summonMessage(type));
     }
     
-    public final void showInstruction(final String msg, final int width, final int height) {
+    public void showInstruction(final String msg, final int width, final int height) {
         this.getClient().sendPacket(MaplePacketCreator.sendHint(msg, width, height));
     }
     
-    public final void playerSummonHint(final boolean summon) {
+    public void playerSummonHint(final boolean summon) {
         this.getClient().getPlayer().setHasSummon(summon);
         this.getClient().sendPacket(UIPacket.summonHelper(summon));
     }
@@ -1472,7 +1474,7 @@ public abstract class AbstractPlayerInteraction
         return this.getClient().getPlayer().getInfoQuest(id);
     }
     
-    public final void updateInfoQuest(final int id, final String data) {
+    public void updateInfoQuest(final int id, final String data) {
         this.getClient().getPlayer().updateInfoQuest(id, data);
     }
     
@@ -1480,35 +1482,35 @@ public abstract class AbstractPlayerInteraction
         return this.getInfoQuest(22013).equals((Object)data);
     }
     
-    public final void updateEvanIntroState(final String data) {
+    public void updateEvanIntroState(final String data) {
         this.updateInfoQuest(22013, data);
     }
     
-    public final void Aran_Start() {
+    public void Aran_Start() {
         this.getClient().sendPacket(UIPacket.Aran_Start());
     }
     
-    public final void evanTutorial(final String data, final int v1) {
+    public void evanTutorial(final String data, final int v1) {
         this.getClient().sendPacket(MaplePacketCreator.getEvanTutorial(data));
     }
     
-    public final void AranTutInstructionalBubble(final String data) {
+    public void AranTutInstructionalBubble(final String data) {
         this.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(data));
     }
     
-    public final void ShowWZEffect(final String data) {
+    public void ShowWZEffect(final String data) {
         this.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(data));
     }
     
-    public final void showWZEffect(final String data) {
+    public void showWZEffect(final String data) {
         this.getClient().sendPacket(UIPacket.ShowWZEffect(data));
     }
     
-    public final void EarnTitleMsg(final String data) {
+    public void EarnTitleMsg(final String data) {
         this.getClient().sendPacket(UIPacket.EarnTitleMsg(data));
     }
     
-    public final void MovieClipIntroUI(final boolean enabled) {
+    public void MovieClipIntroUI(final boolean enabled) {
         this.getClient().sendPacket(UIPacket.IntroDisableUI(enabled));
         this.getClient().sendPacket(UIPacket.IntroLock(enabled));
     }
@@ -1694,7 +1696,7 @@ public abstract class AbstractPlayerInteraction
     public void warpPlayer(final int from, final int to) {
         final MapleMap mapto = this.c.getChannelServer().getMapFactory().getMap(to);
         final MapleMap mapfrom = this.c.getChannelServer().getMapFactory().getMap(from);
-        for (final MapleCharacter chr : mapfrom.getCharactersThreadsafe()) {
+        for (MapleCharacter chr : mapfrom.getCharactersThreadsafe()) {
             chr.changeMap(mapto, mapto.getPortal(0));
         }
     }
@@ -1982,7 +1984,7 @@ public abstract class AbstractPlayerInteraction
         this.c.getPlayer().modifyCSPoints(2, gain, true);
     }
     
-    public final void worldMessage2(final int type, final String message) {
+    public void worldMessage2(final int type, final String message) {
         switch (type) {
             case 1:
             case 2:
@@ -2008,7 +2010,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 全服黄色喇叭(final String message) {
+    public void 全服黄色喇叭(final String message) {
         Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, this.c.getChannel(), message));
     }
     
@@ -2029,7 +2031,7 @@ public abstract class AbstractPlayerInteraction
         return this.c.getPlayer().getCSPoints(类型);
     }
     
-    public final void gainD(final int amount) {
+    public void gainD(final int amount) {
         this.c.getPlayer().modifyCSPoints(2, amount, true);
     }
     
@@ -2037,35 +2039,35 @@ public abstract class AbstractPlayerInteraction
         return this.c.getPlayer().getJob();
     }
     
-    public final void 判断组队() {
+    public void 判断组队() {
         this.c.getPlayer().getParty();
     }
     
-    public final void 判断频道() {
+    public void 判断频道() {
         this.getClient().getChannel();
     }
     
-    public final void 给抵用券(final int amount) {
+    public void 给抵用券(final int amount) {
         this.c.getPlayer().modifyCSPoints(2, amount, true);
     }
     
-    public final void 收抵用券(final int amount) {
+    public void 收抵用券(final int amount) {
         this.c.getPlayer().modifyCSPoints(2, -amount, true);
     }
     
-    public final void 给点券(final int amount) {
+    public void 给点券(final int amount) {
         this.c.getPlayer().modifyCSPoints(1, amount, true);
     }
     
-    public final void 收点券(final int amount) {
+    public void 收点券(final int amount) {
         this.c.getPlayer().modifyCSPoints(1, -amount, true);
     }
     
-    public final void 给物品(final int id, final short quantity) {
+    public void 给物品(final int id, final short quantity) {
         this.gainItem(id, quantity, false, 0L, -1, "");
     }
     
-    public final void 物品兑换1(final int id1, final short shuliang1, final int id2, final int shuliang2) {
+    public void 物品兑换1(final int id1, final short shuliang1, final int id2, final int shuliang2) {
         if (!this.haveItem(id1, (int)shuliang1, true, true)) {
             this.c.getPlayer().dropMessage(1, "你没有足够的兑换物品。");
             return;
@@ -2075,11 +2077,11 @@ public abstract class AbstractPlayerInteraction
         this.c.getPlayer().dropMessage(1, "兑换成功。");
     }
     
-    public final void 概率给物品(final int id, final short quantity, final double 概率2, final String a) {
+    public void 概率给物品(final int id, final short quantity, final double 概率2, final String a) {
         this.概率给物品(id, quantity, 概率2);
     }
     
-    public final void 概率给物品(final int id, final short quantity, double 概率2) {
+    public void 概率给物品(final int id, final short quantity, double 概率2) {
         if (概率2 > 100.0) {
             概率2 = 100.0;
         }
@@ -2092,11 +2094,11 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 概率给物品2(final int id, final short quantity, final double 概率2, final String a) {
+    public void 概率给物品2(final int id, final short quantity, final double 概率2, final String a) {
         this.概率给物品2(id, quantity, 概率2);
     }
     
-    public final void 概率给物品2(final int id, final short quantity, double 概率2) {
+    public void 概率给物品2(final int id, final short quantity, double 概率2) {
         if (概率2 > 100.0) {
             概率2 = 100.0;
         }
@@ -2113,11 +2115,11 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 收物品(final int id, final short quantity) {
+    public void 收物品(final int id, final short quantity) {
         this.gainItem(id, (short)(-quantity), false, 0L, -1, "");
     }
     
-    public final void gainItemS(final String Owner, final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final MapleClient cg) {
+    public void gainItemS(final String Owner, final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final MapleClient cg) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final MapleInventoryType type = GameConstants.getInventoryType(id);
         if (!MapleInventoryManipulator.checkSpace(cg, id, 1, "")) {
@@ -2189,19 +2191,19 @@ public abstract class AbstractPlayerInteraction
         cg.sendPacket(MaplePacketCreator.getShowItemGain(id, (short)1, true));
     }
     
-    public final void gainItem(final String Owner, final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd) {
+    public void gainItem(final String Owner, final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd) {
         this.gainItemS(Owner, id, sj, Flag, str, dex, luk, Int, hp, mp, watk, matk, wdef, mdef, hb, mz, ty, yd, this.c);
     }
     
-    public final void 给属性装备(final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd) {
+    public void 给属性装备(final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd) {
         this.给属性装备(id, sj, Flag, str, dex, luk, Int, hp, mp, watk, matk, wdef, mdef, hb, mz, ty, yd, 0L, this.c);
     }
     
-    public final void 给属性装备(final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final int 给予时间) {
+    public void 给属性装备(final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final int 给予时间) {
         this.给属性装备(id, sj, Flag, str, dex, luk, Int, hp, mp, watk, matk, wdef, mdef, hb, mz, ty, yd, (long)给予时间, this.c);
     }
     
-    public final void 给属性装备(final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final long 给予时间, final MapleClient cg) {
+    public void 给属性装备(final int id, final int sj, final int Flag, final int str, final int dex, final int luk, final int Int, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int hb, final int mz, final int ty, final int yd, final long 给予时间, final MapleClient cg) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final MapleInventoryType type = GameConstants.getInventoryType(id);
         if (!MapleInventoryManipulator.checkSpace(cg, id, 1, "")) {
@@ -2301,7 +2303,7 @@ public abstract class AbstractPlayerInteraction
         return this.getParty() != null && this.getParty().getLeader().getId() == this.c.getPlayer().getId();
     }
     
-    public final void 团队传送地图(final int mapId, final int portal) {
+    public void 团队传送地图(final int mapId, final int portal) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             if (portal < 0) {
                 this.warp(mapId);
@@ -2349,15 +2351,15 @@ public abstract class AbstractPlayerInteraction
         this.c.getPlayer().gainExp(-gain, true, true, true);
     }
     
-    public final void 给团队道具(final int id, final short quantity) {
+    public void 给团队道具(final int id, final short quantity) {
         this.givePartyItems(id, quantity, false);
     }
     
-    public final void 收团队道具(final int id, final short quantity) {
+    public void 收团队道具(final int id, final short quantity) {
         this.givePartyItems2(id, quantity, false);
     }
     
-    public final void givePartyItems2(final int id, final short quantity, final boolean removeAll) {
+    public void givePartyItems2(final int id, final short quantity, final boolean removeAll) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainItem(id, (short)(removeAll ? (-this.getPlayer().itemQuantity(id)) : (-quantity)));
             return;
@@ -2370,7 +2372,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 给团队经验(final int amount) {
+    public void 给团队经验(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainExp(amount);
             return;
@@ -2383,19 +2385,19 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 给团队点券(final int amount, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void 给团队点券(final int amount, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             chr.modifyCSPoints(1, amount, true);
         }
     }
     
-    public final void 给团队抵用券(final int amount, final List<MapleCharacter> party) {
-        for (final MapleCharacter chr : party) {
+    public void 给团队抵用券(final int amount, final List<MapleCharacter> party) {
+        for (MapleCharacter chr : party) {
             chr.modifyCSPoints(2, amount, true);
         }
     }
     
-    public final void givePartyDY(final int amount) {
+    public void givePartyDY(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainDY(amount);
             return;
@@ -2408,7 +2410,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void givePartyMeso(final int amount) {
+    public void givePartyMeso(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainMeso(amount);
             return;
@@ -2421,7 +2423,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 给团队金币(final int amount) {
+    public void 给团队金币(final int amount) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.gainMeso(amount);
             return;
@@ -2434,7 +2436,7 @@ public abstract class AbstractPlayerInteraction
         }
     }
     
-    public final void 销毁物品(final int id) {
+    public void 销毁物品(final int id) {
         this.c.getPlayer().removeAll(id);
     }
     
@@ -2472,7 +2474,7 @@ public abstract class AbstractPlayerInteraction
         return this.getPlayer().getSkillLevel(id);
     }
     
-    public final void 给予技能(final int id, final byte level, final byte masterlevel) {
+    public void 给予技能(final int id, final byte level, final byte masterlevel) {
         this.getPlayer().changeSkillLevel(SkillFactory.getSkill(id), level, masterlevel);
     }
     
@@ -2490,7 +2492,7 @@ public abstract class AbstractPlayerInteraction
         return Guild.getGP(this.getPlayer().getGuildId());
     }
     
-    public final void 给团队每日(final String bossid) {
+    public void 给团队每日(final String bossid) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.setBossLog(bossid);
             return;
@@ -2502,7 +2504,7 @@ public abstract class AbstractPlayerInteraction
             }
         }
     }
-    public final void 给团队每日1(final String bossid) {
+    public void 给团队每日1(final String bossid) {
         if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
             this.setBossLog1(bossid);
             return;
@@ -3380,7 +3382,7 @@ public abstract class AbstractPlayerInteraction
     public int GetPiot(final String Name, final int Channale) {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM FullPoint WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -3397,7 +3399,7 @@ public abstract class AbstractPlayerInteraction
     public int Getsaiji(final String Name, final int Channale) {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM saiji WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -3447,7 +3449,7 @@ public abstract class AbstractPlayerInteraction
                 }
             }
             ret += saiji;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps2 = con.prepareStatement("UPDATE saiji SET `Point` = ? WHERE Name = ? and channel = ?");
             ps2.setInt(1, ret);
             ps2.setString(2, Name);
@@ -3466,7 +3468,7 @@ public abstract class AbstractPlayerInteraction
             ret.add(Integer.valueOf(0));
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM paylog WHERE account = ?");
             ps.setString(1, this.c.getAccountName());
             final ResultSet rs = ps.executeQuery();
@@ -3492,7 +3494,7 @@ public abstract class AbstractPlayerInteraction
         int 破功等级 = 0;
         try {
             final int cid = this.getPlayer().getId();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM characters WHERE id=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -3508,7 +3510,7 @@ public abstract class AbstractPlayerInteraction
     public void 给破攻等级(final int 等级) {
         try {
             final int cid = this.getPlayer().getId();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE characters SET PGSXDJ =PGSXDJ+ " + 等级 + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -3652,7 +3654,7 @@ public abstract class AbstractPlayerInteraction
         }
         final int checkMap = this.getPlayer().getMapId();
         for (final MaplePartyCharacter partyPlayer : this.getPlayer().getParty().getMembers()) {
-            final MapleCharacter chr = this.getPlayer().getMap().getCharacterById(partyPlayer.getId());
+            MapleCharacter chr = this.getPlayer().getMap().getCharacterById(partyPlayer.getId());
             if (chr != null && chr.getMapId() == checkMap) {
                 chr.setEventCount(eventId, type, count);
             }
@@ -3672,7 +3674,7 @@ public abstract class AbstractPlayerInteraction
         int check = 0;
         final int partySize = party.getMembers().size();
         for (final MaplePartyCharacter partyPlayer : party.getMembers()) {
-            final MapleCharacter chr = this.getPlayer().getMap().getCharacterById(partyPlayer.getId());
+            MapleCharacter chr = this.getPlayer().getMap().getCharacterById(partyPlayer.getId());
             if (chr != null) {
                 final int count = chr.getEventCount(eventId);
                 if (count < 0 || count >= checkcount) {
@@ -3686,7 +3688,7 @@ public abstract class AbstractPlayerInteraction
     
     public int getmoneyb() {
         int moneyb = 0;
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final int cid = this.getPlayer().getAccountID();
             ResultSet rs;
             try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
@@ -3706,7 +3708,7 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void setmoneyb(final int slot) {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final int cid = this.getPlayer().getAccountID();
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb =moneyb+ " + slot + " WHERE id = " + cid + "")) {
                 ps.executeUpdate();
@@ -3726,7 +3728,7 @@ public abstract class AbstractPlayerInteraction
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
             this.getPlayer().ban("刷元宝", true, true, false);
         }else {
-            try (final Connection con = DatabaseConnection.getConnection()) {
+            try (Connection con = DatabaseConnection.getConnection()) {
                 final int cid = this.getPlayer().getAccountID();
                 try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb =moneyb+ " + slot + " WHERE id = " + cid + "")) {
                     ps.executeUpdate();
@@ -3746,7 +3748,7 @@ public abstract class AbstractPlayerInteraction
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
             this.getPlayer().ban("刷元宝", true, true, false);
         }else {
-            try (final Connection con = DatabaseConnection.getConnection()) {
+            try (Connection con = DatabaseConnection.getConnection()) {
                 final int cid = this.getPlayer().getAccountID();
                 try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb =moneyb+ " + slot + " WHERE id = " + cid + "")) {
                     ps.executeUpdate();
@@ -3761,7 +3763,7 @@ public abstract class AbstractPlayerInteraction
 
     public int getjbjf() {
         int jbjf = 0;
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final int cid = this.getPlayer().getAccountID();
             ResultSet rs;
             try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
@@ -3781,7 +3783,7 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void setjbjf(final int zhi) {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final int cid = this.getPlayer().getAccountID();
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET jbjf =jbjf+ " + zhi + " WHERE id = " + cid + "")) {
                 ps.executeUpdate();

@@ -18,7 +18,7 @@ import java.io.Serializable;
 
 public class BuddyList implements Serializable
 {
-    public static final String DEFAULT_GROUP = "其他";
+    public static String DEFAULT_GROUP = "其他";
     private final Map<Integer, BuddyEntry> buddies;
     private byte capacity;
     private final Deque<BuddyEntry> pendingReqs;
@@ -100,7 +100,7 @@ public class BuddyList implements Serializable
     }
     
     public void loadFromDb(final int characterId) throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT b.buddyid, b.pending, c.name as buddyname, c.job as buddyjob, c.level as buddylevel, b.groupname FROM buddies as b, characters as c WHERE c.id = b.buddyid AND b.characterid = ?");
             ps.setInt(1, characterId);
             final ResultSet rs = ps.executeQuery();
@@ -143,7 +143,7 @@ public class BuddyList implements Serializable
     
     public static int getBuddyCount(final int chrId, final int pending) {
         int count = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) as buddyCount FROM buddies WHERE characterid = ? AND pending = ?")) {
             ps.setInt(1, chrId);
             ps.setInt(2, pending);
@@ -163,7 +163,7 @@ public class BuddyList implements Serializable
     
     public static int getBuddyCapacity(final int charId) {
         int capacity = -1;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT buddyCapacity FROM characters WHERE id = ?")) {
             ps.setInt(1, charId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -181,7 +181,7 @@ public class BuddyList implements Serializable
     
     public static int getBuddyPending(final int chrId, final int buddyId) {
         int pending = -1;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT pending FROM buddies WHERE characterid = ? AND buddyid = ?")) {
             ps.setInt(1, chrId);
             ps.setInt(2, buddyId);
@@ -199,7 +199,7 @@ public class BuddyList implements Serializable
     }
     
     public static void addBuddyToDB(final MapleCharacter player, final BuddyEntry buddy) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO buddies (`characterid`, `buddyid`, `groupname`, `pending`) VALUES (?, ?, ?, 1)")) {
             ps.setInt(1, buddy.getCharacterId());
             ps.setInt(2, player.getId());

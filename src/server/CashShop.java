@@ -77,7 +77,7 @@ public class CashShop implements Serializable
         }
     }
     
-    public IItem toItem(final CashItemInfo cItem, final MapleCharacter chr) {
+    public IItem toItem(final CashItemInfo cItem, MapleCharacter chr) {
         return this.toItem(cItem, MapleInventoryManipulator.getUniqueId(cItem.getId(), null), "", chr);
     }
     
@@ -97,11 +97,11 @@ public class CashShop implements Serializable
         return this.toItem(cItem, null, uniqueid, gift);
     }
     
-    public IItem toItem(final CashItemInfo cItem, final int uniqueid, final String gift, final MapleCharacter chr) {
+    public IItem toItem(final CashItemInfo cItem, final int uniqueid, final String gift, MapleCharacter chr) {
         return this.toItem(cItem, chr, uniqueid, gift);
     }
     
-    public IItem toItem(final CashItemInfo cItem, final MapleCharacter chr, int uniqueid, final String gift) {
+    public IItem toItem(final CashItemInfo cItem, MapleCharacter chr, int uniqueid, final String gift) {
         if (uniqueid <= 0) {
             uniqueid = MapleInventoryIdentifier.getInstance();
         }
@@ -167,7 +167,7 @@ public class CashShop implements Serializable
     }
     
     public void gift(final int recipient, final String from, final String message, final int sn, final int uniqueid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("INSERT INTO `gifts` VALUES (DEFAULT, ?, ?, ?, ?, ?)");
             ps.setInt(1, recipient);
             ps.setString(2, from);
@@ -185,7 +185,7 @@ public class CashShop implements Serializable
     
     public List<Pair<IItem, String>> loadGifts() {
         final List<Pair<IItem, String>> gifts = new ArrayList<Pair<IItem, String>>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM `gifts` WHERE `recipient` = ?");
             ps.setInt(1, this.characterId);
             final ResultSet rs = ps.executeQuery();
@@ -234,7 +234,7 @@ public class CashShop implements Serializable
         }
     }
     
-    public void save(final Connection con) throws SQLException {
+    public void save(Connection con) throws SQLException {
         final List<Pair<IItem, MapleInventoryType>> itemsWithType = new ArrayList<Pair<IItem, MapleInventoryType>>();
         for (final IItem item : this.inventory) {
             itemsWithType.add(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId())));

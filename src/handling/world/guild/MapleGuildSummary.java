@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class MapleGuildSummary implements Serializable
 {
-    public static final long serialVersionUID = 3565477792085301248L;
+    public static long serialVersionUID = 3565477792085301248L;
     private final String name;
     private final short logoBG;
     private final byte logoBGColor;

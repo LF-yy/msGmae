@@ -21,7 +21,7 @@ import tools.data.LittleEndianAccessor;
 
 public class FamilyHandler
 {
-    public static final void RequestFamily(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void RequestFamily(final LittleEndianAccessor slea, final MapleClient c) {
         if (c == null || c.getPlayer() == null) {
             return;
         }
@@ -40,13 +40,13 @@ public class FamilyHandler
         }
     }
     
-    public static final void OpenFamily(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void OpenFamily(final LittleEndianAccessor slea, final MapleClient c) {
         if (c != null && c.getPlayer() != null) {
             c.sendPacket(FamilyPacket.getFamilyInfo(c.getPlayer()));
         }
     }
     
-    public static final void UseFamily(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void UseFamily(final LittleEndianAccessor slea, final MapleClient c) {
         if (!c.getPlayer().isGM()) {
             c.getPlayer().dropMessage("目前本功能不開放使用");
             c.sendPacket(MaplePacketCreator.enableActions());
@@ -114,7 +114,7 @@ public class FamilyHandler
                     if (chr == -1) {
                         continue;
                     }
-                    final MapleCharacter chrr = World.getStorage(chr).getCharacterById(chrz.getId());
+                    MapleCharacter chrr = World.getStorage(chr).getCharacterById(chrz.getId());
                     entry.applyTo(chrr);
                 }
                 break;
@@ -134,7 +134,7 @@ public class FamilyHandler
                 if (c.getPlayer().getParty() != null) {
                     for (final MaplePartyCharacter mpc : c.getPlayer().getParty().getMembers()) {
                         if (mpc.getId() != c.getPlayer().getId()) {
-                            final MapleCharacter chr2 = c.getPlayer().getMap().getCharacterById(mpc.getId());
+                            MapleCharacter chr2 = c.getPlayer().getMap().getCharacterById(mpc.getId());
                             if (chr2 == null) {
                                 continue;
                             }
@@ -156,7 +156,7 @@ public class FamilyHandler
         }
     }
     
-    public static final void FamilyOperation(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void FamilyOperation(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer() == null) {
             return;
         }
@@ -198,7 +198,7 @@ public class FamilyHandler
         }
     }
     
-    public static final void FamilyPrecept(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void FamilyPrecept(final LittleEndianAccessor slea, final MapleClient c) {
         final MapleFamily fam = Family.getFamily(c.getPlayer().getFamilyId());
         if (fam == null || fam.getLeaderId() != c.getPlayer().getId()) {
             return;
@@ -207,7 +207,7 @@ public class FamilyHandler
         c.getPlayer().dropMessage(1, "重開家族視窗即可套用。");
     }
     
-    public static final void FamilySummon(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void FamilySummon(final LittleEndianAccessor slea, final MapleClient c) {
         if (c == null) {
             return;
         }
@@ -237,7 +237,7 @@ public class FamilyHandler
         c.getPlayer().setTeleportName("");
     }
     
-    public static final void DeleteJunior(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void DeleteJunior(final LittleEndianAccessor slea, final MapleClient c) {
         final int juniorid = slea.readInt();
         if (c.getPlayer().getFamilyId() <= 0 || juniorid <= 0 || (c.getPlayer().getJunior1() != juniorid && c.getPlayer().getJunior2() != juniorid)) {
             return;
@@ -269,7 +269,7 @@ public class FamilyHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void DeleteSenior(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void DeleteSenior(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer().getFamilyId() <= 0 || c.getPlayer().getSeniorId() <= 0) {
             return;
         }
@@ -297,7 +297,7 @@ public class FamilyHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void AcceptFamily(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void AcceptFamily(final LittleEndianAccessor slea, final MapleClient c) {
         final MapleCharacter inviter = c.getPlayer().getMap().getCharacterById(slea.readInt());
         if (inviter != null && c.getPlayer().getSeniorId() == 0 && (c.getPlayer().isGM() || !inviter.isHidden()) && inviter.getLevel() - 20 <= c.getPlayer().getLevel() && inviter.getLevel() >= 10 && inviter.getName().equals((Object)slea.readMapleAsciiString()) && inviter.getNoJuniors() < 2 && c.getPlayer().getLevel() >= 10) {
             final boolean accepted = slea.readByte() > 0;

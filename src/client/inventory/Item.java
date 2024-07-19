@@ -97,7 +97,7 @@ public class Item implements IItem, Serializable
     }
     
     @Override
-    public final void setPosition(final short position) {
+    public void setPosition(final short position) {
         this.position = position;
         if (this.pet != null) {
             this.pet.setInventoryPosition(position);
@@ -145,12 +145,12 @@ public class Item implements IItem, Serializable
     }
     
     @Override
-    public final void setOwner(final String owner) {
+    public void setOwner(final String owner) {
         this.owner = owner;
     }
     
     @Override
-    public final void setFlag(final byte flag) {
+    public void setFlag(final byte flag) {
         this.flag = flag;
     }
     
@@ -160,7 +160,7 @@ public class Item implements IItem, Serializable
     }
     
     @Override
-    public final void setExpiration(final long expire) {
+    public void setExpiration(final long expire) {
         this.expiration = expire;
     }
     
@@ -180,7 +180,7 @@ public class Item implements IItem, Serializable
     }
     
     @Override
-    public final void setUniqueId(final int id) {
+    public void setUniqueId(final int id) {
         this.uniqueid = id;
     }
     
@@ -215,7 +215,7 @@ public class Item implements IItem, Serializable
         return this.pet;
     }
     
-    public final void setPet(final MaplePet pet) {
+    public void setPet(final MaplePet pet) {
         this.pet = pet;
     }
     

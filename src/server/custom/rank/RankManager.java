@@ -36,7 +36,7 @@ public class RankManager
     }
     
     public void loadRank(final int quest) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
         final List<MiniGamePoints> miniGamePoints_list = new ArrayList<MiniGamePoints>();
@@ -122,7 +122,7 @@ public class RankManager
         return ret;
     }
     
-    public String getData(final MapleCharacter chr, final int GameType) {
+    public String getData(MapleCharacter chr, final int GameType) {
         final MapleQuest quest = MapleQuest.getInstance(GameType);
         MapleQuestStatus record;
         if (chr.getQuestNoAdd(quest) == null) {
@@ -148,7 +148,7 @@ public class RankManager
     
     private static class InstanceHolder
     {
-        public static final RankManager instance;
+        public static RankManager instance;
         
         static {
             instance = new RankManager();

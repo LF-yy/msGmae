@@ -31,7 +31,7 @@ import tools.data.LittleEndianAccessor;
 
 public class HiredMerchantHandler
 {
-    public static final void UseHiredMerchant(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void UseHiredMerchant(final LittleEndianAccessor slea, final MapleClient c) {
         if (c == null || c.getPlayer() == null || c.getPlayer().getMap() == null) {
             if (c != null && c.getPlayer() != null) {
                 c.getPlayer().dropMessage("发生未知错误.");
@@ -79,7 +79,7 @@ public class HiredMerchantHandler
     }
     
     private static byte checkExistance(final int accid, final int charid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where accountid = ? OR characterid = ?")) {
             ps.setInt(1, accid);
             ps.setInt(2, charid);
@@ -98,7 +98,7 @@ public class HiredMerchantHandler
         }
     }
     
-    public static final void MerchantItemStore(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void MerchantItemStore(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer() == null) {
             return;
         }
@@ -201,7 +201,7 @@ public class HiredMerchantHandler
         }
     }
     
-    private static final boolean check(final MapleCharacter chr, final MerchItemPackage pack) {
+    private static final boolean check(MapleCharacter chr, final MerchItemPackage pack) {
         if (chr.getMeso() + pack.getMesos() < 0) {
             return false;
         }
@@ -251,7 +251,7 @@ public class HiredMerchantHandler
     }
     
     private static boolean deletePackage(final int charid, final int accid, final int packageid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("DELETE from hiredmerch where characterid = ? OR accountid = ? OR packageid = ?")) {
             ps.setInt(1, charid);
             ps.setInt(2, accid);
@@ -267,7 +267,7 @@ public class HiredMerchantHandler
     }
     
     private static MerchItemPackage loadItemFromDatabase(final int charid, final int accountid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where characterid = ? OR accountid = ?")) {
             ps.setInt(1, charid);
             ps.setInt(2, accountid);

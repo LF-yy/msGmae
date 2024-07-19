@@ -28,7 +28,7 @@ public class RandomAccessByteStream
         }
     }
     
-    public final void seek(final long offset) throws IOException {
+    public void seek(final long offset) throws IOException {
         this.raf.seek(offset);
     }
     

@@ -22,7 +22,7 @@ import tools.data.LittleEndianAccessor;
 
 public class ItemMakerHandler
 {
-    public static final void ItemMaker(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void ItemMaker(final LittleEndianAccessor slea, final MapleClient c) {
         final int makerType = slea.readInt();
         switch (makerType) {
             case 1: {
@@ -142,7 +142,7 @@ public class ItemMakerHandler
                 final int itemId = slea.readInt();
                 c.getPlayer().updateTick(slea.readInt());
                 final byte slot = (byte)slea.readInt();
-                final IItem toUse = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)slot);
+                IItem toUse = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)slot);
                 if (toUse == null || toUse.getItemId() != itemId || toUse.getQuantity() < 1) {
                     return;
                 }

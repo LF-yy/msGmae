@@ -36,7 +36,7 @@ public class CashItemFactory
     private final MapleDataProvider itemStringInfo;
     private Map<Integer, Integer> idLookup;
     
-    public static final CashItemFactory getInstance() {
+    public static CashItemFactory getInstance() {
         return CashItemFactory.instance;
     }
     
@@ -140,7 +140,7 @@ public class CashItemFactory
             if (this.initialized) {
                 return null;
             }
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                  final PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items WHERE serial = ?")) {
                 ps.setInt(1, sn);
                 final ResultSet rs = ps.executeQuery();
@@ -161,7 +161,7 @@ public class CashItemFactory
     private void refreshAllModInfo() {
         this.itemMods.clear();
         this.itemIdToSn.clear();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -198,7 +198,7 @@ public class CashItemFactory
         return (int)Integer.valueOf(this.idLookup.get((Object)Integer.valueOf(itemId)));
     }
     
-    public final void clearCashShop() {
+    public void clearCashShop() {
         this.itemStats.clear();
         this.itemPackage.clear();
         this.itemMods.clear();

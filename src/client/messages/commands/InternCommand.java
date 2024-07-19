@@ -67,7 +67,7 @@ public class InternCommand
         }
         
         public int createPlayer(final int accountid, final int id, final String name) {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 PreparedStatement ps = con.prepareStatement("SELECT id FROM RCmedals WHERE name = ?");
                 ps.setString(1, name);
                 ResultSet rs = ps.executeQuery();
@@ -145,7 +145,7 @@ public class InternCommand
     {
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
-            for (final MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
+            for (MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
                 chr.canTalk(!chr.getCanTalk());
                 final StringBuilder ret = new StringBuilder();
                 ret.append(" 角色暱称 ");
@@ -373,7 +373,7 @@ public class InternCommand
                     return false;
                 }
                 final MapleMap from = c.getPlayer().getMap();
-                for (final MapleCharacter chr : from.getCharactersThreadsafe()) {
+                for (MapleCharacter chr : from.getCharactersThreadsafe()) {
                     chr.changeMap(target, target.getPortal(0));
                 }
             }
@@ -522,7 +522,7 @@ public class InternCommand
                 c.getPlayer().dropMessage(6, "玩家必须上线");
                 return true;
             }
-            final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
+            MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
             final int itemamount = chr.getItemQuantity(item, true);
             if (itemamount > 0) {
                 c.getPlayer().dropMessage(6, chr.getName() + " 有 " + itemamount + " (" + item + ").");
@@ -552,7 +552,7 @@ public class InternCommand
                 c.getPlayer().dropMessage(6, "玩家必须上线");
                 return true;
             }
-            final MapleCharacter chrs = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
+            MapleCharacter chrs = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
             if (chrs == null) {
                 c.getPlayer().dropMessage(5, "找不到该角色");
             }
@@ -573,7 +573,7 @@ public class InternCommand
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
             StringBuilder builder = new StringBuilder("在此地图的玩家: ");
-            for (final MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
+            for (MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
                 if (builder.length() > 150) {
                     builder.setLength(builder.length() - 2);
                     c.getPlayer().dropMessage(6, builder.toString());
@@ -733,7 +733,7 @@ public class InternCommand
     {
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
-            final MapleCharacter chr = c.getPlayer();
+            MapleCharacter chr = c.getPlayer();
             if (splitted.length < 2) {
                 c.getPlayer().dropMessage(5, "[用法] !生死活动 <1干死右边，2干死左边>");
                 return false;
@@ -744,7 +744,7 @@ public class InternCommand
             }
             final int answer = Integer.parseInt(splitted[1]);
             final List<MapleCharacter> chrlist = chr.getMap().getCharacters();
-            for (final MapleCharacter chra : chrlist) {
+            for (MapleCharacter chra : chrlist) {
                 if (isCorrectAnswer(chra, answer)) {
                     chra.getStat().setHp(0);
                     chra.getStat().setMp(0);
@@ -755,7 +755,7 @@ public class InternCommand
             return true;
         }
         
-        public static boolean isCorrectAnswer(final MapleCharacter chr, final int answer) {
+        public static boolean isCorrectAnswer(MapleCharacter chr, final int answer) {
             final double x = chr.getTruePosition().getX();
             final double y = chr.getTruePosition().getY();
             return (x > -234.0 && y > -26.0 && answer == 1) || (x < -234.0 && y > -26.0 && answer == 2);

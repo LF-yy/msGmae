@@ -34,7 +34,7 @@ import tools.packet.UIPacket;
 
 public class MapleGuild implements Serializable
 {
-    public static final long serialVersionUID = 6322150443228168192L;
+    public static long serialVersionUID = 6322150443228168192L;
     private final List<MapleGuildCharacter> members;
     private final String[] rankTitles;
     private String name;
@@ -70,7 +70,7 @@ public class MapleGuild implements Serializable
         this.rL = this.lock.readLock();
         this.wL = this.lock.writeLock();
         this.init = false;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildid);
             ResultSet rs = ps.executeQuery();
@@ -153,9 +153,9 @@ public class MapleGuild implements Serializable
         return this.proper;
     }
     
-    public static final Collection<MapleGuild> loadAll() {
+    public static Collection<MapleGuild> loadAll() {
         final Collection<MapleGuild> ret = new ArrayList<MapleGuild>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT guildid FROM guilds");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -172,8 +172,8 @@ public class MapleGuild implements Serializable
         return ret;
     }
     
-    public final void writeToDB(final boolean bDisband) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+    public void writeToDB(final boolean bDisband) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             if (!bDisband) {
                 final StringBuilder buf = new StringBuilder("UPDATE guilds SET GP = ?, logo = ?, logoColor = ?, logoBG = ?, logoBGColor = ?, ");
                 for (int i = 1; i < 6; ++i) {
@@ -287,7 +287,7 @@ public class MapleGuild implements Serializable
         return this.logo;
     }
     
-    public final void setLogo(final int l) {
+    public void setLogo(final int l) {
         this.logo = l;
     }
     
@@ -295,7 +295,7 @@ public class MapleGuild implements Serializable
         return this.logoColor;
     }
     
-    public final void setLogoColor(final int c) {
+    public void setLogoColor(final int c) {
         this.logoColor = c;
     }
     
@@ -303,7 +303,7 @@ public class MapleGuild implements Serializable
         return this.logoBG;
     }
     
-    public final void setLogoBG(final int bg) {
+    public void setLogoBG(final int bg) {
         this.logoBG = bg;
     }
     
@@ -311,7 +311,7 @@ public class MapleGuild implements Serializable
         return this.logoBGColor;
     }
     
-    public final void setLogoBGColor(final int bgColor) {
+    public void setLogoBGColor(final int bgColor) {
         this.logoBGColor = bgColor;
     }
     
@@ -334,15 +334,15 @@ public class MapleGuild implements Serializable
         return this.signature;
     }
     
-    public final void broadcast(final byte[] packet) {
+    public void broadcast(final byte[] packet) {
         this.broadcast(packet, -1, BCOp.NONE);
     }
     
-    public final void broadcast(final byte[] packet, final int exception) {
+    public void broadcast(final byte[] packet, final int exception) {
         this.broadcast(packet, exception, BCOp.NONE);
     }
     
-    public final void broadcast(final byte[] packet, final int exceptionId, final BCOp bcop) {
+    public void broadcast(final byte[] packet, final int exceptionId, final BCOp bcop) {
         this.wL.lock();
         try {
             this.buildNotifications();
@@ -398,7 +398,7 @@ public class MapleGuild implements Serializable
         this.bDirty = false;
     }
     
-    public final void setOnline(final int cid, final boolean online, final int channel) {
+    public void setOnline(final int cid, final boolean online, final int channel) {
         boolean bBroadcast = true;
         for (final MapleGuildCharacter mgc : this.members) {
             if (mgc.getGuildId() == this.id && mgc.getId() == cid) {
@@ -420,11 +420,11 @@ public class MapleGuild implements Serializable
         this.init = true;
     }
     
-    public final void guildChat(final String name, final int cid, final String msg) {
+    public void guildChat(final String name, final int cid, final String msg) {
         this.broadcast(MaplePacketCreator.multiChat(name, msg, 2), cid);
     }
     
-    public final void allianceChat(final String name, final int cid, final String msg) {
+    public void allianceChat(final String name, final int cid, final String msg) {
         this.broadcast(MaplePacketCreator.multiChat(name, msg, 3), cid);
     }
     
@@ -446,7 +446,7 @@ public class MapleGuild implements Serializable
     
     public void setAllianceId(final int a) {
         this.allianceid = a;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE guilds SET alliance = ? WHERE guildid = ?")) {
             ps.setInt(1, a);
             ps.setInt(2, this.id);
@@ -458,11 +458,11 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public static final int createGuild(final int leaderId, final String name) {
+    public static int createGuild(final int leaderId, final String name) {
         if (name.length() > 12) {
             return 0;
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT guildid FROM guilds WHERE name = ?");
             ps.setString(1, name);
             ResultSet rs = ps.executeQuery();
@@ -524,7 +524,7 @@ public class MapleGuild implements Serializable
         return 1;
     }
     
-    public final void leaveGuild(final MapleGuildCharacter mgc) {
+    public void leaveGuild(final MapleGuildCharacter mgc) {
         this.wL.lock();
         try {
             for (final MapleGuildCharacter mgcc : this.members) {
@@ -550,7 +550,7 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public final void expelMember(final MapleGuildCharacter initiator, final String name, final int cid) {
+    public void expelMember(final MapleGuildCharacter initiator, final String name, final int cid) {
         this.wL.lock();
         try {
             for (final MapleGuildCharacter mgc : this.members) {
@@ -577,11 +577,11 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public final void changeARank() {
+    public void changeARank() {
         this.changeARank(false);
     }
     
-    public final void changeARank(final boolean leader) {
+    public void changeARank(final boolean leader) {
         for (final MapleGuildCharacter mgc : this.members) {
             if (this.leader == mgc.getId()) {
                 this.changeARank(mgc.getId(), leader ? 1 : 2);
@@ -592,13 +592,13 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public final void changeARank(final int newRank) {
+    public void changeARank(final int newRank) {
         for (final MapleGuildCharacter mgc : this.members) {
             this.changeARank(mgc.getId(), newRank);
         }
     }
     
-    public final void changeARank(final int cid, final int newRank) {
+    public void changeARank(final int cid, final int newRank) {
         if (this.allianceid <= 0) {
             return;
         }
@@ -618,7 +618,7 @@ public class MapleGuild implements Serializable
         System.err.println("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
     }
     
-    public final void changeRank(final int cid, final int newRank) {
+    public void changeRank(final int cid, final int newRank) {
         for (final MapleGuildCharacter mgc : this.members) {
             if (cid == mgc.getId()) {
                 if (mgc.isOnline()) {
@@ -635,12 +635,12 @@ public class MapleGuild implements Serializable
         System.err.println("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
     }
     
-    public final void setGuildNotice(final String notice) {
+    public void setGuildNotice(final String notice) {
         this.notice = notice;
         this.broadcast(MaplePacketCreator.guildNotice(this.id, notice));
     }
     
-    public final void memberLevelJobUpdate(final MapleGuildCharacter mgc) {
+    public void memberLevelJobUpdate(final MapleGuildCharacter mgc) {
         for (final MapleGuildCharacter member : this.members) {
             if (member.getId() == mgc.getId()) {
                 final int old_level = member.getLevel();
@@ -664,23 +664,23 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public final void changeRankTitle(final String[] ranks) {
+    public void changeRankTitle(final String[] ranks) {
         System.arraycopy((Object)ranks, 0, (Object)this.rankTitles, 0, 5);
         this.broadcast(MaplePacketCreator.rankTitleChange(this.id, ranks));
     }
     
-    public final void disbandGuild() {
+    public void disbandGuild() {
         this.writeToDB(true);
         this.broadcast(null, -1, BCOp.DISBAND);
     }
     
-    public final void setGuildEmblem(final short bg, final byte bgcolor, final short logo, final byte logocolor) {
+    public void setGuildEmblem(final short bg, final byte bgcolor, final short logo, final byte logocolor) {
         this.logoBG = bg;
         this.logoBGColor = bgcolor;
         this.logo = logo;
         this.logoColor = logocolor;
         this.broadcast(null, -1, BCOp.EMBELMCHANGE);
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE guilds SET logo = ?, logoColor = ?, logoBG = ?, logoBGColor = ? WHERE guildid = ?")) {
             ps.setInt(1, (int)logo);
             ps.setInt(2, this.logoColor);
@@ -710,7 +710,7 @@ public class MapleGuild implements Serializable
         }
         this.capacity += 5;
         this.broadcast(MaplePacketCreator.guildCapacityChange(this.id, this.capacity));
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE guilds SET capacity = ? WHERE guildid = ?")) {
             ps.setInt(1, this.capacity);
             ps.setInt(2, this.id);
@@ -723,11 +723,11 @@ public class MapleGuild implements Serializable
         return true;
     }
     
-    public final void gainGP(final int amount) {
+    public void gainGP(final int amount) {
         this.gainGP(amount, true);
     }
     
-    public final void gainGP(int amount, final boolean broadcast) {
+    public void gainGP(int amount, final boolean broadcast) {
         if (amount == 0) {
             return;
         }
@@ -741,7 +741,7 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public final void addMemberData(final MaplePacketLittleEndianWriter mplew) {
+    public void addMemberData(final MaplePacketLittleEndianWriter mplew) {
         mplew.write(this.members.size());
         for (final MapleGuildCharacter mgc : this.members) {
             mplew.writeInt(mgc.getId());
@@ -757,7 +757,7 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public static final MapleGuildResponse sendInvite(final MapleClient c, final String targetName) {
+    public static MapleGuildResponse sendInvite(final MapleClient c, final String targetName) {
         final MapleCharacter mc = c.getChannelServer().getPlayerStorage().getCharacterByName(targetName);
         if (mc == null) {
             return MapleGuildResponse.NOT_IN_CHANNEL;
@@ -790,28 +790,28 @@ public class MapleGuild implements Serializable
         return ret;
     }
     
-    public final void editBBSThread(final int localthreadid, final String title, final String text, final int icon, final int posterID, final int guildRank) {
+    public void editBBSThread(final int localthreadid, final String title, final String text, final int icon, final int posterID, final int guildRank) {
         final MapleBBSThread thread = (MapleBBSThread)this.bbs.get((Object)Integer.valueOf(localthreadid));
         if (thread != null && (thread.ownerID == posterID || guildRank <= 2)) {
             this.bbs.put(Integer.valueOf(localthreadid), new MapleBBSThread(localthreadid, title, text, System.currentTimeMillis(), this.id, thread.ownerID, icon));
         }
     }
     
-    public final void deleteBBSThread(final int localthreadid, final int posterID, final int guildRank) {
+    public void deleteBBSThread(final int localthreadid, final int posterID, final int guildRank) {
         final MapleBBSThread thread = (MapleBBSThread)this.bbs.get((Object)Integer.valueOf(localthreadid));
         if (thread != null && (thread.ownerID == posterID || guildRank <= 2)) {
             this.bbs.remove((Object)Integer.valueOf(localthreadid));
         }
     }
     
-    public final void addBBSReply(final int localthreadid, final String text, final int posterID) {
+    public void addBBSReply(final int localthreadid, final String text, final int posterID) {
         final MapleBBSThread thread = (MapleBBSThread)this.bbs.get((Object)Integer.valueOf(localthreadid));
         if (thread != null) {
             thread.replies.put(Integer.valueOf(thread.replies.size()), new MapleBBSReply(thread.replies.size(), posterID, text, System.currentTimeMillis()));
         }
     }
     
-    public final void deleteBBSReply(final int localthreadid, final int replyid, final int posterID, final int guildRank) {
+    public void deleteBBSReply(final int localthreadid, final int replyid, final int posterID, final int guildRank) {
         final MapleBBSThread thread = (MapleBBSThread)this.bbs.get((Object)Integer.valueOf(localthreadid));
         if (thread != null) {
             final MapleBBSReply reply = (MapleBBSReply)thread.replies.get((Object)Integer.valueOf(replyid));
@@ -822,7 +822,7 @@ public class MapleGuild implements Serializable
     }
     
     public static void saveCharacterGuildInfo(final int guildid, final byte guildrank, final byte alliancerank, final int cid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE characters SET guildid = ?, guildrank = ?, alliancerank = ? WHERE id = ?");
             ps.setInt(1, guildid);
             ps.setInt(2, (int)guildrank);
@@ -837,13 +837,13 @@ public class MapleGuild implements Serializable
         }
     }
     
-    public String getPrefix(final MapleCharacter chr) {
+    public String getPrefix(MapleCharacter chr) {
         return chr.getPrefix();
     }
     
     public static void 战斗力排行(final MapleClient c, final int npcid) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement ps = con.prepareStatement("select `name`, ((`level` * 15) + CASE WHEN fame < 0 THEN 0 ELSE fame END + (maxhp / 50) + (maxmp / 50) + str + dex + luk + `int`) AS `data`, `level`, meso from characters order by `data` desc LIMIT 100")) {
                 rs = ps.executeQuery();
@@ -858,7 +858,7 @@ public class MapleGuild implements Serializable
     
     public static void 总在线时间排行(final MapleClient c, final int npcid) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement ps = con.prepareStatement("select `name`, totalOnlineTime AS `data`, `level`, meso from characters order by `data` desc LIMIT 10")) {
                 rs = ps.executeQuery();
@@ -873,7 +873,7 @@ public class MapleGuild implements Serializable
     
     public static void 声望排行(final MapleClient c, final int npcid) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement ps = con.prepareStatement("select `name`, totalrep AS `data`, `level`, meso from characters order by `data` desc LIMIT 10")) {
                 rs = ps.executeQuery();
@@ -888,7 +888,7 @@ public class MapleGuild implements Serializable
     
     public static void 人气排行(final MapleClient c, final int npcid) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement ps = con.prepareStatement("select `name`, fame AS `data`, `level`, meso from characters order by `data` desc LIMIT 10")) {
                 rs = ps.executeQuery();
@@ -903,7 +903,7 @@ public class MapleGuild implements Serializable
     
     public static void 豆豆排行(final MapleClient c, final int npcid) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement ps = con.prepareStatement("select `name`, beans AS `data`, `level`, meso from characters order by `data` desc LIMIT 10")) {
                 rs = ps.executeQuery();

@@ -13,19 +13,19 @@ import java.text.SimpleDateFormat;
 
 public class FilePrinter
 {
-    public static final String LoginServer = "LoginServer.txt";
-    public static final String MapleServerHandler = "MapleServerHandler.txt";
-    public static final String StatesHandling = "StatesHandling.txt";
-    public static final String PacketLogs = "PacketLogs.txt";
-    public static final String AccountStuck = "AccountStuck.txt";
-    public static final String PacketLogsExcpt = "PacketLogsExcpt.txt";
-    public static final String CommandProccessor = "CommandProccessor.txt";
-    public static final String ConsoleCommandProcessor = "ConsoleCommandProcessor.txt";
-    public static final String LoginError = "LoginError.txt";
-    public static final String MapleQuest = "MapleQuest.txt";
-    public static final String HorntailLog = "HorntailLog.txt";
-    public static final String PinkbeanLog = "PinkbeanLog.txt";
-    public static final String ZakumLog = "ZakumLog.txt";
+    public static String LoginServer = "LoginServer.txt";
+    public static String MapleServerHandler = "MapleServerHandler.txt";
+    public static String StatesHandling = "StatesHandling.txt";
+    public static String PacketLogs = "PacketLogs.txt";
+    public static String AccountStuck = "AccountStuck.txt";
+    public static String PacketLogsExcpt = "PacketLogsExcpt.txt";
+    public static String CommandProccessor = "CommandProccessor.txt";
+    public static String ConsoleCommandProcessor = "ConsoleCommandProcessor.txt";
+    public static String LoginError = "LoginError.txt";
+    public static String MapleQuest = "MapleQuest.txt";
+    public static String HorntailLog = "HorntailLog.txt";
+    public static String PinkbeanLog = "PinkbeanLog.txt";
+    public static String ZakumLog = "ZakumLog.txt";
     private static final SimpleDateFormat sdf;
     private static final String FILE_PATH;
     private static final String ERROR = "error/";

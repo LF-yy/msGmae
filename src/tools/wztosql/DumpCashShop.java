@@ -26,9 +26,9 @@ public class DumpCashShop
 {
     private static final MapleDataProvider data;
     
-    public static final CashModInfo getModInfo(final int sn) {
+    public static CashModInfo getModInfo(final int sn) {
         CashModInfo ret = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items WHERE serial = ?")) {
             ps.setInt(1, sn);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -48,7 +48,7 @@ public class DumpCashShop
         final CashModInfo m = getModInfo(20000393);
         CashItemFactory.getInstance().initialize();
         final Collection<CashModInfo> list = CashItemFactory.getInstance().getAllModInfo();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final List<Integer> itemids = new ArrayList<Integer>();
             final List<Integer> qq = new ArrayList<Integer>();
             final Map<Integer, Map<String, Integer>> itemConmes = new HashMap<Integer, Map<String, Integer>>();

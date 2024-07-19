@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 public class MapleFamilyCharacter implements Serializable
 {
-    public static final long serialVersionUID = 2058609046116597760L;
+    public static long serialVersionUID = 2058609046116597760L;
     private int level;
     private int id;
     private int channel;

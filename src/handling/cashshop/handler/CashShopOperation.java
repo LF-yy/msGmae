@@ -34,7 +34,7 @@ import tools.data.LittleEndianAccessor;
 
 public class CashShopOperation
 {
-    public static void LeaveCashShop(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void LeaveCashShop(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (chr == null) {
             return;
         }
@@ -64,7 +64,7 @@ public class CashShopOperation
             client.getSession().close();
             return;
         }
-        final MapleCharacter chr = MapleCharacter.ReconstructChr(transfer, client, false);
+        MapleCharacter chr = MapleCharacter.ReconstructChr(transfer, client, false);
         client.setPlayer(chr);
         client.setAccID(chr.getAccountID());
         client.setSecondPassword(chr.getAccountSecondPassword());
@@ -208,7 +208,7 @@ public class CashShopOperation
         RefreshCashShop(c);
     }
     
-    public static final void BuyCashItem(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void BuyCashItem(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final int action = slea.readByte();
         switch (action) {
             case 3:

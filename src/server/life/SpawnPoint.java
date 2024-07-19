@@ -34,7 +34,7 @@ public class SpawnPoint extends Spawns
         this.nextPossibleSpawn = System.currentTimeMillis();
     }
     
-    public final void setCarnival(final int c) {
+    public void setCarnival(final int c) {
         this.carnival = c;
     }
     

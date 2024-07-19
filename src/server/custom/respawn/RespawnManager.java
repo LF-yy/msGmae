@@ -92,7 +92,7 @@ public class RespawnManager
     
     private static class InstanceHolder
     {
-        public static final RespawnManager instance;
+        public static RespawnManager instance;
         
         static {
             instance = new RespawnManager();

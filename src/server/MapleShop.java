@@ -183,7 +183,7 @@ public class MapleShop
     
     public static MapleShop createFromDB(final int id, final boolean isShopId) {
         MapleShop ret = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement(isShopId ? "SELECT * FROM shops WHERE shopid = ?" : "SELECT * FROM shops WHERE npcid = ?");
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();

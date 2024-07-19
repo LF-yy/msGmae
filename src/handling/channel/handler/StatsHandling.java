@@ -16,7 +16,7 @@ import tools.data.LittleEndianAccessor;
 
 public class StatsHandling
 {
-    public static final void DistributeAP(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void DistributeAP(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final Map<MapleStat, Integer> statupdate = new EnumMap<MapleStat, Integer>(MapleStat.class);
         if (chr != null) {
             c.sendPacket(MaplePacketCreator.updatePlayerStats(statupdate, true, chr));
@@ -182,7 +182,7 @@ public class StatsHandling
         }
     }
     
-    public static final void DistributeSP(final int skillid, final MapleClient c, final MapleCharacter chr) {
+    public static void DistributeSP(final int skillid, final MapleClient c, MapleCharacter chr) {
         boolean isBeginnerSkill = false;
         int remainingSp = 0;
         switch (skillid) {
@@ -269,7 +269,7 @@ public class StatsHandling
         }
     }
     
-    public static final void AutoAssignAP(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void AutoAssignAP(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         chr.updateTick(slea.readInt());
         slea.skip(4);
         if (chr.getRemainingAp() < 1) {
@@ -299,7 +299,7 @@ public class StatsHandling
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    static int gainStatByType(final MapleCharacter chr, final MapleStat type, final int gain) {
+    static int gainStatByType(MapleCharacter chr, final MapleStat type, final int gain) {
         if (chr != null) {
             short newVal = 0;
             if (type.equals((Object)MapleStat.STR)) {

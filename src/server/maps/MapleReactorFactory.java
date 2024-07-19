@@ -14,7 +14,7 @@ public class MapleReactorFactory
     private static final MapleDataProvider data;
     private static final Map<Integer, MapleReactorStats> reactorStats;
     
-    public static final MapleReactorStats getReactor(final int rid) {
+    public static MapleReactorStats getReactor(final int rid) {
         MapleReactorStats stats = (MapleReactorStats)MapleReactorFactory.reactorStats.get((Object)Integer.valueOf(rid));
         if (stats == null) {
             int infoId = rid;

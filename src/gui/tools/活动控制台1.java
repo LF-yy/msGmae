@@ -547,7 +547,7 @@ public class 活动控制台1 extends JFrame
                 JOptionPane.showMessageDialog(null, (Object)"[信息]:请填写正确的值。");
                 return;
             }
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps = con.prepareStatement("INSERT INTO 钓鱼物品 (itemid, chance ,expiration) VALUES (?, ?, ?)")) {
                 ps.setInt(1, Integer.parseInt(this.钓鱼物品代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.钓鱼物品概率.getText()));
@@ -767,7 +767,7 @@ public class 活动控制台1 extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.钓鱼物品.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM 钓鱼物品");
@@ -798,7 +798,7 @@ public class 活动控制台1 extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.野外BOSS刷新时间.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM configvalues WHERE name like '%刷新时间'");

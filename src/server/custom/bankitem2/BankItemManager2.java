@@ -68,7 +68,7 @@ public class BankItemManager2
     
     public List<BankItem2> getItems(final int cid) {
         final List<BankItem2> items = new ArrayList<BankItem2>();
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -129,7 +129,7 @@ public class BankItemManager2
         if (item == null) {
             return -1;
         }
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         try {
             ps = con1.prepareStatement("insert into bank_item2 (id,cid,itemid,count,type) values (?,?,?,?,?)");
@@ -159,7 +159,7 @@ public class BankItemManager2
     
     public int delete(final long id) {
         int ret = -1;
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         try {
             ps = con1.prepareStatement("delete from bank_item2 where id = ?");
@@ -185,7 +185,7 @@ public class BankItemManager2
     
     public int update(final BankItem2 bankItem) {
         int ret = -1;
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         try {
             ps = con1.prepareStatement("update bank_item2 set cid = ? ,itemid = ? ,count = ? where id = ?");
@@ -214,7 +214,7 @@ public class BankItemManager2
     
     private static class InstanceHolder
     {
-        public static final BankItemManager2 instance;
+        public static BankItemManager2 instance;
         
         static {
             instance = new BankItemManager2();

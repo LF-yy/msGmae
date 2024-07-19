@@ -99,7 +99,7 @@ public class Forum_Reply
     }
     
     public static ArrayList<Forum_Reply> loadAllReply() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_reply");
             final ResultSet rs = ps.executeQuery();
@@ -117,7 +117,7 @@ public class Forum_Reply
     }
     
     public static boolean addReply(final int tid, final int cid, final String cname, final String news) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final StringBuilder query = new StringBuilder();
             query.append("INSERT INTO forum_reply(tid, cid, cname, news) VALUES (?,?,?,?)");
@@ -148,7 +148,7 @@ public class Forum_Reply
     }
     
     public static Forum_Reply getReplyByNameToSql(final int tid, final String news) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_reply WHERE tid = ? AND news = ?");
             ps.setInt(1, tid);
@@ -165,7 +165,7 @@ public class Forum_Reply
     }
     
     public static boolean deleteReply(final int tid, final int rid, final boolean isAll) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             boolean isExist = false;
             if (isAll) {

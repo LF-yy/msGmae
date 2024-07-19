@@ -33,7 +33,7 @@ public class MapleKeyLayout implements Serializable
         return this.keymap;
     }
     
-    public final void writeData(final MaplePacketLittleEndianWriter mplew) {
+    public void writeData(final MaplePacketLittleEndianWriter mplew) {
         for (int x = 0; x < 90; ++x) {
             final Pair<Byte, Integer> binding = (Pair<Byte, Integer>)this.keymap.get((Object)Integer.valueOf(x));
             if (binding != null) {
@@ -47,7 +47,7 @@ public class MapleKeyLayout implements Serializable
         }
     }
     
-    public final void saveKeys(final int charid, final Connection con) throws SQLException {
+    public void saveKeys(final int charid, Connection con) throws SQLException {
         if (!this.changed || this.keymap.isEmpty()) {
             return;
         }

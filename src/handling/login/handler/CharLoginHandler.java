@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 
 import GuaiSetting.Game;
+import constants.ServerConfig;
 import database.DBConPool;
 
 import java.sql.SQLException;
@@ -15,6 +16,7 @@ import handling.cashshop.CashShopServer;
 import client.inventory.IItem;
 import client.inventory.MapleInventory;
 import client.inventory.Item;
+import server.Start;
 import server.quest.MapleQuest;
 import server.MapleItemInformationProvider;
 import client.inventory.MapleInventoryType;
@@ -45,11 +47,11 @@ public class CharLoginHandler
         return c.loginAttempt > 5;
     }
     
-    public static final void handleWelcome(final MapleClient c) {
+    public static void handleWelcome(final MapleClient c) {
         c.sendPing();
     }
     
-    public static final void LicenseRequest(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void LicenseRequest(final LittleEndianAccessor slea, final MapleClient c) {
         if (slea.readByte() == 1) {
             c.sendPacket(LoginPacket.licenseResult());
             c.updateLoginState(0, c.getSessionIPAddress());
@@ -69,7 +71,20 @@ public class CharLoginHandler
         return sRand;
     }
     
-    public static final void handleLogin(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleLogin(final LittleEndianAccessor slea, final MapleClient c) {
+        //设置登陆人数
+        if (在线人数()> ServerConfig.userlimit){
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "服务器人数已满."));
+            c.sendPacket(LoginPacket.getLoginFailed(1));
+            c.getSession().close();
+            return;
+        }
+        if (Start.userlimit > 0 && 在线人数()>  Start.userlimit){
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "服务器人数已满."));
+            c.sendPacket(LoginPacket.getLoginFailed(1));
+            c.getSession().close();
+            return;
+        }
         final String account = slea.readMapleAsciiString();
         final String password = slea.readMapleAsciiString();
         final String loginkey = RandomString();
@@ -198,7 +213,7 @@ public class CharLoginHandler
         }
     }
     
-    public static final void SetGenderRequest(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void SetGenderRequest(final LittleEndianAccessor slea, final MapleClient c) {
         final byte gender = slea.readByte();
         final String username = slea.readMapleAsciiString();
         if (gender != 0 && gender != 1) {
@@ -218,7 +233,7 @@ public class CharLoginHandler
         }
     }
     
-    public static final void ServerListRequest(final MapleClient c) {
+    public static void ServerListRequest(final MapleClient c) {
         if (c.getLoginKeya() == 0) {
             c.sendPacket(MaplePacketCreator.serverNotice(1, "請不要通過非法手段\r\n進入游戏。"));
             return;
@@ -295,7 +310,7 @@ public class CharLoginHandler
         c.sendPacket(LoginPacket.getEndOfServerList());
     }
     
-    public static final void ServerStatusRequest(final MapleClient c) {
+    public static void ServerStatusRequest(final MapleClient c) {
         if (!c.isCanloginpw()) {
             c.getSession().close();
             return;
@@ -315,7 +330,7 @@ public class CharLoginHandler
         }
     }
     
-    public static final void CharlistRequest(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void CharlistRequest(final LittleEndianAccessor slea, final MapleClient c) {
         if (!c.isCanloginpw()) {
             c.getSession().close();
             return;
@@ -351,11 +366,11 @@ public class CharLoginHandler
         }
     }
     
-    public static final void checkCharName(final String name, final MapleClient c) {
+    public static void checkCharName(final String name, final MapleClient c) {
         c.sendPacket(LoginPacket.charNameResponse(name, !MapleCharacterUtil.canCreateChar(name) || LoginInformationProvider.getInstance().isForbiddenName(name)));
     }
     
-    public static final void handleCreateCharacter(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleCreateCharacter(final LittleEndianAccessor slea, final MapleClient c) {
         final int 冒险家 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家职业开关"));
         final int 战神 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"战神职业开关"));
         final int 骑士团 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"骑士团职业开关"));
@@ -532,7 +547,7 @@ public class CharLoginHandler
         }
     }
     
-    public static final void handleDeleteCharacter(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleDeleteCharacter(final LittleEndianAccessor slea, final MapleClient c) {
         if (!LoginServer.CanLoginKey(c.getLoginKey(), c.getAccID()) || (LoginServer.getLoginKey(c.getAccID()) == null && !c.getLoginKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 刪除角色");
             return;
@@ -586,7 +601,7 @@ public class CharLoginHandler
         c.sendPacket(LoginPacket.deleteCharResponse(characterId, (int)state));
     }
     
-    public static final void handleSecectCharacter(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleSecectCharacter(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getCloseSession()) {
             return;
         }
@@ -647,7 +662,7 @@ public class CharLoginHandler
                 charactercs.getClient().getSession().close();
             }
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             ps = con.prepareStatement("select accountid from characters where id = ?");
             ps.setInt(1, charId);
@@ -776,6 +791,17 @@ public class CharLoginHandler
         }
         return ret;
     }
-
+    public static int 在线人数() {
+        int cloumn = 0;
+        for (ChannelServer cs : ChannelServer.getAllInstances()) {
+            for (MapleCharacter player : cs.getPlayerStorage().getAllCharacters()) {
+                if (player == null) {
+                    continue;
+                }
+                cloumn++;
+            }
+        }
+        return cloumn;
+    }
 
 }

@@ -68,7 +68,7 @@ public enum ItemLoader
             query.append(" AND `inventorytype` = ");
             query.append((int)MapleInventoryType.EQUIPPED.getType());
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement(query.toString());
             ps.setInt(1, this.value);
             for (int i = 0; i < lulz.size(); ++i) {
@@ -155,7 +155,7 @@ public enum ItemLoader
     }
     
     public void saveItems(final List<Pair<IItem, MapleInventoryType>> items, final Integer... id) throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.saveItems(items, con, id);
         }
         catch (SQLException ex) {
@@ -163,7 +163,7 @@ public enum ItemLoader
         }
     }
     
-    public void saveItems(final List<Pair<IItem, MapleInventoryType>> items, final Connection con, final Integer... id) throws SQLException {
+    public void saveItems(final List<Pair<IItem, MapleInventoryType>> items, Connection con, final Integer... id) throws SQLException {
         try {
             final List<Integer> lulz = Arrays.asList(id);
             if (lulz.size() != this.arg.size()) {
@@ -278,7 +278,7 @@ public enum ItemLoader
         for (final ItemLoader il : values()) {
             final StringBuilder query = new StringBuilder();
             query.append("SELECT * FROM `inventoryitems` WHERE `type` = ? AND uniqueid = ?");
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final PreparedStatement ps = con.prepareStatement(query.toString());
                 ps.setInt(1, il.value);
                 ps.setInt(2, uniqueid);

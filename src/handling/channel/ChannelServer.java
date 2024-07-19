@@ -101,7 +101,7 @@ public class ChannelServer implements Serializable
         return new HashSet<Integer>((Collection<? extends Integer>)ChannelServer.instances.keySet());
     }
     
-    public final void loadEvents() {
+    public void loadEvents() {
         if (!this.events.isEmpty()) {
             return;
         }
@@ -111,10 +111,10 @@ public class ChannelServer implements Serializable
         this.events.put(MapleEventType.尋寶, new MapleJewel(this.channel, MapleEventType.尋寶.mapids));
     }
     
-    public final void setup() {
+    public void setup() {
         this.setChannel(this.channel);
         try {
-            System.out.println(ServerProperties.getProperty("LtMS.events"));
+           // System.out.println(ServerProperties.getProperty("LtMS.events"));
             this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","));
             this.port = (short)(ServerProperties.getProperty("LtMS.channel.port", ChannelServer.DEFAULT_PORT) + this.channel - 1);
         }
@@ -129,7 +129,7 @@ public class ChannelServer implements Serializable
         this.eventSM.init();
     }
     
-    public final void shutdown() {
+    public void shutdown() {
         if (this.finishedShutdown) {
             return;
         }
@@ -180,7 +180,7 @@ public class ChannelServer implements Serializable
         return this.mapFactory;
     }
     
-    public final void addPlayer(final MapleCharacter chr) {
+    public void addPlayer(MapleCharacter chr) {
         this.getPlayerStorage().registerPlayer(chr);
         if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"滚动公告开关")) >= 1) {
             chr.getClient().sendPacket(MaplePacketCreator.serverMessage(this.getServerMessage()));
@@ -194,11 +194,11 @@ public class ChannelServer implements Serializable
         return this.players;
     }
     
-    public final void removePlayer(final MapleCharacter chr) {
+    public void removePlayer(MapleCharacter chr) {
         this.getPlayerStorage().deregisterPlayer(chr);
     }
     
-    public final void removePlayer(final int idz, final String namez) {
+    public void removePlayer(final int idz, final String namez) {
         this.getPlayerStorage().deregisterPlayer(idz, namez);
     }
     
@@ -206,27 +206,27 @@ public class ChannelServer implements Serializable
         return WorldConstants.SCROLL_MESSAGE;
     }
     
-    public final void setServerMessage(final String newMessage) {
+    public void setServerMessage(final String newMessage) {
         WorldConstants.SCROLL_MESSAGE = newMessage;
     }
     
-    public final void broadcastPacket(final byte[] data) {
+    public void broadcastPacket(final byte[] data) {
         this.getPlayerStorage().broadcastPacket(data);
     }
     
-    public final void broadcastSmegaPacket(final byte[] data) {
+    public void broadcastSmegaPacket(final byte[] data) {
         this.getPlayerStorage().broadcastSmegaPacket(data);
     }
     
-    public final void broadcastGashponmegaPacket(final byte[] data) {
+    public void broadcastGashponmegaPacket(final byte[] data) {
         this.getPlayerStorage().broadcastGashponmegaPacket(data);
     }
     
-    public final void broadcastGMPacket(final byte[] data) {
+    public void broadcastGMPacket(final byte[] data) {
         this.getPlayerStorage().broadcastGMPacket(data);
     }
     
-    public final void broadcastGMPacket(final byte[] data, final boolean 吸怪) {
+    public void broadcastGMPacket(final byte[] data, final boolean 吸怪) {
         this.getPlayerStorage().broadcastGMPacket(data, 吸怪);
     }
     
@@ -234,7 +234,7 @@ public class ChannelServer implements Serializable
         return WorldConstants.EXP_RATE;
     }
     
-    public final void setExpRate(final int expRate) {
+    public void setExpRate(final int expRate) {
         WorldConstants.EXP_RATE = expRate;
     }
     
@@ -242,7 +242,7 @@ public class ChannelServer implements Serializable
         return WorldConstants.MESO_RATE;
     }
     
-    public final void setMesoRate(final int mesoRate) {
+    public void setMesoRate(final int mesoRate) {
         WorldConstants.MESO_RATE = mesoRate;
     }
     
@@ -250,7 +250,7 @@ public class ChannelServer implements Serializable
         return WorldConstants.DROP_RATE;
     }
     
-    public final void setDropRate(final int dropRate) {
+    public void setDropRate(final int dropRate) {
         WorldConstants.DROP_RATE = dropRate;
     }
     
@@ -258,12 +258,12 @@ public class ChannelServer implements Serializable
         return this.channel;
     }
     
-    public final void setChannel(final int channel) {
+    public void setChannel(final int channel) {
         ChannelServer.instances.put(Integer.valueOf(channel), this);
         LoginServer.addChannel(channel);
     }
     
-    public static final Collection<ChannelServer> getAllInstances() {
+    public static Collection<ChannelServer> getAllInstances() {
         return Collections.unmodifiableCollection((Collection<? extends ChannelServer>)ChannelServer.instances.values());
     }
     
@@ -283,10 +283,10 @@ public class ChannelServer implements Serializable
         return this.eventSM;
     }
     //重载单个事件
-    public final void setEventSM(String script) {
+    public void setEventSM(String script) {
          this.eventSM.EventScript(this,script);
     }
-    public final void reloadEvents() {
+    public void reloadEvents() {
         this.eventSM.cancel();
         //System.out.println(ServerProperties.getProperty("LtMS.events").split(",")[0]+"事件名称");
         (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","))).init();
@@ -394,7 +394,7 @@ public class ChannelServer implements Serializable
         return runningmer;
     }
     
-    public final void removeMerchant(final HiredMerchant hMerchant) {
+    public void removeMerchant(final HiredMerchant hMerchant) {
         this.merchLock.writeLock().lock();
         try {
             this.merchants.remove((Object)Integer.valueOf(hMerchant.getStoreId()));
@@ -438,7 +438,7 @@ public class ChannelServer implements Serializable
         return list;
     }
     
-    public final void toggleMegaphoneMuteState() {
+    public void toggleMegaphoneMuteState() {
         this.MegaphoneMuteState = !this.MegaphoneMuteState;
     }
     
@@ -450,7 +450,7 @@ public class ChannelServer implements Serializable
         return this.eventmap;
     }
     
-    public final void setEvent(final int ze) {
+    public void setEvent(final int ze) {
         this.eventmap = ze;
     }
     
@@ -466,7 +466,7 @@ public class ChannelServer implements Serializable
         return (PlayerNPC)this.playerNPCs.get((Object)Integer.valueOf(id));
     }
     
-    public final void addPlayerNPC(final PlayerNPC npc) {
+    public void addPlayerNPC(final PlayerNPC npc) {
         if (this.playerNPCs.containsKey((Object)Integer.valueOf(npc.getId()))) {
             this.removePlayerNPC(npc);
         }
@@ -474,7 +474,7 @@ public class ChannelServer implements Serializable
         this.getMapFactory().getMap(npc.getMapId()).addMapObject((MapleMapObject)npc);
     }
     
-    public final void removePlayerNPC(final PlayerNPC npc) {
+    public void removePlayerNPC(final PlayerNPC npc) {
         if (this.playerNPCs.containsKey((Object)Integer.valueOf(npc.getId()))) {
             this.playerNPCs.remove((Object)Integer.valueOf(npc.getId()));
             this.getMapFactory().getMap(npc.getMapId()).removeMapObject((MapleMapObject)npc);
@@ -485,7 +485,7 @@ public class ChannelServer implements Serializable
         return ServerConfig.SERVERNAME;
     }
     
-    public final void setServerName(final String sn) {
+    public void setServerName(final String sn) {
         ServerConfig.SERVERNAME = sn;
     }
     
@@ -493,12 +493,12 @@ public class ChannelServer implements Serializable
         return this.port;
     }
     
-    public final void setPrepareShutdown() {
+    public void setPrepareShutdown() {
         this.shutdown = true;
         System.out.println("[頻道" + this.getChannel() + "] 准备关闭");
     }
     
-    public final void setFinishShutdown() {
+    public void setFinishShutdown() {
         this.finishedShutdown = true;
         System.out.println("[頻道" + this.getChannel() + "] 已經关闭完成.");
     }
@@ -550,7 +550,7 @@ public class ChannelServer implements Serializable
         int ppl = 0;
         int lastnumber = 0;
         final List<MapleCharacter> all = this.players.getAllCharactersThreadSafe();
-        for (final MapleCharacter chr : all) {
+        for (MapleCharacter chr : all) {
             try {
                 final int res = chr.saveToDB(false, false);
                 if (ChannelServer.离线挂机) {
@@ -574,7 +574,7 @@ public class ChannelServer implements Serializable
         return WorldConstants.GMITEMS;
     }
     
-    public final int getMerchantMap(final MapleCharacter chr) {
+    public final int getMerchantMap(MapleCharacter chr) {
         final int ret = -1;
         for (int i = 910000001; i <= 910000022; ++i) {
             for (final MapleMapObject mmo : this.mapFactory.getMap(i).getAllHiredMerchantsThreadsafe()) {
@@ -586,7 +586,7 @@ public class ChannelServer implements Serializable
         return ret;
     }
     
-    public static final int getChannelCount() {
+    public static int getChannelCount() {
         return ChannelServer.instances.size();
     }
     
@@ -626,26 +626,26 @@ public class ChannelServer implements Serializable
         catch (Exception ex3) {}
     }
     
-    public static final Set<Integer> getChannels() {
+    public static Set<Integer> getChannels() {
         return new HashSet<Integer>((Collection<? extends Integer>)ChannelServer.instances.keySet());
     }
     
-    public static final ChannelServer newInstance(final int channel) {
+    public static ChannelServer newInstance(final int channel) {
         return new ChannelServer(channel);
     }
     
-    public static final ChannelServer getInstance(final int channel) {
+    public static ChannelServer getInstance(final int channel) {
         return (ChannelServer)ChannelServer.instances.get((Object)Integer.valueOf(channel));
     }
     
-    public static final void startAllChannels() {
+    public static void startAllChannels() {
         ChannelServer.serverStartTime = System.currentTimeMillis();
         for (int channelCount = WorldConstants.CHANNEL_COUNT, i = 1; i <= Math.min(20, (channelCount > 0) ? channelCount : 1); ++i) {
             newInstance(i).setup();
         }
     }
     
-    public static final void startChannel(final int channel) {
+    public static void startChannel(final int channel) {
         ChannelServer.serverStartTime = System.currentTimeMillis();
         if (channel <= WorldConstants.CHANNEL_COUNT) {
             newInstance(channel).setup();
@@ -760,7 +760,7 @@ public class ChannelServer implements Serializable
         ChannelServer.clones = new ArrayList<离线人偶>();
     }
 
-    public final void guaiReloadEvents() {
+    public void guaiReloadEvents() {
         this.eventSM.cancel();
         (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","))).init();
     }
@@ -779,17 +779,17 @@ public class ChannelServer implements Serializable
         return this.eventSMC;
     }
 
-    public final void reloadEventsa() {
+    public void reloadEventsa() {
         this.eventSMA.cancel();
         (this.eventSMA = new EventScriptManager(this, ServerProperties.getProperty("LtMS.活动事件脚本").split(","))).init();
     }
 
-    public final void reloadEventsb() {
+    public void reloadEventsb() {
         this.eventSMB.cancel();
         (this.eventSMB = new EventScriptManager(this, ServerProperties.getProperty("LtMS.BOSS事件脚本").split(","))).init();
     }
 
-    public final void reloadEventsc() {
+    public void reloadEventsc() {
         this.eventSMC.cancel();
         (this.eventSMC = new EventScriptManager(this, ServerProperties.getProperty("LtMS.自定义事件脚本").split(","))).init();
     }

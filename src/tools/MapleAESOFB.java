@@ -113,7 +113,7 @@ public class MapleAESOFB
         return "IV: " + HexTool.toString(this.iv);
     }
     
-    public static final void funnyShit(final byte inputByte, final byte[] in) {
+    public static void funnyShit(final byte inputByte, final byte[] in) {
         byte elina = in[1];
         final byte anna = inputByte;
         byte moritz = MapleAESOFB.funnyBytes[elina & 0xFF];

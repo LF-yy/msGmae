@@ -913,7 +913,7 @@ public class MapleMapFactory
             MapleMapFactory.customLife.clear();
             MapleMapFactory.changed = true;
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM `wz_customlife`");
                  final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

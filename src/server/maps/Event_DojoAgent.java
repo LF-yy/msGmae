@@ -92,7 +92,7 @@ public class Event_DojoAgent
         if (canenter) {
             if (party && c.getParty() != null) {
                 for (final MaplePartyCharacter mem : c.getParty().getMembers()) {
-                    final MapleCharacter chr = mapidd.getCharacterById(mem.getId());
+                    MapleCharacter chr = mapidd.getCharacterById(mem.getId());
                     if (chr != null && chr.isAlive()) {
                         chr.changeMap(map2, map2.getPortal(0));
                     }
@@ -117,7 +117,7 @@ public class Event_DojoAgent
                 clearMap(currentmap, true);
                 if (c.getParty() != null && c.getParty().getMembers().size() > 1) {
                     for (final MaplePartyCharacter mem : c.getParty().getMembers()) {
-                        final MapleCharacter chr = currentmap.getCharacterById(mem.getId());
+                        MapleCharacter chr = currentmap.getCharacterById(mem.getId());
                         if (chr != null) {
                             final int point = points * 3;
                             final int pLevel = c.getParty().getAverageLevel();
@@ -146,7 +146,7 @@ public class Event_DojoAgent
                 final MapleMap map = ch.getMapFactory().getMap(925020003);
                 if (c.getParty() != null) {
                     for (final MaplePartyCharacter mem2 : c.getParty().getMembers()) {
-                        final MapleCharacter chr2 = currentmap.getCharacterById(mem2.getId());
+                        MapleCharacter chr2 = currentmap.getCharacterById(mem2.getId());
                         if (chr2 != null) {
                             chr2.changeMap(map, map.getPortal(1));
                         }
@@ -162,7 +162,7 @@ public class Event_DojoAgent
                 clearMap(map, false);
                 if (c.getParty() != null) {
                     for (final MaplePartyCharacter mem2 : c.getParty().getMembers()) {
-                        final MapleCharacter chr2 = currentmap.getCharacterById(mem2.getId());
+                        MapleCharacter chr2 = currentmap.getCharacterById(mem2.getId());
                         if (chr2 != null) {
                             chr2.changeMap(map, map.getPortal(0));
                         }
@@ -181,7 +181,7 @@ public class Event_DojoAgent
                     clearMap(mapz, false);
                     if (c.getParty() != null) {
                         for (final MaplePartyCharacter mem3 : c.getParty().getMembers()) {
-                            final MapleCharacter chr3 = currentmap.getCharacterById(mem3.getId());
+                            MapleCharacter chr3 = currentmap.getCharacterById(mem3.getId());
                             if (chr3 != null) {
                                 chr3.changeMap(mapz, mapz.getPortal(0));
                             }

@@ -1,15 +1,18 @@
 package constants;
 
+import bean.Leveladdharm;
 import bean.SuitSystem;
 import client.MapleCharacter;
 import client.MapleStat;
 import client.inventory.IItem;
 import gui.CongMS;
 import gui.LtMS;
+import server.MapleItemInformationProvider;
 import server.Start;
 import server.life.MapleMonster;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
+import util.ListUtil;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -130,64 +133,70 @@ public class tzjc {
             });
             if (exp.get()>0) {
                 chr.setItemExpm(exp.get());
-                chr.dropMessage(5, "佩戴双爆装备,物品掉落概率总计加成：" + exp.get() + "%");
+                chr.dropMessage(5, "佩戴双爆装备,经验倍率总计加成：" + exp.get() + "%");
             }
             if (drop.get()>0) {
                 chr.setItemDropm(drop.get());
-                chr.dropMessage(5, "佩戴双爆装备,经验倍率总计加成：" + drop.get() + "%");
+                chr.dropMessage(5, "佩戴双爆装备,物品掉落概率总计加成：" + drop.get() + "%");
             }
         } catch (Exception e) {
             System.out.println("双爆装备装备加载异常");
         }
-        if ( LtMS.ConfigValuesMap.get("赋能属性加成开关") > 0) {
-            for (final tz_model tz : tzjc.tz_list) {
-                final int[] list = tz.getList();
-                boolean is_tz = true;
-                for (int j = 0; j < list.length; ++j) {
-                    if (!chr.hasEquipped(list[j])) {
-                        is_tz = false;
-                    }
-                }
-                if (is_tz && tz.getJc() >0) {
-                    number.updateAndGet(v -> (double) v + tz.getJc());
-                   // chr.dropMessage(5, "检测到佩戴了 [" + tz.getName() + "] 套装  加成伤害：" + tz.getJc() * 100.0 + "%");
-                }
-            }
-        }
-        if ( LtMS.ConfigValuesMap.get("个人赋能属性加成开关") > 0) {
-            List<String> list = new ArrayList<>();
-            hasEquipped.forEach(iItem -> {
-                Double integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
-                if (Objects.nonNull(integer)) {
-                    if (!list.contains("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "")) {
-                        if (integer > 0) {
-                            list.add("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
-                            number.updateAndGet(v -> (double) (v + (integer / 100.0)));
-                            chr.dropMessage(5, "检测到佩戴赋能装备加成伤害：" + integer + "%");
+        try {
+            if ( LtMS.ConfigValuesMap.get("赋能属性加成开关") > 0) {
+                for (final tz_model tz : tzjc.tz_list) {
+                    final int[] list = tz.getList();
+                    boolean is_tz = true;
+                    for (int j = 0; j < list.length; ++j) {
+                        if (!chr.hasEquipped(list[j])) {
+                            is_tz = false;
                         }
                     }
+                    if (is_tz && tz.getJc() >0) {
+                        number.updateAndGet(v -> (double) v + (tz.getJc()));
+                        chr.dropMessage(5, "检测到佩戴了 [" + tz.getName() + "] 系统赋能装备,  加成伤害：" + (tz.getJc()*100)  + "%");
+                    }
                 }
-
-            });
+            }
+        } catch (Exception e) {
+            System.out.println("套装属性装备加载异常");
         }
+        try {
+            if ( LtMS.ConfigValuesMap.get("个人赋能属性加成开关") > 0) {
+                List<String> list = new ArrayList<>();
+                hasEquipped.forEach(iItem -> {
+                    Double integer = tzMap.get("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                    if (Objects.nonNull(integer)) {
+                        if (!list.contains("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "")) {
+                            if (integer > 0) {
+                                list.add("赋能" + iItem.getItemId() + chr.getClient().getPlayer().getName() + "");
+                                number.updateAndGet(v -> (double) (v + (integer / 100.0)));
+                                chr.dropMessage(5, "检测到佩戴个人赋能装备,加成伤害：" + integer + "%");
+                            }
+                        }
+                    }
 
-
-//        private transient short passive_sharpeye_percent; //爆击最大伤害倍率
-//        private transient short localmaxhp;//血量
-//        private transient short localmaxmp;//蓝量
-//        private transient byte passive_mastery; //武器熟练度
-//        private transient byte passive_sharpeye_rate;  //爆击概率
-//        private transient int localstr; //力量
-//        private transient int localdex; //敏捷
-//        private transient int localluk; //运气
-//        private transient int localint_;//智力
-//        private transient int magic; //魔法防御
-//        private transient int watk;  //物理防御
-//        private transient int hands;//手技
-//        private transient int accuracy; //攻速
-//        public transient double dam_r; //伤害加成
-//        public transient double bossdam_r; //BOSS伤害加成
-
+                });
+            }
+        } catch (Exception e) {
+            System.out.println("个人赋能属性装备加载异常");
+        }
+        try {
+            if(LtMS.ConfigValuesMap.get("装备等级附加") > 0){
+                hasEquipped.forEach(iItem -> {
+                    int reqLevel = MapleItemInformationProvider.getInstance().getReqLevel(iItem.getItemId());
+                    List<Leveladdharm> leveladdharms = Start.leveladdharm.get(reqLevel);
+                    if (ListUtil.isNotEmpty(leveladdharms)){
+                        Leveladdharm leveladdharm = leveladdharms.get(0);
+                        number.updateAndGet(v -> (double)(v + (leveladdharm.getHarm()/100.0)));
+                        chr.dropMessage(5, "装备等级增伤：" + leveladdharm.getHarm() + "%");
+                    }
+    //120级的永恒  增加20%总伤 单件  130级  30%  140级40%  150级50%  160级 60%  200级  150%
+                });
+            }
+        } catch (Exception e) {
+            System.out.println("装备等级附加加载异常");
+        }
         chr.dropMessage(5,
                 "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
                         "血量：" + chr.getStat().localmaxhp + ">>" +

@@ -322,10 +322,6 @@ public class PlayerCommand
                 int 获得破功 = c.getPlayer().取破攻等级();
                 jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
             }
-            if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
-               System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
-               System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
-            }
             //double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
             DecimalFormat df = new DecimalFormat("#.00");
             String formatExp = df.format(c.getPlayer().getEXPMod()  * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );

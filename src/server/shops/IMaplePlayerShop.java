@@ -9,11 +9,11 @@ import tools.Pair;
 
 public interface IMaplePlayerShop
 {
-    public static final byte HIRED_FISHING = -1;
-    public static final byte HIRED_MERCHANT = 1;
-    public static final byte PLAYER_SHOP = 2;
-    public static final byte OMOK = 3;
-    public static final byte MATCH_CARD = 4;
+    public static byte HIRED_FISHING = -1;
+    public static byte HIRED_MERCHANT = 1;
+    public static byte PLAYER_SHOP = 2;
+    public static byte OMOK = 3;
+    public static byte MATCH_CARD = 4;
     
     String getOwnerName();
     

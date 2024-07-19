@@ -72,13 +72,14 @@ public class Start
 {
     private static ServerSocket srvSocket;
     private static int srvPort;
+    public static int userlimit = 0;
     public static long startTime;
-    public static final Start instance;
+    public static Start instance;
     private static int maxUsers;
     private int rankTime;
     private boolean ivCheck;
     public static boolean 是否控制台启动;
-    public static Map<String, Integer> ConfigValuesMap;
+   // public static Map<String, Integer> ConfigValuesMap;
     public static Map<String, Integer> 地图吸怪检测;
     private static int 记录在线时间;
     private static int 世界BOSS刷新记录;
@@ -87,7 +88,7 @@ public class Start
     private static int 更新时间2;
     private static int 更新时间3;
 
-    private static Boolean 喜从天降;
+    private static int 喜从天降;
     private static int 初始通缉令;
     private static Boolean 倍率活动;
     private static Boolean 幸运职业;
@@ -121,17 +122,18 @@ public class Start
     public static Map<Integer, List<SuperSkills>> superSkillsMap;
     public static Map<Integer, List<FiveTurn>>  fiveTurn;
     public static Map<Integer, List<BreakthroughMechanism>>  breakthroughMechanism;
+    public static Map<Integer, List<Leveladdharm>>  leveladdharm;
     public static Map<Integer, List<MobInfo>>  mobInfoMap;
-    public static List<String> 授权IP = Arrays.asList("127.0.0.1","101.34.216.55","111.229.164.192","110.41.70.201");
+    public static List<String> 授权IP = Arrays.asList("101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201");
     public static int 计数器 = 0;
 
     public static void main(final String[] args) {
 
-            final String name = null;
-            final int id = 0;
-            final int vip = 0;
-            final int size = 0;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+//            final String name = null;
+//            final int id = 0;
+//            final int vip = 0;
+//            final int size = 0;
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                  final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET loggedin = 0")) {
                 ps.executeUpdate();
             }
@@ -144,9 +146,8 @@ public class Start
             System.out.println("◇ -> 版本信息:ver0.1");
             System.out.println("◇ -> 正在读取授权码请稍后");
 
-            if (进行授权校验()!=1){
-                启动轮播(10);
-            }
+
+            进行授权校验();
             System.out.println("◇ -> 授权码读取完毕");
             final long startQuestTime = System.currentTimeMillis();
 
@@ -169,6 +170,7 @@ public class Start
             else {
                 System.out.println("◇ -> 允许玩家使用管理员物品开关: 关闭");
             }
+
             MapleParty.怪物倍怪 = true;
             MapleParty.怪物倍率 = 1;
             //自定义配置加载
@@ -178,6 +180,7 @@ public class Start
                 Start.GetSuitSystem();
                 Start.GetfiveTurn();
                 Start.GetBreakthroughMechanism();
+                Start.getleveladdharm();
                 Start.GetSuperSkills();
                 Start.GetFieldSkills();
                 Start.getAttackInfo();
@@ -268,13 +271,15 @@ public class Start
             在线统计(10);
             记录在线时间(1);
             定时重载爆率(60);
-            吸怪检测(3);
+            //吸怪检测(3);
             World.isShutDown = false;
             OnlyID.getInstance();
             //清理复制道具
            checkCopyItemFromSql();
             tzjc.sr_tz();
-
+        if (!授权IP.contains(ServerConfig.IP)){
+            Start.userlimit = 2;
+        }
             System.out.println("[所有游戏数据加载完毕] ");
             System.out.println("[LtMs079服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
             System.out.println("[温馨提示]运行中请勿直接关闭本控制台，使用下方关闭服务器按钮来关闭服务端，否则回档自负\r\n");
@@ -285,7 +290,7 @@ public class Start
         final List<Integer> equipOnlyIds = new ArrayList<Integer>();
         final Map<Integer, Integer> checkItems = new HashMap<Integer, Integer>();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE equipOnlyId > 0");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -322,12 +327,9 @@ public class Start
     //机器码
     public static int 进行授权校验() {
 
-        if(授权IP.contains(ServerConfig.IP)){
-            return 1;
-        }
 
         int ret =0;
-        String[] macs = {"0219e1eb6238d933794f5bf912fd6b231e077b29","0916bd1133a6e2b9f0feccaa0a9b4bc6ebe56fd3","63dd380b0a343688288ddfeecbe6d06ad17810df","6993556b97ce679d83a66cb36db5593e97c39a0e","1b48a9487cb41085ec9384e50d2589504709569b","acb9d23fbac9073d74a84e0c49efc6ed8fa48a91","8dffcdcdbf80555523fb8c0877b36a9af5fb3336","abb8bb439105565ce3e58db8af5d089f7e012578","091e052935987d66ca704ee2aaca494f6646149a","2b5f67b4f326afe460a06fc9e933ac594eacf2b6","6a61f9accabe50ff3eab9960b51149b1d7af1c7c"};
+        String[] macs = {"fc3fe16273e5feb8acdd116c4fd7e8fc969bd692","fbdd68311756574a1590b60ed213b5ebef0f5dec","b675a9627e710594bce3bf0ba50ff751b57c5ede","ca8dc472950604e891460041a1e8c4c89731be1a"};
 
                 String mac = MacAddressTool.getMacAddress(false);
                 String num = returnSerialNumber();
@@ -340,9 +342,13 @@ public class Start
                             break;
                         }
                     }
+                    if (System.currentTimeMillis()>1722268800000L){
+                        启动轮播(50);
+                    }
                 } else {
-                    //System.exit(0);
+                    启动轮播(50);
                 }
+
         return ret ;
     }
     
@@ -410,7 +416,7 @@ public class Start
     }
     
     public static void GetConfigValues() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT name, val FROM ConfigValues")) {
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -450,7 +456,7 @@ public class Start
                 if (LtMS.ConfigValuesMap.get("启用吸怪") == 0) {
                     for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
 
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 MapleClient client = chr.getClient();
                                 MapleCharacter player = client.getPlayer();
                                 if (player.haveItem(吸怪盒子,1)){
@@ -606,7 +612,6 @@ public class Start
                         isClearBossLog = Boolean.valueOf(true);
                         魔族入侵 = Boolean.valueOf(false);
                         魔族攻城 = Boolean.valueOf(false);
-                        喜从天降 = Boolean.valueOf(false);
                     }
                     else if (时 == 23) {
                         isClearBossLog = Boolean.valueOf(false);
@@ -678,16 +683,32 @@ public class Start
                         }
                     }
                     if (LtMS.ConfigValuesMap.get("世界BOSS开关") == 1 && time >= 21 && 世界BOSS刷新记录 != 1) {
-                            活动野外通缉.随机通缉();
+                        WorldBoss.随机通缉();
                             世界BOSS刷新记录 = 1;
+                    }
+                    if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "野外通缉开关")) == 1) {
+                        if (初始通缉令 == 30) {
+                            活动野外通缉.随机通缉();
+                            初始通缉令++;
+                        } else {
+                            初始通缉令++;
+                        }
+                    }
+                    if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "喜从天降开关")) == 1) {
+                        if (喜从天降 == 30) {
+                            活动喜从天降.喜从天降();
+                            喜从天降++;
+                        } else {
+                            喜从天降++;
+                        }
                     }
                     Z = 0;
                     for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                        for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                        for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                             if (chr == null) {
                                 continue;
                             }
-                            final Connection con = DatabaseConnection.getConnection();
+                            Connection con = DatabaseConnection.getConnection();
                             try {
                                 try (final PreparedStatement psu = con.prepareStatement("UPDATE characters SET todayOnlineTime = todayOnlineTime + ?, totalOnlineTime = totalOnlineTime + ? WHERE id = ?")) {
                                     psu.setInt(1, time);
@@ -703,7 +724,11 @@ public class Start
                                 Z++;
                             }
                             catch (SQLException ex2) {
-                                Start.记录在线时间补救(chr.getId());
+                                try {
+                                    Start.记录在线时间补救(chr.getId());
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
                         }
                     }
@@ -715,8 +740,8 @@ public class Start
         }, (long)(60000 * time));
     }
     
-    public static void 记录在线时间补救(final int a) {
-        final Connection con = DatabaseConnection.getConnection();
+    public static void 记录在线时间补救(final int a) throws SQLException {
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement psu = con.prepareStatement("UPDATE characters SET todayOnlineTime = todayOnlineTime + ?, totalOnlineTime = totalOnlineTime + ? WHERE id = ?")) {
             psu.setInt(1, 1);
             psu.setInt(2, 1);
@@ -730,7 +755,7 @@ public class Start
     }
     
     public static void 记录在线时间补救2(final int a) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement psu = con.prepareStatement("UPDATE characters SET todayOnlineTime = todayOnlineTime + ?, totalOnlineTime = totalOnlineTime + ? WHERE id = ?")) {
             psu.setInt(1, 1);
             psu.setInt(2, 1);
@@ -744,7 +769,7 @@ public class Start
     }
     
     public static void 记录在线时间补救3(final int a) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement psu = con.prepareStatement("UPDATE characters SET todayOnlineTime = todayOnlineTime + ?, totalOnlineTime = totalOnlineTime + ? WHERE id = ?")) {
             psu.setInt(1, 1);
             psu.setInt(2, 1);
@@ -846,7 +871,7 @@ public class Start
                 if (福利泡点 > 0) {
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 if (chr == null || chr.getMap().getId() !=910000000) {//泡点地图
                                     continue;
                                 }
@@ -915,7 +940,7 @@ public class Start
     public static void 福利泡点() {
         try {
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                     if (chr == null) {
                         continue;
                     }
@@ -998,7 +1023,7 @@ public class Start
                             ppl = 0;
                             try {
                                 int over = 0;
-                                for (final MapleCharacter chr : allCharacters) {
+                                for (MapleCharacter chr : allCharacters) {
                                     if (chr == null) {
                                         continue;
                                     }
@@ -1042,7 +1067,7 @@ public class Start
             @Override
             public void run() {
                 for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                    for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                    for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                         for (int i = 0; i < 6; ++i) {
                             int mapidA = 100000000 + (i + 1000000 - 2000000);
                             final MapleCharacter player = chr;
@@ -1079,7 +1104,7 @@ public class Start
     }
     
     public static void 读取地图吸怪检测() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT name, val FROM 地图吸怪检测")) {
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1098,7 +1123,7 @@ public class Start
     public static int 服务器角色() {
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT id as DATA FROM characters WHERE id >=0");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1116,7 +1141,7 @@ public class Start
     public static int 服务器账号() {
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT id as DATA FROM accounts WHERE id >=0");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1134,7 +1159,7 @@ public class Start
     public static int 服务器技能() {
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT id as DATA FROM skills ");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1152,7 +1177,7 @@ public class Start
     public static int 服务器道具() {
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT inventoryitemid as DATA FROM inventoryitems WHERE inventoryitemid >=0");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1170,7 +1195,7 @@ public class Start
     public static int 服务器商城商品() {
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT serial as DATA FROM cashshop_modified_items WHERE serial >=0");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1188,7 +1213,7 @@ public class Start
     public static int 服务器游戏商品() {
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT shopitemid as DATA FROM shopitems WHERE shopitemid >=0");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1241,7 +1266,7 @@ public class Start
                 final int minute = c.get(12);
                 if (hour == 0 && minute == 0) {
                     try {
-                        final Connection con = DatabaseConnection.getConnection();
+                        Connection con = DatabaseConnection.getConnection();
                         try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePoints = ?, updateTime = CURRENT_TIMESTAMP()")) {
                             ps.setInt(1, 0);
                             ps.executeUpdate();
@@ -1254,7 +1279,7 @@ public class Start
                 }
                 try {
                     for (final ChannelServer chan : ChannelServer.getAllInstances()) {
-                        for (final MapleCharacter chr : chan.getPlayerStorage().getAllCharacters()) {
+                        for (MapleCharacter chr : chan.getPlayerStorage().getAllCharacters()) {
                             if (chr == null) {
                                 continue;
                             }
@@ -1285,7 +1310,7 @@ public class Start
             @Override
             public void run() {
                 for (final ChannelServer cserv_ : ChannelServer.getAllInstances()) {
-                    for (final MapleCharacter chr : cserv_.getPlayerStorage().getAllCharacters()) {
+                    for (MapleCharacter chr : cserv_.getPlayerStorage().getAllCharacters()) {
                         if (chr != null) {
                             chr.startCheck();
                         }
@@ -1321,6 +1346,7 @@ public class Start
         superSkills = new ArrayList<>();
         mobInfo = new ArrayList<>();
         breakthroughMechanism = new Hashtable<>();
+        leveladdharm = new Hashtable<>();
         fieldSkillsMap = new Hashtable<>();
         superSkillsMap = new Hashtable<>();
         allAttackInfo = new Hashtable<>();
@@ -1338,7 +1364,7 @@ public class Start
         Start.更新时间1=0;
         Start.更新时间2=0;
         Start.更新时间3=0;
-        Start.喜从天降 = Boolean.valueOf(false);
+        Start.喜从天降 = 0;;
         Start.初始通缉令 = 0;
         Start.倍率活动 = Boolean.valueOf(false);
         Start.幸运职业 = Boolean.valueOf(false);
@@ -1368,7 +1394,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT name, numb,proportion,proname FROM suitdamtable");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1387,7 +1413,7 @@ public class Start
          ps = null;
          rs = null;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT  item_id,exp_multiplier,drop_rate FROM ltt_item_explosion_markup");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1407,7 +1433,7 @@ public class Start
         ps = null;
         rs = null;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT  SkillID,prop FROM skills_prop");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1426,7 +1452,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT name, numb,proportion,proname FROM suitdamtableNew");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1445,7 +1471,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT skillid,skill_name, master_max_lv,job_id,job_name FROM lt_initialization_skills");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1469,7 +1495,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT name,Equip_list,trigger_number,localstr,localdex,localluk,localint,all_quality,harm,crit,crit_harm,boss_harm,hp,mp,pad,matk FROM lt_suit_system");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1509,7 +1535,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT characterid,skillid,skill_name,skill_leve,injuryinterval,injurydelaytime,damagedestructiontime,skillLX,skillLY,skillRX,skillRY,ranges,harm FROM lt_field_skills");
 
 
@@ -1546,7 +1572,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT characterid,skillid,itemid,injuryinterval,injurydelaytime,skillLX,skillLY,skillRX,skillRY,damagedestructiontime,combinatorialCodingId,skill_name,skill_leve,ranges,skillCount,stackingDistance,harm FROM lt_super_skills");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1582,7 +1608,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT name,characterid,equal_order,localstr,localdex,localluk,localint,all_quality,harm,crit,crit_harm,boss_harm,hp,mp,pad,matk,customize_attribute,customize_smash_roll FROM lt_breakthrough_mechanism");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1616,13 +1642,30 @@ public class Start
             System.out.println("境界系统加载异常：" + ex.getMessage());
         }
     }
-
+    public static void getleveladdharm(){
+        List<Leveladdharm> list = new ArrayList<>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try  {
+            Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT leve,numb FROM lt_leveladdharm");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new Leveladdharm(rs.getInt("leve"),rs.getInt("numb")));
+            }
+            ps.execute();
+            ps.close();
+            leveladdharm = list.stream().collect(Collectors.groupingBy(Leveladdharm::getLevel));
+        } catch (SQLException ex) {
+            System.out.println("getleveladdharm出错：" + ex.getMessage());
+        }
+    }
     public static void getMobInfo() {
           List<MobInfo>  mobInfoList = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT id, mobId, name, hp, mp, level, speed, eva, damage, exp, pdd from lt_mob_heavy_load");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1654,7 +1697,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT charactersid,occupation_id,occupation_name FROM lt_five_turn");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -1676,7 +1719,7 @@ public class Start
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("insert into lt_attack_info_skills (charge,skill,lastAttackTickCount,hits,targets,tbyte,display,animation,speed,csstar,AOE,slot,unk) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
             ps.setInt(1, info.getCharge());
             ps.setInt(2, info.skill);
@@ -1703,7 +1746,7 @@ public class Start
         ResultSet rs = null;
         List<AttackInfo> list = new ArrayList<>();
         try {
-            final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("select charge,skill,lastAttackTickCount,hits,targets,tbyte,display,animation,speed,csstar,AOE,slot,unk from lt_attack_info_skills");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -2013,7 +2056,7 @@ public class Start
 
     }
     private static void Delete( String a,  int b) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from " + a + "");
             ps.executeUpdate();

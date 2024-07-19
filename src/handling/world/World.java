@@ -1,8 +1,10 @@
 package handling.world;
 
+import bean.UserAttraction;
 import constants.ServerConfig;
 import gui.CongMS;
 import gui.LtMS;
+import scripting.NPCConversationManager;
 import scripting.ReactorScriptManager;
 import server.life.MapleMonsterInformationProvider;
 import handling.world.family.MapleFamilyCharacter;
@@ -180,13 +182,18 @@ public class World
                 }
             }
         }
-        //刷怪判斷輪迴
+        //刷怪判斷輪迴 轮回石碑
         if (map.characterSize() > 0) {
             if (map.canSpawn()) {
                 map.respawn(false);
             }
+            //自定义轮回
+//            UserAttraction attractLhList = NPCConversationManager.getAttractLhList(map.getChannel(), map.getId());
+//            if (attractLhList!=null){
+//                map.respawn(false);
+//            }
             final boolean hurt = map.canHurt();
-            for (final MapleCharacter chr : map.getCharactersThreadsafe()) {
+            for (MapleCharacter chr : map.getCharactersThreadsafe()) {
                 handleCooldowns(chr, numTimes, hurt);
             }
             if (map.getMobsSize() > 0) {
@@ -237,7 +244,7 @@ public class World
         }, delay * 1000L);
     }
     
-    public static void handleCooldowns(final MapleCharacter chr, final int numTimes, final boolean hurt) {
+    public static void handleCooldowns(MapleCharacter chr, final int numTimes, final boolean hurt) {
         final long now = System.currentTimeMillis();
         for (final MapleCoolDownValueHolder m : chr.getCooldowns()) {
             if (m.startTime + m.length < now) {
@@ -314,7 +321,7 @@ public class World
             public void run() {
                 final int quantity = Randomizer.rand(10, 30);
                 for (final ChannelServer cs : ChannelServer.getAllInstances()) {
-                    for (final MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
+                    for (MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
                         if (chr == null) {
                             break;
                         }
@@ -336,7 +343,7 @@ public class World
                 final Map<MapleCharacter, Integer> GiveList = new HashMap<MapleCharacter, Integer>();
                 final int quantity = Randomizer.rand(15, 35);
                 for (final ChannelServer cs : ChannelServer.getAllInstances()) {
-                    for (final MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
+                    for (MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
                         if (chr == null) {
                             break;
                         }
@@ -383,7 +390,7 @@ public class World
             for (final MaplePartyCharacter partychar : party.getMembers()) {
                 final int ch = Find.findChannel(partychar.getName());
                 if (ch > 0) {
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(partychar.getName());
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(partychar.getName());
                     if (chr == null || chr.getName().equalsIgnoreCase(namefrom)) {
                         continue;
                     }
@@ -428,7 +435,7 @@ public class World
             for (final MaplePartyCharacter partychar : party.getMembers()) {
                 final int ch = Find.findChannel(partychar.getName());
                 if (ch > 0) {
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(partychar.getName());
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(partychar.getName());
                     if (chr == null) {
                         continue;
                     }
@@ -448,7 +455,7 @@ public class World
                     if (ch2 <= 0) {
                         break;
                     }
-                    final MapleCharacter chr2 = ChannelServer.getInstance(ch2).getPlayerStorage().getCharacterByName(target.getName());
+                    MapleCharacter chr2 = ChannelServer.getInstance(ch2).getPlayerStorage().getCharacterByName(target.getName());
                     if (chr2 != null) {
                         chr2.getClient().sendPacket(MaplePacketCreator.updateParty(chr2.getClient().getChannel(), party, operation, target));
                         chr2.setParty(null);
@@ -477,7 +484,7 @@ public class World
         static {
             Party.parties = new HashMap<Integer, MapleParty>();
             runningPartyId = new AtomicInteger();
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final PreparedStatement ps = con.prepareStatement("SELECT MAX(party)+2 FROM characters");
                 try (final ResultSet rs = ps.executeQuery()) {
                     rs.next();
@@ -497,7 +504,7 @@ public class World
             for (final int characterId : recipientCharacterIds) {
                 final int ch = Find.findChannel(characterId);
                 if (ch > 0) {
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterById(characterId);
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterById(characterId);
                     if (chr != null && chr.getBuddylist().containsVisible(cidFrom)) {
                         chr.getClient().sendPacket(MaplePacketCreator.multiChat(nameFrom, chattext, 0));
                     }
@@ -509,7 +516,7 @@ public class World
             for (final Integer buddy : buddies) {
                 final int ch = Find.findChannel((int)buddy);
                 if (ch > 0) {
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterById((int)buddy);
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterById((int)buddy);
                     if (chr == null) {
                         continue;
                     }
@@ -605,7 +612,7 @@ public class World
             final int ch = Find.findChannel(target);
             if (ch > 0) {
                 final ChannelServer cs = ChannelServer.getInstance(ch);
-                final MapleCharacter chr = cs.getPlayerStorage().getCharacterByName(target);
+                MapleCharacter chr = cs.getPlayerStorage().getCharacterByName(target);
                 if (chr != null) {
                     final MapleMessenger messenger = chr.getMessenger();
                     if (messenger != null) {
@@ -632,7 +639,7 @@ public class World
                     if (ch <= 0) {
                         continue;
                     }
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(mmc.getName());
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(mmc.getName());
                     if (chr == null) {
                         continue;
                     }
@@ -666,7 +673,7 @@ public class World
                     if (ch <= 0) {
                         continue;
                     }
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(messengerchar.getName());
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(messengerchar.getName());
                     if (chr == null) {
                         continue;
                     }
@@ -690,7 +697,7 @@ public class World
                     if (ch <= 0) {
                         continue;
                     }
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(messengerchar.getName());
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(messengerchar.getName());
                     if (chr == null) {
                         continue;
                     }
@@ -717,7 +724,7 @@ public class World
                     if (ch <= 0) {
                         continue;
                     }
-                    final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(messengerchar.getName());
+                    MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(messengerchar.getName());
                     if (chr == null) {
                         continue;
                     }
@@ -1002,28 +1009,28 @@ public class World
             return -1;
         }
         
-        public static final void editBBSThread(final int guildid, final int localthreadid, final String title, final String text, final int icon, final int posterID, final int guildRank) {
+        public static void editBBSThread(final int guildid, final int localthreadid, final String title, final String text, final int icon, final int posterID, final int guildRank) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.editBBSThread(localthreadid, title, text, icon, posterID, guildRank);
             }
         }
         
-        public static final void deleteBBSThread(final int guildid, final int localthreadid, final int posterID, final int guildRank) {
+        public static void deleteBBSThread(final int guildid, final int localthreadid, final int posterID, final int guildRank) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.deleteBBSThread(localthreadid, posterID, guildRank);
             }
         }
         
-        public static final void addBBSReply(final int guildid, final int localthreadid, final String text, final int posterID) {
+        public static void addBBSReply(final int guildid, final int localthreadid, final String text, final int posterID) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.addBBSReply(localthreadid, text, posterID);
             }
         }
         
-        public static final void deleteBBSReply(final int guildid, final int localthreadid, final int replyid, final int posterID, final int guildRank) {
+        public static void deleteBBSReply(final int guildid, final int localthreadid, final int replyid, final int posterID, final int guildRank) {
             final MapleGuild g = getGuild(guildid);
             if (g != null) {
                 g.deleteBBSReply(localthreadid, replyid, posterID, guildRank);

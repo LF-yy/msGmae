@@ -34,7 +34,7 @@ public class MapleOxQuiz extends MapleEvent
     }
     
     @Override
-    public void onMapLoad(final MapleCharacter chr) {
+    public void onMapLoad(MapleCharacter chr) {
         if (chr.getMapId() == this.mapid[0] && !chr.isGM()) {
             chr.canTalk(false);
         }
@@ -81,7 +81,7 @@ public class MapleOxQuiz extends MapleEvent
                 if (toSend.getCharactersSize() - number <= 1 || timesAsked == 10) {
                     toSend.broadcastMessage(MaplePacketCreator.serverNotice(6, "本次活動已經結束。"));
                     MapleOxQuiz.this.unreset();
-                    for (final MapleCharacter chr : toSend.getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : toSend.getCharactersThreadsafe()) {
                         if (chr != null && !chr.isGM() && chr.isAlive()) {
                             chr.canTalk(true);
                             MapleOxQuiz.this.givePrize(chr);
@@ -101,7 +101,7 @@ public class MapleOxQuiz extends MapleEvent
                     public void run() {
                         toSend.broadcastMessage(MaplePacketCreator.showOXQuiz((int)(Integer)((Pair)question.getKey()).left, (int)(Integer)((Pair)question.getKey()).right, false));
                         timesAsked++;
-                        for (final MapleCharacter chr : toSend.getCharactersThreadsafe()) {
+                        for (MapleCharacter chr : toSend.getCharactersThreadsafe()) {
                             if (chr != null && !chr.isGM() && chr.isAlive()) {
                                 if (!MapleOxQuiz.this.isCorrectAnswer(chr, ((MapleOxQuizEntry)question.getValue()).getAnswer())) {
                                     chr.getStat().setHp(0);
@@ -120,7 +120,7 @@ public class MapleOxQuiz extends MapleEvent
         }, 10000L);
     }
     
-    private boolean isCorrectAnswer(final MapleCharacter chr, final int answer) {
+    private boolean isCorrectAnswer(MapleCharacter chr, final int answer) {
         final double x = chr.getPosition().getX();
         final double y = chr.getPosition().getY();
         if ((x > -234.0 && y > -26.0 && answer == 0) || (x < -234.0 && y > -26.0 && answer == 1)) {

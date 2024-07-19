@@ -108,7 +108,7 @@ public class MTSCart implements Serializable
             itemsWithType.add(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId())));
         }
         ItemLoader.MTS_TRANSFER.saveItems(itemsWithType, Integer.valueOf(this.characterId));
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("DELETE FROM mts_cart WHERE characterid = ?");
             ps.setInt(1, this.characterId);
             ps.execute();
@@ -133,7 +133,7 @@ public class MTSCart implements Serializable
     }
     
     public void loadCart() throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM mts_cart WHERE characterid = ?");
             ps.setInt(1, this.characterId);
             final ResultSet rs = ps.executeQuery();
@@ -158,7 +158,7 @@ public class MTSCart implements Serializable
     }
     
     public void loadNotYetSold() throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM mts_items WHERE characterid = ?");
             ps.setInt(1, this.characterId);
             final ResultSet rs = ps.executeQuery();

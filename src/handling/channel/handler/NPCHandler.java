@@ -34,7 +34,7 @@ import tools.data.LittleEndianAccessor;
 
 public class NPCHandler
 {
-    public static final void handleNPCAnimation(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleNPCAnimation(final LittleEndianAccessor slea, final MapleClient c) {
         final int length = (int)slea.available();
         if (length < 4) {
             return;
@@ -76,7 +76,7 @@ public class NPCHandler
         }
     }
     
-    public static final void handleNPCShop(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleNPCShop(final LittleEndianAccessor slea, final MapleClient c) {
         final MapleCharacter player = c.getPlayer();
         final byte bmode = slea.readByte();
         if (player == null) {
@@ -121,7 +121,7 @@ public class NPCHandler
         }
     }
     
-    public static final void handleNPCTalk(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void handleNPCTalk(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (c == null || chr == null || chr.getMap() == null) {
             return;
         }
@@ -147,7 +147,7 @@ public class NPCHandler
         }
     }
     
-    public static final void QuestAction(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void QuestAction(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final byte action = slea.readByte();
         final int quest = slea.readUShort();
         if (chr == null) {
@@ -249,7 +249,7 @@ public class NPCHandler
         }
     }
     
-    public static final void Storage(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void Storage(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final byte mode = slea.readByte();
         if (chr == null) {
             return;
@@ -436,7 +436,7 @@ public class NPCHandler
     }
 
     //脚本处理
-    public static final void NPCMoreTalk(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void NPCMoreTalk(final LittleEndianAccessor slea, final MapleClient c) {
         final byte lastMsg = slea.readByte();
         final byte action = slea.readByte();
         final NPCConversationManager cm = NPCScriptManager.getInstance().getCM(c);
@@ -495,7 +495,7 @@ public class NPCHandler
         }
     }
     
-    public static final void repairAll(final MapleClient c) {
+    public static void repairAll(final MapleClient c) {
         if (c.getPlayer().getMapId() != 240000000) {
             return;
         }
@@ -532,7 +532,7 @@ public class NPCHandler
         }
     }
     
-    public static final void repair(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void repair(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer().getMapId() != 240000000 || slea.available() < 4L) {
             return;
         }
@@ -558,14 +558,14 @@ public class NPCHandler
         c.getPlayer().forceReAddItem(eq.copy(), type);
     }
     
-    public static final void UpdateQuest(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void UpdateQuest(final LittleEndianAccessor slea, final MapleClient c) {
         final MapleQuest quest = MapleQuest.getInstance((int)slea.readShort());
         if (quest != null) {
             c.getPlayer().updateQuest(c.getPlayer().getQuest(quest), true);
         }
     }
     
-    public static final void UseItemQuest(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void UseItemQuest(final LittleEndianAccessor slea, final MapleClient c) {
         final short slot = slea.readShort();
         final int itemId = slea.readInt();
         final IItem item = c.getPlayer().getInventory(MapleInventoryType.ETC).getItem(slot);

@@ -1,9 +1,11 @@
 package scripting;
 // 汉化方法库
+import GuaiSetting.Game;
 import bean.*;
 import com.alibaba.druid.util.StringUtils;
 import constants.tzjc;
 import gui.LtMS;
+import handling.channel.handler.*;
 import merchant.merchant_main;
 import gui.CongMS;
 
@@ -19,10 +21,10 @@ import server.*;
 
 import constants.ServerConfig;
 import database.DatabaseConnection;
-import handling.channel.handler.InterServerHandler;
 import client.inventory.Item;
 import server.gashapon.GashaponFactory;
 import server.gashapon.Gashapon;
+import server.life.MapleLifeFactory;
 import server.shops.HiredMerchant;
 import server.life.MonsterDropEntry;
 import client.MapleJob;
@@ -81,7 +83,9 @@ import util.ListUtil;
 
 public class NPCConversationManager extends AbstractPlayerInteraction
 {
-    private final static Map<Integer, UserAttraction> 吸怪集合 = new HashMap<>();
+    public final static Map<Integer, UserAttraction> 吸怪集合 = new HashMap<>();
+    public final static Map<Integer, UserLhAttraction> 轮回集合 = new HashMap<>();
+    public final static Map<Integer, List<MapleMonster>> 轮回怪物 = new HashMap<>();
     private final MapleClient c;
     private final int npc;
     private final int questid;
@@ -118,6 +122,20 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         PacketHelper.showDamageSkin(c.getPlayer().getId(),param);
     }
 
+//    //释放特殊技能
+    public void autoAttack( int display,int skillId) {
+       PlayerHandler.AutoAttack(display,skillId, c, c.getPlayer());
+//        c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.closeRangeAttack(c.getPlayer().getId(), (int)attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, energy, (int)c.getPlayer().getLevel(), c.getPlayer().getStat().passive_mastery(), attack2.unk, attack2.charge));
+//        final ISkill skill = SkillFactory.getSkill(skillId);
+//        final int skillLevel = c.getPlayer().getSkillLevel(skillId);
+//        MapleStatEffect effect = skill.getEffect(skillLevel);
+//        final int maxdamage2 = effect.getDamage();
+//        final int attackCount2 = 1;
+//        final boolean mirror = false;
+//        final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), c, 1);
+//        DamageParse.applyAttack(attack2, skill, c, attackCount2, maxdamage2, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
+    }
+
     public void yourIsGM() {
         if (!c.getPlayer().isGM()) {
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 这么屌读我GM权限,走你。"));
@@ -133,7 +151,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         ResultSet rs = null;
         BreakthroughMechanism su = new BreakthroughMechanism();
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("DELETE FROM lt_field_skills WHERE characterid = ? AND skillid = ?");
             ps.setInt(1, userId);
             ps.setInt(1, skillId);
@@ -144,18 +162,17 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             System.out.println("移除领域技能异常：" + ex.getMessage());
         }
     }
-    public void 移除超级技能(int userId,int skillId) {
+    public void 移除超级技能(int userId) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         BreakthroughMechanism su = new BreakthroughMechanism();
         try  {
-            final Connection con = DatabaseConnection.getConnection();
-            ps = con.prepareStatement("DELETE FROM lt_super_skills WHERE characterid = ? AND skillid = ?");
+            Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("DELETE FROM lt_super_skills WHERE characterid = ? ");
             ps.setInt(1, userId);
-            ps.setInt(1, skillId);
             ps.executeUpdate();
             ps.close();
-            Start.GetFieldSkills();
+            Start.GetSuperSkills();
         } catch (SQLException ex) {
             System.out.println("移除超级技能异常：" + ex.getMessage());
         }
@@ -191,7 +208,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
       try{
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("INSERT INTO lt_field_skills (characterid,skillid,skill_name,skill_leve,injuryinterval,injurydelaytime,damagedestructiontime,skillLX,skillLY,skillRX,skillRY,ranges,harm) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 ps1.setInt(1, characterid);
                 ps1.setInt(2, skillid);
@@ -219,12 +236,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         SuperSkills su = new SuperSkills();
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT id,characterid ,skillid,itemid,injuryinterval,injurydelaytime,skillLX,skillLY,skillRX,skillRY,damagedestructiontime,combinatorialCodingId,skill_name,skill_leve,ranges,skillCount,stackingDistance,harm FROM lt_super_skills where characterid = ? and skillid = ?");
             ps.setInt(1, Characterid);
             ps.setInt(2, Skillid);
             rs = ps.executeQuery();
-            while (rs.next()) {
+            if (rs.next()) {
                 su.setId(rs.getLong("id"));
                 su.setCharacterid(rs.getInt("characterid"));
                 su.setSkillid(rs.getInt("skillid"));
@@ -249,7 +266,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if(su.getCharacterid() >0 ){
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("update lt_super_skills set  characterid = ? ,skillid = ? ,itemid = ? ,injuryinterval = ? ,injurydelaytime = ? ,skillLX = ? ,skillLY = ? ,skillRX = ? ,skillRY = ? ,damagedestructiontime = ?,combinatorialCodingId = ?,skill_name = ?,skill_leve = ?,ranges = ?,skillCount = ?,stackingDistance = ?,harm = ? FROM lt_super_skills where id = ?");
                 ps1.setInt(1, Characterid);
                 ps1.setInt(2, Skillid);
@@ -274,7 +291,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             }else{
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement(
                         "INSERT INTO lt_super_skills (characterid ,skillid,itemid,injuryinterval,injurydelaytime,skillLX,skillLY,skillRX,skillRY,damagedestructiontime,combinatorialCodingId,skill_name,skill_leve,ranges,skillCount,stackingDistance,harm) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 ps1.setInt(1, Characterid);
@@ -303,13 +320,6 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
     }
 
-
-
-
-
-
-
-
     public BreakthroughMechanism 查询境界(int userId) {
         return ListUtil.isNotEmpty(Start.breakthroughMechanism.get(userId)) ? Start.breakthroughMechanism.get(userId).get(0) : null;
     }
@@ -319,7 +329,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         BreakthroughMechanism su = new BreakthroughMechanism();
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT name,characterid,equal_order,localstr,localdex,localluk,localint,all_quality,harm,crit,crit_harm,boss_harm,hp,mp,pad,matk,customize_attribute,customize_smash_roll FROM lt_breakthrough_mechanism where characterid = ?");
             ps.setInt(1, userId);
             rs = ps.executeQuery();
@@ -356,7 +366,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 if("customizeSmashRoll".equals(type)){
                     su.setCustomizeSmashRoll(su.getCustomizeSmashRoll()+count);
                 }
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("update lt_breakthrough_mechanism set customize_attribute = ? ,customize_smash_roll = ?  where characterid = ? ");
                 ps1.setInt(1, su.getCustomizeAttribute());
                 ps1.setInt(2, su.getCustomizeSmashRoll());
@@ -380,7 +390,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         BreakthroughMechanism su = new BreakthroughMechanism();
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT name,characterid,equal_order,localstr,localdex,localluk,localint,all_quality,harm,crit,crit_harm,boss_harm,hp,mp,pad,matk,customize_attribute,customize_smash_roll FROM lt_breakthrough_mechanism where characterid = ?");
             ps.setInt(1, userId);
             rs = ps.executeQuery();
@@ -416,7 +426,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 su.setAllQuality(allQuality);
                 su.setCustomizeAttribute(su.getCustomizeAttribute()+1);
                 su.setCustomizeSmashRoll(su.getCustomizeSmashRoll()+1);
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("update lt_breakthrough_mechanism set name = ? ,equal_order = ? ,all_quality = ? ,customize_attribute = ?,customize_smash_roll = ?  where characterid = ? ");
                 ps1.setString(1, su.getName());
                 ps1.setString(2, su.getEqualOrder());
@@ -435,7 +445,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 su.setAllQuality(allQuality);
                 su.setCustomizeAttribute(1);
                 su.setCustomizeSmashRoll(1);
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("INSERT INTO lt_breakthrough_mechanism (name,characterid,equal_order,all_quality,customize_attribute,customize_smash_roll) VALUES(?,?,?,?,?,?)");
                 ps1.setString(1, su.getName());
                 ps1.setInt(2, su.getCharacterid());
@@ -462,7 +472,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         int numbOld = 0;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT occupation_name,occupation_id FROM lt_five_turn where charactersid = ?  ");
             ps.setInt(1, id);
             rs = ps.executeQuery();
@@ -474,7 +484,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if(numbOld>0){
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("update lt_five_turn set occupation_id = ?,occupation_name = ? where charactersid = ? ");
                 ps1.setInt(1, job);
                 ps1.setString(2, jobName);
@@ -484,7 +494,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             }else{
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("INSERT INTO lt_five_turn (charactersid,occupation_id,occupation_name) VALUES(?,?,?)");
                 ps1.setInt(1, id);
                 ps1.setInt(2, job);
@@ -511,7 +521,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         int numbOld = 0;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT occupation_name,occupation_id FROM lt_five_turn where charactersid = ? ");
             ps.setInt(1, id);
             rs = ps.executeQuery();
@@ -526,13 +536,14 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         return numbOld;
     }
+
     public String 查5转职业名称(final int id){
 
         PreparedStatement ps = null;
         ResultSet rs = null;
         String numbOld = null;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT occupation_name,occupation_id FROM lt_five_turn where charactersid = ? ");
             ps.setInt(1, id);
             rs = ps.executeQuery();
@@ -554,7 +565,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         String numbOld = null;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("delete FROM lt_five_turn where charactersid = ? ");
             ps.setInt(1, id);
             ps.execute();
@@ -640,7 +651,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         int numbOld = 0;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT numb FROM suitdamtablenew where name = ? ");
             ps.setString(1, names);
             rs = ps.executeQuery();
@@ -662,7 +673,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         ResultSet rs = null;
         double numbOld = 0.0;
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT numb FROM suitdamtablenew where name = ? ");
             ps.setString(1, names);
             rs = ps.executeQuery();
@@ -674,7 +685,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if(numbOld>0){
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("update suitdamtablenew set numb = ? where name = ? ");
                 ps1.setDouble(1, numbOld+numb);
                 ps1.setString(2, names);
@@ -683,7 +694,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             }else{
                 PreparedStatement ps1 = null;
                 ResultSet rs1 = null;
-                final Connection con1 = DatabaseConnection.getConnection();
+                Connection con1 = DatabaseConnection.getConnection();
                 ps1 = con1.prepareStatement("INSERT INTO suitdamtablenew (name,numb,proportion,proname) VALUES(?,?,?,?)");
                 ps1.setString(1, names);
                 ps1.setDouble(2, numbOld+numb);
@@ -705,12 +716,17 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
        return 吸怪集合.get(id);
     }
 
+
     public static UserAttraction getAttractList(int channel,int mapId){
         List<Entry<Integer, UserAttraction>> collect = 吸怪集合.entrySet().stream().filter(ua ->
                 ua.getValue().getPinDao() == channel && ua.getValue().getMapId() == mapId).collect(Collectors.toList());
         return collect.size()>0 ? collect.get(0).getValue() : null;
     }
-
+    public static UserLhAttraction getAttractLhList(int channel,int mapId){
+        List<Entry<Integer, UserLhAttraction>> collect = 轮回集合.entrySet().stream().filter(ua ->
+                ua.getValue().getPinDao() == channel && ua.getValue().getMapId() == mapId).collect(Collectors.toList());
+        return collect.size()>0 ? collect.get(0).getValue() : null;
+    }
     public  void gain开启吸怪(final MapleCharacter player){
         int mapId = player.getMapId();
         for ( MapleMonster monstermo : player.getMap().getAllMonster()) {
@@ -740,10 +756,52 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
 
     }
+
+    public  void gain开启轮回(final MapleCharacter player){
+        int mapId = player.getMapId();
+        for ( MapleMonster monstermo : player.getMap().getAllMonster()) {
+            if (monstermo.getPosition() != null && monstermo.getStats().isBoss()) {
+                c.getPlayer().dropMessage(1, "该地图有BOSS不允许开启轮回.");
+                return;
+            }
+        }
+        if (特殊宠物吸物无法使用地图.stream().anyMatch(s-> {return mapId == Integer.parseInt(s);})){
+            c.getPlayer().dropMessage(1, "该地图不允许轮回.");
+        }else {
+
+            boolean b = 轮回集合.entrySet().stream().anyMatch(ua -> {
+                return ua.getValue().getPinDao() == c.getChannel() && ua.getValue().getMapId() == player.getMapId();
+            });
+            if (b) {
+                c.getPlayer().dropMessage(1, "该地图已经有人开启轮回了.");
+            } else {
+                //获取身边的怪物
+                List<MapleMonster> list = new ArrayList<>();
+                for (final MapleMapObject monstermo : c.getPlayer().getMap().getMapObjectsInRange(c.getPlayer().getPosition(), 10000.0, Arrays.asList(MapleMapObjectType.MONSTER))) {
+                    MapleMonster monster = (MapleMonster)monstermo;
+                    if (monster.isAlive()) {
+                        list.add(monster);
+                    }
+                }
+
+                this.轮回怪物.put(player.getId(), list);
+                //清除地图所有怪物
+                c.getPlayer().getMap().killAllMonsters(true);
+                UserLhAttraction userAttraction = new UserLhAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
+                this.轮回集合.put(player.getId(), userAttraction);
+                c.getPlayer().startMobLhVac(userAttraction);
+                //开启吸怪();
+            }
+        }
+
+    }
     public void gain关闭吸怪(final MapleCharacter player){
         c.getPlayer().getMap().killAllMonsters(true);
         this.吸怪集合.remove(player.getId());
-
+    }
+    public static void gain关闭轮回(int id){
+       // c.getPlayer().getMap().killAllMonsters(true);
+        轮回集合.remove(id);
     }
     public static void gain关闭吸怪(int id){
         吸怪集合.remove(id);
@@ -774,7 +832,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int getBossLog1统计用(final int id, final String boss, final int type) {
         try {
             int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ?");
             ps.setInt(1, id);
             ps.setString(2, boss);
@@ -1315,7 +1373,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
     }
     
-    public final void clearSkills() {
+    public void clearSkills() {
         final Map<ISkill, SkillEntry> skills = this.getPlayer().getSkills();
         for (final Entry<ISkill, SkillEntry> skill : skills.entrySet()) {
             this.getPlayer().changeSkillLevel((ISkill)skill.getKey(), (byte)0, (byte)0);
@@ -1693,7 +1751,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void giveMerchantMesos() {
         long mesos = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT mesos FROM hiredmerchants WHERE merchantid = ?");
             ps.setInt(1, this.getPlayer().getId());
             final ResultSet rs = ps.executeQuery();
@@ -1726,7 +1784,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public long getMerchantMesos() {
         long mesos = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT mesos FROM hiredmerchants WHERE merchantid = ?")) {
             ps.setInt(1, this.getPlayer().getId());
             try (final ResultSet rs = ps.executeQuery()) {
@@ -1842,7 +1900,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         return this.c.getPlayer().getNextCarnivalRequest();
     }
     
-    public final MapleCarnivalChallenge getCarnivalChallenge(final MapleCharacter chr) {
+    public final MapleCarnivalChallenge getCarnivalChallenge(MapleCharacter chr) {
         return new MapleCarnivalChallenge(chr);
     }
     
@@ -2026,7 +2084,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         if (ii.getItemEffect(buff) != null && this.getPlayer().getGuildId() > 0) {
             final MapleStatEffect mse = ii.getItemEffect(buff);
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                     if (chr.getGuildId() == this.getPlayer().getGuildId()) {
                         mse.applyTo(chr, chr, true, null, duration);
                         chr.dropMessage(5, "Your guild has gotten a " + msg + " buff.");
@@ -2077,7 +2135,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         return this.lastMsg;
     }
     
-    public final void setLastMsg(final byte last) {
+    public void setLastMsg(final byte last) {
         this.lastMsg = last;
     }
     
@@ -2085,14 +2143,14 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void setPartyBossLog(final String bossid) {
         final MapleParty party = this.getPlayer().getParty();
         for (final MaplePartyCharacter pc : party.getMembers()) {
-            final MapleCharacter chr = World.getStorage(this.getChannelNumber()).getCharacterById(pc.getId());
+            MapleCharacter chr = World.getStorage(this.getChannelNumber()).getCharacterById(pc.getId());
             if (chr != null) {
                 chr.setBossLog(bossid);
             }
         }
     }
     
-    public final void maxAllSkills() {
+    public void maxAllSkills() {
         for (final ISkill skil : SkillFactory.getAllSkills()) {
             if (GameConstants.isApplicableSkill(skil.getId())) {
                 this.teachSkill(skil.getId(), skil.getMaxLevel(), skil.getMaxLevel());
@@ -2100,7 +2158,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
     }
     
-    public final void resetStats(final int str, final int dex, final int z, final int luk) {
+    public void resetStats(final int str, final int dex, final int z, final int luk) {
         this.c.getPlayer().resetStats(str, dex, z, luk);
     }
     
@@ -2142,16 +2200,16 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         return builder.toString();
     }
     
-    public final void sendRPS() {
+    public void sendRPS() {
         this.c.sendPacket(MaplePacketCreator.getRPSMode((byte)8, -1, -1, -1));
     }
     
-    public final void setQuestRecord(final Object ch, final int questid, final String data) {
+    public void setQuestRecord(final Object ch, final int questid, final String data) {
         ((MapleCharacter)ch).getQuestNAdd(MapleQuest.getInstance(questid)).setCustomData(data);
     }
     
-    public final void doWeddingEffect(final Object ch) {
-        final MapleCharacter chr = (MapleCharacter)ch;
+    public void doWeddingEffect(final Object ch) {
+        MapleCharacter chr = (MapleCharacter)ch;
         this.getMap().broadcastMessage(MaplePacketCreator.yellowChat(chr.getName() + ", 妳願意承認 " + this.getPlayer().getName() + " 做妳的丈夫，誠實遵照上帝的誡命，和他生活在一起，無論在什麼環境願順服他、愛惜他、安慰他、尊重他保護他，以致奉召歸主？？"));
         CloneTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
@@ -2271,7 +2329,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         if (this.getPlayer().haveItem(item)) {
             return false;
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT id FROM RCmedals WHERE name = ?");
             ps.setString(1, name);
             final ResultSet rs = ps.executeQuery();
@@ -2467,7 +2525,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
 
 
-    public String checkDrop(final MapleCharacter chr, final int mobId, final boolean GM) {
+    public String checkDrop(MapleCharacter chr, final int mobId, final boolean GM) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
         if (ranks != null && ranks.size() > 0) {
@@ -2580,7 +2638,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
     }
     
-    public void checkMobs(final MapleCharacter chr) {
+    public void checkMobs(MapleCharacter chr) {
         if (this.getMap().getAllMonstersThreadsafe().size() <= 0) {
             this.sendOk("#地图上沒有怪物哦!!。");
             this.dispose();
@@ -2664,7 +2722,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 推广人ID = 0;
         try {
             final int cid = this.getPlayer().getAccountID();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
                 rs = limitCheck.executeQuery();
@@ -2683,7 +2741,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 写入推广人ID(final int slot) {
         try {
             final int cid = this.getPlayer().getAccountID();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET 推广人ID = " + slot + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -2697,7 +2755,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 推广值 = 0;
         try {
             final int cid = this.getPlayer().getAccountID();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ResultSet rs;
             try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
                 rs = limitCheck.executeQuery();
@@ -2716,7 +2774,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 写入推广值(final int slot) {
         try {
             final int cid = this.获取推广人ID();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET 推广值 = 推广值 + " + slot + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -2729,7 +2787,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 更改推广值(final int slot) {
         try {
             final int cid = this.getPlayer().getAccountID();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET 推广值 = 推广值+" + slot + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -3040,7 +3098,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             this.c.getPlayer().getParty().getMembers().size();
         }
     }
-    
+    public final int getChannel() {
+        return this.c.getPlayer().getClient().getChannel();
+    }
     public int 判断经验() {
         return this.c.getPlayer().getExp();
     }
@@ -3111,7 +3171,31 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             }
         }
     }
-    
+    public void 全服喇叭(final int lx, final String msg) {
+        switch (lx) {
+            case 1: {
+                Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(11, this.c.getChannel(), "[" + ServerConfig.SERVERNAME + "] : " + msg));
+                break;
+            }
+            case 2: {
+                Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(12, this.c.getChannel(), "[" + ServerConfig.SERVERNAME + "] : " + msg));
+                break;
+            }
+            case 3: {
+                Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(3, this.c.getChannel(), "[" + ServerConfig.SERVERNAME + "] : " + msg));
+                break;
+            }
+            case 4: {
+                Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, this.c.getChannel(), "[" + ServerConfig.SERVERNAME + "] : " + msg));
+                break;
+            }
+            case 5: {
+                Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(2, this.c.getChannel(), "[" + ServerConfig.SERVERNAME + "] : " + msg));
+                break;
+            }
+        }
+    }
+
     public void 组队征集喇叭(final int lx, final String msg) {
         switch (lx) {
             case 1: {
@@ -3140,7 +3224,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String SN取出售(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT Point as DATA FROM character7 WHERE Name = ? && channel = 1");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3162,7 +3246,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String SN取库存(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT Point as DATA FROM character7 WHERE Name = ? &&  channel = 2");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3184,7 +3268,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String SN取折扣(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT Point as DATA FROM character7 WHERE Name = ? &&  channel = 3");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3206,7 +3290,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String SN取限购(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT Point as DATA FROM character7 WHERE Name = ? &&  channel = 4");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3228,7 +3312,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String SN取类型(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT Point as DATA FROM character7 WHERE Name = ? &&  channel = 5");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3250,7 +3334,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 角色名字取ID(final String id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT id as DATA FROM characters WHERE name = ?");
             ps.setString(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3269,7 +3353,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 角色ID取名字(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT name as DATA FROM characters WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3291,7 +3375,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 角色名字取账号ID(final String id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT accountid as DATA FROM characters WHERE name = ?");
             ps.setString(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3310,7 +3394,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String IP取账号(final String id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT name as DATA FROM accounts WHERE SessionIP = ?");
             ps.setString(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3333,7 +3417,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String MAC取账号(final String id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT name as DATA FROM accounts WHERE macs = ?");
             ps.setString(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3355,7 +3439,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 账号ID取账号(final String id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT name as DATA FROM accounts WHERE id = ?");
             ps.setString(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3374,7 +3458,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 账号ID取在线(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT loggedin as DATA FROM accounts WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3393,7 +3477,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 角色名字取等级(final String id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT level as DATA FROM characters WHERE name = ?");
             ps.setString(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3415,7 +3499,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 物品获取掉落怪物(final int itemid) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT dropperid as DATA FROM drop_data WHERE itemid = ?");
             ps.setInt(1, itemid);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3434,7 +3518,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族名称(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT name as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3454,7 +3538,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         String name = "";
         String level = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `name`, `level` FROM characters WHERE gm = 0 ORDER BY `level` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -3473,7 +3557,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public int 角色ID取雇佣数据(final int id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT cid as DATA FROM hire WHERE cid = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3492,7 +3576,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 角色ID取账号ID(final int id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT accountid as DATA FROM characters WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3511,7 +3595,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 账号ID取绑定QQ(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT qq as DATA FROM accounts WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -3798,7 +3882,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 全服存档() {
         try {
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                     if (chr == null) {
                         continue;
                     }
@@ -3811,7 +3895,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public static void 商城物品(final int id, final int key) throws SQLException {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ps = con.prepareStatement("INSERT INTO cashshop_modified_items (itemid, meso) VALUES (?, ?)");
             ps.setInt(1, id);
@@ -3850,7 +3934,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                     c.getPlayer().getClient().getSession().close();
                     Thread.sleep(2000L);
                     String SqlStr = "";
-                    final Connection con = DatabaseConnection.getConnection();
+                    Connection con = DatabaseConnection.getConnection();
                     PreparedStatement ps = null;
                     SqlStr = "SELECT * from keymap where characterid=" + id + " and keye=" + key + "";
                     ps = con.prepareStatement(SqlStr);
@@ -4485,7 +4569,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             final List<MapleCharacter> list = frommap.getCharactersThreadsafe();
             if (tomap != null && frommap != null && list != null && frommap.getCharactersSize() > 0) {
                 for (final MapleMapObject mmo : list) {
-                    final MapleCharacter chr = (MapleCharacter)mmo;
+                    MapleCharacter chr = (MapleCharacter)mmo;
                     if (chr.getId() == myId) {
                         if (!(boolean)includeSelf) {
                             continue;
@@ -4516,7 +4600,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if (frommap != null && list != null && frommap.getCharactersSize() > 0) {
                 for (final MapleMapObject mmo : list) {
                     if (mmo != null) {
-                        final MapleCharacter chr = (MapleCharacter)mmo;
+                        MapleCharacter chr = (MapleCharacter)mmo;
                         if (chr.getId() == myId) {
                             if (!(boolean)includeSelf) {
                                 continue;
@@ -4550,7 +4634,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if (frommap != null && list != null && frommap.getCharactersSize() > 0) {
                 for (final MapleMapObject mmo : list) {
                     if (mmo != null) {
-                        final MapleCharacter chr = (MapleCharacter)mmo;
+                        MapleCharacter chr = (MapleCharacter)mmo;
                         if (chr.getId() == myId) {
                             if (!(boolean)includeSelf) {
                                 continue;
@@ -4582,7 +4666,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void 跟踪玩家(final String charName) {
         for (final ChannelServer chl : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : chl.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : chl.getPlayerStorage().getAllCharacters()) {
                 if (chr.getName() == charName) {
                     this.c.getPlayer().changeMap(chr.getMapId());
                 }
@@ -4603,7 +4687,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if (list != null && frommap.getCharactersSize() > 0) {
                 for (final MapleMapObject mmo : list) {
                     if (mmo != null) {
-                        final MapleCharacter chr = (MapleCharacter)mmo;
+                        MapleCharacter chr = (MapleCharacter)mmo;
                         if (数量 >= 0) {
                             if (!MapleInventoryManipulator.checkSpace(chr.getClient(), 物品ID, 数量, "")) {
                                 return 0;
@@ -4708,7 +4792,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 if (类型 == 1 || 类型 == 2) {
                     for (final MapleMapObject mmo : list) {
                         if (mmo != null) {
-                            final MapleCharacter chr = (MapleCharacter)mmo;
+                            MapleCharacter chr = (MapleCharacter)mmo;
                             chr.modifyCSPoints(类型, 数量);
                             String cash = null;
                             if (类型 == 1) {
@@ -4724,7 +4808,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 else if (类型 == 3) {
                     for (final MapleMapObject mmo : list) {
                         if (mmo != null) {
-                            final MapleCharacter chr = (MapleCharacter)mmo;
+                            MapleCharacter chr = (MapleCharacter)mmo;
                             chr.gainMeso(数量, true);
                             ++count;
                         }
@@ -4733,7 +4817,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 else if (类型 == 4) {
                     for (final MapleMapObject mmo : list) {
                         if (mmo != null) {
-                            final MapleCharacter chr = (MapleCharacter)mmo;
+                            MapleCharacter chr = (MapleCharacter)mmo;
                             chr.gainExp(数量, true, false, true);
                             ++count;
                         }
@@ -4801,7 +4885,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                     try {
                         Thread.sleep(300000L);
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 if (chr == null) {
                                     continue;
                                 }
@@ -4852,7 +4936,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     
     public void 记录地图(final int a) {
-        try (final Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO map (id) VALUES ( ?)")) {
             ps.setInt(1, a);
             ps.executeUpdate();
@@ -4878,7 +4962,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public int 判断地图(final int a) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM map where id =" + a + "");
             final ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -4912,7 +4996,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public int 查询今日在线时间() {
         int data = 0;
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement psu = con.prepareStatement("SELECT todayOnlineTime FROM characters WHERE id = ?");
             psu.setInt(1, this.c.getPlayer().getId());
@@ -4931,7 +5015,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public int 查询总在线时间() {
         int data = 0;
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement psu = con.prepareStatement("SELECT totalOnlineTime FROM characters WHERE id = ?");
             psu.setInt(1, this.c.getPlayer().getId());
@@ -4959,7 +5043,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 判断背包位置是否有物品(final int a, final int b, final int c) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + a + " && inventorytype = " + b + " && position = " + c + "");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -4977,7 +5061,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 判断背包位置代码(final int a, final int b, final int c) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + a + " && inventorytype = " + b + " && position = " + c + "");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -4995,7 +5079,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 判断玩家是否穿戴某装备(final int a, final int b, final int c) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + a + " && itemid = " + b + " && inventorytype = " + c + "");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5013,7 +5097,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 获取最高玩家等级() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT MAX(level) as DATA FROM characters WHERE gm = 0");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5031,7 +5115,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 获取最高等级() {
         int level = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT  `level` FROM characters WHERE gm = 0 ORDER BY `level` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5049,7 +5133,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 获取最高玩家人气() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT MAX(fame) as DATA FROM characters WHERE gm = 0");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5068,7 +5152,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         String name = "";
         String level = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `name`, `fame` FROM characters WHERE gm = 0 ORDER BY `fame` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5087,7 +5171,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 获取最高玩家金币() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT MAX(meso) as DATA FROM characters WHERE gm = 0");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5106,7 +5190,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         String name = "";
         String level = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `name`, `meso` FROM characters WHERE gm = 0 ORDER BY `meso` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5125,7 +5209,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 获取最高玩家在线() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT MAX(totalOnlineTime) as DATA FROM characters WHERE gm = 0");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5144,7 +5228,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         String name = "";
         String level = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `name`, `totalOnlineTime` FROM characters WHERE gm = 0 ORDER BY `totalOnlineTime` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5164,7 +5248,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         String name = "";
         String level = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `name`, `todayOnlineTime` FROM characters WHERE gm = 0 ORDER BY `todayOnlineTime` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5184,7 +5268,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         String name = "";
         String level = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `name`, `GP` FROM guilds  ORDER BY `GP` DESC LIMIT 1");
             try (final ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -5203,7 +5287,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族族长备注(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT rank1title as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5222,7 +5306,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族副族长备注(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT rank2title as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5241,7 +5325,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族一级成员备注(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT rank3title as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5260,7 +5344,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族二级成员备注(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT rank4title as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5279,7 +5363,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族三级成员备注(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT rank5title as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5298,7 +5382,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static String 获取家族族长ID(final int guildId) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT leader as DATA FROM guilds WHERE guildid = ?");
             ps.setInt(1, guildId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5317,7 +5401,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 家族成员数(final int a) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters ");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -5338,7 +5422,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 名次 = 1;
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5403,7 +5487,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         final int 名次 = 1;
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters  WHERE gm = 0 order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5433,7 +5517,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         final int 名次 = 1;
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM monsterbook   order by level desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5463,7 +5547,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 名次 = 1;
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE gm = 0 order by meso desc LIMIT 20 ");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5505,7 +5589,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 名次 = 1;
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE gm = 0 order by totalOnlineTime desc LIMIT 20 ");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5549,7 +5633,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 名次 = 1;
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryequipment order by itemlevel desc LIMIT 20");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5598,7 +5682,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 道具id获取道具ID(final int a) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE inventoryitemid = " + a + "");
             final ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -5613,7 +5697,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 道具id获取主人(final int a) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE inventoryitemid = " + a + "");
             final ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -5628,7 +5712,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 今日全服总在线时间() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5644,7 +5728,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 今日家族总在线时间(final int a) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5660,7 +5744,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static int 角色ID取GM(final int id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT gm as DATA FROM characters WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5695,7 +5779,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public String 显示商品(final int id) {
         final StringBuilder name = new StringBuilder();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM mysterious WHERE f = " + id + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5714,7 +5798,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void 购买物品(final int id) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM mysterious WHERE f = " + id + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -5741,7 +5825,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void setzb(final int slot) {
         try {
             final int cid = this.getPlayer().getAccountID();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET money =money+ " + slot + " WHERE id = " + cid + "")) {
                 ps.executeUpdate();
             }
@@ -5759,7 +5843,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public final boolean getPartyBosslog(final String bossid, final int lcishu) {
         final MapleParty party = this.getPlayer().getParty();
         for (final MaplePartyCharacter pc : party.getMembers()) {
-            final MapleCharacter chr = World.getStorage(this.getChannelNumber()).getCharacterById(pc.getId());
+            MapleCharacter chr = World.getStorage(this.getChannelNumber()).getCharacterById(pc.getId());
             if (chr != null && chr.getBossLog(bossid) >= lcishu) {
                 return false;
             }
@@ -5770,7 +5854,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void setPartyBosslog(final String bossid) {
         final MapleParty party = this.getPlayer().getParty();
         for (final MaplePartyCharacter pc : party.getMembers()) {
-            final MapleCharacter chr = World.getStorage(this.getChannelNumber()).getCharacterById(pc.getId());
+            MapleCharacter chr = World.getStorage(this.getChannelNumber()).getCharacterById(pc.getId());
             if (chr != null) {
                 chr.setBossLog(bossid);
             }
@@ -5827,6 +5911,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if (!MapleItemInformationProvider.getInstance().itemExists(id)) {
                 return -1;
             }
+            if (quantity<1){
+                return -1;
+            }
             final IItem item = MapleInventoryManipulator.addbyId_Gachapon(this.c, id, (short)quantity);
             if (item == null) {
                 return -1;
@@ -5875,7 +5962,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     
     public void gainmoneym(final int cid, final int slot) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneym =moneym+" + slot + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -5891,7 +5978,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     
     public void setmoneym(final int cid, final int slot) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneym = " + slot + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -5904,7 +5991,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public int getmoneym() {
         int moneyb = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final int cid = this.getPlayer().getAccountID();
             ResultSet rs;
             try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
@@ -5951,7 +6038,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     public static int getMRJF(final int id) {
         int jf = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select * from paymoney1 where characterid =?");
             ps.setInt(1, id);
             final ResultSet rs = ps.executeQuery();
@@ -5975,7 +6062,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     public static int 角色名字取Id(final String name) {
         int data = 0;
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT id as DATA FROM characters WHERE name = ?");
             ps.setString(1, name);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5995,7 +6082,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 限制等级 = 0;
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -6012,7 +6099,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 火药桶 = 0;
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -6029,7 +6116,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int 火药桶总数量 = 0;
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -6045,7 +6132,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 写入火药桶数量(final int slot) {
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET dangqianshuliang =dangqianshuliang+ " + slot + " WHERE huoyaotongid = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -6056,7 +6143,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 写入火药桶总数量(final int slot) {
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET zongshuliang =zongshuliang+ " + slot + " WHERE huoyaotongid = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -6067,7 +6154,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 写入限制等级(final int slot) {
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET xianzhidengji =xianzhidengji+ " + slot + " WHERE huoyaotongid = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -6077,8 +6164,17 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public static void 写入世界等级(final int slot) {
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET xianzhidengji =" + slot + " WHERE huoyaotongid = " + cid + "");
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (SQLException ex) {}
+    }
+    public static void 写入个人等级(final int slot,final int userId) {
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET xianzhidengji =" + slot + " WHERE huoyaotongid = " + userId + "");
             ps.executeUpdate();
             ps.close();
         }
@@ -6087,7 +6183,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void 扣除火药桶数量(final int slot) {
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE shijiexianzhidengji SET dangqianshuliang =dangqianshuliang- " + slot + " WHERE huoyaotongid = " + cid + "");
             ps.executeUpdate();
             ps.close();
@@ -6173,5 +6269,45 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 //            return "暂无吸怪信息！";
 //        }
 //    }
+
+    public String ms() {
+        return Game.服务端名字;
+    }
+
+    public int 召唤扎昆() {
+        this.c.getPlayer().getMap().spawnFakeMonsterOnGroundBelow(MapleLifeFactory.getMonster(8800000), this.c.getPlayer().getPosition());
+        for(int i = 8800003; i <= 8800010; ++i) {
+            this.c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(i), this.c.getPlayer().getPosition());
+        }
+
+        return 1;
+    }
+
+    public int 召唤黑龙() {
+        this.c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.musicChange("Bgm14/HonTale"));
+        this.c.getPlayer().getMap().spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(8810026), this.c.getPlayer().getPosition());
+        return 1;
+    }
+
+    public int 召唤闹钟() {
+        MapleMonster mob0 = MapleLifeFactory.getMonster(8500001);
+        this.c.getPlayer().getMap().spawnMonsterOnGroundBelow(mob0, this.c.getPlayer().getPosition());
+        return 1;
+    }
+
+    public final void 全服漂浮喇叭(String msg, int itemId) {
+        int ret = 0;
+        Iterator var4 = ChannelServer.getAllInstances().iterator();
+
+        while(var4.hasNext()) {
+            ChannelServer cserv = (ChannelServer)var4.next();
+
+            for(Iterator var6 = cserv.getPlayerStorage().getAllCharacters().iterator(); var6.hasNext(); ++ret) {
+                MapleCharacter mch = (MapleCharacter)var6.next();
+                mch.startMapEffect(msg, itemId);
+            }
+        }
+
+    }
 
 }

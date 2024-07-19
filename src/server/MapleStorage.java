@@ -48,7 +48,7 @@ public class MapleStorage implements Serializable
     
     public static int create(final int id) throws SQLException {
         ResultSet rs;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO storages (accountid, slots, meso) VALUES (?, ?, ?)", 1)) {
             ps.setInt(1, id);
             ps.setInt(2, 4);
@@ -72,7 +72,7 @@ public class MapleStorage implements Serializable
     
     public static MapleStorage loadStorage(final int id) {
         MapleStorage ret = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM storages WHERE accountid = ?");
             ps.setInt(1, id);
             final ResultSet rs = ps.executeQuery();
@@ -100,7 +100,7 @@ public class MapleStorage implements Serializable
     }
     
     public void saveToDB() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.saveToDB(con);
         }
         catch (SQLException ex) {
@@ -108,7 +108,7 @@ public class MapleStorage implements Serializable
         }
     }
     
-    public void saveToDB(final Connection con) {
+    public void saveToDB(Connection con) {
         if (!this.changed) {
             return;
         }

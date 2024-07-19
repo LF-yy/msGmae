@@ -15,8 +15,8 @@ import java.io.Serializable;
 
 public class MapleGuildAlliance implements Serializable
 {
-    public static final long serialVersionUID = 24081985245L;
-    public static final int CHANGE_CAPACITY_COST = 10000000;
+    public static long serialVersionUID = 24081985245L;
+    public static int CHANGE_CAPACITY_COST = 10000000;
     private final int[] guilds;
     private int allianceid;
     private int leaderid;
@@ -28,7 +28,7 @@ public class MapleGuildAlliance implements Serializable
     public MapleGuildAlliance(final int id) {
         this.guilds = new int[5];
         this.ranks = new String[5];
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM alliances WHERE id = ?")) {
             ps.setInt(1, id);
             final ResultSet rs = ps.executeQuery();
@@ -55,9 +55,9 @@ public class MapleGuildAlliance implements Serializable
         }
     }
     
-    public static final Collection<MapleGuildAlliance> loadAll() {
+    public static Collection<MapleGuildAlliance> loadAll() {
         final Collection<MapleGuildAlliance> ret = new ArrayList<MapleGuildAlliance>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT id FROM alliances");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -84,12 +84,12 @@ public class MapleGuildAlliance implements Serializable
         return ret;
     }
     
-    public static final int createToDb(final int leaderId, final String name, final int guild1, final int guild2) {
+    public static int createToDb(final int leaderId, final String name, final int guild1, final int guild2) {
         int ret = -1;
         if (name.length() > 12) {
             return ret;
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT id FROM alliances WHERE name = ?");
             ps.setString(1, name);
             ResultSet rs = ps.executeQuery();
@@ -121,7 +121,7 @@ public class MapleGuildAlliance implements Serializable
     }
     
     public final boolean deleteAlliance() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             for (int i = 0; i < this.getNoGuilds(); ++i) {
                 final PreparedStatement ps = con.prepareStatement("UPDATE characters SET alliancerank = 5 WHERE guildid = ?");
                 ps.setInt(1, this.guilds[i]);
@@ -141,15 +141,15 @@ public class MapleGuildAlliance implements Serializable
         return true;
     }
     
-    public final void broadcast(final byte[] packet) {
+    public void broadcast(final byte[] packet) {
         this.broadcast(packet, -1, GAOp.NONE, false);
     }
     
-    public final void broadcast(final byte[] packet, final int exception) {
+    public void broadcast(final byte[] packet, final int exception) {
         this.broadcast(packet, exception, GAOp.NONE, false);
     }
     
-    public final void broadcast(final byte[] packet, final int exceptionId, final GAOp op, final boolean expelled) {
+    public void broadcast(final byte[] packet, final int exceptionId, final GAOp op, final boolean expelled) {
         if (op == GAOp.DISBAND) {
             Alliance.setOldAlliance(exceptionId, expelled, this.allianceid);
         }
@@ -169,8 +169,8 @@ public class MapleGuildAlliance implements Serializable
         return ret;
     }
     
-    public final void saveToDb() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public void saveToDb() {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE alliances set guild1 = ?, guild2 = ?, guild3 = ?, guild4 = ?, guild5 = ?, rank1 = ?, rank2 = ?, rank3 = ?, rank4 = ?, rank5 = ?, capacity = ?, leaderid = ?, notice = ? where id = ?")) {
             for (int i = 0; i < 5; ++i) {
                 ps.setInt(i + 1, (this.guilds[i] < 0) ? 0 : this.guilds[i]);

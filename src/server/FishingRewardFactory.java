@@ -72,7 +72,7 @@ public class FishingRewardFactory
     private void loadItems() {
         this.rewards.clear();
         Long acc = Long.valueOf(0L);
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM 钓鱼物品 ORDER BY chance ASC");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {

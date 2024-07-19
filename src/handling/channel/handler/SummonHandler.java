@@ -33,7 +33,7 @@ import tools.data.LittleEndianAccessor;
 
 public class SummonHandler
 {
-    public static final void MoveSummon(final LittleEndianAccessor slea, final MapleCharacter chr) {
+    public static void MoveSummon(final LittleEndianAccessor slea, MapleCharacter chr) {
         final int oid = slea.readInt();
         final Point startPos = new Point((int)slea.readShort(), (int)slea.readShort());
         final List<LifeMovementFragment> res = MovementParse.parseMovement(slea, 4);
@@ -53,7 +53,7 @@ public class SummonHandler
         }
     }
     
-    public static final void DamageSummon(final LittleEndianAccessor slea, final MapleCharacter chr) {
+    public static void DamageSummon(final LittleEndianAccessor slea, MapleCharacter chr) {
         final int unkByte = slea.readByte();
         final int damage = slea.readInt();
         final int monsterIdFrom = slea.readInt();
@@ -69,7 +69,7 @@ public class SummonHandler
         }
     }
     
-    public static void SummonAttack(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void SummonAttack(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (chr == null || !chr.isAlive()) {
             return;
         }

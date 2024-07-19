@@ -9,7 +9,7 @@ import java.util.List;
 
 public class UIPacket
 {
-    public static final byte[] EarnTitleMsg(final String msg) {
+    public static byte[] EarnTitleMsg(final String msg) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.EARN_TITLE_MSG.getValue());
         mplew.writeMapleAsciiString(msg);
@@ -55,19 +55,19 @@ public class UIPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] MapEff(final String path) {
+    public static byte[] MapEff(final String path) {
         return MaplePacketCreator.environmentChange(path, 3);
     }
     
-    public static final byte[] MapNameDisplay(final int mapid) {
+    public static byte[] MapNameDisplay(final int mapid) {
         return MaplePacketCreator.environmentChange("maplemap/enter/" + mapid, 3);
     }
     
-    public static final byte[] Aran_Start() {
+    public static byte[] Aran_Start() {
         return MaplePacketCreator.environmentChange("Aran/balloon", 4);
     }
     
-    public static final byte[] AranTutInstructionalBalloon(final String data) {
+    public static byte[] AranTutInstructionalBalloon(final String data) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
         mplew.write(23);
@@ -76,7 +76,7 @@ public class UIPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] ShowWZEffect(final String data) {
+    public static byte[] ShowWZEffect(final String data) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SHOW_ITEM_GAIN_INCHAT.getValue());
         mplew.write(20);

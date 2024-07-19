@@ -22,32 +22,32 @@ import server.maps.MapleMapObjectType;
 public class GameConstants
 {
     public static String 冒险岛名字;
-    public static final List<MapleMapObjectType> rangedMapobjectTypes;
+    public static List<MapleMapObjectType> rangedMapobjectTypes;
     private static final int[] ExpTable;
     private static final int[] ClosenessTable;
     private static final int[] MountExpTable;
-    public static final int[] itemBlock;
-    public static final int[] cashBlock;
-    public static final int OMOK_SCORE = 122200;
-    public static final int MATCH_SCORE = 122210;
-    public static final int HP_ITEM = 122221;
-    public static final int MP_ITEM = 122223;
-    public static final int[] blockedSkills;
+    public static int[] itemBlock;
+    public static int[] cashBlock;
+    public static int OMOK_SCORE = 122200;
+    public static int MATCH_SCORE = 122210;
+    public static int HP_ITEM = 122221;
+    public static int MP_ITEM = 122223;
+    public static int[] blockedSkills;
     public static int[] blockedMaps;
     public static int[] Equipments_Bonus;
-    public static final String[] RESERVED;
-    public static final String[] stats;
-    public static final int[] Jxboxrewards;
-    public static final int[] goldrewards;
-    public static final int[] silverrewards;
+    public static String[] RESERVED;
+    public static String[] stats;
+    public static int[] Jxboxrewards;
+    public static int[] goldrewards;
+    public static int[] silverrewards;
     public static int[] eventCommonReward;
     public static int[] eventUncommonReward;
     public static int[] eventRareReward;
     public static int[] eventSuperReward;
     public static int[] fishingReward;
-    public static final int[] normalDrops;
-    public static final int[] rareDrops;
-    public static final int[] superDrops;
+    public static int[] normalDrops;
+    public static int[] rareDrops;
+    public static int[] superDrops;
     public static int[] owlItems;
     private static final List<Balloon> lBalloon;
     
@@ -2608,7 +2608,7 @@ public class GameConstants
         return 20000012;
     }
     
-    public static final boolean isMountItemAvailable(final int mountid, final int jobid) {
+    public static boolean isMountItemAvailable(final int mountid, final int jobid) {
         if (jobid != 900 && mountid / 10000 == 190) {
             if (isKOC(jobid)) {
                 if (mountid < 1902005 || mountid > 1902007) {
@@ -2977,7 +2977,7 @@ public class GameConstants
         return defRange;
     }
     
-    private static double getAttackRangeByWeapon(final MapleCharacter chr) {
+    private static double getAttackRangeByWeapon(MapleCharacter chr) {
         final IItem weapon_item = chr.getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-11));
         final MapleWeaponType weapon = (weapon_item == null) ? MapleWeaponType.沒有武器 : getWeaponType(weapon_item.getItemId());
         switch (weapon) {
@@ -2998,7 +2998,7 @@ public class GameConstants
         }
     }
     
-    public static double getAttackRange(final MapleCharacter chr, final MapleStatEffect def, final AttackInfo attack) {
+    public static double getAttackRange(MapleCharacter chr, final MapleStatEffect def, final AttackInfo attack) {
         final int rangeInc = chr.getStat().defRange;
         final double base = 450.0;
         double defRange = (base + (double)rangeInc) * (base + (double)rangeInc);

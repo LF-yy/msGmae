@@ -21,7 +21,7 @@ public class GuildHandler
     private static final List<Invited> invited;
     private static long nextPruneTime;
     
-    public static final void denyGuildRequest(final String from, final MapleClient c) {
+    public static void denyGuildRequest(final String from, final MapleClient c) {
         final MapleCharacter cfrom = c.getChannelServer().getPlayerStorage().getCharacterByName(from);
         if (cfrom != null) {
             cfrom.getClient().sendPacket(MaplePacketCreator.denyGuildInvitation(c.getPlayer().getName()));
@@ -48,7 +48,7 @@ public class GuildHandler
         }
     }
     
-    public static final void HandleGuild(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void HandleGuild(final LittleEndianAccessor slea, final MapleClient c) {
         if (System.currentTimeMillis() >= GuildHandler.nextPruneTime) {
             final Iterator<Invited> itr = GuildHandler.invited.iterator();
             while (itr.hasNext()) {
@@ -252,7 +252,7 @@ public class GuildHandler
             this.value = op;
         }
         
-        public static final GuildOperation getByValue(final byte value) {
+        public static GuildOperation getByValue(final byte value) {
             for (final GuildOperation op : values()) {
                 if (op.value == value) {
                     return op;

@@ -35,11 +35,11 @@ import java.util.TimeZone;
 public class PacketHelper
 {
     private static final long FT_UT_OFFSET = 116444592000000000L;
-    public static final long MAX_TIME = 150842304000000000L;
-    public static final byte[] unk1;
-    public static final byte[] unk2;
+    public static long MAX_TIME = 150842304000000000L;
+    public static byte[] unk1;
+    public static byte[] unk2;
     
-    public static final long getKoreanTimestamp(final long realTimestamp) {
+    public static long getKoreanTimestamp(final long realTimestamp) {
         if (realTimestamp == -1L) {
             return 150842304000000000L;
         }
@@ -47,7 +47,7 @@ public class PacketHelper
         return time * 600000000L + 116444592000000000L;
     }
     
-    public static final long getTime(final long realTimestamp) {
+    public static long getTime(final long realTimestamp) {
         if (realTimestamp == -1L) {
             return 150842304000000000L;
         }
@@ -74,7 +74,7 @@ public class PacketHelper
         mplew.write(image);
     }
     
-    public static void addQuestInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addQuestInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         final List<MapleQuestStatus> started = chr.getStartedQuests();
         mplew.writeShort(started.size());
         for (final MapleQuestStatus q : started) {
@@ -91,7 +91,7 @@ public class PacketHelper
         }
     }
     
-    public static final void addSkillInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addSkillInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         final Map<ISkill, SkillEntry> skills = chr.getSkills();
         mplew.writeShort(skills.size());
         for (final Entry<ISkill, SkillEntry> skill : skills.entrySet()) {
@@ -103,7 +103,7 @@ public class PacketHelper
         }
     }
     
-    public static final void addCoolDownInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addCoolDownInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         final List<MapleCoolDownValueHolder> cd = chr.getCooldowns();
         mplew.writeShort(cd.size());
         for (final MapleCoolDownValueHolder cooling : cd) {
@@ -112,7 +112,7 @@ public class PacketHelper
         }
     }
     
-    public static final void addRocksInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addRocksInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         final int[] mapz = chr.getRegRocks();
         for (int i = 0; i < 5; ++i) {
             mplew.writeInt(mapz[i]);
@@ -123,13 +123,13 @@ public class PacketHelper
         }
     }
     
-    public static final void addMonsterBookInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addMonsterBookInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         mplew.writeInt(chr.getMonsterBookCover());
         mplew.write(0);
         chr.getMonsterBook().addCardPacket(mplew);
     }
     
-    public static final void addRingInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addRingInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         mplew.writeShort(0);
         final Pair<List<MapleRing>, List<MapleRing>> aRing = chr.getRings(true);
         final List<MapleRing> cRing = (List<MapleRing>)aRing.getLeft();
@@ -159,7 +159,7 @@ public class PacketHelper
         }
     }
     
-    public static void addInventoryInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addInventoryInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         mplew.writeInt(chr.getMeso());
         mplew.writeInt(chr.getId());
         mplew.writeInt(chr.getBeans());
@@ -216,7 +216,7 @@ public class PacketHelper
         mplew.write(0);
     }
     
-    public static final void addCharStats(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addCharStats(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         mplew.writeInt(chr.getId());
         mplew.writeAsciiString(chr.getName(), 13);
         mplew.write(chr.getGender());
@@ -237,7 +237,7 @@ public class PacketHelper
         mplew.write(chr.getInitialSpawnpoint());
     }
     
-    public static final void addCharLook(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr, final boolean mega) {
+    public static void addCharLook(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr, final boolean mega) {
         mplew.write(chr.getGender());
         mplew.write(chr.getSkinColor());
         mplew.writeInt(chr.getFace());
@@ -288,13 +288,13 @@ public class PacketHelper
         mplew.writeLong(getTime(time));
     }
     
-    public static final void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition) {
+    public static void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition) {
         addItemInfo(mplew, item, zeroPosition);
     }
     public static void addItemInfo(MaplePacketLittleEndianWriter mplew, Item item) {
         addItemInfo(mplew, item, false);
     }
-    public static final void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition, final boolean leaveOut) {
+    public static void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition, final boolean leaveOut) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final boolean isPet = item.getPet() != null && item.getPet().getUniqueId() > -1;
         boolean isRing = false;
@@ -387,7 +387,7 @@ public class PacketHelper
         }
     }
     
-    public static final void addItemInfo2(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition, final boolean leaveOut, final boolean trade) {
+    public static void addItemInfo2(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition, final boolean leaveOut, final boolean trade) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final boolean isCash = ii.isCash(item.getItemId());
         final boolean isPet = item.getPet() != null && item.getPet().getUniqueId() > -1;
@@ -462,14 +462,14 @@ public class PacketHelper
         }
     }
     
-    public static final void serializeMovementList(final MaplePacketLittleEndianWriter lew, final List<LifeMovementFragment> moves) {
+    public static void serializeMovementList(final MaplePacketLittleEndianWriter lew, final List<LifeMovementFragment> moves) {
         lew.write(moves.size());
         for (final LifeMovementFragment move : moves) {
             move.serialize(lew);
         }
     }
     
-    public static final void addAnnounceBox(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr) {
+    public static void addAnnounceBox(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr) {
         if (chr.getPlayerShop() != null && chr.getPlayerShop().isOwner(chr) && chr.getPlayerShop().getShopType() != 1 && chr.getPlayerShop().isAvailable()) {
             addInteraction(mplew, chr.getPlayerShop());
         }
@@ -478,7 +478,7 @@ public class PacketHelper
         }
     }
     
-    public static final void addInteraction(final MaplePacketLittleEndianWriter mplew, final IMaplePlayerShop shop) {
+    public static void addInteraction(final MaplePacketLittleEndianWriter mplew, final IMaplePlayerShop shop) {
         mplew.write(shop.getGameType());
         mplew.writeInt(((AbstractPlayerStore)shop).getObjectId());
         mplew.writeMapleAsciiString(shop.getDescription());
@@ -493,7 +493,7 @@ public class PacketHelper
         }
     }
     
-    public static final void addCharacterInfo(final MaplePacketLittleEndianWriter mplew, final MapleCharacter chr, final boolean isCs) {
+    public static void addCharacterInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr, final boolean isCs) {
         mplew.writeLong(-1L);
         mplew.write(0);
         addCharStats(mplew, chr);
@@ -551,7 +551,7 @@ public class PacketHelper
         mplew.writeShort(0);
     }
     
-    public static final void addPetItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final MaplePet pet) {
+    public static void addPetItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final MaplePet pet) {
         addExpirationTime(mplew, (item != null) ? item.getExpiration() : -1L);
         String petname = pet.getName();
         if (petname == null) {

@@ -45,7 +45,7 @@ public final class Eval
         }
     }
     
-    public static final class Tokeniser
+    public static class Tokeniser
     {
         static final Character START_NEW_EXPRESSION;
         private final String string;
@@ -417,7 +417,7 @@ public final class Eval
         abstract BigDecimal perform(final BigDecimal p0, final BigDecimal p1, final BigDecimal p2);
     }
     
-    public static final class Operation
+    public static class Operation
     {
         final Type type;
         final Operator operator;

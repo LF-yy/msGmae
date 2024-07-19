@@ -110,7 +110,7 @@ public class PlayerStats implements Serializable
     public transient int element_fire; //element_fire 火
     public transient int element_light;//element_light  光
     public transient int element_psn;
-    public static final short maxStr = 999;
+    public static short maxStr = 999;
     public ReentrantLock lock;
     public short pickRate;
     public int defRange;
@@ -124,7 +124,7 @@ public class PlayerStats implements Serializable
     public transient Map<String, List<SuitSystem>> suitSys;//套装列表
     public transient long damage;//伤害
 
-    public PlayerStats(final MapleCharacter chr) {
+    public PlayerStats(MapleCharacter chr) {
         this.equipLevelHandling = new ArrayList<Equip>();
         this.Berserk = false;
         this.isRecalc = false;
@@ -139,7 +139,7 @@ public class PlayerStats implements Serializable
         itemExpm = 100;
         itemDropm = 0;
     }
-    public final void init() {
+    public void init() {
         this.recalcLocalStats();
         this.relocHeal();
     }
@@ -160,22 +160,22 @@ public class PlayerStats implements Serializable
         return this.int_;
     }
     
-    public final void setStr(final short str) {
+    public void setStr(final short str) {
         this.str = str;
         this.recalcLocalStats();
     }
     
-    public final void setDex(final short dex) {
+    public void setDex(final short dex) {
         this.dex = dex;
         this.recalcLocalStats();
     }
     
-    public final void setLuk(final short luk) {
+    public void setLuk(final short luk) {
         this.luk = luk;
         this.recalcLocalStats();
     }
     
-    public final void setInt(final short int_) {
+    public void setInt(final short int_) {
         this.int_ = int_;
         this.recalcLocalStats();
     }
@@ -194,7 +194,7 @@ public class PlayerStats implements Serializable
             thp = this.localmaxhp;
         }
         this.hp = (short)thp;
-        final MapleCharacter chra = (MapleCharacter)this.chr.get();
+        MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra != null) {
             if (!silent) {
                 chra.updatePartyMemberHP();
@@ -219,12 +219,12 @@ public class PlayerStats implements Serializable
         return this.mp != oldMp;
     }
     
-    public final void setMaxHp(final short hp) {
+    public void setMaxHp(final short hp) {
         this.maxhp = hp;
         this.recalcLocalStats();
     }
     
-    public final void setMaxMp(final short mp) {
+    public void setMaxMp(final short mp) {
         this.maxmp = mp;
         this.recalcLocalStats();
     }
@@ -313,7 +313,7 @@ public class PlayerStats implements Serializable
         套装4是否共存 = true;
         套装5是否共存 = true;
         套装6是否共存 = true;
-        final MapleCharacter chra = (MapleCharacter)this.chr.get();
+        MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra == null) {
             return;
         }
@@ -909,8 +909,8 @@ public class PlayerStats implements Serializable
         buff = chra.getBuffedValue(MapleBuffStat.ECHO_OF_HERO);
         if (buff != null) {
             final double d = (double)buff / 100.0;
-            this.watk += (int)((double)this.watk * d);
-            this.magic += (int)((double)this.magic * d);
+            this.watk += (int)((double)this.watk * d);//物攻?
+            this.magic += (int)((double)this.magic * d);//魔攻?
         }
         buff = chra.getBuffedValue(MapleBuffStat.ARAN_COMBO);
         if (buff != null) {
@@ -1307,7 +1307,7 @@ public class PlayerStats implements Serializable
 
 
     //角色属性整合
-    public void recalcLocalStats1(final boolean first_login,final MapleCharacter chra) {
+    public void recalcLocalStats1(final boolean first_login,MapleCharacter chra) {
 
         int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
         int 套装2装备数量 = LtMS.ConfigValuesMap.get("套装2最少触发件数");//装备数量
@@ -2311,7 +2311,7 @@ public class PlayerStats implements Serializable
 
     }
 
-    public boolean checkEquipLevels(final MapleCharacter chr, final int gain) {
+    public boolean checkEquipLevels(MapleCharacter chr, final int gain) {
         boolean changed = false;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final List<Equip> all = new ArrayList<Equip>((Collection<? extends Equip>)this.equipLevelHandling);
@@ -2351,7 +2351,7 @@ public class PlayerStats implements Serializable
         return changed;
     }
     
-    public boolean checkEquipDurabilitys(final MapleCharacter chr, final int gain) {
+    public boolean checkEquipDurabilitys(MapleCharacter chr, final int gain) {
         for (final Equip item : this.durabilityHandling) {
             item.setDurability(item.getDurability() + gain);
             if (item.getDurability() < 0) {
@@ -2556,7 +2556,7 @@ public class PlayerStats implements Serializable
         this.passive_sharpeye_rate = (byte)added_sharpeye_rate;
     }
     
-    private void CalcPassive_Range(final MapleCharacter chra) {
+    private void CalcPassive_Range(MapleCharacter chra) {
         switch (chra.getJob()) {
             case 300:
             case 310:
@@ -2644,7 +2644,7 @@ public class PlayerStats implements Serializable
     }
     
     public final float calculateMaxBaseDamage(final int matk, final int watk) {
-        final MapleCharacter chra = (MapleCharacter)this.chr.get();
+        MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra == null) {
             return 0.0f;
         }
@@ -2770,8 +2770,8 @@ public class PlayerStats implements Serializable
         return (float)shouldHealMP;
     }
     
-    public final void relocHeal() {
-        final MapleCharacter chra = (MapleCharacter)this.chr.get();
+    public void relocHeal() {
+        MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra == null) {
             return;
         }
@@ -2835,7 +2835,7 @@ public class PlayerStats implements Serializable
         this.shouldHealMP *= 2.0f;
     }
     
-    public final void connectData(final MaplePacketLittleEndianWriter mplew) {
+    public void connectData(final MaplePacketLittleEndianWriter mplew) {
         mplew.writeShort((int)this.str);
         mplew.writeShort((int)this.dex);
         mplew.writeShort((int)this.int_);

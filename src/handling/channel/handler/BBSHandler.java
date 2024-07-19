@@ -17,7 +17,7 @@ public class BBSHandler
         return in;
     }
     
-    public static final void HandleBBS(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void HandleBBS(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer().getGuildId() <= 0) {
             return;
         }

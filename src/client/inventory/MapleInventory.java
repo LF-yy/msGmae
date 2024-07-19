@@ -172,7 +172,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable
         this.removeItem(slot, quantity, allowZero, null);
     }
     
-    public void removeItem(final short slot, final short quantity, final boolean allowZero, final MapleCharacter chr) {
+    public void removeItem(final short slot, final short quantity, final boolean allowZero, MapleCharacter chr) {
         final IItem item = (IItem)this.inventory.get((Object)Short.valueOf(slot));
         if (item == null) {
             return;

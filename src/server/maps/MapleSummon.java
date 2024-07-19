@@ -47,15 +47,15 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject
     }
     
     @Override
-    public final void sendSpawnData(final MapleClient client) {
+    public void sendSpawnData(final MapleClient client) {
     }
     
     @Override
-    public final void sendDestroyData(final MapleClient client) {
+    public void sendDestroyData(final MapleClient client) {
         client.sendPacket(MaplePacketCreator.removeSummon(this, false));
     }
     
-    public final void updateMap(final MapleMap map) {
+    public void updateMap(final MapleMap map) {
         this.map = map;
     }
     
@@ -67,7 +67,7 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject
         return this.fh;
     }
     
-    public final void setFh(final int fh) {
+    public void setFh(final int fh) {
         this.fh = fh;
     }
     
@@ -87,7 +87,7 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject
         return this.hp;
     }
     
-    public final void addHP(final short delta) {
+    public void addHP(final short delta) {
         this.hp += delta;
     }
     
@@ -200,7 +200,7 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject
         return MapleMapObjectType.SUMMON;
     }
     
-    public final void CheckSummonAttackFrequency(final MapleCharacter chr, final int tickcount) {
+    public void CheckSummonAttackFrequency(MapleCharacter chr, final int tickcount) {
         final int tickdifference = tickcount - this.lastSummonTickCount;
         if (tickdifference < GameConstants.getSummonAttackDelay(this.skill)) {
             chr.getCheatTracker().registerOffense(CheatingOffense.FAST_SUMMON_ATTACK, chr.getName() + "快速召喚獸攻击");
@@ -220,7 +220,7 @@ public class MapleSummon extends AbstractAnimatedMapleMapObject
         return this.changedMap;
     }
     
-    public final void setChangedMap(final boolean cm) {
+    public void setChangedMap(final boolean cm) {
         this.changedMap = cm;
     }
 }

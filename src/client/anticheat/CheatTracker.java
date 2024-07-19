@@ -60,7 +60,7 @@ public class CheatTracker
     private long error;
     private long noError;
 
-    public CheatTracker(final MapleCharacter chr) {
+    public CheatTracker(MapleCharacter chr) {
         this.lock = new ReentrantReadWriteLock();
         this.rL = this.lock.readLock();
         this.wL = this.lock.writeLock();
@@ -197,7 +197,7 @@ public class CheatTracker
         return 0;
     }
     
-    public final void checkTakeDamage(final int damage) {
+    public void checkTakeDamage(final int damage) {
         ++this.numSequentialDamage;
         this.lastDamageTakenTime = System.currentTimeMillis();
         if (this.lastDamageTakenTime - this.takingDamageSince / 500L < (long)this.numSequentialDamage) {}
@@ -217,7 +217,7 @@ public class CheatTracker
         }
     }
     
-    public final void checkSameDamage(final int dmg, final double expected) {
+    public void checkSameDamage(final int dmg, final double expected) {
         if (dmg > 2000 && this.lastDamage == (long)dmg && this.chr.get() != null && (((MapleCharacter)this.chr.get()).getLevel() < 175 || (double)dmg > expected * 2.0)) {
             ++this.numSameDamage;
             if (this.numSameDamage > 5) {
@@ -231,7 +231,7 @@ public class CheatTracker
         }
     }
     
-    public final void checkMoveMonster(final Point pos) {
+    public void checkMoveMonster(final Point pos) {
         if (pos == this.lastMonsterMove) {
             ++this.monsterMoveCount;
             if (this.monsterMoveCount > 10) {
@@ -245,7 +245,7 @@ public class CheatTracker
         }
     }
     
-    public final void resetSummonAttack() {
+    public void resetSummonAttack() {
         this.summonSummonTime = System.currentTimeMillis();
         this.numSequentialSummonAttack = 0;
     }
@@ -255,11 +255,11 @@ public class CheatTracker
         return true;
     }
     
-    public final void checkDrop() {
+    public void checkDrop() {
         this.checkDrop(false);
     }
     
-    public final void checkDrop(final boolean dc) {
+    public void checkDrop(final boolean dc) {
         if (System.currentTimeMillis() - this.lastDropTime < 1000L) {
             ++this.dropsPerSecond;
             if (this.dropsPerSecond >= (dc ? 32 : 16) && this.chr.get() != null && !((MapleCharacter)this.chr.get()).isGM()) {
@@ -302,7 +302,7 @@ public class CheatTracker
         return false;
     }
     
-    public final void checkMsg() {
+    public void checkMsg() {
         if (System.currentTimeMillis() - this.lastMsgTime < 1000L) {
             ++this.msgsPerSecond;
         }
@@ -316,7 +316,7 @@ public class CheatTracker
         return this.attacksWithoutHit;
     }
     
-    public final void setAttacksWithoutHit(final boolean increase) {
+    public void setAttacksWithoutHit(final boolean increase) {
         if (increase) {
             ++this.attacksWithoutHit;
         }
@@ -325,12 +325,12 @@ public class CheatTracker
         }
     }
     
-    public final void registerOffense(final CheatingOffense offense) {
+    public void registerOffense(final CheatingOffense offense) {
         this.registerOffense(offense, null);
     }
     
-    public final void registerOffense(final CheatingOffense offense, final String param) {
-        final MapleCharacter chrhardref = (MapleCharacter)this.chr.get();
+    public void registerOffense(final CheatingOffense offense, final String param) {
+        MapleCharacter chrhardref = (MapleCharacter)this.chr.get();
         if (chrhardref == null || !offense.isEnabled() || chrhardref.isClone()) {
             return;
         }
@@ -435,7 +435,7 @@ public class CheatTracker
         this.lastTickCount = newTick;
     }
     
-    public final void expireEntry(final CheatingOffenseEntry coe) {
+    public void expireEntry(final CheatingOffenseEntry coe) {
         this.wL.lock();
         try {
             this.offenses.remove((Object)coe.getOffense());
@@ -503,7 +503,7 @@ public class CheatTracker
         return ret.toString();
     }
     
-    public final void dispose() {
+    public void dispose() {
         if (this.invalidationTask != null) {
             this.invalidationTask.cancel(false);
         }
@@ -541,7 +541,7 @@ public class CheatTracker
     private final class InvalidationTask implements Runnable
     {
         @Override
-        public final void run() {
+        public void run() {
             rL.lock();
             CheatingOffenseEntry[] offenses_copy;
             try {

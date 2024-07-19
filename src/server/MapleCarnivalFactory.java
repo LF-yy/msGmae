@@ -25,7 +25,7 @@ public class MapleCarnivalFactory
         this.initialize();
     }
     
-    public static final MapleCarnivalFactory getInstance() {
+    public static MapleCarnivalFactory getInstance() {
         return MapleCarnivalFactory.instance;
     }
     

@@ -156,6 +156,9 @@ public class MobPacket
      */
     public static byte[] spawnMonster(final MapleMonster life, final int spawnType, final int effect, final int link) {
         UserAttraction userAttraction = NPCConversationManager.getAttractList(life.getMap().getChannel(), life.getMap().getId());
+//        if (Objects.isNull(userAttraction)) {
+//             userAttraction = NPCConversationManager.getAttractLhList(life.getMap().getChannel(), life.getMap().getId());
+//        }
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SPAWN_MONSTER.getValue());
         mplew.writeInt(life.getObjectId());

@@ -10,13 +10,13 @@ import client.MapleCharacter;
 
 public class AramiaFireWorks
 {
-    public static final int KEG_ID = 4031875;
-    public static final int SUN_ID = 4001246;
-    public static final int DEC_ID = 4001473;
-    public static final int XIANG_ID = 4000516;
-    public static final int MAX_KEGS = 5000;
-    public static final int MAX_SUN = 14000;
-    public static final int MAX_DEC = 18000;
+    public static int KEG_ID = 4031875;
+    public static int SUN_ID = 4001246;
+    public static int DEC_ID = 4001473;
+    public static int XIANG_ID = 4000516;
+    public static int MAX_KEGS = 5000;
+    public static int MAX_SUN = 14000;
+    public static int MAX_DEC = 18000;
     private short kegs;
     private short sunshines;
     private short decorations;
@@ -34,11 +34,11 @@ public class AramiaFireWorks
         this.decorations = 3000;
     }
     
-    public static final AramiaFireWorks getInstance() {
+    public static AramiaFireWorks getInstance() {
         return AramiaFireWorks.instance;
     }
     
-    public final void giveKegs(final MapleCharacter c, final int kegs) {
+    public void giveKegs(final MapleCharacter c, final int kegs) {
         switch (this.kegs += (short)kegs) {
             case 1000: {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "<頻道 " + c.getClient().getChannel() + "> 不夜城新年活動進度目前是5000/" + (int)this.kegs + "！！"));
@@ -80,7 +80,7 @@ public class AramiaFireWorks
         this.broadcastServer(c, 4000516);
         EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
-            public final void run() {
+            public void run() {
                 AramiaFireWorks.this.startEvent(c.getClient().getChannelServer().getMapFactory().getMap(741000000));
             }
         }, 10000L);
@@ -90,7 +90,7 @@ public class AramiaFireWorks
         map.startMapEffect("可以進行新年活動的表演了！！", 5121020);
         EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
-            public final void run() {
+            public void run() {
                 AramiaFireWorks.this.spawnMonster(map);
             }
         }, 5000L);
@@ -103,7 +103,7 @@ public class AramiaFireWorks
         }
     }
     
-    public final void giveSuns(final MapleCharacter c, final int kegs) {
+    public void giveSuns(final MapleCharacter c, final int kegs) {
         this.sunshines += (short)kegs;
         final MapleMap map = c.getClient().getChannelServer().getMapFactory().getMap(555000000);
         final MapleReactor reactor = map.getReactorByName("XmasTree");
@@ -145,7 +145,7 @@ public class AramiaFireWorks
         this.broadcastServer(c, 4001246);
         EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
-            public final void run() {
+            public void run() {
                 AramiaFireWorks.this.startSun(c.getClient().getChannelServer().getMapFactory().getMap(970010000));
             }
         }, 10000L);
@@ -156,7 +156,7 @@ public class AramiaFireWorks
         for (int i = 0; i < 3; ++i) {
             EventTimer.getInstance().schedule((Runnable)new Runnable() {
                 @Override
-                public final void run() {
+                public void run() {
                     AramiaFireWorks.this.spawnItem(map);
                 }
             }, (long)(5000 + i * 10000));
@@ -170,7 +170,7 @@ public class AramiaFireWorks
         }
     }
     
-    public final void giveDecs(final MapleCharacter c, final int kegs) {
+    public void giveDecs(final MapleCharacter c, final int kegs) {
         this.decorations += (short)kegs;
         final MapleMap map = c.getClient().getChannelServer().getMapFactory().getMap(555000000);
         final MapleReactor reactor = map.getReactorByName("XmasTree");
@@ -212,7 +212,7 @@ public class AramiaFireWorks
         this.broadcastServer(c, 4001473);
         EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
-            public final void run() {
+            public void run() {
                 AramiaFireWorks.this.startDec(c.getClient().getChannelServer().getMapFactory().getMap(555000000));
             }
         }, 10000L);
@@ -223,7 +223,7 @@ public class AramiaFireWorks
         for (int i = 0; i < 3; ++i) {
             EventTimer.getInstance().schedule((Runnable)new Runnable() {
                 @Override
-                public final void run() {
+                public void run() {
                     AramiaFireWorks.this.spawnDec(map);
                 }
             }, (long)(5000 + i * 10000));

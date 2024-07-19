@@ -2,7 +2,7 @@ package tools;
 
 public class MapleCustomEncryption
 {
-    public static final byte[] encryptData(final byte[] data) {
+    public static byte[] encryptData(final byte[] data) {
         for (int j = 0; j < 6; ++j) {
             byte remember = 0;
             byte dataLength = (byte)(data.length & 0xFF);
@@ -35,7 +35,7 @@ public class MapleCustomEncryption
         return data;
     }
     
-    public static final byte[] decryptData(final byte[] data) {
+    public static byte[] decryptData(final byte[] data) {
         for (int j = 1; j <= 6; ++j) {
             byte remember = 0;
             byte dataLength = (byte)(data.length & 0xFF);

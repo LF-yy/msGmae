@@ -108,7 +108,7 @@ public abstract class AbstractLoadedMapleLife extends AbstractAnimatedMapleMapOb
         return this.custom;
     }
     
-    public final void setCustom(final boolean custom) {
+    public void setCustom(final boolean custom) {
         this.custom = custom;
     }
 }

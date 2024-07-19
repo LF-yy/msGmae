@@ -24,17 +24,17 @@ import java.util.Map;
 
 public class SearchGenerator
 {
-    public static final int 道具;
-    public static final int NPC;
-    public static final int 地图;
-    public static final int 怪物;
-    public static final int 任務;
-    public static final int 技能;
-    public static final int 职业;
-    public static final int 伺服器包頭;
-    public static final int 用戶端包頭;
-    public static final int 发型;
-    public static final int 脸型;
+    public static int 道具;
+    public static int NPC;
+    public static int 地图;
+    public static int 怪物;
+    public static int 任務;
+    public static int 技能;
+    public static int 职业;
+    public static int 伺服器包頭;
+    public static int 用戶端包頭;
+    public static int 发型;
+    public static int 脸型;
     private static final Map<SearchType, Map<Integer, String>> searchs;
     
     public static Map<Integer, String> getSearchs(final int type) {

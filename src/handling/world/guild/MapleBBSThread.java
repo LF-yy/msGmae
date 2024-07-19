@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 public class MapleBBSThread implements Serializable
 {
-    public static final long serialVersionUID = 3565477792085301248L;
+    public static long serialVersionUID = 3565477792085301248L;
     public String name;
     public String text;
     public long timestamp;

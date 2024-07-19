@@ -419,18 +419,7 @@ public class DamageParse
                 } else {
                     monster.damage(player, monster.getStats().isBoss() ? 500000L : (monster.getHp() - 1L), true, attack.skill);
                 }
-                //触发特效技能
-                List<SuperSkills> superSkills = Start.superSkillsMap.get(player.getId());
-                if (ListUtil.isNotEmpty(superSkills)) {
-                    SuperSkills superSkills1 = superSkills.get(0);
-                    if (player.getHasEquipped().stream().anyMatch(iItem -> iItem.getItemId() == superSkills1.getItemid())) {
-                        //按技能等级概率触发
-                        if (Randomizer.nextInt(100) <= superSkills1.getSkill_leve()) {
-                            //触发技能
-                            player.getClient().useSkill(superSkills1.getSkillid(), superSkills1.getSkill_leve());
-                        }
-                    }
-                }
+
 
 
                 if (monster.isBuffed(MonsterStatus.WEAPON_DAMAGE_REFLECT)) {
@@ -639,8 +628,8 @@ public class DamageParse
             }
         }
     }
-    
-    public static final void applyAttackMagic(final AttackInfo attack, final ISkill theSkill, final MapleCharacter player, final MapleStatEffect effect) {
+
+    public static void applyAttackMagic(final AttackInfo attack, final ISkill theSkill, final MapleCharacter player, final MapleStatEffect effect) {
         if (!player.isAlive()) {
             player.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
@@ -912,6 +901,7 @@ public class DamageParse
 //                newtotDamageToOneMonster = 伤害减伤(monster.getId(), newtotDamageToOneMonster);
                 monster.damage(player, newtotDamageToOneMonster+附加伤害总和, true, attack.skill);
                 //monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
+
                 if (monster.isBuffed(MonsterStatus.MAGIC_DAMAGE_REFLECT)) {
                     player.addHP(-(7000 + Randomizer.nextInt(8000)));
                 }
@@ -948,7 +938,7 @@ public class DamageParse
         }
     }
     
-    private static double calculateMaxMagicDamagePerHit(final MapleCharacter chr, final ISkill skill, final MapleMonster monster, final MapleMonsterStats mobstats, final PlayerStats stats, final Element elem, final Integer sharpEye, final double maxDamagePerMonster) {
+    private static double calculateMaxMagicDamagePerHit(MapleCharacter chr, final ISkill skill, final MapleMonster monster, final MapleMonsterStats mobstats, final PlayerStats stats, final Element elem, final Integer sharpEye, final double maxDamagePerMonster) {
         final int dLevel = Math.max(mobstats.getLevel() - chr.getLevel(), 0);
         final int Accuracy = (int)(Math.floor((double)stats.getTotalInt() / 10.0) + Math.floor((double)stats.getTotalLuk() / 10.0));
         final int MinAccuracy = mobstats.getEva() * (dLevel * 2 + 51) / 120;
@@ -1240,7 +1230,7 @@ public class DamageParse
         return elementalMaxDamagePerMonster;
     }
     
-    public static final AttackInfo DivideAttack(final AttackInfo attack, final int rate) {
+    public static AttackInfo DivideAttack(final AttackInfo attack, final int rate) {
         attack.real = false;
         if (rate <= 1) {
             return attack;
@@ -1257,7 +1247,7 @@ public class DamageParse
         return attack;
     }
     
-    public static final AttackInfo Modify_AttackCrit(final AttackInfo attack, final MapleCharacter chr, final int type) {
+    public static AttackInfo Modify_AttackCrit(final AttackInfo attack, MapleCharacter chr, final int type) {
         final int criticalRate = chr.getStat().passive_sharpeye_rate();
         final boolean shadow = (type == 2 && chr.getBuffedValue(MapleBuffStat.SHADOWPARTNER) != null) || (type == 1 && chr.getBuffedValue(MapleBuffStat.MIRROR_IMAGE) != null);
         if (attack.skill != 4211006 && attack.skill != 3211003 && attack.skill != 4111004 && (criticalRate > 0 || attack.skill == 4221001 || attack.skill == 3221007)) {
@@ -1291,7 +1281,7 @@ public class DamageParse
     }
 
 
-    public static final AttackInfo parseDmgMaNew(final LittleEndianAccessor lea) {
+    public static AttackInfo parseDmgMaNew(final LittleEndianAccessor lea) {
         final AttackInfo ret = new AttackInfo();
         //2121006    15121019
         //2221006   15121020
@@ -1342,7 +1332,7 @@ public class DamageParse
         return ret;
     }
 
-    public static final AttackInfo parseDmgMa(final LittleEndianAccessor lea) {
+    public static AttackInfo parseDmgMa(final LittleEndianAccessor lea) {
 
         final AttackInfo ret = new AttackInfo();
         lea.skip(1);
@@ -1390,7 +1380,7 @@ public class DamageParse
         return ret;
     }
     
-    public static final AttackInfo parseDmgM(final LittleEndianAccessor lea) {
+    public static AttackInfo parseDmgM(final LittleEndianAccessor lea) {
         final AttackInfo ret = new AttackInfo();
         lea.skip(1);
         lea.skip(8);
@@ -1441,7 +1431,7 @@ public class DamageParse
         return ret;
     }
     
-    public static final AttackInfo parseDmgR(final LittleEndianAccessor lea) {
+    public static AttackInfo parseDmgR(final LittleEndianAccessor lea) {
         final AttackInfo ret = new AttackInfo();
         lea.skip(1);
         lea.skip(8);
@@ -1488,7 +1478,7 @@ public class DamageParse
         return ret;
     }
     
-    public static final AttackInfo parseExplosionAttack(final LittleEndianAccessor lea, final AttackInfo ret) {
+    public static AttackInfo parseExplosionAttack(final LittleEndianAccessor lea, final AttackInfo ret) {
         if (ret.hits == 0) {
             lea.skip(4);
             final byte bullets = lea.readByte();
@@ -1567,7 +1557,7 @@ public class DamageParse
     }
     public static void readMobRedDam() {
         DamageParse.MobRedDam.clear();
-        try (final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM mobreddam");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

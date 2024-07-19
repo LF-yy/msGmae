@@ -45,7 +45,7 @@ import tools.data.LittleEndianAccessor;
 
 public class PlayersHandler
 {
-    public static void Note(final LittleEndianAccessor slea, final MapleCharacter chr) {
+    public static void Note(final LittleEndianAccessor slea, MapleCharacter chr) {
         final byte type = slea.readByte();
         switch (type) {
             case 0: {
@@ -80,7 +80,7 @@ public class PlayersHandler
         }
     }
     
-    public static void GiveFame(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void GiveFame(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final int who = slea.readInt();
         final int mode = slea.readByte();
         final int famechange = (mode == 0) ? -1 : 1;
@@ -150,10 +150,6 @@ public class PlayersHandler
             int 获得破功 = c.getPlayer().取破攻等级();
             jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"));
         }
-        if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
-            System.out.println("角色破功:"+ c.getPlayer().取破攻等级() +"||组队爆率:"+ coefficient + "||破功爆率:"+jiac+"||经验卡:"+c.getPlayer().getDropMod()+"||掉落:"+c.getPlayer().getDropm() +  "||未知爆率dropBuff:"+c.getPlayer().getStat().dropBuff +"||getDropRate频道爆率?:"+c.getChannelServer().getDropRate()+"||装备爆率加成:"+c.getPlayer().getItemDropm()+"||爆率加成:"+c.getPlayer().getStat().realDropBuff);
-            System.out.println("经验1:"+ c.getPlayer().getEXPMod() +"||经验2:"+ c.getChannelServer().getExpRate() + "||经验3:"+c.getPlayer().getItemExpm()+"||经验4:"+c.getPlayer().getStat().expBuff +"||经验5:"+c.getPlayer().getFairyExp());
-        }
         double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
         DecimalFormat df = new DecimalFormat("#.00");
         String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
@@ -173,7 +169,7 @@ public class PlayersHandler
 
     }
 
-    public static void UseDoor(final LittleEndianAccessor slea, final MapleCharacter chr) {
+    public static void UseDoor(final LittleEndianAccessor slea, MapleCharacter chr) {
         final int oid = slea.readInt();
         final boolean mode = slea.readByte() == 0;
         for (final MapleMapObject obj : chr.getMap().getAllDoorsThreadsafe()) {
@@ -185,7 +181,7 @@ public class PlayersHandler
         }
     }
     
-    public static void TransformPlayer(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void TransformPlayer(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         chr.updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
@@ -408,7 +404,7 @@ public class PlayersHandler
             final String name = slea.readMapleAsciiString();
             final int itemid = slea.readInt();
             final int newItemId = 1112300 + (itemid - 2240004);
-            final MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(name);
+            MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(name);
             int errcode = 0;
             if (c.getPlayer().getMarriageId() > 0) {
                 errcode = 23;
@@ -455,7 +451,7 @@ public class PlayersHandler
             final boolean accepted = slea.readByte() > 0;
             final String name2 = slea.readMapleAsciiString();
             final int id = slea.readInt();
-            final MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(name2);
+            MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(name2);
             if (c.getPlayer().getMarriageId() > 0 || chr == null || chr.getId() != id || chr.getMarriageItemId() <= 0 || !chr.haveItem(chr.getMarriageItemId(), 1) || chr.getMarriageId() > 0) {
                 c.sendPacket(MaplePacketCreator.sendEngagement((byte)29, 0, null, null));
                 c.sendPacket(MaplePacketCreator.enableActions());
@@ -487,11 +483,12 @@ public class PlayersHandler
             final IItem item = c.getPlayer().getInventory(type).findById(itemId);
             if (item != null && type == MapleInventoryType.ETC && itemId / 10000 == 421) {
                 MapleInventoryManipulator.drop(c, type, item.getPosition(), item.getQuantity());
+
             }
         }
     }
     
-    public static void UpdateCharInfo(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UpdateCharInfo(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (slea.available() == 0L) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -517,7 +514,7 @@ public class PlayersHandler
         }
     }
     
-    public static void LieDetector(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr, final boolean isItem) {
+    public static void LieDetector(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr, final boolean isItem) {
         if (chr == null || chr.getMap() == null) {
             return;
         }
@@ -531,7 +528,7 @@ public class PlayersHandler
             }
             slot = (byte)slea.readShort();
             final int itemId = slea.readInt();
-            final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+            IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
             if (toUse == null || toUse.getQuantity() <= 0 || toUse.getItemId() != itemId || itemId != 2190000) {
                 c.getSession().writeAndFlush((Object)MaplePacketCreator.enableActions());
                 return;

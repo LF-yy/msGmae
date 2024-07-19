@@ -45,7 +45,7 @@ public class Skill implements ISkill
         return this.name;
     }
     
-    public static final Skill loadFromData(final int id, final MapleData data) {
+    public static Skill loadFromData(final int id, final MapleData data) {
         final Skill ret = new Skill(id);
         boolean isBuff = false;
         final int skillType = MapleDataTool.getInt("skillType", data, -1);

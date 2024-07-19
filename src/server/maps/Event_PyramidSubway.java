@@ -60,7 +60,7 @@ public class Event_PyramidSubway
         }
     }
     
-    public final void fullUpdate(final MapleCharacter c, final int stage) {
+    public void fullUpdate(final MapleCharacter c, final int stage) {
         this.broadcastEnergy(c, "massacre_party", (c.getParty() == null) ? 0 : c.getParty().getMembers().size());
         this.broadcastEnergy(c, "massacre_miss", this.miss);
         this.broadcastEnergy(c, "massacre_cool", this.cool);
@@ -70,7 +70,7 @@ public class Event_PyramidSubway
         this.broadcastUpdate(c);
     }
     
-    public final void commenceTimerNextMap(final MapleCharacter c, final int stage) {
+    public void commenceTimerNextMap(final MapleCharacter c, final int stage) {
         if (this.timerSchedule != null) {
             this.timerSchedule.cancel(false);
             this.timerSchedule = null;
@@ -83,7 +83,7 @@ public class Event_PyramidSubway
         final int time = ((this.type == -1) ? 180 : ((stage == 1) ? 240 : 300)) - 1;
         if (c.getParty() != null && c.getParty().getMembers().size() > 1) {
             for (final MaplePartyCharacter mpc : c.getParty().getMembers()) {
-                final MapleCharacter chr = ourMap.getCharacterById(mpc.getId());
+                MapleCharacter chr = ourMap.getCharacterById(mpc.getId());
                 if (chr != null) {
                     chr.getClient().sendPacket(MaplePacketCreator.getClock(time));
                     chr.getClient().sendPacket(MaplePacketCreator.showEffect("killing/first/number/" + stage));
@@ -129,7 +129,7 @@ public class Event_PyramidSubway
         }, (long)time * 1000L);
     }
     
-    public final void onKill(final MapleCharacter c) {
+    public void onKill(final MapleCharacter c) {
         ++this.kill;
         if (Randomizer.nextInt(100) < 5) {
             this.broadcastEnergy(c, "massacre_cool", ++this.cool);
@@ -153,7 +153,7 @@ public class Event_PyramidSubway
         this.broadcastEnergy(c, "massacre_hit", this.kill);
     }
     
-    public final void onMiss(final MapleCharacter c) {
+    public void onMiss(final MapleCharacter c) {
         ++this.miss;
         this.energybar -= 5;
         this.broadcastUpdate(c);
@@ -168,7 +168,7 @@ public class Event_PyramidSubway
         return false;
     }
     
-    public final void onChangeMap(final MapleCharacter c, final int newmapid) {
+    public void onChangeMap(final MapleCharacter c, final int newmapid) {
         if ((newmapid == 910330001 && this.type == -1) || (newmapid == 926020001 + this.type && this.type != -1)) {
             this.succeed(c);
         }
@@ -187,7 +187,7 @@ public class Event_PyramidSubway
         }
     }
     
-    public final void succeed(final MapleCharacter c) {
+    public void succeed(final MapleCharacter c) {
         final MapleQuestStatus record = c.getQuestNAdd(MapleQuest.getInstance((this.type == -1) ? 7662 : 7760));
         String data = record.getCustomData();
         if (data == null) {
@@ -344,7 +344,7 @@ public class Event_PyramidSubway
         this.dispose(c);
     }
     
-    public final void fail(final MapleCharacter c) {
+    public void fail(final MapleCharacter c) {
         MapleMap map;
         if (this.type == -1) {
             map = c.getClient().getChannelServer().getMapFactory().getMap(910320001);
@@ -356,7 +356,7 @@ public class Event_PyramidSubway
         this.dispose(c);
     }
     
-    public final void dispose(final MapleCharacter c) {
+    public void dispose(final MapleCharacter c) {
         final boolean lead = this.energyBarDecrease != null && this.timerSchedule != null;
         if (this.energyBarDecrease != null) {
             this.energyBarDecrease.cancel(false);
@@ -377,11 +377,11 @@ public class Event_PyramidSubway
         c.setPyramidSubway(null);
     }
     
-    public final void broadcastUpdate(final MapleCharacter c) {
+    public void broadcastUpdate(final MapleCharacter c) {
         final MapleMap map = c.getMap();
         if (c.getParty() != null && c.getParty().getMembers().size() > 1) {
             for (final MaplePartyCharacter mpc : c.getParty().getMembers()) {
-                final MapleCharacter chr = map.getCharacterById(mpc.getId());
+                MapleCharacter chr = map.getCharacterById(mpc.getId());
                 if (chr != null) {
                     chr.getClient().sendPacket(MaplePacketCreator.sendPyramidUpdate(this.energybar));
                 }
@@ -392,11 +392,11 @@ public class Event_PyramidSubway
         }
     }
     
-    public final void broadcastEffect(final MapleCharacter c, final String effect) {
+    public void broadcastEffect(final MapleCharacter c, final String effect) {
         c.getClient().sendPacket(MaplePacketCreator.showEffect(effect));
     }
     
-    public final void broadcastEnergy(final MapleCharacter c, final String type, final int amount) {
+    public void broadcastEnergy(final MapleCharacter c, final String type, final int amount) {
         c.getClient().sendPacket(MaplePacketCreator.sendPyramidEnergy(type, String.valueOf(amount)));
     }
     
@@ -527,7 +527,7 @@ public class Event_PyramidSubway
         final MapleMap oldMap = c.getMap();
         if (c.getParty() != null && c.getParty().getMembers().size() > 1) {
             for (final MaplePartyCharacter mpc : c.getParty().getMembers()) {
-                final MapleCharacter chr = oldMap.getCharacterById(mpc.getId());
+                MapleCharacter chr = oldMap.getCharacterById(mpc.getId());
                 if (chr != null && chr.getId() != c.getId() && chr.getLevel() >= minLevel && chr.getLevel() <= maxLevel) {
                     if (clear == 1) {
                         chr.getClient().sendPacket(MaplePacketCreator.showEffect("killing/clear"));

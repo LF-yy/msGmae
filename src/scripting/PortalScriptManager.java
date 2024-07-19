@@ -35,7 +35,7 @@ public class PortalScriptManager
         this.scripts = new HashMap<String, PortalScript>();
     }
     
-    public static final PortalScriptManager getInstance() {
+    public static PortalScriptManager getInstance() {
         return PortalScriptManager.instance;
     }
     
@@ -76,7 +76,7 @@ public class PortalScriptManager
         return script;
     }
     
-    public final void executePortalScript(final MaplePortal portal, final MapleClient c) {
+    public void executePortalScript(final MaplePortal portal, final MapleClient c) {
         final PortalScript script = this.getPortalScript(portal.getScriptName());
         if (c != null && c.getPlayer() != null && c.getPlayer().hasGmLevel(2)) {
             c.getPlayer().dropMessage("您已經建立與傳送門腳本: " + portal.getScriptName() + ".js 的关联。");
@@ -92,7 +92,7 @@ public class PortalScriptManager
         this.clearScripts();
     }
     
-    public final void clearScripts() {
+    public void clearScripts() {
         this.scripts.clear();
     }
     

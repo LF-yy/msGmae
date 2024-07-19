@@ -4,8 +4,8 @@ import server.ServerProperties;
 
 public class JobConstants
 {
-    public static final boolean enableJobs = true;
-    public static final int jobOrder = 184;
+    public static boolean enableJobs = true;
+    public static int jobOrder = 184;
     
     public enum LoginJob
     {

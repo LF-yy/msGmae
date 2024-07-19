@@ -28,7 +28,7 @@ import client.MapleClient;
 
 public class ChatHandler
 {
-    public static final void GeneralChat(final String text, final byte unk, final MapleClient c, final MapleCharacter chr) {
+    public static void GeneralChat(final String text, final byte unk, final MapleClient c, MapleCharacter chr) {
         if (chr != null && !CommandProcessor.processCommand(c, text, CommandType.NORMAL)) {
             if (LtMS.ConfigValuesMap.get("玩家聊天开关") == 0 ) {
                 c.sendPacket(MaplePacketCreator.serverNotice(1, "管理员从后台关闭了聊天功能"));
@@ -94,7 +94,7 @@ public class ChatHandler
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + chr.getName() + "』(" + chr.getId() + ")地图『" + chr.getMapId() + "』普聊：  " + text);
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                            for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                 if (chr_ == null) {
                                     break;
                                 }
@@ -117,7 +117,7 @@ public class ChatHandler
         }
     }
     
-    public static final void Others(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void Others(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final int type = slea.readByte();
         final byte numRecipients = slea.readByte();
         if (numRecipients <= 0) {
@@ -151,7 +151,7 @@ public class ChatHandler
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + chr.getName() + "』(" + chr.getId() + ")地图『" + chr.getMapId() + "』好友聊天： 好友ID: " + Arrays.toString(recipients) + " 玩家: " + chr.getName() + " 說了 :" + chattext);
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                            for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                 if (chr_ == null) {
                                     break;
                                 }
@@ -176,7 +176,7 @@ public class ChatHandler
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + chr.getName() + "』(" + chr.getId() + ")地图『" + chr.getMapId() + "』队伍聊天： 队伍: " + chr.getParty().getId() + " 玩家: " + chr.getName() + " 說了 :" + chattext);
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                            for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                 if (chr_ == null) {
                                     break;
                                 }
@@ -201,7 +201,7 @@ public class ChatHandler
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + chr.getName() + "』(" + chr.getId() + ")地图『" + chr.getMapId() + "』公会聊天： 公会: " + chr.getGuildId() + " 玩家: " + chr.getName() + " 說了 :" + chattext);
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                            for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                 if (chr_ == null) {
                                     break;
                                 }
@@ -226,7 +226,7 @@ public class ChatHandler
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + chr.getName() + "』(" + chr.getId() + ")地图『" + chr.getMapId() + "』联盟聊天： 公会: " + chr.getGuildId() + " 玩家: " + chr.getName() + " 說了 :" + chattext);
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                            for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                 if (chr_ == null) {
                                     break;
                                 }
@@ -245,7 +245,7 @@ public class ChatHandler
         }
     }
     
-    public static final void Messenger(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void Messenger(final LittleEndianAccessor slea, final MapleClient c) {
         MapleMessenger messenger = c.getPlayer().getMessenger();
         final byte mode = slea.readByte();
         if (!c.getPlayer().getCanTalk()) {
@@ -359,7 +359,7 @@ public class ChatHandler
         }
     }
     
-    public static final void WhisperFind(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void WhisperFind(final LittleEndianAccessor slea, final MapleClient c) {
         final byte mode = slea.readByte();
         if (!c.getPlayer().getCanTalk()) {
             c.sendPacket(MaplePacketCreator.serverNotice(6, "在這個地方不能說話。"));
@@ -443,7 +443,7 @@ public class ChatHandler
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + c.getPlayer().getName() + "』(" + c.getPlayer().getId() + ")地图『" + c.getPlayer().getMapId() + "』玩家密语： 玩家: " + c.getPlayer().getName() + " 對玩家: " + recipient + " 說了 :" + text);
                     try {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                            for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                 if (chr_ == null) {
                                     break;
                                 }

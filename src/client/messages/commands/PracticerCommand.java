@@ -40,7 +40,7 @@ public class PracticerCommand
             MapleCharacter smart_victim = null;
             final StringBuilder sb = new StringBuilder();
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                     final String name = chr.getName().toLowerCase();
                     if (name.contains((CharSequence)input)) {
                         if (smart_victim == null) {
@@ -571,7 +571,7 @@ public class PracticerCommand
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
             c.getPlayer().dropMessage(6, "频道: " + c.getChannelServer().getChannel() + " 线上人数: " + curConnected);
             total += curConnected;
-            for (final MapleCharacter chr : c.getChannelServer().getPlayerStorage().getAllCharactersThreadSafe()) {
+            for (MapleCharacter chr : c.getChannelServer().getPlayerStorage().getAllCharactersThreadSafe()) {
                 if (chr != null && c.getPlayer().getGMLevel() >= chr.getGMLevel()) {
                     final StringBuilder ret = new StringBuilder();
                     ret.append(" 角色暱称 ");
@@ -622,7 +622,7 @@ public class PracticerCommand
                 final int curConnected = cserv.getConnectedClients();
                 c.getPlayer().dropMessage(6, "频道: " + cserv.getChannel());
                 total += curConnected;
-                for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                     if (chr != null && c.getPlayer().getGMLevel() >= chr.getGMLevel()) {
                         final StringBuilder ret = new StringBuilder();
                         if (chr.getMapId() == mapId) {
@@ -663,13 +663,13 @@ public class PracticerCommand
             int totalOnline = 0;
             int GmInChannel = 0;
             List<MapleCharacter> chrs = new LinkedList<MapleCharacter>();
-            for (final MapleCharacter chr : c.getChannelServer().getPlayerStorage().getAllCharactersThreadSafe()) {
+            for (MapleCharacter chr : c.getChannelServer().getPlayerStorage().getAllCharactersThreadSafe()) {
                 if (chr.getGMLevel() > 0) {
                     ++channelOnline;
                 }
             }
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr2 : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                for (MapleCharacter chr2 : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                     if (chr2 != null && chr2.getGMLevel() > 0) {
                         ++totalOnline;
                     }
@@ -677,7 +677,7 @@ public class PracticerCommand
             }
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr2 : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                for (MapleCharacter chr2 : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                     if (chr2 != null && chr2.getGMLevel() > 0) {
                         chrs.add(chr2);
                     }
@@ -685,7 +685,7 @@ public class PracticerCommand
                 GmInChannel = chrs.size();
                 if (GmInChannel > 0) {
                     c.getPlayer().dropMessage(6, "频道: " + cserv.getChannel() + " 线上GM人数: " + GmInChannel);
-                    for (final MapleCharacter chr2 : chrs) {
+                    for (MapleCharacter chr2 : chrs) {
                         if (chr2 != null) {
                             final StringBuilder ret = new StringBuilder();
                             ret.append(" GM暱称 ");
@@ -754,7 +754,7 @@ public class PracticerCommand
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
             StringBuilder builder = new StringBuilder("在地图上的玩家 : ").append(c.getPlayer().getMap().getCharactersThreadsafe().size()).append(", ");
-            for (final MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
+            for (MapleCharacter chr : c.getPlayer().getMap().getCharactersThreadsafe()) {
                 if (builder.length() > 150) {
                     builder.setLength(builder.length() - 2);
                     c.getPlayer().dropMessage(6, builder.toString());
@@ -1257,7 +1257,7 @@ public class PracticerCommand
             boolean IPbanned = false;
             boolean MACbanned = false;
             String reason = null;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 PreparedStatement ps = con.prepareStatement("select accountid from characters where name = ?");
                 ps.setString(1, name);
                 try (final ResultSet rs = ps.executeQuery()) {
@@ -1317,7 +1317,7 @@ public class PracticerCommand
                 return true;
             }
             c.getPlayer().dropMessage("封锁MAC [" + mac + "] 成功");
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                  final PreparedStatement ps = con.prepareStatement("INSERT INTO macbans (mac) VALUES (?)")) {
                 ps.setString(1, mac);
                 ps.executeUpdate();

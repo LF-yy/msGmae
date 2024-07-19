@@ -47,7 +47,7 @@ public class MapleFootholdTree
         this.center = new Point((p2.x - p1.x) / 2, (p2.y - p1.y) / 2);
     }
     
-    public final void insert(final MapleFoothold f) {
+    public void insert(final MapleFoothold f) {
         if (this.depth == 0) {
             if (f.getX1() > this.maxDropX) {
                 this.maxDropX = f.getX1();

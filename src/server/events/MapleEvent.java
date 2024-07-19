@@ -42,7 +42,7 @@ public abstract class MapleEvent
         }
     }
     
-    public void givePrize(final MapleCharacter chr) {
+    public void givePrize(MapleCharacter chr) {
         final int reward = RandomRewards.getInstance().getEventReward();
         if (reward == 0) {
             chr.gainMeso(66666, true, false, false);
@@ -93,16 +93,16 @@ public abstract class MapleEvent
         }
     }
     
-    public void finished(final MapleCharacter chr) {
+    public void finished(MapleCharacter chr) {
     }
     
-    public void onMapLoad(final MapleCharacter chr) {
+    public void onMapLoad(MapleCharacter chr) {
     }
     
     public void startEvent() {
     }
     
-    public void warpBack(final MapleCharacter chr) {
+    public void warpBack(MapleCharacter chr) {
         int map = chr.getSavedLocation(SavedLocationType.EVENT);
         if (map <= -1) {
             map = 104000000;
@@ -119,7 +119,7 @@ public abstract class MapleEvent
         this.isRunning = false;
     }
     
-    public static final void setEvent(final ChannelServer cserv, final boolean auto) {
+    public static void setEvent(final ChannelServer cserv, final boolean auto) {
         if (auto) {
             for (final MapleEventType t : MapleEventType.values()) {
                 final MapleEvent e = cserv.getEvent(t);
@@ -143,7 +143,7 @@ public abstract class MapleEvent
         cserv.setEvent(-1);
     }
     
-    public static final void mapLoad(final MapleCharacter chr, final int channel) {
+    public static void mapLoad(MapleCharacter chr, final int channel) {
         if (chr == null) {
             return;
         }
@@ -162,7 +162,7 @@ public abstract class MapleEvent
         }
     }
     
-    public static final void onStartEvent(final MapleCharacter chr) {
+    public static void onStartEvent(MapleCharacter chr) {
         for (final MapleEventType t : MapleEventType.values()) {
             final MapleEvent e = chr.getClient().getChannelServer().getEvent(t);
             if (e.isRunning) {
@@ -176,7 +176,7 @@ public abstract class MapleEvent
         }
     }
     
-    public static final String scheduleEvent(final MapleEventType event, final ChannelServer cserv) {
+    public static String scheduleEvent(final MapleEventType event, final ChannelServer cserv) {
         if (cserv.getEvent() != -1 || cserv.getEvent(event) == null) {
             return "該活動已經被禁止安排了.";
         }

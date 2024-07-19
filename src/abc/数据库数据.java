@@ -11,7 +11,7 @@ public class 数据库数据
 {
     public static void getOfflineTimeList() {
         try {
-            final Connection conn = DatabaseConnection.getConnection();
+            Connection conn = DatabaseConnection.getConnection();
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
                 final PreparedStatement ps = conn.prepareStatement("SELECT * FROM lefttime WHERE channel=?");
                 ps.setInt(1, cserv.channel);

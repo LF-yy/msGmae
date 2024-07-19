@@ -41,7 +41,7 @@ public class DumpQuests
     }
     
     public void dumpQuests() throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             if (!this.hadError) {
                 final PreparedStatement psai = con.prepareStatement("INSERT INTO wz_questactitemdata(uniqueid, itemid, count, period, gender, job, jobEx, prop) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 final PreparedStatement psas = con.prepareStatement("INSERT INTO wz_questactskilldata(uniqueid, skillid, skillLevel, masterLevel) VALUES (?, ?, ?, ?)");
@@ -82,7 +82,7 @@ public class DumpQuests
     }
     
     public void delete(final String sql) throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement(sql);
             ps.executeUpdate();
             ps.close();
@@ -93,7 +93,7 @@ public class DumpQuests
     }
     
     public boolean doesExist(final String sql) throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement(sql);
             final ResultSet rs = ps.executeQuery();
             final boolean ret = rs.next();

@@ -11,7 +11,7 @@ import java.util.AbstractMap;
 
 public class ArrayMap<K, V> extends AbstractMap<K, V> implements Serializable
 {
-    public static final long serialVersionUID = 9179541993413738569L;
+    public static long serialVersionUID = 9179541993413738569L;
     private transient Set<? extends Map.Entry<K, V>> entries;
     private ArrayList<Entry<K, V>> list;
     
@@ -88,7 +88,7 @@ public class ArrayMap<K, V> extends AbstractMap<K, V> implements Serializable
     
     public static class Entry<K, V> implements Map.Entry<K, V>, Serializable
     {
-        public static final long serialVersionUID = 9179541993413738569L;
+        public static long serialVersionUID = 9179541993413738569L;
         protected K key;
         protected V value;
         

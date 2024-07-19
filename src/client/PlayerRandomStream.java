@@ -23,7 +23,7 @@ public class PlayerRandomStream
         this.CRand32__Seed(Randomizer.nextLong(), 803157710L, 803157710L);
     }
     
-    public final void CRand32__Seed(final long s1, final long s2, final long s3) {
+    public void CRand32__Seed(final long s1, final long s2, final long s3) {
         this.seed1 = (s1 | 0x100000L);
         this.seed2 = (s2 | 0x1000L);
         this.seed3 = (s3 | 0x10L);
@@ -91,7 +91,7 @@ public class PlayerRandomStream
         return (v8 ^ v9 ^ v10) & 0xFFFFFFFFL;
     }
     
-    public final void connectData(final MaplePacketLittleEndianWriter mplew) {
+    public void connectData(final MaplePacketLittleEndianWriter mplew) {
         final long v5 = this.CRand32__Random();
         final long s2 = this.CRand32__Random();
         final long v6 = this.CRand32__Random();

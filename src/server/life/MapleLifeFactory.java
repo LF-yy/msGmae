@@ -48,7 +48,7 @@ public class MapleLifeFactory
         return map;
     }
     
-    public static final void loadQuestCounts() {
+    public static void loadQuestCounts() {
         if (MapleLifeFactory.questCount.size() > 0) {
             return;
         }
@@ -72,7 +72,7 @@ public class MapleLifeFactory
         }
     }
     
-    public static final List<Integer> getQuestCount(final int id) {
+    public static List<Integer> getQuestCount(final int id) {
         return (List<Integer>)MapleLifeFactory.questCount.get((Object)Integer.valueOf(id));
     }
     
@@ -229,7 +229,7 @@ public class MapleLifeFactory
         return new MapleMonster(mid, stats);
     }
     
-    public static final void decodeElementalString(final MapleMonsterStats stats, final String elemAttr) {
+    public static void decodeElementalString(final MapleMonsterStats stats, final String elemAttr) {
         for (int i = 0; i < elemAttr.length(); i += 2) {
             stats.setEffectiveness(Element.getFromChar(elemAttr.charAt(i)), ElementalEffectiveness.getByNumber((int)Integer.valueOf(String.valueOf(elemAttr.charAt(i + 1)))));
         }

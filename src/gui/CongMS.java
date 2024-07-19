@@ -87,7 +87,7 @@ import tools.wztosql.*;
 public class CongMS extends JFrame
 {
     public static List<String> mobmaptable;
-    public static final String 套装属性 = "套装属性";
+    public static String 套装属性 = "套装属性";
     private static long starttime;
     private ImageIcon bgImg;
     private JLabel imgLabel;
@@ -919,7 +919,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.钓鱼物品.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM 钓鱼物品");
@@ -998,7 +998,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.广播信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM 广播信息");
@@ -1113,7 +1113,7 @@ public class CongMS extends JFrame
         catch (Exception ex) {}
     }
 
-    public static final CongMS getInstance() {
+    public static CongMS getInstance() {
         return CongMS.instance;
     }
 
@@ -1252,7 +1252,7 @@ public class CongMS extends JFrame
     }
 
     public static void GetConfigValues() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT name, val FROM ConfigValues")) {
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -6319,7 +6319,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.游戏道具.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM bank_item WHERE itemid =" + Integer.parseInt(this.游戏道具代码.getText()) + "");
@@ -6372,7 +6372,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.游戏道具.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM bank_item1 WHERE itemid =" + Integer.parseInt(this.游戏道具代码.getText()) + "");
@@ -6425,7 +6425,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.游戏道具.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM auctionitems1 WHERE itemid =" + Integer.parseInt(this.游戏道具代码.getText()) + "");
@@ -6478,7 +6478,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.游戏道具.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM auctionitems WHERE itemid =" + Integer.parseInt(this.游戏道具代码.getText()) + "");
@@ -6531,7 +6531,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.游戏道具.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE itemid =" + Integer.parseInt(this.游戏道具代码.getText()) + "");
@@ -6643,7 +6643,7 @@ public class CongMS extends JFrame
                 JOptionPane.showMessageDialog(null, (Object)"[信息]:请填写正确的值。");
                 return;
             }
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps = con.prepareStatement("INSERT INTO shopitems (shopid ,itemid ,price ,pitch ,position ,reqitem ,reqitemq) VALUES ( ?, ?, ?, ?, ?, ?, ?)")) {
                 ps.setInt(1, Integer.parseInt(this.商店代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.商品物品代码.getText()));
@@ -6716,7 +6716,7 @@ public class CongMS extends JFrame
             catch (SQLException ex) {
                 Logger.getLogger(CongMS.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
             }
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps2 = con.prepareStatement("INSERT INTO configvalues (id, name,Val) VALUES ( ?, ?, ?)")) {
                 ps2.setInt(1, 999);
                 ps2.setString(2, "商城扩充价格");
@@ -6922,7 +6922,7 @@ public class CongMS extends JFrame
             ps1.setInt(1, Integer.parseInt(this.商品编码.getText()));
             rs = ps1.executeQuery();
             if (!rs.next()) {
-                try (final Connection con = DatabaseConnection.getConnection();
+                try (Connection con = DatabaseConnection.getConnection();
                      final PreparedStatement ps2 = con.prepareStatement("INSERT INTO cashshop_modified_items (serial, showup,itemid,priority,period,gender,count,meso,discount_price,mark, unk_1, unk_2, unk_3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     ps2.setInt(1, Integer.parseInt(this.商品编码.getText()));
                     ps2.setInt(2, 1);
@@ -7213,7 +7213,7 @@ public class CongMS extends JFrame
 
     private void jButton34ActionPerformed(final ActionEvent evt) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE guilds SET GP =" + this.家族GP.getText().toString() + " WHERE guildid = " + this.家族ID.getText().toString() + "");
             ps.executeUpdate();
             ps.close();
@@ -7593,7 +7593,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters order by id desc");
@@ -7616,7 +7616,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters order by id desc");
@@ -7950,7 +7950,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters  WHERE gm >0 ");
@@ -7991,7 +7991,7 @@ public class CongMS extends JFrame
         }
         final String account = this.账号操作.getText();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("Update accounts set loggedin = ? Where name = ?");
             ps.setInt(1, 0);
             ps.setString(2, account);
@@ -8013,7 +8013,7 @@ public class CongMS extends JFrame
         }
         final String account = this.账号操作.getText();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("Update accounts set banned = ? Where name = ?");
             ps.setInt(1, 1);
             ps.setString(2, account);
@@ -8056,7 +8056,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM accounts  WHERE loggedin > 0 ");
@@ -8100,7 +8100,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM accounts WHERE banned > 0 ");
@@ -8144,7 +8144,7 @@ public class CongMS extends JFrame
         }
         final String account = this.账号操作.getText();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("Update accounts set banned = ? Where name = ?");
             ps.setInt(1, 0);
             ps.setString(2, account);
@@ -8165,7 +8165,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM accounts  WHERE loggedin = 0 ");
@@ -8305,7 +8305,7 @@ public class CongMS extends JFrame
                 JOptionPane.showMessageDialog(null, (Object)"[信息]:请填写正确的值。");
                 return;
             }
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps = con.prepareStatement("INSERT INTO 钓鱼物品 (itemid, chance ,expiration) VALUES (?, ?, ?)")) {
                 ps.setInt(1, Integer.parseInt(this.钓鱼物品代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.钓鱼物品概率.getText()));
@@ -8402,7 +8402,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM drop_data WHERE itemid =  " + Integer.parseInt(this.查询物品掉落代码.getText()) + "");
@@ -8515,7 +8515,7 @@ public class CongMS extends JFrame
             }
             final PreparedStatement ps1 = null;
             final ResultSet rs = null;
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps2 = con.prepareStatement("INSERT INTO drop_data_global (continent,dropType,itemid,minimum_quantity,maximum_quantity,questid,chance) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
                 ps2.setInt(1, -1);
                 ps2.setInt(2, 1);
@@ -8557,7 +8557,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid =  " + Integer.parseInt(this.查询怪物掉落代码.getText()) + " && itemid !=0");
@@ -8633,7 +8633,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM drop_data WHERE itemid =  " + Integer.parseInt(this.查询物品掉落代码.getText()) + "");
@@ -8746,7 +8746,7 @@ public class CongMS extends JFrame
                 JOptionPane.showMessageDialog(null, (Object)"[信息]:请填写正确的值。");
                 return;
             }
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps = con.prepareStatement("INSERT INTO drop_data ( dropperid,itemid,minimum_quantity,maximum_quantity,chance) VALUES ( ?, ?, ?, ?, ?)")) {
                 ps.setInt(1, Integer.parseInt(this.怪物爆物怪物代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.怪物爆物物品代码.getText()));
@@ -8847,7 +8847,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.反应堆.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM reactordrops WHERE itemid = " + Integer.parseInt(this.查找物品.getText()));
@@ -8875,7 +8875,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.反应堆.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM reactordrops WHERE reactorid = " + Integer.parseInt(this.查找反应堆掉落.getText()));
@@ -8920,7 +8920,7 @@ public class CongMS extends JFrame
     private void 新增反应堆物品ActionPerformed(final ActionEvent evt) {
         final boolean result2 = this.反应堆代码.getText().matches("[0-9]+");
         if (result2) {
-            try (final Connection con = DatabaseConnection.getConnection();
+            try (Connection con = DatabaseConnection.getConnection();
                  final PreparedStatement ps = con.prepareStatement("INSERT INTO reactordrops ( reactorid ,itemid ,chance ,questid ) VALUES ( ?, ?, ?, ?)")) {
                 ps.setInt(1, Integer.parseInt(this.反应堆代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.反应堆物品.getText()));
@@ -9211,7 +9211,7 @@ public class CongMS extends JFrame
     private void jButton7ActionPerformed(final ActionEvent evt) {
         int p = 0;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 ++p;
                 chr.saveToDB(true, true);
             }
@@ -9415,7 +9415,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, (Object)"请填写广告信息哦。");
             return;
         }
-        try (final Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO 广播信息 ( 广播 ) VALUES ( ? )")) {
             ps.setString(1, this.广播文本.getText());
             ps.executeUpdate();
@@ -9845,7 +9845,7 @@ public class CongMS extends JFrame
 //        this.刷新章鱼怪开关();
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
 
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr.getId()==CongMS.ConfigValuesMap.get("测试角色ID")){
 //                        final LittleEndianAccessor slea = new LittleEndianAccessor(new ByteArrayByteStream((byte[])(byte[])message));
 //                    final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
@@ -10325,7 +10325,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.反应堆.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM reactordrops ");
@@ -10393,7 +10393,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.封MAC.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM macbans");
@@ -10412,7 +10412,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.封IP.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM ipbans");
@@ -10530,7 +10530,7 @@ public class CongMS extends JFrame
                 }
             }
             ret += Piot;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps2 = con.prepareStatement("UPDATE character7 SET `Point` = ? WHERE Name = ? and channel = ?");
             ps2.setInt(1, ret);
             ps2.setString(2, Name);
@@ -10546,7 +10546,7 @@ public class CongMS extends JFrame
     public static int Getcharacter7(final String Name, final int Channale) {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM character7 WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -10563,7 +10563,7 @@ public class CongMS extends JFrame
     public static int Get商城物品() {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items WHERE serial = ?");
             final int serial = 0;
             ps.setInt(1, serial);
@@ -10613,7 +10613,7 @@ public class CongMS extends JFrame
                 }
             }
             ret += Piot;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps2 = con.prepareStatement("UPDATE cashshop_modified_items SET `meso` = ? WHERE serial = ?");
             ps2.setInt(1, ret);
             final int serial2 = 0;
@@ -10631,7 +10631,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.商城扩充价格.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM configvalues WHERE id = 999 ");
@@ -10694,7 +10694,7 @@ public class CongMS extends JFrame
     public static int update上下架(final CashItemInfo merchandise) {
         PreparedStatement ps = null;
         int resulet = 0;
-        final Connection conn = DatabaseConnection.getConnection();
+        Connection conn = DatabaseConnection.getConnection();
         int i = 0;
         try {
             ps = conn.prepareStatement("update cashshop_modified_items set showup = ? where serial = ?");
@@ -10714,7 +10714,7 @@ public class CongMS extends JFrame
         }
         this.商品编码.setText("" + a + "");
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM cashshop_modified_items WHERE serial >= " + a + " && serial < " + b + "");
@@ -10764,7 +10764,7 @@ public class CongMS extends JFrame
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT `serial` FROM cashshop_modified_items WHERE serial >= " + a + " && serial <" + b + " ORDER BY `serial` DESC LIMIT 1");
             try (final ResultSet rs2 = ps.executeQuery()) {
                 if (rs2.next()) {
@@ -10994,7 +10994,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.charTable.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM cashshop_modified_items ");
@@ -11143,7 +11143,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.游戏商店2.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 if (lx == 0) {
@@ -11184,7 +11184,7 @@ public class CongMS extends JFrame
     public static int 在线玩家() {
         int p = 0;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr != null) {
                     ++p;
                 }
@@ -11221,7 +11221,7 @@ public class CongMS extends JFrame
         int data = 0;
         int p = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT loggedin as DATA FROM accounts WHERE loggedin > 0");
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -11249,7 +11249,7 @@ public class CongMS extends JFrame
             return;
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("Update accounts set password = ? Where name = ?");
             ps.setString(1, LoginCrypto.hexSha1(password));
             ps.setString(2, account);
@@ -11305,7 +11305,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM accounts order by id desc");
@@ -11347,7 +11347,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM accounts WHERE qq =  '" + this.账号操作.getText() + " ' ");
@@ -11404,7 +11404,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.账号信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM accounts WHERE name =  '" + this.账号操作.getText() + "  '");
@@ -11456,7 +11456,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.技能信息.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM skills  WHERE characterid =" + this.角色ID.getText() + "");
@@ -11504,7 +11504,7 @@ public class CongMS extends JFrame
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
         }
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters order by id desc");
@@ -11566,7 +11566,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色背包穿戴.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + this.角色ID.getText() + " && inventorytype = -1");
@@ -11597,7 +11597,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色装备背包.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + this.角色ID.getText() + " && inventorytype = 1");
@@ -11628,7 +11628,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色消耗背包.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + this.角色ID.getText() + " && inventorytype = 2");
@@ -11657,7 +11657,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色特殊背包.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + this.角色ID.getText() + " && inventorytype = 5");
@@ -11686,7 +11686,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色游戏仓库.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE accountid =" + this.账号ID.getText());
@@ -11715,7 +11715,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色商城仓库.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM csitems WHERE accountid =" + this.账号ID.getText());
@@ -11744,7 +11744,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色点券拍卖行.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM auctionitems WHERE characterid =" + this.角色ID.getText());
@@ -11771,7 +11771,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色金币拍卖行.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM auctionitems1 WHERE characterid =" + this.角色ID.getText());
@@ -11798,7 +11798,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色其他背包.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + this.角色ID.getText() + " && inventorytype = 4");
@@ -11827,7 +11827,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色设置背包.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid =" + this.角色ID.getText() + " && inventorytype = 3");
@@ -11858,7 +11858,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.角色信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters WHERE accountid =" + this.账号ID.getText() + "");
@@ -11918,7 +11918,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM drop_data WHERE itemid >=2380000&& itemid <2390000");
@@ -11951,7 +11951,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.世界爆物.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM drop_data_global WHERE itemid !=0");
@@ -11987,7 +11987,7 @@ public class CongMS extends JFrame
                 ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
             }
             try {
-                final Connection con = DatabaseConnection.getConnection();
+                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid =  " + Integer.parseInt(this.怪物爆物怪物代码.getText()) + "");
@@ -12026,7 +12026,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.怪物爆物.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM drop_data WHERE itemid !=0");
@@ -12059,7 +12059,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.在线泡点设置.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM configvalues WHERE id = 700 || id = 702 || id = 704 || id = 706 || id = 708 || id = 712");
@@ -13033,7 +13033,7 @@ public class CongMS extends JFrame
     
     private void 刷新家族信息() {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters");
@@ -13046,7 +13046,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.家族信息.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM guilds");
@@ -13087,7 +13087,7 @@ public class CongMS extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.经验加成表.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM configvalues WHERE id = 150 ||  id = 151  ||  id=152  ||  id=153  ");
@@ -13261,7 +13261,7 @@ public class CongMS extends JFrame
             JOptionPane.showMessageDialog(null, "错误:套装名字错误");
             return;
         }
-        try (final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             switch (type) {
                 case 0: {
@@ -13362,7 +13362,7 @@ public class CongMS extends JFrame
         if (CongMS.ConfigValuesMap.get(name) != null) {
             CongMS.ConfigValuesMap.put(name, value);
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             ps = con.prepareStatement("UPDATE configvalues SET Val = ? WHERE name = ?");
             ps.setInt(1, value);

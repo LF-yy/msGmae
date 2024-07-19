@@ -62,7 +62,7 @@ public final class Gashapon
     
     public void reloadItems() {
         long chanceTotal = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM gashapon_items WHERE gashaponsid = ? ORDER BY itemid ASC")) {
             ps.setInt(1, this.getId());
             final ResultSet rs = ps.executeQuery();
@@ -147,8 +147,8 @@ public final class Gashapon
         return sb.toString();
     }
     
-    public void ChangeChance(final MapleCharacter chr, final int itemid, final int chance) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public void ChangeChance(MapleCharacter chr, final int itemid, final int chance) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE gashapon_items SET chance = ? WHERE gashaponsid = ? AND itemid = ?")) {
             ps.setInt(1, chance);
             ps.setInt(2, this.getId());
@@ -163,8 +163,8 @@ public final class Gashapon
         FileoutputUtil.logToFile("logs/GM_LOG/GM更改轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率更改為" + chance);
     }
     
-    public void ChangeQuantity(final MapleCharacter chr, final int itemid, final int quantity) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public void ChangeQuantity(MapleCharacter chr, final int itemid, final int quantity) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE gashapon_items SET quantity = ? WHERE gashaponsid = ? AND itemid = ?")) {
             ps.setInt(1, quantity);
             ps.setInt(2, this.getId());
@@ -179,8 +179,8 @@ public final class Gashapon
         FileoutputUtil.logToFile("logs/GM_LOG/GM更改轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 數量更改為" + quantity);
     }
     
-    public void AddItem(final MapleCharacter chr, final int itemid, final int chance, final boolean msg, final int quantity) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public void AddItem(MapleCharacter chr, final int itemid, final int chance, final boolean msg, final int quantity) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO gashapon_items SET chance = ? , gashaponsid = ? , itemid = ? , name = ?, showmsg = ?, quantity = ?")) {
             ps.setInt(1, chance);
             ps.setInt(2, this.getId());

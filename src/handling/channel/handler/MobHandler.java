@@ -38,12 +38,12 @@ import tools.data.LittleEndianAccessor;
 public class MobHandler
 {
 
-    public static final void MoveMonster(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void MoveMonster(final LittleEndianAccessor slea, final MapleClient c) {
         //如开启吸怪直接返回
        UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
 
 
-        final MapleCharacter chr = c.getPlayer();
+        MapleCharacter chr = c.getPlayer();
         if (chr == null || chr.getMap() == null) {
             return;
         }
@@ -212,7 +212,7 @@ public class MobHandler
                                 if (!chr.hasGmLevel(1)) {
                                     for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
                                         //获取玩家
-                                        for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                                        for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
 
                                             if (chr_.getAuto吸怪()) {
                                                 chr_.warpAuto吸怪(chr);
@@ -331,7 +331,7 @@ public class MobHandler
 
     }
     public static void CheckMobVac(final MapleClient c, final MapleMonster monster, final List<LifeMovementFragment> res, final Point startPos) {
-        final MapleCharacter chr = c.getPlayer();
+        MapleCharacter chr = c.getPlayer();
         try {
             final boolean fly = monster.getStats().getFly();
             Point endPos = null;
@@ -425,7 +425,7 @@ public class MobHandler
                         sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_y), ' ', 4));
                         if (!chr.hasGmLevel(1)) {
                             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                                for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                                for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                                     if (chr_.getAuto吸怪()) {
                                         chr_.warpAuto吸怪(chr);
                                     }
@@ -441,8 +441,8 @@ public class MobHandler
         }
         catch (Exception ex2) {}
     }
-    public static final void handleFriendlyDamage(final LittleEndianAccessor slea, final MapleClient c) {
-        final MapleCharacter chr = c.getPlayer();
+    public static void handleFriendlyDamage(final LittleEndianAccessor slea, final MapleClient c) {
+        MapleCharacter chr = c.getPlayer();
         final MapleMap map = chr.getMap();
         final MapleMonster mobfrom = map.getMonsterByOid(slea.readInt());
         slea.skip(4);
@@ -454,9 +454,9 @@ public class MobHandler
         }
     }
     
-    public static final void checkShammos(final MapleCharacter chr, final MapleMonster mobto, final MapleMap map) {
+    public static void checkShammos(MapleCharacter chr, final MapleMonster mobto, final MapleMap map) {
         if (!mobto.isAlive() && mobto.getId() == 9300275) {
-            for (final MapleCharacter chrz : map.getCharactersThreadsafe()) {
+            for (MapleCharacter chrz : map.getCharactersThreadsafe()) {
                 if (chrz.getParty() != null && chrz.getParty().getLeader().getId() == chrz.getId()) {
                     if (chrz.haveItem(2022698)) {
                         MapleInventoryManipulator.removeById(chrz.getClient(), MapleInventoryType.USE, 2022698, 1, false, true);
@@ -468,7 +468,7 @@ public class MobHandler
             }
             map.broadcastMessage(MaplePacketCreator.serverNotice(6, "Your party has failed to protect the monster."));
             final MapleMap mapp = chr.getClient().getChannelServer().getMapFactory().getMap(921120001);
-            for (final MapleCharacter chrz2 : map.getCharactersThreadsafe()) {
+            for (MapleCharacter chrz2 : map.getCharactersThreadsafe()) {
                 chrz2.changeMap(mapp, mapp.getPortal(0));
             }
         }
@@ -477,8 +477,8 @@ public class MobHandler
         }
     }
     
-    public static final void handleMonsterBomb(final LittleEndianAccessor slea, final MapleClient c) {
-        final MapleCharacter chr = c.getPlayer();
+    public static void handleMonsterBomb(final LittleEndianAccessor slea, final MapleClient c) {
+        MapleCharacter chr = c.getPlayer();
         final MapleMonster monster = chr.getMap().getMonsterByOid(slea.readInt());
         if (monster == null || !chr.isAlive() || chr.isHidden() || (chr.getJob() != 421 && chr.getJob() != 422)) {
             return;
@@ -489,11 +489,11 @@ public class MobHandler
         }
     }
     
-    public static final void handleAutoAggro(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void handleAutoAggro(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer() == null || c.getPlayer().getMap() == null || c.getPlayer().isHidden()) {
             return;
         }
-        final MapleCharacter chr = c.getPlayer();
+        MapleCharacter chr = c.getPlayer();
         final MapleMonster monster = chr.getMap().getMonsterByOid(slea.readInt());
         if (monster != null && chr.getPosition().distanceSq((Point2D)monster.getPosition()) < 200000.0) {
             if (monster.getController() != null) {
@@ -510,8 +510,8 @@ public class MobHandler
         }
     }
     
-    public static final void HypnotizeDmg(final LittleEndianAccessor slea, final MapleClient c) {
-        final MapleCharacter chr = c.getPlayer();
+    public static void HypnotizeDmg(final LittleEndianAccessor slea, final MapleClient c) {
+        MapleCharacter chr = c.getPlayer();
         final MapleMonster mob_from = chr.getMap().getMonsterByOid(slea.readInt());
         slea.skip(4);
         final int to = slea.readInt();
@@ -527,16 +527,16 @@ public class MobHandler
         }
     }
     
-    public static final void handleDisplayNode(final LittleEndianAccessor slea, final MapleClient c) {
-        final MapleCharacter chr = c.getPlayer();
+    public static void handleDisplayNode(final LittleEndianAccessor slea, final MapleClient c) {
+        MapleCharacter chr = c.getPlayer();
         final MapleMonster mobFrom = chr.getMap().getMonsterByOid(slea.readInt());
         if (mobFrom != null) {
             chr.getClient().sendPacket(MaplePacketCreator.getNodeProperties(mobFrom, chr.getMap()));
         }
     }
     
-    public static final void handleMobNode(final LittleEndianAccessor slea, final MapleClient c) {
-        final MapleCharacter chr = c.getPlayer();
+    public static void handleMobNode(final LittleEndianAccessor slea, final MapleClient c) {
+        MapleCharacter chr = c.getPlayer();
         final MapleMonster mob_from = chr.getMap().getMonsterByOid(slea.readInt());
         final int newNode = slea.readInt();
         final int nodeSize = chr.getMap().getNodes().size();

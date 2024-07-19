@@ -29,7 +29,7 @@ public class MapleNPC extends AbstractLoadedMapleLife
         return MapleShopFactory.getInstance().getShopForNPC(this.getId()) != null;
     }
     
-    public final void sendShop(final MapleClient c) {
+    public void sendShop(final MapleClient c) {
         MapleShopFactory.getInstance().getShopForNPC(this.getId()).sendShop(c);
     }
     
@@ -42,7 +42,7 @@ public class MapleNPC extends AbstractLoadedMapleLife
     }
     
     @Override
-    public final void sendDestroyData(final MapleClient client) {
+    public void sendDestroyData(final MapleClient client) {
         client.getSession().writeAndFlush((Object)MaplePacketCreator.removeNPCController(this.getObjectId()));
         client.sendPacket(MaplePacketCreator.removeNPC(this.getObjectId()));
     }

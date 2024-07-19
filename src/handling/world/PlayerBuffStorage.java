@@ -13,27 +13,27 @@ public class PlayerBuffStorage implements Serializable
     private static final Map<Integer, List<MapleCoolDownValueHolder>> coolDowns;
     private static final Map<Integer, List<MapleDiseaseValueHolder>> diseases;
     
-    public static final void addBuffsToStorage(final int chrid, final List<PlayerBuffValueHolder> toStore) {
+    public static void addBuffsToStorage(final int chrid, final List<PlayerBuffValueHolder> toStore) {
         PlayerBuffStorage.buffs.put(Integer.valueOf(chrid), toStore);
     }
     
-    public static final void addCooldownsToStorage(final int chrid, final List<MapleCoolDownValueHolder> toStore) {
+    public static void addCooldownsToStorage(final int chrid, final List<MapleCoolDownValueHolder> toStore) {
         PlayerBuffStorage.coolDowns.put(Integer.valueOf(chrid), toStore);
     }
     
-    public static final void addDiseaseToStorage(final int chrid, final List<MapleDiseaseValueHolder> toStore) {
+    public static void addDiseaseToStorage(final int chrid, final List<MapleDiseaseValueHolder> toStore) {
         PlayerBuffStorage.diseases.put(Integer.valueOf(chrid), toStore);
     }
     
-    public static final List<PlayerBuffValueHolder> getBuffsFromStorage(final int chrid) {
+    public static List<PlayerBuffValueHolder> getBuffsFromStorage(final int chrid) {
         return (List<PlayerBuffValueHolder>)PlayerBuffStorage.buffs.remove((Object)Integer.valueOf(chrid));
     }
     
-    public static final List<MapleCoolDownValueHolder> getCooldownsFromStorage(final int chrid) {
+    public static List<MapleCoolDownValueHolder> getCooldownsFromStorage(final int chrid) {
         return (List<MapleCoolDownValueHolder>)PlayerBuffStorage.coolDowns.remove((Object)Integer.valueOf(chrid));
     }
     
-    public static final List<MapleDiseaseValueHolder> getDiseaseFromStorage(final int chrid) {
+    public static List<MapleDiseaseValueHolder> getDiseaseFromStorage(final int chrid) {
         return (List<MapleDiseaseValueHolder>)PlayerBuffStorage.diseases.remove((Object)Integer.valueOf(chrid));
     }
     

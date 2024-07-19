@@ -44,7 +44,7 @@ public enum MapleDisease implements Serializable
         return this.i;
     }
     
-    public static final MapleDisease getRandom() {
+    public static MapleDisease getRandom() {
         MapleDisease dis = null;
     Block_1:
         while (true) {
@@ -59,7 +59,7 @@ public enum MapleDisease implements Serializable
         return dis;
     }
     
-    public static final MapleDisease getBySkill(final int skill) {
+    public static MapleDisease getBySkill(final int skill) {
         switch (skill) {
             case 120: {
                 return MapleDisease.SEAL;
@@ -100,7 +100,7 @@ public enum MapleDisease implements Serializable
         }
     }
     
-    public static final MapleDisease getByMobSkill(final int skill) {
+    public static MapleDisease getByMobSkill(final int skill) {
         switch (skill) {
             case 120: {
                 return MapleDisease.SEAL;
@@ -150,7 +150,7 @@ public enum MapleDisease implements Serializable
         }
     }
     
-    public static final int getByDisease(final MapleDisease skill) {
+    public static int getByDisease(final MapleDisease skill) {
         switch (skill) {
             case SEAL: {
                 return 120;

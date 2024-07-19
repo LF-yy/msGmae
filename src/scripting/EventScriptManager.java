@@ -33,7 +33,7 @@ public class EventScriptManager extends AbstractScriptManager
             }
         }
     }
-    public final void EventScript(final ChannelServer cserv, final String scripts) {
+    public void EventScript(final ChannelServer cserv, final String scripts) {
             if (Objects.nonNull(scripts)) {
                 final Invocable iv = this.getInvocable("事件/" + scripts + ".js", null);
                 if (iv != null) {
@@ -50,7 +50,7 @@ public class EventScriptManager extends AbstractScriptManager
         return entry.em;
     }
     
-    public final void init() {
+    public void init() {
         for (final EventEntry entry : this.events.values()) {
             try {
                 ((ScriptEngine)entry.iv).put("em", (Object)entry.em);
@@ -63,7 +63,7 @@ public class EventScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void cancel() {
+    public void cancel() {
         for (final EventEntry entry : this.events.values()) {
             entry.em.cancel();
         }

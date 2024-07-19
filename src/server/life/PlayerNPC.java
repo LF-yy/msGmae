@@ -56,7 +56,7 @@ public final class PlayerNPC extends MapleNPC
                 this.pets[i] = 0;
             }
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM playernpcs_equip WHERE NpcId = ?")) {
             ps.setInt(1, this.getId());
             try (final ResultSet rs2 = ps.executeQuery()) {
@@ -92,7 +92,7 @@ public final class PlayerNPC extends MapleNPC
     
     public static void loadAll() {
         final List<PlayerNPC> toAdd = new ArrayList<PlayerNPC>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM playernpcs");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -107,7 +107,7 @@ public final class PlayerNPC extends MapleNPC
         }
     }
     
-    public static void updateByCharId(final MapleCharacter chr, final Connection con) {
+    public static void updateByCharId(MapleCharacter chr, Connection con) {
         if (Find.findChannel(chr.getId()) > 0) {
             for (final PlayerNPC npc : ChannelServer.getInstance(Find.findChannel(chr.getId())).getAllPlayerNPC()) {
                 npc.update(chr, con);
@@ -127,11 +127,11 @@ public final class PlayerNPC extends MapleNPC
         }
     }
     
-    public void update(final MapleCharacter chr) {
+    public void update(MapleCharacter chr) {
         this.update(chr, null);
     }
     
-    public void update(final MapleCharacter chr, final Connection con) {
+    public void update(MapleCharacter chr, Connection con) {
         if (chr == null || this.charId != chr.getId()) {
             return;
         }
@@ -160,7 +160,7 @@ public final class PlayerNPC extends MapleNPC
     }
     
     public void destroy(final boolean remove) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("DELETE FROM playernpcs WHERE scriptid = ?");
             ps.setInt(1, this.getId());
             ps.executeUpdate();
@@ -179,7 +179,7 @@ public final class PlayerNPC extends MapleNPC
     }
     
     public void saveToDB() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.saveToDB(con);
         }
         catch (Exception se) {
@@ -187,7 +187,7 @@ public final class PlayerNPC extends MapleNPC
         }
     }
     
-    public void saveToDB(final Connection con) {
+    public void saveToDB(Connection con) {
         try {
             if (this.getNPCFromWZ() == null) {
                 this.destroy(true);

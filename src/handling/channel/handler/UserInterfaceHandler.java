@@ -6,7 +6,7 @@ import client.MapleClient;
 
 public class UserInterfaceHandler
 {
-    public static final void CygnusSummonNPCRequest(final MapleClient c) {
+    public static void CygnusSummonNPCRequest(final MapleClient c) {
         if (c.getPlayer().getJob() == 2000) {
             NPCScriptManager.getInstance().start(c, 1202000);
         }
@@ -15,6 +15,6 @@ public class UserInterfaceHandler
         }
     }
     
-    public static final void InGamePoll(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void InGamePoll(final LittleEndianAccessor slea, final MapleClient c) {
     }
 }

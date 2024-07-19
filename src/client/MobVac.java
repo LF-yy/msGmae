@@ -8,10 +8,10 @@ import server.maps.MapleMap;
 public class MobVac  extends Thread{
     private UserAttraction object;
     private MapleMap map;
-    private final MapleCharacter chr;
+    private MapleCharacter chr;
     private final MapleClient c;
 
-    public MobVac(final MapleCharacter chr,UserAttraction userAttraction) {
+    public MobVac(MapleCharacter chr,UserAttraction userAttraction) {
         this.chr = chr;
         this.c = chr.getClient();
         this.map = this.c.getPlayer().getMap();

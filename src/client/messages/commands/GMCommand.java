@@ -219,7 +219,7 @@ public class GMCommand
             int p = 0;
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
                 final List<MapleCharacter> chrs = cserv.getPlayerStorage().getAllCharactersThreadSafe();
-                for (final MapleCharacter chr : chrs) {
+                for (MapleCharacter chr : chrs) {
                     ++p;
                     chr.saveToDB(false, false);
                 }
@@ -721,7 +721,7 @@ public class GMCommand
             if (splitted.length != 2) {
                 return false;
             }
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final PreparedStatement ps = con.prepareStatement("SELECT guildid FROM guilds WHERE name = ?");
                 ps.setString(1, splitted[1]);
                 final ResultSet rs = ps.executeQuery();
@@ -3214,7 +3214,7 @@ public class GMCommand
                 c.getPlayer().dropMessage(6, "玩家必须上线");
                 return true;
             }
-            final MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
+            MapleCharacter chr = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
             if (chr == null) {
                 c.getPlayer().dropMessage(6, "此玩家并不存在");
             }
@@ -3238,7 +3238,7 @@ public class GMCommand
             if (splitted.length < 3) {
                 return false;
             }
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final int item = Integer.parseInt(splitted[1]);
                 final String name = splitted[2];
                 int id = 0;
@@ -3463,7 +3463,7 @@ public class GMCommand
         }
         
         public void HandleOffline(final MapleClient c, final int chr, final long inventoryitemid, final long equiponlyid) {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 String itemname = "null";
                 try (final PreparedStatement ps = con.prepareStatement("select itemid from inventoryitems WHERE inventoryitemid = ?")) {
                     ps.setLong(1, inventoryitemid);

@@ -54,7 +54,7 @@ public class MapleOxQuizFactory
             return;
         }
         System.out.println("[正在加载] -> 游戏QX问答系统");
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_oxdata");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -70,7 +70,7 @@ public class MapleOxQuizFactory
     
     public MapleOxQuizEntry getFromSQL(final String sql) {
         MapleOxQuizEntry ret = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement(sql);
              final ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
@@ -120,7 +120,7 @@ public class MapleOxQuizFactory
     
     public void reloadOX() {
         this.questionCache.clear();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_oxdata");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {

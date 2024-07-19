@@ -27,11 +27,11 @@ public class ReactorScriptManager extends AbstractScriptManager
         this.drops = new HashMap<Integer, List<ReactorDropEntry>>();
     }
     
-    public static final ReactorScriptManager getInstance() {
+    public static ReactorScriptManager getInstance() {
         return ReactorScriptManager.instance;
     }
     
-    public final void act(final MapleClient c, final MapleReactor reactor) {
+    public void act(final MapleClient c, final MapleReactor reactor) {
         try {
             final Invocable iv = this.getInvocable("反应堆/" + reactor.getReactorId() + ".js", c);
             if (iv == null) {
@@ -60,7 +60,7 @@ public class ReactorScriptManager extends AbstractScriptManager
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 ps = con.prepareStatement("SELECT * FROM reactordrops WHERE reactorid = ?");
                 ps.setInt(1, rid);
                 rs = ps.executeQuery();
@@ -106,7 +106,7 @@ public class ReactorScriptManager extends AbstractScriptManager
         return ret;
     }
     
-    public final void clearDrops() {
+    public void clearDrops() {
         this.drops.clear();
     }
     

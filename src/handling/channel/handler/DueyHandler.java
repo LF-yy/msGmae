@@ -29,7 +29,7 @@ import tools.data.LittleEndianAccessor;
 
 public class DueyHandler
 {
-    public static final void DueyOperation(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void DueyOperation(final LittleEndianAccessor slea, final MapleClient c) {
         final byte operation = slea.readByte();
         switch (operation) {
             case 1: {
@@ -163,7 +163,7 @@ public class DueyHandler
     }
     
     private static boolean addMesoToDB(final int mesos, final String sName, final int recipientID, final boolean isOn) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type) VALUES (?, ?, ?, ?, ?, ?)")) {
                 ps.setInt(1, recipientID);
                 ps.setString(2, sName);
@@ -183,7 +183,7 @@ public class DueyHandler
     }
     
     private static boolean addItemToDB(final IItem item, final int quantity, final int mesos, final String sName, final int recipientID, final boolean isOn) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("INSERT INTO dueypackages (RecieverId, SenderName, Mesos, TimeStamp, Checked, Type) VALUES (?, ?, ?, ?, ?, ?)", 1)) {
                 ps.setInt(1, recipientID);
                 ps.setString(2, sName);
@@ -207,9 +207,9 @@ public class DueyHandler
         }
     }
     
-    public static final List<MapleDueyActions> loadItems(final MapleCharacter chr) {
+    public static List<MapleDueyActions> loadItems(MapleCharacter chr) {
         final List<MapleDueyActions> packages = new LinkedList<MapleDueyActions>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM dueypackages WHERE RecieverId = ?")) {
                 ps.setInt(1, chr.getId());
                 try (final ResultSet rs = ps.executeQuery()) {
@@ -231,8 +231,8 @@ public class DueyHandler
         }
     }
     
-    public static final MapleDueyActions loadSingleItem(final int packageid, final int charid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+    public static MapleDueyActions loadSingleItem(final int packageid, final int charid) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM dueypackages WHERE PackageId = ? and RecieverId = ?");
             ps.setInt(1, packageid);
             ps.setInt(2, charid);
@@ -257,8 +257,8 @@ public class DueyHandler
         }
     }
     
-    public static final void reciveMsg(final MapleClient c, final int recipientId) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public static void reciveMsg(final MapleClient c, final int recipientId) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE dueypackages SET Checked = 0 where RecieverId = ?")) {
             ps.setInt(1, recipientId);
             ps.executeUpdate();
@@ -270,7 +270,7 @@ public class DueyHandler
     }
     
     private static void removeItemFromDB(final int packageid, final int charid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("DELETE FROM dueypackages WHERE PackageId = ? and RecieverId = ?")) {
             ps.setInt(1, packageid);
             ps.setInt(2, charid);

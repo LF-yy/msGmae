@@ -126,7 +126,7 @@ public class MapleSnowball extends MapleEvent
         }
         
         public void broadcast(final MapleMap map, final int message) {
-            for (final MapleCharacter chr : map.getCharactersThreadsafe()) {
+            for (MapleCharacter chr : map.getCharactersThreadsafe()) {
                 chr.getClient().sendPacket(MaplePacketCreator.snowballMessage(this.team, message));
             }
         }
@@ -139,7 +139,7 @@ public class MapleSnowball extends MapleEvent
             return this.getLeftX() + 275;
         }
         
-        public static final void hitSnowball(final MapleCharacter chr) {
+        public static void hitSnowball(MapleCharacter chr) {
             final int team = (chr.getPosition().y <= -80) ? 1 : 0;
             final MapleSnowball sb = (MapleSnowball)chr.getClient().getChannelServer().getEvent(MapleEventType.滾雪球);
             final MapleSnowballs ball = sb.getSnowBall(team);
@@ -167,7 +167,7 @@ public class MapleSnowball extends MapleEvent
                                 map.broadcastMessage(MaplePacketCreator.rollSnowball(i + 2, sb.getSnowBall(0), sb.getSnowBall(1)));
                             }
                             chr.getMap().broadcastMessage(MaplePacketCreator.serverNotice(6, "[恭喜] " + ((team == 0) ? "藍队" : "紅队") + " 贏得勝利!"));
-                            for (final MapleCharacter chrz : chr.getMap().getCharactersThreadsafe()) {
+                            for (MapleCharacter chrz : chr.getMap().getCharactersThreadsafe()) {
                                 if ((team == 0 && chrz.getPosition().y > -80) || (team == 1 && chrz.getPosition().y <= -80)) {
                                     sb.givePrize(chrz);
                                 }
@@ -206,7 +206,7 @@ public class MapleSnowball extends MapleEvent
                                     oBall.broadcast(map2, 5);
                                 }
                             }, 10000L);
-                            for (final MapleCharacter chrz2 : chr.getMap().getCharactersThreadsafe()) {
+                            for (MapleCharacter chrz2 : chr.getMap().getCharactersThreadsafe()) {
                                 if ((ball.getTeam() == 0 && chr.getPosition().y < -80) || (ball.getTeam() == 1 && chr.getPosition().y > -80)) {
                                     chrz2.getDiseaseBuff(MapleDisease.SEDUCE, MobSkillFactory.getMobSkill(128, 1));
                                 }

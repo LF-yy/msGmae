@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 public final class MapleFamily implements Serializable
 {
-    public static final long serialVersionUID = 6322150443228168192L;
+    public static long serialVersionUID = 6322150443228168192L;
     private final Map<Integer, MapleFamilyCharacter> members;
     private String leadername;
     private String notice;
@@ -40,7 +40,7 @@ public final class MapleFamily implements Serializable
         this.proper = true;
         this.bDirty = false;
         this.changed = false;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM families WHERE familyid = ?");
             ps.setInt(1, fid);
             ResultSet rs = ps.executeQuery();
@@ -154,9 +154,9 @@ public final class MapleFamily implements Serializable
         return this.proper;
     }
     
-    public static final Collection<MapleFamily> loadAll() {
+    public static Collection<MapleFamily> loadAll() {
         final Collection<MapleFamily> ret = new ArrayList<MapleFamily>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT familyid FROM families")) {
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -174,8 +174,8 @@ public final class MapleFamily implements Serializable
         return ret;
     }
     
-    public final void writeToDB(final boolean bDisband) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+    public void writeToDB(final boolean bDisband) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             if (!bDisband) {
                 if (this.changed) {
                     try (final PreparedStatement ps = con.prepareStatement("UPDATE families SET notice = ? WHERE familyid = ?")) {
@@ -218,15 +218,15 @@ public final class MapleFamily implements Serializable
         return this.leadername;
     }
     
-    public final void broadcast(final byte[] packet, final List<Integer> cids) {
+    public void broadcast(final byte[] packet, final List<Integer> cids) {
         this.broadcast(packet, -1, FCOp.NONE, cids);
     }
     
-    public final void broadcast(final byte[] packet, final int exception, final List<Integer> cids) {
+    public void broadcast(final byte[] packet, final int exception, final List<Integer> cids) {
         this.broadcast(packet, exception, FCOp.NONE, cids);
     }
     
-    public final void broadcast(final byte[] packet, final int exceptionId, final FCOp bcop, final List<Integer> cids) {
+    public void broadcast(final byte[] packet, final int exceptionId, final FCOp bcop, final List<Integer> cids) {
         this.buildNotifications();
         if (this.members.size() < 2) {
             this.bDirty = true;
@@ -278,7 +278,7 @@ public final class MapleFamily implements Serializable
         this.bDirty = false;
     }
     
-    public final void setOnline(final int cid, final boolean online, final int channel) {
+    public void setOnline(final int cid, final boolean online, final int channel) {
         final MapleFamilyCharacter mgc = this.getMFC(cid);
         if (mgc != null && mgc.getFamilyId() == this.id) {
             if (mgc.isOnline() != online) {
@@ -348,11 +348,11 @@ public final class MapleFamily implements Serializable
         return 1;
     }
     
-    public final void leaveFamily(final int id) {
+    public void leaveFamily(final int id) {
         this.leaveFamily(this.getMFC(id), true);
     }
     
-    public final void leaveFamily(final MapleFamilyCharacter mgc, final boolean skipLeader) {
+    public void leaveFamily(final MapleFamilyCharacter mgc, final boolean skipLeader) {
         this.bDirty = true;
         if (mgc.getId() == this.leaderid && !skipLeader) {
             this.leadername = null;
@@ -393,7 +393,7 @@ public final class MapleFamily implements Serializable
         this.bDirty = true;
     }
     
-    public final void memberLevelJobUpdate(final MapleCharacter mgc) {
+    public void memberLevelJobUpdate(final MapleCharacter mgc) {
         final MapleFamilyCharacter member = this.getMFC(mgc.getId());
         if (member != null) {
             final int old_level = member.getLevel();
@@ -409,7 +409,7 @@ public final class MapleFamily implements Serializable
         }
     }
     
-    public final void disbandFamily() {
+    public void disbandFamily() {
         this.writeToDB(true);
     }
     
@@ -422,7 +422,7 @@ public final class MapleFamily implements Serializable
     }
     
     public static void setOfflineFamilyStatus(final int familyid, final int seniorid, final int junior1, final int junior2, final int currentrep, final int totalrep, final int cid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE characters SET familyid = ?, seniorid = ?, junior1 = ?, junior2 = ?, currentrep = ?, totalrep = ? WHERE id = ?");
             ps.setInt(1, familyid);
             ps.setInt(2, seniorid);
@@ -442,7 +442,7 @@ public final class MapleFamily implements Serializable
     }
     
     public static int createFamily(final int leaderId) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("INSERT INTO families (`leaderid`) VALUES (?)", 1);
             ps.setInt(1, leaderId);
             ps.executeUpdate();
@@ -524,7 +524,7 @@ public final class MapleFamily implements Serializable
         return false;
     }
     
-    public final void setNotice(final String notice) {
+    public void setNotice(final String notice) {
         this.changed = true;
         this.notice = notice;
     }

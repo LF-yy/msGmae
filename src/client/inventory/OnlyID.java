@@ -64,7 +64,7 @@ public class OnlyID
         final Map checkItems = new HashMap();
         final List<Integer> all = new LinkedList<Integer>();
         final List<Integer> gm = new LinkedList<Integer>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT characterid FROM inventoryitems WHERE equipOnlyId > 0");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

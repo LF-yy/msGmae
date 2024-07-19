@@ -43,7 +43,7 @@ public class ConnectionMysqlJDBC
         return conn;
     }
     
-    public void closeAllConnection(final Connection con, final PreparedStatement ps, final ResultSet rs) throws SQLException {
+    public void closeAllConnection(Connection con, final PreparedStatement ps, final ResultSet rs) throws SQLException {
         if (rs != null) {
             rs.close();
         }

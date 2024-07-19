@@ -331,7 +331,7 @@ public class 一键还原 extends JFrame
     }
     
     private void Delete(final String a, final int b) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from " + a + "");
             ps.executeUpdate();
@@ -344,7 +344,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空个人设置() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from characterz");
             ps.executeUpdate();
@@ -356,7 +356,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空qqgame() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from qqstem");
             ps.executeUpdate();
@@ -368,7 +368,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空qqlog() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from qqlog");
             ps.executeUpdate();
@@ -380,7 +380,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空养殖() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from character7");
             ps.executeUpdate();
@@ -392,7 +392,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank1");
             ps.executeUpdate();
@@ -404,7 +404,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank2");
             ps.executeUpdate();
@@ -416,7 +416,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B3() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank3");
             ps.executeUpdate();
@@ -428,7 +428,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B4() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank4");
             ps.executeUpdate();
@@ -440,7 +440,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B5() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank5");
             ps.executeUpdate();
@@ -452,7 +452,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B6() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank6");
             ps.executeUpdate();
@@ -464,7 +464,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B7() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank7");
             ps.executeUpdate();
@@ -476,7 +476,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B8() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank8");
             ps.executeUpdate();
@@ -494,7 +494,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空拍卖b1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from auctionitems1");
             ps.executeUpdate();
@@ -507,7 +507,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空拍卖b2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from auctionpoint1");
             ps.executeUpdate();
@@ -570,7 +570,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清除商城所有商品() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from cashshop_modified_items");
             ps.executeUpdate();
@@ -583,7 +583,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空个人随身仓库() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bank_item");
             ps.executeUpdate();
@@ -596,7 +596,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空家族随身仓库() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bank_item1");
             ps.executeUpdate();
@@ -609,7 +609,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空拍卖a1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from auctionitems");
             ps.executeUpdate();
@@ -622,7 +622,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空拍卖a2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from auctionpoint");
             ps.executeUpdate();
@@ -635,7 +635,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清理雇佣金币() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from hiredmerch");
             ps.executeUpdate();
@@ -647,7 +647,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空记录角色人数() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from z角色统计");
             ps.executeUpdate();
@@ -659,7 +659,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空商城() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from csitems");
             ps.executeUpdate();
@@ -672,7 +672,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空技能2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from skills");
             ps.executeUpdate();
@@ -685,7 +685,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空技能1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from skillmacros");
             ps.executeUpdate();
@@ -698,7 +698,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空任务2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from queststatusmobs");
             ps.executeUpdate();
@@ -711,7 +711,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空任务1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from queststatus");
             ps.executeUpdate();
@@ -724,7 +724,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空D() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from mountdata");
             ps.executeUpdate();
@@ -737,7 +737,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空C() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from keymap");
             ps.executeUpdate();
@@ -750,7 +750,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空B() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from inventoryslot");
             ps.executeUpdate();
@@ -763,7 +763,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空论坛1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from forum_thread");
             ps.executeUpdate();
@@ -776,7 +776,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空A() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from hypay");
             ps.executeUpdate();
@@ -789,7 +789,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空武器2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from inventoryitems");
             ps.executeUpdate();
@@ -802,7 +802,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空武器1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from inventoryequipment");
             ps.executeUpdate();
@@ -815,7 +815,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空论坛2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from forum_section");
             ps.executeUpdate();
@@ -828,7 +828,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空论坛3() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from forum_reply");
             ps.executeUpdate();
@@ -841,7 +841,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空世界爆物() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from drop_data_global");
             ps.executeUpdate();
@@ -855,7 +855,7 @@ public class 一键还原 extends JFrame
     
     private void 清空家族表() {
         this.Z(6);
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from guilds");
             ps.executeUpdate();
@@ -869,7 +869,7 @@ public class 一键还原 extends JFrame
     
     private void 清空角色表() {
         this.Z(10);
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from characters");
             ps.executeUpdate();
@@ -883,7 +883,7 @@ public class 一键还原 extends JFrame
     
     private void 清空核心数据库() {
         this.Z(14);
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank");
             ps.executeUpdate();
@@ -897,7 +897,7 @@ public class 一键还原 extends JFrame
     
     private void 清空每日列表() {
         this.Z(18);
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bosslog");
             ps.executeUpdate();
@@ -910,7 +910,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空随身仓库() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from bank_item");
             ps.executeUpdate();
@@ -923,7 +923,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空拍卖1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from auctionitems");
             ps.executeUpdate();
@@ -936,7 +936,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空拍卖2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from auctionpoint");
             ps.executeUpdate();
@@ -950,7 +950,7 @@ public class 一键还原 extends JFrame
     
     private void 清空账号() {
         this.Z(2);
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from accounts");
             ps.executeUpdate();
@@ -963,7 +963,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空雇佣1() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from hiredmerch");
             ps.executeUpdate();
@@ -976,7 +976,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空雇佣2() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from hiredmerchequipment");
             ps.executeUpdate();
@@ -989,7 +989,7 @@ public class 一键还原 extends JFrame
     }
     
     private void 清空雇佣3() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("Delete from hiredmerchitems");
             ps.executeUpdate();

@@ -19,7 +19,7 @@ public class AutoRegister
     
     public static boolean getAccountExists(final String login) {
         boolean accountExists = false;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT name FROM accounts WHERE name = ?");
             ps.setString(1, login);
             final ResultSet rs = ps.executeQuery();
@@ -36,7 +36,7 @@ public class AutoRegister
     
     public static void createAccount(final String login, final String pwd, final String eip) {
         final String sockAddr = eip;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             ResultSet rs;
             try (final PreparedStatement ipc = con.prepareStatement("SELECT Macs FROM accounts WHERE macs = ?")) {
                 ipc.setString(1, "00-00-00-00-00-00");

@@ -59,7 +59,7 @@ public enum CheatingOffense
         return this.bantype;
     }
     
-    public final void setEnabled(final boolean enabled) {
+    public void setEnabled(final boolean enabled) {
         this.bantype = (byte)(byte)(enabled ? 1 : 0);
     }
     

@@ -70,7 +70,7 @@ public class MonsterStatusEffect
         return this.x;
     }
     
-    public final void setValue(final MonsterStatus status, final Integer newVal) {
+    public void setValue(final MonsterStatus status, final Integer newVal) {
         this.stati = status;
         this.x = newVal;
     }
@@ -87,7 +87,7 @@ public class MonsterStatusEffect
         return this.monsterSkill;
     }
     
-    public final void setCancelTask(final long cancelTask) {
+    public void setCancelTask(final long cancelTask) {
         this.cancelTime = System.currentTimeMillis() + cancelTask;
     }
     
@@ -107,7 +107,7 @@ public class MonsterStatusEffect
         return this.dotTime;
     }
     
-    public final void setPoisonDamage(final int poisonDamage, final MapleCharacter chrr) {
+    public void setPoisonDamage(final int poisonDamage, MapleCharacter chrr) {
         this.poisonDamage = poisonDamage;
         this.weakChr = new WeakReference<MapleCharacter>(chrr);
     }
@@ -120,7 +120,7 @@ public class MonsterStatusEffect
         return this.cancelTime > 0L && this.cancelTime <= System.currentTimeMillis();
     }
     
-    public final void cancelTask() {
+    public void cancelTask() {
         this.cancelTime = 0L;
     }
     
@@ -132,7 +132,7 @@ public class MonsterStatusEffect
         return (this.weakChr == null || this.weakChr.get() == null) ? 0 : ((MapleCharacter)this.weakChr.get()).getId();
     }
     
-    public final void cancelPoisonSchedule(final MapleMonster mm) {
+    public void cancelPoisonSchedule(final MapleMonster mm) {
         mm.doPoison(this, this.weakChr);
         this.poisonDamage = 0;
         this.weakChr = null;

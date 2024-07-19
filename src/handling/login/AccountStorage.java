@@ -42,7 +42,7 @@ public class AccountStorage
         return ret;
     }
     
-    public final void registerAccount(final MapleClient c) {
+    public void registerAccount(final MapleClient c) {
         this.writeLock.lock();
         try {
             this.idToClient.put(Integer.valueOf(c.getAccID()), c);
@@ -52,7 +52,7 @@ public class AccountStorage
         }
     }
     
-    public final void deregisterAccount(final MapleClient c) {
+    public void deregisterAccount(final MapleClient c) {
         this.writeLock.lock();
         try {
             final List<Integer> clients = new ArrayList<Integer>();
@@ -72,7 +72,7 @@ public class AccountStorage
         }
     }
     
-    public final void deregisterAccountById(final int id) {
+    public void deregisterAccountById(final int id) {
         this.writeLock.lock();
         try {
             this.idToClient.remove((Object)Integer.valueOf(id));
@@ -122,11 +122,11 @@ public class AccountStorage
         return this.idToClient.size();
     }
     
-    public final void disconnectAll() {
+    public void disconnectAll() {
         this.disconnectAll(false);
     }
     
-    public final void disconnectAll(final boolean checkGM) {
+    public void disconnectAll(final boolean checkGM) {
         this.writeLock.lock();
         try {
             final Iterator<MapleClient> itr = this.idToClient.values().iterator();
@@ -144,7 +144,7 @@ public class AccountStorage
         }
     }
     
-    public final void disconnectAll(final MapleClient cl) {
+    public void disconnectAll(final MapleClient cl) {
         this.writeLock.lock();
         try {
             final Iterator<MapleClient> itr = this.idToClient.values().iterator();
@@ -194,7 +194,7 @@ public class AccountStorage
         return sb.toString();
     }
     
-    public final void broadcastPacket(final byte[] data) {
+    public void broadcastPacket(final byte[] data) {
         this.readLock.lock();
         try {
             final Iterator<MapleClient> itr = this.idToClient.values().iterator();
@@ -207,7 +207,7 @@ public class AccountStorage
         }
     }
     
-    public final void broadcastGMPacket(final byte[] data) {
+    public void broadcastGMPacket(final byte[] data) {
         this.readLock.lock();
         try {
             for (final MapleClient c : this.idToClient.values()) {

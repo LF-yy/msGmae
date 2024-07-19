@@ -65,9 +65,9 @@ import tools.data.LittleEndianAccessor;
 
 public class InventoryHandler
 {
-    public static final int OWL_ID = 2;
+    public static int OWL_ID = 2;
     
-    public static final void ItemMove(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void ItemMove(final LittleEndianAccessor slea, final MapleClient c) {
         final MapleCharacter player = c.getPlayer();
         if (c.getPlayer().hasBlockedInventory(true)) {
             return;
@@ -99,6 +99,8 @@ public class InventoryHandler
                 return;
             }
             MapleInventoryManipulator.drop(c, type, src, quantity);
+            //修复复制
+            //c.getPlayer().saveToDB(true, true);
         }
         else {
             MapleInventoryManipulator.move(c, type, src, dst);
@@ -106,7 +108,7 @@ public class InventoryHandler
     }
     
     
-    public static final void ItemSort(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void ItemSort(final LittleEndianAccessor slea, final MapleClient c) {
         c.getPlayer().updateTick(slea.readInt());
         final MapleInventoryType pInvType = MapleInventoryType.getByType(slea.readByte());
         if (pInvType == MapleInventoryType.UNDEFINED) {
@@ -140,7 +142,7 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void ItemGather(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void ItemGather(final LittleEndianAccessor slea, final MapleClient c) {
         if (c == null || c.getPlayer() == null) {
             return;
         }
@@ -186,8 +188,8 @@ public class InventoryHandler
         return sortedList;
     }
     //自定义箱子，礼包箱子，双击箱子打开NPC
-    public static final boolean UseRewardItem(final byte slot, final int itemId, final MapleClient c, final MapleCharacter chr) {
-        final IItem toUse = c.getPlayer().getInventory(GameConstants.getInventoryType(itemId)).getItem((short)slot);
+    public static boolean UseRewardItem(final byte slot, final int itemId, final MapleClient c, MapleCharacter chr) {
+        IItem toUse = c.getPlayer().getInventory(GameConstants.getInventoryType(itemId)).getItem((short)slot);
         if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
             System.out.println("使用物品:"+ itemId + "---slot:"+slot);
         }
@@ -400,6 +402,9 @@ public class InventoryHandler
                             }
                             if (chr.getInventory(MapleInventoryType.EQUIP).getNextFreeSlot() > -1 && chr.getInventory(MapleInventoryType.USE).getNextFreeSlot() > -1 && chr.getInventory(MapleInventoryType.SETUP).getNextFreeSlot() > -1 && chr.getInventory(MapleInventoryType.ETC).getNextFreeSlot() > -1) {
                                 final IItem item2 = MapleInventoryManipulator.addbyId_Gachapon(c, reward2, (short)amount);
+                                if (item2==null){
+                                    return false;
+                                }
                                 final byte rareness = GameConstants.gachaponRareItem(item2.getItemId());
                                 MapleInventoryManipulator.removeById(c, GameConstants.getInventoryType(itemId), itemId, 1, false, false);
                                 c.sendPacket(MaplePacketCreator.getShowItemGain(reward2, (short)amount, true));
@@ -425,14 +430,15 @@ public class InventoryHandler
         }
         return false;
     }
-    
-    public static final void UseItem(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+
+    //使用消耗品
+    public static void UseItem(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
 
 
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         List<String> itemCodeList = getItemCodeList(1L);
         if (itemCodeList.contains(toUse.getItemId()+"")) {
             c.sendPacket(MaplePacketCreator.enableActions());
@@ -473,7 +479,7 @@ public class InventoryHandler
         ResultSet rs = null;
         StringBuilder numbOld =new StringBuilder();
         try  {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT code FROM ltt_item_code where id = ? ");
             ps.setLong(1, id);
             rs = ps.executeQuery();
@@ -489,7 +495,7 @@ public class InventoryHandler
         }
         return Arrays.asList(numbOld.toString().split(","));
     }
-    public static final void UseReturnScroll(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseReturnScroll(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (!chr.isAlive() || chr.getMapId() == 749040100 || GameConstants.isNotToMap(chr.getMapId())) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -497,7 +503,7 @@ public class InventoryHandler
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (toUse == null || toUse.getQuantity() < 1 || toUse.getItemId() != itemId) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -517,7 +523,7 @@ public class InventoryHandler
     /*
      * 使用鉴定放大镜
      */
-    public static final void UseMagnify(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void UseMagnify(final LittleEndianAccessor slea, final MapleClient c) {
         c.getPlayer().updateTick(slea.readInt());
         final IItem magnify = c.getPlayer().getInventory(MapleInventoryType.USE).getItem((short)(byte)slea.readShort());
         final IItem toReveal = c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)(byte)slea.readShort());
@@ -563,12 +569,12 @@ public class InventoryHandler
         }
     }
     
-    public static final boolean UseUpgradeScroll(final byte slot, final byte dst, final byte ws, final MapleClient c, final MapleCharacter chr) {
+    public static boolean UseUpgradeScroll(final byte slot, final byte dst, final byte ws, final MapleClient c, MapleCharacter chr) {
         return UseUpgradeScroll(slot, dst, ws, c, chr, 0);
     }
 
     //使用混沌卷轴等
-    public static final boolean UseUpgradeScroll(final byte slot, final byte dst, final byte ws, final MapleClient c, final MapleCharacter chr, final int vegas) {
+    public static boolean UseUpgradeScroll(final byte slot, final byte dst, final byte ws, final MapleClient c, MapleCharacter chr, final int vegas) {
         boolean whiteScroll = false;
         boolean legendarySpirit = false;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
@@ -739,12 +745,12 @@ public class InventoryHandler
         return true;
     }
     
-    public static final void UseCatchItem(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseCatchItem(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemid = slea.readInt();
         final MapleMonster mob = chr.getMap().getMonsterByOid(slea.readInt());
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (toUse != null && toUse.getQuantity() > 0 && toUse.getItemId() == itemid && mob != null) {
             switch (itemid) {
                 case 2270004: {
@@ -803,11 +809,11 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void UseMountFood(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseMountFood(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemid = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         final MapleMount mount = chr.getMount();
         if (toUse != null && toUse.getQuantity() > 0 && toUse.getItemId() == itemid && mount != null) {
             final int fatigue = mount.getFatigue();
@@ -827,11 +833,11 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void UseScriptedNPCItem(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseScriptedNPCItem(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         long expiration_days = 0L;
         int mountid = 0;
         if (toUse != null && toUse.getQuantity() >= 1 && toUse.getItemId() == itemId) {
@@ -1072,7 +1078,7 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void UseSummonBag(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseSummonBag(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (!chr.isAlive()) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -1084,7 +1090,7 @@ public class InventoryHandler
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (toUse != null && toUse.getQuantity() >= 1 && toUse.getItemId() == itemId) {
             if (toUse.getItemId() == 2100069) {
                 c.sendPacket(MaplePacketCreator.enableActions());
@@ -1107,7 +1113,7 @@ public class InventoryHandler
                        if (chr.isReincarnationMob()) {
                            switch (result) {
                                case 1: {
-                                   chr.dropMessage("地圖上有人施放了輪迴");
+                                   chr.dropMessage("地圖上有人施放了輪迴"); //轮回石碑
                                    break;
                                 }
                            }
@@ -1128,10 +1134,10 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void UseTreasureChest(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseTreasureChest(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final short slot = slea.readShort();
         final int itemid = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.ETC).getItem((short)(byte)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.ETC).getItem((short)(byte)slot);
         if (toUse == null || toUse.getQuantity() <= 0 || toUse.getItemId() != itemid) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -1191,10 +1197,10 @@ public class InventoryHandler
         }
     }
     
-    public static final void UseCashItem(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void UseCashItem(final LittleEndianAccessor slea, final MapleClient c) {
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
-        final IItem toUse = c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((short)slot);
+        IItem toUse = c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((short)slot);
         if (toUse == null || toUse.getItemId() != itemId || toUse.getQuantity() < 1) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -1703,8 +1709,8 @@ public class InventoryHandler
                     c.getPlayer().dropMessage(5, "此道具无法使用金锤子");
                     return;
                 }
-                final int 随机数 = (int) Math.floor(Math.random() * 100.0);
-                if (随机数 <= ((Integer) LtMS.ConfigValuesMap.get("金锤子提升成功率")).intValue()) {
+                 int randomNum = (int) Math.floor(Math.random() * 100.0);
+                if (randomNum <= LtMS.ConfigValuesMap.get("金锤子提升成功率")) {
                     MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, itemId, 1, true, false);//扣掉金锤子
                     item3.setViciousHammer((byte) (item3.getViciousHammer() + 1));
                     item3.setUpgradeSlots((byte) (item3.getUpgradeSlots() + 1));
@@ -2516,12 +2522,12 @@ public class InventoryHandler
                 c.getPlayer().dropMessage(1, "Auto change channel failed.");
                 return;
             }
-            c.getPlayer().dropMessage(5, "Auto changing channels. Please wait.");
+            c.getPlayer().dropMessage(5, "自动更换频道,请稍后.");
             c.getPlayer().changeChannel((c.getChannel() == ChannelServer.getChannelCount()) ? 1 : (c.getChannel() + 1));
         }
     }
     
-    public static final void PlayerPickup(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void PlayerPickup(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         //拾取物品
         if (World.isShutDown) {
             c.getPlayer().dropMessage(1, "目前無法撿物品。");
@@ -2630,7 +2636,7 @@ public class InventoryHandler
         }
     }
     
-    public static final void PetPickup(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void PetPickup(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (chr == null) {
             return;
         }
@@ -2728,7 +2734,7 @@ public class InventoryHandler
         }
     }
     
-    public static final boolean useItem(final MapleClient c, final int id) {
+    public static boolean useItem(final MapleClient c, final int id) {
         if (LtMS.ConfigValuesMap.get("开启卡片buff")==0 && GameConstants.isMonsterCard(id)){
             return false;
         }
@@ -2739,7 +2745,7 @@ public class InventoryHandler
                 if (consumeval == 2) {
                     if (c.getPlayer().getParty() != null) {
                         for (final MaplePartyCharacter pc : c.getPlayer().getParty().getMembers()) {
-                            final MapleCharacter chr = c.getPlayer().getMap().getCharacterById(pc.getId());
+                            MapleCharacter chr = c.getPlayer().getMap().getCharacterById(pc.getId());
                             if (chr != null) {
                                 ii.getItemEffect(id).applyTo(chr);
                             }
@@ -2759,7 +2765,7 @@ public class InventoryHandler
         return false;
     }
     
-    public static final void removeItemPet(final MapleCharacter chr, final MapleMapItem mapitem, final int pet) {
+    public static void removeItemPet(MapleCharacter chr, final MapleMapItem mapitem, final int pet) {
         mapitem.setPickedUp(true);
         chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 5, chr.getId(), pet), mapitem.getPosition());
         chr.getMap().removeMapObject((MapleMapObject)mapitem);
@@ -2768,7 +2774,7 @@ public class InventoryHandler
         }
     }
     
-    public static void removeItem(final MapleCharacter chr, final MapleMapItem mapitem, final MapleMapObject ob) {
+    public static void removeItem(MapleCharacter chr, final MapleMapItem mapitem, final MapleMapObject ob) {
         mapitem.setPickedUp(true);
         chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, chr.getId()), mapitem.getPosition());
         chr.getMap().removeMapObject(ob);
@@ -2801,10 +2807,10 @@ public class InventoryHandler
         return MapleInventoryManipulator.addById(c, ids[z], (short)1) && MapleInventoryManipulator.addById(c, ids[z_2], (short)1);
     }
     
-    public static final void OwlMinerva(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void OwlMinerva(final LittleEndianAccessor slea, final MapleClient c) {
         final byte slot = (byte)slea.readShort();
         final int itemid = slea.readInt();
-        final IItem toUse = c.getPlayer().getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = c.getPlayer().getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (toUse != null && toUse.getQuantity() > 0 && toUse.getItemId() == itemid && itemid == 2310000) {
             final int itemSearch = slea.readInt();
             final List<HiredMerchant> hms = c.getChannelServer().searchMerchant(itemSearch);
@@ -2819,7 +2825,7 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void Owl(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void Owl(final LittleEndianAccessor slea, final MapleClient c) {
         if (c.getPlayer().haveItem(5230000, 1, true, false) || c.getPlayer().haveItem(2310000, 1, true, false)) {
             if (c.getPlayer().getMapId() >= 910000000 && c.getPlayer().getMapId() <= 910000022) {
                 c.sendPacket(MaplePacketCreator.getOwlOpen());
@@ -2831,11 +2837,11 @@ public class InventoryHandler
         }
     }
     
-    public static final void UseSkillBook(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void UseSkillBook(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         slea.skip(4);
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (toUse == null || toUse.getQuantity() < 1 || toUse.getItemId() != itemId) {
             return;
         }
@@ -2879,7 +2885,7 @@ public class InventoryHandler
         c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.useSkillBook(chr, skill, maxlevel, canuse, success));
     }
     
-    public static final void OwlWarp(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void OwlWarp(final LittleEndianAccessor slea, final MapleClient c) {
         c.sendPacket(MaplePacketCreator.enableActions());
         if (c.getPlayer().getMapId() >= 910000000 && c.getPlayer().getMapId() <= 910000022 && c.getPlayer().getPlayerShop() == null) {
             final int id = slea.readInt();
@@ -2967,7 +2973,7 @@ public class InventoryHandler
         }
     }
     
-    public static final boolean UseTeleRock(final LittleEndianAccessor slea, final MapleClient c, final int itemId) {
+    public static boolean UseTeleRock(final LittleEndianAccessor slea, final MapleClient c, final int itemId) {
         boolean used = false;
         if (itemId == 5041001 || itemId == 5040004) {
             slea.readByte();
@@ -3039,7 +3045,7 @@ public class InventoryHandler
     public static int UseSummonBagNotCSP(int itemId) {
         int result = 0;
         switch (itemId) {
-            case 2109013: // 輪迴道具 ID
+            case 2109013: // 輪迴道具 ID 轮回石碑
                 result = 1;
                 break;
         }

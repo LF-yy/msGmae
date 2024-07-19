@@ -34,7 +34,7 @@ public class DumpHairFace
         final MapleDataProvider chrData = MapleDataProviderFactory.getDataProvider(dataFile);
         final MapleDataProvider stringDataWZ = MapleDataProviderFactory.getDataProvider(strDataFile);
         final MapleData chrStringData = stringDataWZ.getData("Eqp.img").getChildByPath("Eqp/" + type);
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_" + type.toLowerCase() + "data`")) {
                 ps.execute();
             }

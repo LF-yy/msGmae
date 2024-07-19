@@ -35,7 +35,7 @@ public class AttackInfo
         this.real = true;
     }
     
-    public final MapleStatEffect getAttackEffect(final MapleCharacter chr, int skillLevel, final ISkill skill_) {
+    public final MapleStatEffect getAttackEffect(MapleCharacter chr, int skillLevel, final ISkill skill_) {
         if (GameConstants.isMulungSkill(this.skill) || GameConstants.isPyramidSkill(this.skill)) {
             skillLevel = 1;
         }

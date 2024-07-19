@@ -39,7 +39,7 @@ public class DumpMobSkills
     
     public void dumpMobSkills() throws Exception {
         if (!this.hadError) {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final PreparedStatement ps = con.prepareStatement("INSERT INTO wz_mobskilldata(skillid, `level`, hp, mpcon, x, y, time, prop, `limit`, spawneffect,`interval`, summons, ltx, lty, rbx, rby, once) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 try {
                     this.dumpMobSkills(ps);
@@ -62,7 +62,7 @@ public class DumpMobSkills
     }
     
     public void delete(final String sql) throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement(sql)) {
             ps.executeUpdate();
         }
@@ -73,7 +73,7 @@ public class DumpMobSkills
     }
     
     public boolean doesExist(final String sql) throws Exception {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement(sql)) {
             final ResultSet rs = ps.executeQuery();
             final boolean ret = rs.next();

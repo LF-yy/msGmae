@@ -102,7 +102,7 @@ public class MapleNodes
         for (int nextNode = this.getNextNode((MapleNodeInfo)unsortedNodes.get((Object)Integer.valueOf(this.nodeStart))); this.nodes.size() != nodeSize && nextNode >= 0; nextNode = this.getNextNode((MapleNodeInfo)unsortedNodes.get((Object)Integer.valueOf(nextNode)))) {}
     }
     
-    public final void addMapleArea(final Rectangle rec) {
+    public void addMapleArea(final Rectangle rec) {
         this.areas.add(rec);
     }
     
@@ -114,7 +114,7 @@ public class MapleNodes
         return (Rectangle)this.getAreas().get(index);
     }
     
-    public final void addPlatform(final MaplePlatform mp) {
+    public void addPlatform(final MaplePlatform mp) {
         this.platforms.add(mp);
     }
     
@@ -126,11 +126,11 @@ public class MapleNodes
         return this.monsterPoints;
     }
     
-    public final void addMonsterPoint(final int x, final int y, final int fh, final int cy, final int team) {
+    public void addMonsterPoint(final int x, final int y, final int fh, final int cy, final int team) {
         this.monsterPoints.add(new MonsterPoint(x, y, fh, cy, team));
     }
     
-    public final void addMobSpawn(final int mobId, final int spendCP) {
+    public void addMobSpawn(final int mobId, final int spendCP) {
         this.mobsToSpawn.add(new Pair<Integer, Integer>(Integer.valueOf(mobId), Integer.valueOf(spendCP)));
     }
     
@@ -138,7 +138,7 @@ public class MapleNodes
         return this.mobsToSpawn;
     }
     
-    public final void addGuardianSpawn(final Point guardian, final int team) {
+    public void addGuardianSpawn(final Point guardian, final int team) {
         this.guardiansToSpawn.add(new Pair<Point, Integer>(guardian, Integer.valueOf(team)));
     }
     
@@ -150,7 +150,7 @@ public class MapleNodes
         return this.skillIds;
     }
     
-    public final void addSkillId(final int z) {
+    public void addSkillId(final int z) {
         this.skillIds.add(Integer.valueOf(z));
     }
     

@@ -20,7 +20,7 @@ public class FixDropNullItem
 {
     private List<Integer> loadFromDB(final int type) {
         final List<Integer> dropid = new ArrayList<Integer>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final StringBuilder sb = new StringBuilder();
             sb.append("SELECT itemid FROM drop_data ORDER BY itemid");
             if (type == 1) {
@@ -55,7 +55,7 @@ public class FixDropNullItem
             sb.append(" DESC");
         }
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement(sb.toString());
             ps.setInt(1, itemId);
             final ResultSet rs = ps.executeQuery();

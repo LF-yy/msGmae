@@ -15,7 +15,7 @@ public enum MapleEventType
         this.mapids = mapids;
     }
     
-    public static final MapleEventType getByString(final String splitted) {
+    public static MapleEventType getByString(final String splitted) {
         for (final MapleEventType t : values()) {
             if (t.command.equalsIgnoreCase(splitted)) {
                 return t;

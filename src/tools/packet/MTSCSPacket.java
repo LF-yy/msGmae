@@ -167,7 +167,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static byte[] changePetName(final MapleCharacter chr, final String newname, final int slot) {
+    public static byte[] changePetName(MapleCharacter chr, final String newname, final int slot) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.PET_NAMECHANGE.getValue());
         mplew.writeInt(chr.getId());
@@ -207,7 +207,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static byte[] getTrockRefresh(final MapleCharacter chr, final byte vip, final boolean delete) {
+    public static byte[] getTrockRefresh(MapleCharacter chr, final byte vip, final boolean delete) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MAP_TRANSFER_RESULT.getValue());
         mplew.write(delete ? 2 : 3);
@@ -227,7 +227,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static byte[] sendShowWishList(final MapleCharacter chr) {
+    public static byte[] sendShowWishList(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.CS_OPERATION.getValue());
         mplew.write(70);
@@ -246,7 +246,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static byte[] setWishList(final MapleCharacter chr) {
+    public static byte[] setWishList(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.CS_OPERATION.getValue());
         mplew.write(74);
@@ -339,7 +339,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static byte[] showNXMapleTokens(final MapleCharacter chr) {
+    public static byte[] showNXMapleTokens(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.CS_UPDATE.getValue());
         mplew.writeInt(chr.getCSPoints(1));
@@ -360,19 +360,19 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final int accId, final int sn) {
+    public static void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final int accId, final int sn) {
         addCashItemInfo(mplew, item, accId, sn, true);
     }
     
-    public static final void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final int accId, final int sn, final boolean isFirst) {
+    public static void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final int accId, final int sn, final boolean isFirst) {
         addCashItemInfo(mplew, item.getUniqueId(), accId, item.getItemId(), sn, (int)item.getQuantity(), item.getGiftFrom(), item.getExpiration(), isFirst);
     }
     
-    public static final void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final int uniqueid, final int accId, final int itemid, final int sn, final int quantity, final String sender, final long expire) {
+    public static void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final int uniqueid, final int accId, final int itemid, final int sn, final int quantity, final String sender, final long expire) {
         addCashItemInfo(mplew, uniqueid, accId, itemid, sn, quantity, sender, expire, true);
     }
     
-    public static final void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final int uniqueid, final int accId, final int itemid, final int sn, final int quantity, final String sender, final long expire, final boolean isFirst) {
+    public static void addCashItemInfo(final MaplePacketLittleEndianWriter mplew, final int uniqueid, final int accId, final int itemid, final int sn, final int quantity, final String sender, final long expire, final boolean isFirst) {
         mplew.writeLong((uniqueid > 0) ? ((long)uniqueid) : 0L);
         mplew.writeLong((long)accId);
         mplew.writeInt(itemid);
@@ -581,7 +581,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] startMTS(final MapleCharacter chr, final MapleClient c) {
+    public static byte[] startMTS(MapleCharacter chr, final MapleClient c) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SET_ITC.getValue());
         PacketHelper.addCharacterInfo(mplew, chr, true);
@@ -595,7 +595,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] sendMTS(final List<MTSItemInfo> items, final int tab, final int type, final int page, final int pages) {
+    public static byte[] sendMTS(final List<MTSItemInfo> items, final int tab, final int type, final int page, final int pages) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(21);
@@ -613,14 +613,14 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] showMTSCash(final MapleCharacter p) {
+    public static byte[] showMTSCash(final MapleCharacter p) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.GET_MTS_TOKENS.getValue());
         mplew.writeInt(p.getCSPoints(2));
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSWantedListingOver(final int nx, final int items) {
+    public static byte[] getMTSWantedListingOver(final int nx, final int items) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(61);
@@ -629,14 +629,14 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSConfirmSell() {
+    public static byte[] getMTSConfirmSell() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(29);
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSFailSell() {
+    public static byte[] getMTSFailSell() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(30);
@@ -644,14 +644,14 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSConfirmBuy() {
+    public static byte[] getMTSConfirmBuy() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(51);
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSFailBuy() {
+    public static byte[] getMTSFailBuy() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(52);
@@ -659,14 +659,14 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSConfirmCancel() {
+    public static byte[] getMTSConfirmCancel() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(37);
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSFailCancel() {
+    public static byte[] getMTSFailCancel() {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(38);
@@ -674,7 +674,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] getMTSConfirmTransfer(final int quantity, final int pos) {
+    public static byte[] getMTSConfirmTransfer(final int quantity, final int pos) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(39);
@@ -696,7 +696,7 @@ public class MTSCSPacket
         mplew.writeZeroBytes(28);
     }
     
-    public static final byte[] getNotYetSoldInv(final List<MTSItemInfo> items) {
+    public static byte[] getNotYetSoldInv(final List<MTSItemInfo> items) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(35);
@@ -707,7 +707,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] getTransferInventory(final List<IItem> items, final boolean changed) {
+    public static byte[] getTransferInventory(final List<IItem> items, final boolean changed) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         mplew.write(33);
@@ -726,7 +726,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static final byte[] addToCartMessage(final boolean fail, final boolean remove) {
+    public static byte[] addToCartMessage(final boolean fail, final boolean remove) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MTS_OPERATION.getValue());
         if (remove) {

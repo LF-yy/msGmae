@@ -37,7 +37,7 @@ public class MapleRing implements Serializable
     }
     
     public static MapleRing loadFromDb(final int ringId, final boolean equipped) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM rings WHERE ringId = ?")) {
             ps.setInt(1, ringId);
             MapleRing ret;
@@ -57,8 +57,8 @@ public class MapleRing implements Serializable
         }
     }
     
-    public static void addToDB(final int itemid, final MapleCharacter chr, final String player, final int id, final int[] ringId) throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+    public static void addToDB(final int itemid, MapleCharacter chr, final String player, final int id, final int[] ringId) throws SQLException {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("INSERT INTO rings (ringId, itemid, partnerChrId, partnerName, partnerRingId) VALUES (?, ?, ?, ?, ?)");
             ps.setInt(1, ringId[0]);
             ps.setInt(2, itemid);
@@ -155,7 +155,7 @@ public class MapleRing implements Serializable
     }
     
     public static void removeRingFromDB(final MapleCharacter player) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM rings WHERE partnerChrId = ?");
             ps.setInt(1, player.getId());
             final ResultSet rs = ps.executeQuery();

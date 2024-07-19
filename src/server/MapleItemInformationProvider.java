@@ -46,7 +46,7 @@ public class MapleItemInformationProvider
     protected final MapleData petStringData;
     protected Map<Integer, Boolean> onEquipUntradableCache;
     protected final Map<Integer, List<Integer>> scrollReqCache;
-    public static final Map<Integer, Short> slotMaxCache = new HashMap<Integer, Short>();
+    public static Map<Integer, Short> slotMaxCache = new HashMap<Integer, Short>();
     protected final Map<Integer, List<StructPotentialItem>> potentialCache;
     protected final Map<Integer, MapleStatEffect> itemEffects;
     protected final Map<Integer, Map<String, Integer>> equipStatsCache;
@@ -84,8 +84,8 @@ public class MapleItemInformationProvider
     protected final Map<Byte, StructSetItem> setItems;
     protected final Map<Integer, Pair<Integer, List<Integer>>> questItems;
     protected final Map<Integer, String> faceList;
-    public static final Map<Integer, String> faceLists;
-    public static final Map<Integer, String> hairList;
+    public static Map<Integer, String> faceLists;
+    public static Map<Integer, String> hairList;
     protected Map<Integer, MapleInventoryType> inventoryTypeCache;
     protected final Map<Integer, Integer> chairMountId;
     protected Map<Integer, Boolean> floatCashItem = new HashMap<>(); //拥有漂浮效果的道具
@@ -145,7 +145,7 @@ public class MapleItemInformationProvider
         System.out.println("[正在加载] -> WZ物品信息");
     }
     
-    public final void load() {
+    public void load() {
         if (!this.setItems.isEmpty() || !this.potentialCache.isEmpty()) {
             return;
         }
@@ -160,7 +160,7 @@ public class MapleItemInformationProvider
         return this.potentialCache;
     }
     
-    public static final MapleItemInformationProvider getInstance() {
+    public static MapleItemInformationProvider getInstance() {
         return MapleItemInformationProvider.instance;
     }
     
@@ -888,7 +888,7 @@ public class MapleItemInformationProvider
     }
 
     //给装备上卷轴
-    public final IItem scrollEquipWithId(final IItem equip, final IItem scrollId, final boolean ws, final MapleCharacter chr, final int vegas) {
+    public final IItem scrollEquipWithId(final IItem equip, final IItem scrollId, final boolean ws, MapleCharacter chr, final int vegas) {
         if (equip.getType() == 1) {
             final Equip nEquip = (Equip)equip;
            // int scroll = scrollId.getItemId();
@@ -1854,7 +1854,7 @@ public class MapleItemInformationProvider
         return bRestricted;
     }
     
-    public final void loadStyles(final boolean reload) {
+    public void loadStyles(final boolean reload) {
         if (reload) {
             this.faceList.clear();
         }
@@ -2085,7 +2085,7 @@ public class MapleItemInformationProvider
     }
     
     public static void loadFaceHair() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_hairdata ORDER BY `hairid`");
                  final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

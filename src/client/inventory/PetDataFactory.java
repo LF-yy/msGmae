@@ -14,7 +14,7 @@ public class PetDataFactory
     private static final Map<Pair<Integer, Integer>, PetCommand> petCommands;
     private static final Map<Integer, Integer> petHunger;
     
-    public static final PetCommand getPetCommand(final int petId, final int skillId) {
+    public static PetCommand getPetCommand(final int petId, final int skillId) {
         PetCommand ret = (PetCommand)PetDataFactory.petCommands.get((Object)new Pair((Object)Integer.valueOf(petId), (Object)Integer.valueOf(skillId)));
         if (ret != null) {
             return ret;
@@ -31,7 +31,7 @@ public class PetDataFactory
         return ret;
     }
     
-    public static final int getHunger(final int petId) {
+    public static int getHunger(final int petId) {
         Integer ret = PetDataFactory.petHunger.get((Object)Integer.valueOf(petId));
         if (ret != null) {
             return (int)ret;

@@ -22,12 +22,12 @@ public class MapleOla extends MapleEvent
     }
     
     @Override
-    public void finished(final MapleCharacter chr) {
+    public void finished(MapleCharacter chr) {
         this.givePrize(chr);
     }
     
     @Override
-    public void onMapLoad(final MapleCharacter chr) {
+    public void onMapLoad(MapleCharacter chr) {
         if (this.isTimerStarted()) {
             chr.getClient().sendPacket(MaplePacketCreator.getClock((int)(this.getTimeLeft() / 1000L)));
         }
@@ -44,7 +44,7 @@ public class MapleOla extends MapleEvent
             @Override
             public void run() {
                 for (int i = 0; i < MapleOla.this.mapid.length; ++i) {
-                    for (final MapleCharacter chr : MapleOla.this.getMap(i).getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : MapleOla.this.getMap(i).getCharactersThreadsafe()) {
                         MapleOla.this.warpBack(chr);
                     }
                     MapleOla.this.unreset();

@@ -152,7 +152,7 @@ public class MapleQuest implements Serializable
     
     public static void initQuests() {
         System.out.println("[正在加载] -> 游戏任务系统");
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_questdata");
             final PreparedStatement psr = con.prepareStatement("SELECT * FROM wz_questreqdata WHERE questid = ?");
             final PreparedStatement psa = con.prepareStatement("SELECT * FROM wz_questactdata WHERE questid = ?");
@@ -235,7 +235,7 @@ public class MapleQuest implements Serializable
         return true;
     }
     
-    public final void RestoreLostItem(final MapleCharacter c, final int itemid) {
+    public void RestoreLostItem(final MapleCharacter c, final int itemid) {
         if (this.blocked && !c.isGM()) {
             return;
         }
@@ -388,7 +388,7 @@ public class MapleQuest implements Serializable
         return this.scriptedStart;
     }
     
-    public final boolean canHold(final MapleCharacter chr) {
+    public final boolean canHold(MapleCharacter chr) {
         for (int i = 1; i <= 5; ++i) {
             if (chr.getInventory(MapleInventoryType.getByType((byte)i)).getNextFreeSlot() <= -1) {
                 return false;

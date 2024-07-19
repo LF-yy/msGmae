@@ -722,7 +722,7 @@ public class AdminCommand
             if (splitted.length < 3) {
                 return false;
             }
-            final MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(splitted[1]);
+            MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(splitted[1]);
             if (chr == null) {
                 c.getPlayer().dropMessage(6, "此玩家并不存在");
             }
@@ -758,7 +758,7 @@ public class AdminCommand
             if (splitted.length < 3) {
                 return false;
             }
-            final MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(splitted[1]);
+            MapleCharacter chr = c.getChannelServer().getPlayerStorage().getCharacterByName(splitted[1]);
             if (chr == null) {
                 c.getPlayer().dropMessage(6, "此玩家并不存在");
             }
@@ -1945,7 +1945,7 @@ public class AdminCommand
             try {
                 final MapleMap target = c.getChannelServer().getMapFactory().getMap(Integer.parseInt(splitted[1]));
                 final MapleMap from = c.getPlayer().getMap();
-                for (final MapleCharacter chr : from.getCharactersThreadsafe()) {
+                for (MapleCharacter chr : from.getCharactersThreadsafe()) {
                     chr.changeMap(target, target.getPortal(0));
                 }
             }
@@ -1968,7 +1968,7 @@ public class AdminCommand
             try {
                 final MapleMap target = c.getChannelServer().getMapFactory().getMap(Integer.parseInt(splitted[1]));
                 final MapleMap from = c.getPlayer().getMap();
-                for (final MapleCharacter chr : from.getCharactersThreadsafe()) {
+                for (MapleCharacter chr : from.getCharactersThreadsafe()) {
                     chr.changeMap(target, target.getPortal(0));
                 }
             }
@@ -2209,7 +2209,7 @@ public class AdminCommand
                 npc.setRx1(xpos);
                 npc.setFh(fh);
                 npc.setCustom(true);
-                try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+                try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                      final PreparedStatement ps = con.prepareStatement("INSERT INTO wz_customlife (dataid, f, hide, fh, cy, rx0, rx1, type, x, y, mid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     ps.setInt(1, npcId);
                     ps.setInt(2, 0);
@@ -2262,7 +2262,7 @@ public class AdminCommand
                 npc.setRx1(xpos);
                 npc.setFh(fh);
                 npc.setCustom(true);
-                try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+                try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                      final PreparedStatement ps = con.prepareStatement("INSERT INTO wz_customlife (dataid, f, hide, fh, cy, rx0, rx1, type, x, y, mid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     ps.setInt(1, npcId);
                     ps.setInt(2, 0);
@@ -2866,13 +2866,13 @@ public class AdminCommand
                 }
                 int ret = 0;
                 final MapleMap from = c.getPlayer().getMap();
-                for (final MapleCharacter chrr : from.getCharactersThreadsafe()) {
+                for (MapleCharacter chrr : from.getCharactersThreadsafe()) {
                     chrr.modifyCSPoints(type, quantity);
                     ++ret;
                 }
                 final String show = (type == 1) ? "点卷" : "抵用卷";
                 final MapleMap froma = c.getPlayer().getMap();
-                for (final MapleCharacter chrrr : froma.getCharactersThreadsafe()) {
+                for (MapleCharacter chrrr : froma.getCharactersThreadsafe()) {
                     chrrr.startMapEffect("管理员发放" + quantity + show + "给地图的所有玩家！祝您玩得开心快乐", 5121009);
                 }
                 c.getPlayer().dropMessage(6, "命令使用成功，当前共有: " + ret + " 个玩家获得: " + quantity + " 点的" + ((type == 1) ? "GASH " : " 枫叶点数 ") + " 共计: " + ret * quantity);
@@ -2901,12 +2901,12 @@ public class AdminCommand
                 final int quantity = Integer.parseInt(splitted[1]);
                 int ret = 0;
                 final MapleMap from = c.getPlayer().getMap();
-                for (final MapleCharacter chrr : from.getCharactersThreadsafe()) {
+                for (MapleCharacter chrr : from.getCharactersThreadsafe()) {
                     chrr.gainMeso(quantity, true);
                     ++ret;
                 }
                 final MapleMap froma = c.getPlayer().getMap();
-                for (final MapleCharacter chrrr : froma.getCharactersThreadsafe()) {
+                for (MapleCharacter chrrr : froma.getCharactersThreadsafe()) {
                     chrrr.startMapEffect("管理员发放" + quantity + "金币给地图的所有玩家！祝您玩得开心快乐", 5121009);
                 }
                 c.getPlayer().dropMessage(6, "命令使用成功，当前共有: " + ret + " 个玩家获得: " + quantity + " 金币" + " 共计: " + ret * quantity);
@@ -2931,12 +2931,12 @@ public class AdminCommand
                 final int quantity = Integer.parseInt(splitted[1]);
                 int ret = 0;
                 final MapleMap from = c.getPlayer().getMap();
-                for (final MapleCharacter chrr : from.getCharactersThreadsafe()) {
+                for (MapleCharacter chrr : from.getCharactersThreadsafe()) {
                     chrr.modifyCSPoints(3, quantity, true);
                     ++ret;
                 }
                 final MapleMap froma = c.getPlayer().getMap();
-                for (final MapleCharacter chrrr : froma.getCharactersThreadsafe()) {
+                for (MapleCharacter chrrr : froma.getCharactersThreadsafe()) {
                     chrrr.startMapEffect("管理员发放" + quantity + "元宝给地图的所有玩家！祝您玩得开心快乐", 5121009);
                 }
                 c.getPlayer().dropMessage(6, "命令使用成功，当前共有: " + ret + " 个玩家获得: " + quantity + " 元宝" + " 共计: " + ret * quantity);

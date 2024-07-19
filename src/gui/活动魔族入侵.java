@@ -35,7 +35,7 @@ public class 活动魔族入侵
                     if (S > 0) {
                         ++x;
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 if (chr == null) {
                                     continue;
                                 }

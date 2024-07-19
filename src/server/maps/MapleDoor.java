@@ -87,7 +87,7 @@ public class MapleDoor extends AbstractMapleMapObject
     }
     
     @Override
-    public final void sendSpawnData(final MapleClient client) {
+    public void sendSpawnData(final MapleClient client) {
         if (this.getOwner() == null || this.target == null || client.getPlayer() == null) {
             return;
         }
@@ -101,7 +101,7 @@ public class MapleDoor extends AbstractMapleMapObject
     }
     
     @Override
-    public final void sendDestroyData(final MapleClient client) {
+    public void sendDestroyData(final MapleClient client) {
         if (client.getPlayer() == null || this.getOwner() == null || this.target == null) {
             return;
         }
@@ -114,7 +114,7 @@ public class MapleDoor extends AbstractMapleMapObject
         }
     }
     
-    public final void warp(final MapleCharacter chr, final boolean toTown) {
+    public void warp(MapleCharacter chr, final boolean toTown) {
         if (chr.getId() == this.getOwnerId() || (this.getOwner() != null && this.getOwner().getParty() != null && chr.getParty() != null && this.getOwner().getParty().getId() == chr.getParty().getId())) {
             if (!toTown) {
                 chr.changeMap(this.target, this.target.findClosestPortal(this.targetPosition));

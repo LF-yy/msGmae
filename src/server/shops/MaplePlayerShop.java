@@ -102,7 +102,7 @@ public class MaplePlayerShop extends AbstractPlayerStore
             this.bannedList.add(name);
         }
         for (int i = 0; i < 3; ++i) {
-            final MapleCharacter chr = this.getVisitor(i);
+            MapleCharacter chr = this.getVisitor(i);
             if (chr.getName().equals((Object)name)) {
                 chr.getClient().sendPacket(PlayerShopPacket.shopErrorMessage(5, 1));
                 chr.setPlayerShop(null);

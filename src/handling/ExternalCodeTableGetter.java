@@ -52,7 +52,7 @@ public class ExternalCodeTableGetter
         return (short)(Short.parseShort(offset) + base);
     }
     
-    public static final <T extends java.lang.Enum> String getOpcodeTable(final T[] enumeration) {
+    public static <T extends java.lang.Enum> String getOpcodeTable(final T[] enumeration) {
         final StringBuilder enumVals = new StringBuilder();
         final List<T> all = new ArrayList<T>();
         all.addAll((Collection<? extends T>)Arrays.asList(enumeration));
@@ -74,7 +74,7 @@ public class ExternalCodeTableGetter
         return enumVals.toString();
     }
     
-    public static final <T extends java.lang.Enum> void populateValues(final Properties properties, final T[] values) {
+    public static <T extends java.lang.Enum> void populateValues(final Properties properties, final T[] values) {
         final ExternalCodeTableGetter exc = new ExternalCodeTableGetter(properties);
         for (final T code : values) {
             ((WritableIntValueHolder)code).setValue(exc.getValue(((java.lang.Enum)code).name(), values, (short)(-2)));

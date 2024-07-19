@@ -138,7 +138,7 @@ public class 游戏抽奖工具1 extends JFrame
             ((DefaultTableModel)(DefaultTableModel)this.游戏抽奖.getModel()).removeRow(i);
         }
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM gashapon_items");

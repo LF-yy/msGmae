@@ -31,7 +31,7 @@ import client.MapleCharacter;
 
 public class MapleInventoryManipulator
 {
-    public static void addRing(final MapleCharacter chr, final int itemId, final int ringId, final int sn) {
+    public static void addRing(MapleCharacter chr, final int itemId, final int ringId, final int sn) {
         final CashItemInfo csi = CashItemFactory.getInstance().getItem(sn);
         if (csi == null) {
             return;
@@ -404,10 +404,10 @@ public class MapleInventoryManipulator
                 c.getPlayer().havePartyQuest(nItem2.getItemId());
                 return nItem2;
             }
-        }
-        else {
+        }else {
             if (quantity != 1) {
-                throw new InventoryException("Trying to create equip with non-one quantity");
+                quantity = 1;
+              //  throw new InventoryException("Trying to create equip with non-one quantity");
             }
             IItem item = null;
             switch (itemId) {
@@ -651,7 +651,8 @@ public class MapleInventoryManipulator
         }
         else {
             if (quantity != 1) {
-                throw new RuntimeException("Trying to create equip with non-one quantity");
+                return false;
+               // throw new RuntimeException("Trying to create equip with non-one quantity");
             }
             if (item.hasSetOnlyId()) {
                 item.setEquipOnlyId(MapleEquipOnlyId.getInstance().getNextEquipOnlyId());
@@ -695,7 +696,7 @@ public class MapleInventoryManipulator
         return true;
     }
     
-    private static final IItem checkEnhanced(final IItem before, final MapleCharacter chr) {
+    private static final IItem checkEnhanced(final IItem before, MapleCharacter chr) {
         if (before instanceof Equip) {
             final Equip eq = (Equip)before;
             if (eq.getState() == 0 && (eq.getUpgradeSlots() >= 1 || eq.getLevel() >= 1) && Randomizer.nextInt(100) > 80) {
@@ -1025,6 +1026,7 @@ public class MapleInventoryManipulator
             if(!c.getPlayer().haveItem(source.getItemId(),quantity)){
                 c.getPlayer().dropMessage(1, "你想干什么警告一次,再来就封了。");
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 强丢物品 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity));
+                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() +"丢弃物品异常 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity+"警告一次,再来就封了。"));
                 FileoutputUtil.logToFile("logs/Data/强丢物品.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity);
                 return false;
             }

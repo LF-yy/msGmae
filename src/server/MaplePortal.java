@@ -5,8 +5,8 @@ import java.awt.Point;
 
 public interface MaplePortal
 {
-    public static final int MAP_PORTAL = 2;
-    public static final int DOOR_PORTAL = 6;
+    public static int MAP_PORTAL = 2;
+    public static int DOOR_PORTAL = 6;
     
     int getType();
     

@@ -54,8 +54,8 @@ public class DatabaseConnection
         }
         return ret.getConnection();
     }
-    
-    private static long getWaitTimeout(final Connection con) {
+
+    private static long getWaitTimeout(Connection con) {
         Statement stmt = null;
         ResultSet rs = null;
         try {
@@ -138,7 +138,7 @@ public class DatabaseConnection
         }
         catch (ClassNotFoundException ex2) {}
         try {
-            final Connection con = DriverManager.getConnection(DatabaseConnection.dbUrl, DatabaseConnection.dbUser, DatabaseConnection.dbPass);
+            Connection con = DriverManager.getConnection(DatabaseConnection.dbUrl, DatabaseConnection.dbUser, DatabaseConnection.dbPass);
             if (!DatabaseConnection.propsInited) {
                 final long timeout = getWaitTimeout(con);
                 if (timeout != -1L) {
@@ -152,14 +152,14 @@ public class DatabaseConnection
             throw new DatabaseException(e);
         }
     }
-    
+
     public static void closeAll() throws SQLException {
         for (final ConWrapper con : DatabaseConnection.connections.values()) {
             con.connection.close();
         }
         DatabaseConnection.connections.clear();
     }
-    
+
     public static void closeTimeout() {
         int i = 0;
         DatabaseConnection.lock.lock();
@@ -176,7 +176,7 @@ public class DatabaseConnection
             DatabaseConnection.lock.unlock();
         }
     }
-    
+
     static {
         connections = new HashMap<Integer, ConWrapper>();
         lock = new ReentrantLock();
@@ -190,18 +190,18 @@ public class DatabaseConnection
             }
         };
     }
-    
+
     public static class ConWrapper
     {
         private long lastAccessTime;
         private Connection connection;
         private int id;
-        
-        public ConWrapper(final Connection con) {
+
+        public ConWrapper(Connection con) {
             this.lastAccessTime = 0L;
             this.connection = con;
         }
-        
+
         public Connection getConnection() {
             if (this.expiredConnection()) {
                 try {
@@ -213,7 +213,7 @@ public class DatabaseConnection
             this.lastAccessTime = System.currentTimeMillis();
             return this.connection;
         }
-        
+
         public boolean expiredConnection() {
             if (this.lastAccessTime == 0L) {
                 return false;
@@ -225,7 +225,7 @@ public class DatabaseConnection
                 return true;
             }
         }
-        
+
         private boolean close() {
             throw new UnsupportedOperationException("Not supported yet.");
         }

@@ -16,7 +16,7 @@ import tools.data.LittleEndianAccessor;
 
 public class MovementParse {
 
-    public static final List<LifeMovementFragment> parseMovement(final LittleEndianAccessor lea, final int kind) {
+    public static List<LifeMovementFragment> parseMovement(final LittleEndianAccessor lea, final int kind) {
         final List<LifeMovementFragment> res = new ArrayList<LifeMovementFragment>();
         final byte numCommands = lea.readByte();
         if (numCommands <= 0) {
@@ -24,9 +24,6 @@ public class MovementParse {
         }
         for (byte i = 0; i < numCommands; ++i) {
             final byte command = lea.readByte();
-            if(LtMS.ConfigValuesMap.get("开启封包调试") >0) {
-                System.out.println(command);
-            }
             switch (command) {
                 case 0:
                 case 5:
@@ -125,7 +122,7 @@ public class MovementParse {
         return res;
     }
     
-    public static final void updatePosition(final List<LifeMovementFragment> movement, final AnimatedMapleMapObject target, final int yoffset) {
+    public static void updatePosition(final List<LifeMovementFragment> movement, final AnimatedMapleMapObject target, final int yoffset) {
         for (final LifeMovementFragment move : movement) {
             if (move instanceof LifeMovement) {
                 if (move instanceof StaticLifeMovement) {

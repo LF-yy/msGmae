@@ -77,7 +77,7 @@ public class EventInstanceManager
         this.channel = channel;
     }
     
-    public void registerPlayer(final MapleCharacter chr) {
+    public void registerPlayer(MapleCharacter chr) {
         if (this.disposed || chr == null) {
             return;
         }
@@ -102,7 +102,7 @@ public class EventInstanceManager
         }
     }
     
-    public void changedMap(final MapleCharacter chr, final int mapid) {
+    public void changedMap(MapleCharacter chr, final int mapid) {
         if (this.disposed) {
             return;
         }
@@ -157,7 +157,7 @@ public class EventInstanceManager
             }
             this.eventTimer = null;
             final int timesend = (int)time / 1000;
-            for (final MapleCharacter chr : this.getPlayers()) {
+            for (MapleCharacter chr : this.getPlayers()) {
                 chr.getClient().sendPacket(MaplePacketCreator.getClock(timesend));
             }
             this.timeOut(time, this);
@@ -191,7 +191,7 @@ public class EventInstanceManager
         }
     }
     
-    public void unregisterPlayer(final MapleCharacter chr) {
+    public void unregisterPlayer(MapleCharacter chr) {
         if (this.disposed) {
             chr.setEventInstance(null);
             return;
@@ -205,7 +205,7 @@ public class EventInstanceManager
         }
     }
     
-    private boolean unregisterPlayer_NoLock(final MapleCharacter chr) {
+    private boolean unregisterPlayer_NoLock(MapleCharacter chr) {
         if (this.name.equals((Object)"CWKPQ")) {
             final MapleSquad squad = ChannelServer.getInstance(this.channel).getMapleSquad("CWKPQ");
             if (squad != null) {
@@ -227,7 +227,7 @@ public class EventInstanceManager
     }
     
     public boolean check() {
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : this.getPlayers()) {
             if (chr.getLevel() < 30 || chr.getLevel() > 50) {
                 return false;
             }
@@ -236,7 +236,7 @@ public class EventInstanceManager
     }
     
     public boolean check1() {
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : this.getPlayers()) {
             if (chr.getLevel() < 51 || chr.getLevel() > 120) {
                 return false;
             }
@@ -256,7 +256,7 @@ public class EventInstanceManager
         try {
             if (this.chars.size() <= size) {
                 final List<MapleCharacter> chrs = new LinkedList<MapleCharacter>((Collection<? extends MapleCharacter>)this.chars);
-                for (final MapleCharacter chr : chrs) {
+                for (MapleCharacter chr : chrs) {
                     this.unregisterPlayer_NoLock(chr);
                     if (towarp > 0) {
                         chr.changeMap(map, map.getPortal(0));
@@ -272,11 +272,11 @@ public class EventInstanceManager
         return false;
     }
     
-    public final void saveBossQuest(final int points) {
+    public void saveBossQuest(final int points) {
         if (this.disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : this.getPlayers()) {
             final MapleQuestStatus record = chr.getQuestNAdd(MapleQuest.getInstance(150001));
             if (record.getCustomData() != null) {
                 record.setCustomData(String.valueOf(points + Integer.parseInt(record.getCustomData())));
@@ -287,11 +287,11 @@ public class EventInstanceManager
         }
     }
     
-    public final void saveNX(final int points) {
+    public void saveNX(final int points) {
         if (this.disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : this.getPlayers()) {
             chr.modifyCSPoints(1, points, true);
         }
     }
@@ -381,7 +381,7 @@ public class EventInstanceManager
      * 在活动角色死亡触发事件
      * @param chr
      */
-    public void playerKilled(final MapleCharacter chr) {
+    public void playerKilled(MapleCharacter chr) {
         if (this.disposed) {
             return;
         }
@@ -400,7 +400,7 @@ public class EventInstanceManager
      * @param chr
      * @return
      */
-    public boolean revivePlayer(final MapleCharacter chr) {
+    public boolean revivePlayer(MapleCharacter chr) {
         if (this.disposed) {
             return false;
         }
@@ -423,7 +423,7 @@ public class EventInstanceManager
      * @param chr
      * @param idz
      */
-    public void playerDisconnected(final MapleCharacter chr, final int idz) {
+    public void playerDisconnected(MapleCharacter chr, final int idz) {
         if (this.disposed) {
             return;
         }
@@ -471,7 +471,7 @@ public class EventInstanceManager
      * @param chr
      * @param mob
      */
-    public void monsterKilled(final MapleCharacter chr, final MapleMonster mob) {
+    public void monsterKilled(MapleCharacter chr, final MapleMonster mob) {
         if (this.disposed) {
             return;
         }
@@ -508,7 +508,7 @@ public class EventInstanceManager
      * @param mob
      * @param damage
      */
-    public void monsterDamaged(final MapleCharacter chr, final MapleMonster mob, final int damage) {
+    public void monsterDamaged(MapleCharacter chr, final MapleMonster mob, final int damage) {
         if (this.disposed || mob.getId() != 9700037) {
             return;
         }
@@ -530,7 +530,7 @@ public class EventInstanceManager
         }
     }
     
-    public int getKillCount(final MapleCharacter chr) {
+    public int getKillCount(MapleCharacter chr) {
         if (this.disposed) {
             return 0;
         }
@@ -551,7 +551,7 @@ public class EventInstanceManager
         final String emN = this.em.getName();
         try {
             this.disposed = true;
-            for (final MapleCharacter chr : this.chars) {
+            for (MapleCharacter chr : this.chars) {
                 chr.setEventInstance(null);
             }
             this.chars.clear();
@@ -604,11 +604,11 @@ public class EventInstanceManager
         return this.mobs;
     }
     
-    public final void broadcastPlayerMsg(final int type, final String msg) {
+    public void broadcastPlayerMsg(final int type, final String msg) {
         if (this.disposed) {
             return;
         }
-        for (final MapleCharacter chr : this.getPlayers()) {
+        for (MapleCharacter chr : this.getPlayers()) {
             chr.getClient().sendPacket(MaplePacketCreator.serverNotice(type, msg));
         }
     }
@@ -705,7 +705,7 @@ public class EventInstanceManager
         }
     }
     
-    public final void schedule(final String methodName, final long delay) {
+    public void schedule(final String methodName, final long delay) {
         if (this.disposed) {
             return;
         }
@@ -732,7 +732,7 @@ public class EventInstanceManager
         return this.name;
     }
     
-    public final void setProperty(final String key, final String value) {
+    public void setProperty(final String key, final String value) {
         if (this.disposed) {
             return;
         }
@@ -761,7 +761,7 @@ public class EventInstanceManager
      * 离开队伍触发
      * @param chr
      */
-    public final void leftParty(final MapleCharacter chr) {
+    public void leftParty(MapleCharacter chr) {
         if (this.disposed) {
             return;
         }
@@ -777,7 +777,7 @@ public class EventInstanceManager
     /**
      * 解散队伍触发
      */
-    public final void disbandParty() {
+    public void disbandParty() {
         if (this.disposed) {
             return;
         }
@@ -790,7 +790,7 @@ public class EventInstanceManager
         }
     }
     
-    public final void finishPQ() {
+    public void finishPQ() {
         if (this.disposed) {
             return;
         }
@@ -808,7 +808,7 @@ public class EventInstanceManager
      * 角色退出时触发
      * @param chr
      */
-    public final void removePlayer(final MapleCharacter chr) {
+    public void removePlayer(MapleCharacter chr) {
         if (this.disposed) {
             return;
         }
@@ -822,7 +822,7 @@ public class EventInstanceManager
         }
     }
     
-    public final void registerCarnivalParty(final MapleCharacter leader, final MapleMap map, final byte team) {
+    public void registerCarnivalParty(final MapleCharacter leader, final MapleMap map, final byte team) {
         if (this.disposed) {
             return;
         }
@@ -841,7 +841,7 @@ public class EventInstanceManager
             }
         }
         final MapleCarnivalParty carnivalParty = new MapleCarnivalParty(leader, characters, team);
-        for (final MapleCharacter chr : characters) {
+        for (MapleCharacter chr : characters) {
             chr.setCarnivalParty(carnivalParty);
         }
         try {
@@ -855,7 +855,7 @@ public class EventInstanceManager
         catch (NoSuchMethodException ex3) {}
     }
     
-    public void onMapLoad(final MapleCharacter chr) {
+    public void onMapLoad(MapleCharacter chr) {
         if (this.disposed) {
             return;
         }
@@ -870,7 +870,7 @@ public class EventInstanceManager
         catch (NoSuchMethodException ex3) {}
     }
     
-    public boolean isLeader(final MapleCharacter chr) {
+    public boolean isLeader(MapleCharacter chr) {
         return chr != null && chr.getParty() != null && chr.getParty().getLeader().getId() == chr.getId();
     }
 
@@ -903,7 +903,7 @@ public class EventInstanceManager
      * @param chr
      * @return
      */
-    public boolean isDisconnected(final MapleCharacter chr) {
+    public boolean isDisconnected(MapleCharacter chr) {
         return !this.disposed && this.dced.contains((Object)Integer.valueOf(chr.getId()));
     }
 
@@ -922,7 +922,7 @@ public class EventInstanceManager
         return this.em;
     }
     
-    public void applyBuff(final MapleCharacter chr, final int id) {
+    public void applyBuff(MapleCharacter chr, final int id) {
         MapleItemInformationProvider.getInstance().getItemEffect(id).applyTo(chr);
         chr.getClient().sendPacket(UIPacket.getStatusMsg(id));
     }
@@ -939,28 +939,28 @@ public class EventInstanceManager
         return this.c;
     }
     
-    public final void openNpc(final int id) {
+    public void openNpc(final int id) {
         this.openNpc(id, null);
     }
     
-    public final void openNpc(final int id, final int mode) {
+    public void openNpc(final int id, final int mode) {
         this.openNpc(this.getClient(), id, mode, null);
     }
     
-    public final void openNpc(final MapleClient cg, final int id) {
+    public void openNpc(final MapleClient cg, final int id) {
         NPCScriptManager.getInstance().dispose(cg);
         this.openNpc(cg, id, 0, null);
     }
     
-    public final void openNpc(final int id, final String script) {
+    public void openNpc(final int id, final String script) {
         this.openNpc(this.getClient(), id, script);
     }
     
-    public final void openNpc(final MapleClient cg, final int id, final String script) {
+    public void openNpc(final MapleClient cg, final int id, final String script) {
         this.openNpc(this.getClient(), id, 0, script);
     }
     
-    public final void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
+    public void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
         cg.removeClickedNPC();
         NPCScriptManager.getInstance().start(cg, id, mode, script);
     }

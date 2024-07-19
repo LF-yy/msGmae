@@ -2,8 +2,8 @@ package client.inventory;
 
 public interface IEquip extends IItem
 {
-    public static final int ARMOR_RATIO = 350000;
-    public static final int WEAPON_RATIO = 700000;
+    public static int ARMOR_RATIO = 350000;
+    public static int WEAPON_RATIO = 700000;
     
     byte getUpgradeSlots();
     

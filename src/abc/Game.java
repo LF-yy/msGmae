@@ -19,8 +19,8 @@ public class Game
     public static String 更新程序;
     public static int 版本;
     public static String 窗口标题;
-    public static final short 检测客户端版本1 = 79;
-    public static final String 检测客户端版本2 = "1";
+    public static short 检测客户端版本1 = 79;
+    public static String 检测客户端版本2 = "1";
     public static int 商城端口;
     public static String 作者QQ;
     public static String 作者昵称;

@@ -24,7 +24,7 @@ public class RankingWorker
         this.jobCommands = new HashMap<String, Integer>();
     }
     
-    public static final RankingWorker getInstance() {
+    public static RankingWorker getInstance() {
         if (RankingWorker.instance == null) {
             RankingWorker.instance = new RankingWorker();
         }
@@ -43,10 +43,10 @@ public class RankingWorker
         return (List<RankingInformation>)this.rankings.get((Object)Integer.valueOf(job));
     }
     
-    public final void run() {
+    public void run() {
         System.out.println("[正在加载] -> 游戏徘行榜系统");
         this.loadJobCommands();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.updateRanking(con);
         }
         catch (Exception ex) {
@@ -55,7 +55,7 @@ public class RankingWorker
         }
     }
     
-    private void updateRanking(final Connection con) throws Exception {
+    private void updateRanking(Connection con) throws Exception {
         final StringBuilder sb = new StringBuilder("SELECT c.id, c.job, c.exp, c.level, c.name, c.jobRank, c.jobRankMove, c.rank, c.rankMove");
         sb.append(", a.lastlogin AS lastlogin, a.loggedin FROM characters AS c LEFT JOIN accounts AS a ON c.accountid = a.id WHERE c.gm = 0 AND a.banned = 0 ");
         sb.append("ORDER BY c.level DESC , c.exp DESC , c.fame DESC , c.meso DESC , c.rank ASC");
@@ -93,7 +93,7 @@ public class RankingWorker
         ps.close();
     }
     
-    public final void loadJobCommands() {
+    public void loadJobCommands() {
         this.jobCommands.put("all", Integer.valueOf(-1));
         this.jobCommands.put("beginner", Integer.valueOf(0));
         this.jobCommands.put("warrior", Integer.valueOf(1));
@@ -121,7 +121,7 @@ public class RankingWorker
             this.loadToString();
         }
         
-        public final void loadToString() {
+        public void loadToString() {
             final StringBuilder builder = new StringBuilder("Rank ");
             builder.append(this.rank);
             builder.append(" : ");

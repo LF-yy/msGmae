@@ -123,7 +123,7 @@ public class LtMS extends JFrame {
     /**
      * Creates new form KinMS
      */
-    public static final LtMS getInstance() {
+    public static LtMS getInstance() {
 
 // 重定向System.out和System.err
         return instance;
@@ -389,7 +389,7 @@ public class LtMS extends JFrame {
                         在线人数.setValue(cloumn);
                         在线人数.setString(cloumn + "/999");
                     }
-                }, 1000 * 60);
+                }, 1000 * 10);
             }
         }).start();
     }
@@ -4394,6 +4394,7 @@ public class LtMS extends JFrame {
         Start.GetSuitSystem();
         Start.GetfiveTurn();
         Start.GetBreakthroughMechanism();
+        Start.getleveladdharm();
         Start.GetSuperSkills();
         Start.GetFieldSkills();
         Start.getAttackInfo();
@@ -4401,7 +4402,7 @@ public class LtMS extends JFrame {
         GetConfigValues();
         GetMobMapTable();
         tzjc.sr_tz();
-
+        World.registerRespawn();
         String 输出 = "[重载系统] 系统配置重载成功。";
         JOptionPane.showMessageDialog(null, "系统配置重载成功。");
         printChatLog(输出);
@@ -7045,7 +7046,7 @@ public class LtMS extends JFrame {
         try {
             Timer.WorldTimer.GuiTimer.getInstance().register(new Runnable() {
                 @Override
-                public final void run() {
+                public void run() {
                     ActiveThread.setText("<html>【线程个数】：<span style='color:red;'>" + Thread.activeCount() + "</span>");
                 }
             }, 1 * 1000);
@@ -7059,7 +7060,7 @@ public class LtMS extends JFrame {
         try {
             Timer.WorldTimer.GuiTimer.getInstance().register(new Runnable() {
                 @Override
-                public final void run() {
+                public void run() {
                     Runtime rt = Runtime.getRuntime();
                     long totalMemory = rt.totalMemory() / 1024 / 1024;
                     long usedMemory = totalMemory - rt.freeMemory() / 1024 / 1024;

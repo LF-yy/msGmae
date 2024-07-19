@@ -165,7 +165,7 @@ public class CharacterTransfer implements Externalizable
         this.Skills = new LinkedHashMap<Integer, SkillEntry>();
     }
     
-    public CharacterTransfer(final MapleCharacter chr) {
+    public CharacterTransfer(MapleCharacter chr) {
         this.mbook = new LinkedHashMap<Integer, Integer>();
         this.keymap = new LinkedHashMap<Integer, Pair<Byte, Integer>>();
         this.finishedAchievements = new ArrayList<Integer>();

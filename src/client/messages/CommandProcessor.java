@@ -244,7 +244,7 @@ public class CommandProcessor
             return;
         }
         PreparedStatement ps = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             ps = con.prepareStatement("INSERT INTO gmlog (cid, command, mapid) VALUES (?, ?, ?)");
             ps.setInt(1, player.getId());
             ps.setString(2, command);

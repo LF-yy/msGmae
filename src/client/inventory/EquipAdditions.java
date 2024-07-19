@@ -80,7 +80,7 @@ public enum EquipAdditions
         return this.element;
     }
     
-    public static final EquipAdditions fromString(final String str) {
+    public static EquipAdditions fromString(final String str) {
         for (final EquipAdditions s : values()) {
             if (s.name().equalsIgnoreCase(str)) {
                 return s;

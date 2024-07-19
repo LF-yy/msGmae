@@ -163,7 +163,7 @@ public class MapleMiniGame extends AbstractPlayerStore
         return this.ready[slot];
     }
     
-    public void setPiece(final int move1, final int move2, final int type, final MapleCharacter chr) {
+    public void setPiece(final int move1, final int move2, final int type, MapleCharacter chr) {
         if (this.piece[move1][move2] == 0 && !this.isOpen()) {
             this.piece[move1][move2] = type;
             this.broadcastToVisitors(PlayerShopPacket.getMiniGameMoveOmok(move1, move2, type));
@@ -264,7 +264,7 @@ public class MapleMiniGame extends AbstractPlayerStore
         return ret;
     }
     
-    public int getScore(final MapleCharacter chr) {
+    public int getScore(MapleCharacter chr) {
         int score = 2000;
         final int wins = this.getWins(chr);
         final int ties = this.getTies(chr);
@@ -282,15 +282,15 @@ public class MapleMiniGame extends AbstractPlayerStore
         return (byte)((this.GameType == 1) ? 3 : 4);
     }
     
-    public int getWins(final MapleCharacter chr) {
+    public int getWins(MapleCharacter chr) {
         return Integer.parseInt(this.getData(chr).split(",")[2]);
     }
     
-    public int getTies(final MapleCharacter chr) {
+    public int getTies(MapleCharacter chr) {
         return Integer.parseInt(this.getData(chr).split(",")[1]);
     }
     
-    public int getLosses(final MapleCharacter chr) {
+    public int getLosses(MapleCharacter chr) {
         return Integer.parseInt(this.getData(chr).split(",")[0]);
     }
     
@@ -315,7 +315,7 @@ public class MapleMiniGame extends AbstractPlayerStore
         }
     }
     
-    public String getData(final MapleCharacter chr) {
+    public String getData(MapleCharacter chr) {
         final MapleQuest quest = MapleQuest.getInstance((this.GameType == 1) ? 122200 : 122210);
         MapleQuestStatus record;
         if (chr.getQuestNoAdd(quest) == null) {

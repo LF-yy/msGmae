@@ -30,7 +30,7 @@ public class MapleGenericPortal implements MaplePortal
         return this.id;
     }
     
-    public final void setId(final int id) {
+    public void setId(final int id) {
         this.id = id;
     }
     
@@ -64,29 +64,29 @@ public class MapleGenericPortal implements MaplePortal
         return this.scriptName;
     }
     
-    public final void setName(final String name) {
+    public void setName(final String name) {
         this.name = name;
     }
     
-    public final void setPosition(final Point position) {
+    public void setPosition(final Point position) {
         this.position = position;
     }
     
-    public final void setTarget(final String target) {
+    public void setTarget(final String target) {
         this.target = target;
     }
     
-    public final void setTargetMapId(final int targetmapid) {
+    public void setTargetMapId(final int targetmapid) {
         this.targetmap = targetmapid;
     }
     
     @Override
-    public final void setScriptName(final String scriptName) {
+    public void setScriptName(final String scriptName) {
         this.scriptName = scriptName;
     }
     
     @Override
-    public final void enterPortal(final MapleClient c) {
+    public void enterPortal(final MapleClient c) {
         if (this.getPosition().distanceSq((Point2D)c.getPlayer().getPosition()) > 22500.0) {
             c.getPlayer().getCheatTracker().registerOffense(CheatingOffense.USING_FARAWAY_PORTAL);
         }

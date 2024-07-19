@@ -112,7 +112,7 @@ public class MapleGuildRanking
     private void 剑客职业排行() {
         this.ranks剑客.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 110  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -137,7 +137,7 @@ public class MapleGuildRanking
     private void 勇士职业排行() {
         this.ranks勇士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 111  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -162,7 +162,7 @@ public class MapleGuildRanking
     private void 英雄职业排行() {
         this.ranks英雄.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 112  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -187,7 +187,7 @@ public class MapleGuildRanking
     private void 枪战士职业排行() {
         this.ranks枪战士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 130  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -212,7 +212,7 @@ public class MapleGuildRanking
     private void 龙骑士职业排行() {
         this.ranks龙骑士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 131  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -237,7 +237,7 @@ public class MapleGuildRanking
     private void 黑骑士职业排行() {
         this.ranks黑骑士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 132  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -262,7 +262,7 @@ public class MapleGuildRanking
     private void 准骑士职业排行() {
         this.ranks准骑士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 120  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -287,7 +287,7 @@ public class MapleGuildRanking
     private void 骑士职业排行() {
         this.ranks骑士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 121  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -312,7 +312,7 @@ public class MapleGuildRanking
     private void 圣骑士职业排行() {
         this.ranks圣骑士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 122  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -337,7 +337,7 @@ public class MapleGuildRanking
     private void 火毒法师职业排行() {
         this.ranks火毒法师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 210  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -362,7 +362,7 @@ public class MapleGuildRanking
     private void 火毒巫师职业排行() {
         this.ranks火毒巫师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 211  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -387,7 +387,7 @@ public class MapleGuildRanking
     private void 火毒魔导师职业排行() {
         this.ranks火毒魔导师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 212  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -412,7 +412,7 @@ public class MapleGuildRanking
     private void 冰雷法师职业排行() {
         this.ranks冰雷法师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 220  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -437,7 +437,7 @@ public class MapleGuildRanking
     private void 冰雷巫师职业排行() {
         this.ranks冰雷巫师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 221  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -462,7 +462,7 @@ public class MapleGuildRanking
     private void 冰雷魔导师职业排行() {
         this.ranks冰雷魔导师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 222  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -487,7 +487,7 @@ public class MapleGuildRanking
     private void 牧师职业排行() {
         this.ranks牧师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 230  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -512,7 +512,7 @@ public class MapleGuildRanking
     private void 祭师职业排行() {
         this.ranks祭师.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 231  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -537,7 +537,7 @@ public class MapleGuildRanking
     private void 主教职业排行() {
         this.ranks主教.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 232  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -562,7 +562,7 @@ public class MapleGuildRanking
     private void 猎人职业排行() {
         this.ranks猎人.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 310  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -587,7 +587,7 @@ public class MapleGuildRanking
     private void 射手职业排行() {
         this.ranks射手.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 311  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -612,7 +612,7 @@ public class MapleGuildRanking
     private void 神射手职业排行() {
         this.ranks神射手.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 312  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -637,7 +637,7 @@ public class MapleGuildRanking
     private void 弩弓手职业排行() {
         this.ranks弩弓手.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 320  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -662,7 +662,7 @@ public class MapleGuildRanking
     private void 游侠职业排行() {
         this.ranks游侠.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 321  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -687,7 +687,7 @@ public class MapleGuildRanking
     private void 箭神职业排行() {
         this.ranks箭神.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 322  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -712,7 +712,7 @@ public class MapleGuildRanking
     private void 刺客职业排行() {
         this.ranks刺客.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 410  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -737,7 +737,7 @@ public class MapleGuildRanking
     private void 无影人职业排行() {
         this.ranks无影人.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 411  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -762,7 +762,7 @@ public class MapleGuildRanking
     private void 隐士职业排行() {
         this.ranks隐士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 412  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -787,7 +787,7 @@ public class MapleGuildRanking
     private void 侠客职业排行() {
         this.ranks侠客.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 420  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -812,7 +812,7 @@ public class MapleGuildRanking
     private void 独行客职业排行() {
         this.ranks独行客.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 421  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -837,7 +837,7 @@ public class MapleGuildRanking
     private void 侠盗职业排行() {
         this.ranks侠盗.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 422  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -862,7 +862,7 @@ public class MapleGuildRanking
     private void 拳手职业排行() {
         this.ranks拳手.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 510  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -887,7 +887,7 @@ public class MapleGuildRanking
     private void 斗士职业排行() {
         this.ranks斗士.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 511  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -912,7 +912,7 @@ public class MapleGuildRanking
     private void 冲锋队长职业排行() {
         this.ranks冲锋队长.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 512  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -937,7 +937,7 @@ public class MapleGuildRanking
     private void 火枪手职业排行() {
         this.ranks火枪手.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 520  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -962,7 +962,7 @@ public class MapleGuildRanking
     private void 大副职业排行() {
         this.ranks大副.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 521  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -987,7 +987,7 @@ public class MapleGuildRanking
     private void 船长职业排行() {
         this.ranks船长.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE job = 522  ORDER BY `level` DESC LIMIT " + this.职业排行显示 + "");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -1046,7 +1046,7 @@ public class MapleGuildRanking
     
     private void reload() {
         this.ranks.clear();
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds ORDER BY `GP` DESC LIMIT 10")) {
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -1063,7 +1063,7 @@ public class MapleGuildRanking
     private void showLevelRank() {
         this.ranks1.clear();
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE gm < 1 ORDER BY `level` DESC LIMIT 10");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -1080,7 +1080,7 @@ public class MapleGuildRanking
     
     private void showMesoRank() {
         this.ranks2.clear();
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT *, ( chr.meso + s.meso ) as money FROM `characters` as chr , `storages` as s WHERE chr.gm < 1  AND s.accountid = chr.accountid ORDER BY money DESC LIMIT 10")) {
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -1124,7 +1124,7 @@ public class MapleGuildRanking
         else if (type == 6) {
             jobRange = "and job >= '2000' and job <= '2112'";
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE gm = 0 " + jobRange + " and accountid in (select id from accounts where banned= '0') ORDER BY `level` DESC LIMIT 10");
             final ResultSet rs = ps.executeQuery();
             final LinkedList<JobRankingInfo> JobRankList = new LinkedList<JobRankingInfo>();

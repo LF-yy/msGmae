@@ -28,12 +28,12 @@ public class merchant_main
         return merchant_main.instance;
     }
     
-    public void add_good(final MapleCharacter chr, final int good_id, final int good_num, final int good_price, final long createData) {
+    public void add_good(MapleCharacter chr, final int good_id, final int good_num, final int good_price, final long createData) {
         this.goods_list.add(new goods_model(chr.getAccountID(), good_id, good_num, good_price, chr.getName(), createData));
         FileoutputUtil.logToFile("日志/商人交易系统/上架物品_goods.txt", " 上架物品ID： " + good_id + " 上架数量： " + good_num + " 价格： " + good_price + "");
     }
     
-    public void add_eq(final MapleCharacter chr, final String owner, final int upgradeslots, final int level, final int str, final int dex, final int int_, final int luk, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int acc, final int avoid, final int hands, final int speed, final int jump, final byte viciousHammer, final int itemEXP, final int durability, final byte enhance, final short potential1, final short potential2, final short potential3, final short hpR, final short mpR, final int good_id, final int good_price) {
+    public void add_eq(MapleCharacter chr, final String owner, final int upgradeslots, final int level, final int str, final int dex, final int int_, final int luk, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int acc, final int avoid, final int hands, final int speed, final int jump, final byte viciousHammer, final int itemEXP, final int durability, final byte enhance, final short potential1, final short potential2, final short potential3, final short hpR, final short mpR, final int good_id, final int good_price) {
         final eqs_model add_eq = new eqs_model(owner, upgradeslots, level, str, dex, int_, luk, hp, mp, watk, matk, wdef, mdef, acc, avoid, hands, speed, jump, viciousHammer, itemEXP, durability, enhance, potential1, potential2, potential3, hpR, mpR, chr.getAccountID(), good_id, good_price, chr.getName(), System.currentTimeMillis(), 1);
         this.eq_list.add(add_eq);
         FileoutputUtil.logToFile("日志/商人交易系统/上架物品_eqs.txt", add_eq.toString());
@@ -51,7 +51,7 @@ public class merchant_main
         if (this.isClose()) {
             return;
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("Truncate Table merchant");
             ps.executeUpdate();
             for (int i = 0; i < this.goods_list.size(); ++i) {
@@ -119,7 +119,7 @@ public class merchant_main
     }
     
     public void load_data() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select * from merchant");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {

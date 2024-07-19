@@ -70,7 +70,7 @@ public class 进阶BOSS线程
                     }
                     else if (随机 == 10.0 || 随机 == 11.0 || 随机 == 12.0 || 随机 == 13.0) {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 if (chr == null) {
                                     continue;
                                 }
@@ -93,7 +93,7 @@ public class 进阶BOSS线程
                     }
                     else if (随机 == 14.0 || 随机 == 15.0 || 随机 == 16.0 || 随机 == 17.0) {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 if (chr == null) {
                                     continue;
                                 }
@@ -116,7 +116,7 @@ public class 进阶BOSS线程
                     }
                     else {
                         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                                 if (chr == null) {
                                     continue;
                                 }
@@ -186,7 +186,7 @@ public class 进阶BOSS线程
     
     public static void 直接驱散() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -207,7 +207,7 @@ public class 进阶BOSS线程
     
     public static void 直接死亡() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -228,7 +228,7 @@ public class 进阶BOSS线程
     
     public static void 减少血量() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -260,7 +260,7 @@ public class 进阶BOSS线程
     
     public static void 减少蓝量() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -283,7 +283,7 @@ public class 进阶BOSS线程
     
     public static void 全图诱导() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -306,7 +306,7 @@ public class 进阶BOSS线程
     
     public static void 全图诅咒() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -324,7 +324,7 @@ public class 进阶BOSS线程
     
     public static void 全图虚弱() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -342,7 +342,7 @@ public class 进阶BOSS线程
     
     public static void 全图黑暗() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -360,7 +360,7 @@ public class 进阶BOSS线程
     
     public static void 全图封锁() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -378,7 +378,7 @@ public class 进阶BOSS线程
     
     public static void 全图掉HP() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -392,7 +392,7 @@ public class 进阶BOSS线程
     
     public static void 全图掉MP() {
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }

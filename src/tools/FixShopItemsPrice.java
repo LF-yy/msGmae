@@ -14,7 +14,7 @@ public class FixShopItemsPrice
 {
     private List<Integer> loadFromDB() {
         final List<Integer> shopItemsId = new ArrayList<Integer>();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT itemid FROM shopitems ORDER BY itemid");
             final ResultSet rs = ps.executeQuery();
             int itemId = 0;
@@ -36,7 +36,7 @@ public class FixShopItemsPrice
     
     private void changePrice(final int itemId) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT shopid, price FROM shopitems WHERE itemid = ? ORDER BY price");
             ps.setInt(1, itemId);
             final ResultSet rs = ps.executeQuery();

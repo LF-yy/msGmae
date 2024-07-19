@@ -122,7 +122,7 @@ public class MapleCarnivalParty
         return true;
     }
     
-    public void removeMember(final MapleCharacter chr) {
+    public void removeMember(MapleCharacter chr) {
         try {
             this.memebersLock.writeLock().lock();
             int index = -1;

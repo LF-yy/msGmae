@@ -38,7 +38,7 @@ public class MapleCoconut extends MapleEvent
     }
     
     @Override
-    public void onMapLoad(final MapleCharacter chr) {
+    public void onMapLoad(MapleCharacter chr) {
         chr.getClient().sendPacket(MaplePacketCreator.coconutScore(this.getCoconutScore()));
     }
     
@@ -130,7 +130,7 @@ public class MapleCoconut extends MapleEvent
                     MapleCoconut.this.bonusTime();
                 }
                 else if (MapleCoconut.this.getMapleScore() > MapleCoconut.this.getStoryScore()) {
-                    for (final MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
                         if (chr.getCoconutTeam() == 0) {
                             chr.getClient().sendPacket(MaplePacketCreator.showEffect("event/coconut/victory"));
                             chr.getClient().sendPacket(MaplePacketCreator.playSound("Coconut/Victory"));
@@ -143,7 +143,7 @@ public class MapleCoconut extends MapleEvent
                     MapleCoconut.this.warpOut();
                 }
                 else {
-                    for (final MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
                         if (chr.getCoconutTeam() == 1) {
                             chr.getClient().sendPacket(MaplePacketCreator.showEffect("event/coconut/victory"));
                             chr.getClient().sendPacket(MaplePacketCreator.playSound("Coconut/Victory"));
@@ -165,14 +165,14 @@ public class MapleCoconut extends MapleEvent
             @Override
             public void run() {
                 if (MapleCoconut.this.getMapleScore() == MapleCoconut.this.getStoryScore()) {
-                    for (final MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
                         chr.getClient().sendPacket(MaplePacketCreator.showEffect("event/coconut/lose"));
                         chr.getClient().sendPacket(MaplePacketCreator.playSound("Coconut/Failed"));
                     }
                     MapleCoconut.this.warpOut();
                 }
                 else if (MapleCoconut.this.getMapleScore() > MapleCoconut.this.getStoryScore()) {
-                    for (final MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
                         if (chr.getCoconutTeam() == 0) {
                             chr.getClient().sendPacket(MaplePacketCreator.showEffect("event/coconut/victory"));
                             chr.getClient().sendPacket(MaplePacketCreator.playSound("Coconut/Victory"));
@@ -185,7 +185,7 @@ public class MapleCoconut extends MapleEvent
                     MapleCoconut.this.warpOut();
                 }
                 else {
-                    for (final MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                    for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
                         if (chr.getCoconutTeam() == 1) {
                             chr.getClient().sendPacket(MaplePacketCreator.showEffect("event/coconut/victory"));
                             chr.getClient().sendPacket(MaplePacketCreator.playSound("Coconut/Victory"));
@@ -206,7 +206,7 @@ public class MapleCoconut extends MapleEvent
         EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
             public void run() {
-                for (final MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
+                for (MapleCharacter chr : MapleCoconut.this.getMap(0).getCharactersThreadsafe()) {
                     if ((MapleCoconut.this.getMapleScore() > MapleCoconut.this.getStoryScore() && chr.getCoconutTeam() == 0) || (MapleCoconut.this.getStoryScore() > MapleCoconut.this.getMapleScore() && chr.getCoconutTeam() == 1)) {
                         MapleCoconut.this.givePrize(chr);
                     }

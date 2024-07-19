@@ -27,8 +27,8 @@ class Encoding
     public static int ASCII;
     public static int OTHER;
     public static int TOTALTYPES;
-    public static final int SIMP = 0;
-    public static final int TRAD = 1;
+    public static int SIMP = 0;
+    public static int TRAD = 1;
     public static String[] javaname;
     public static String[] nicename;
     public static String[] htmlname;

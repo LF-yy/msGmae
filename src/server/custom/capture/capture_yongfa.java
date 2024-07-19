@@ -13,7 +13,7 @@ public class capture_yongfa
         name.append("\t\t\t参赛人数([#b蓝队#k].").append(判断蓝色队伍()).append(" |[#r红队#k].").append(判断红色队伍()).append(")\r\n");
         name.append("——————————————————————————\r\n");
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM capture_cs order by id desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -39,7 +39,7 @@ public class capture_yongfa
     }
     
     public static void 参加(final int id) {
-        try (final Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO capture_cs ( cid,duiwu) VALUES ( ?, ?)")) {
             ps.setInt(1, id);
             if (判断蓝色队伍() > 判断红色队伍()) {
@@ -56,7 +56,7 @@ public class capture_yongfa
     public static String Rolename(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT name as DATA FROM characters WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -75,7 +75,7 @@ public class capture_yongfa
     public static int 判断蓝色队伍() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM capture_cs");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -94,7 +94,7 @@ public class capture_yongfa
     public static int 判断红色队伍() {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM capture_cs");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -113,7 +113,7 @@ public class capture_yongfa
     public static int 判断是否已经参加(final int id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT cid as DATA FROM capture_cs WHERE cid = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -132,7 +132,7 @@ public class capture_yongfa
     public static int 判断队伍(final int id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT duiwu as DATA FROM capture_cs WHERE cid = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -151,7 +151,7 @@ public class capture_yongfa
     public static int 判断队伍旗帜数量(final int id) {
         int data = 0;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT zhankuang as DATA FROM capture_zk WHERE duiwu = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {

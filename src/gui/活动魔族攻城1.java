@@ -1525,7 +1525,7 @@ public class 活动魔族攻城1
         final MapleMap mapleMap = channelServer.getMapFactory().getMap(a);
         mapleMap.resetFully();
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }

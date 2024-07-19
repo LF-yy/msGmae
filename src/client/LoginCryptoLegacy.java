@@ -10,18 +10,18 @@ public class LoginCryptoLegacy
     private static final Random rand;
     private static final char[] iota64;
     
-    public static final String hashPassword(final String password) {
+    public static String hashPassword(final String password) {
         final byte[] randomBytes = new byte[6];
         LoginCryptoLegacy.rand.setSeed(System.currentTimeMillis());
         LoginCryptoLegacy.rand.nextBytes(randomBytes);
         return myCrypt(password, genSalt(randomBytes));
     }
     
-    public static final boolean checkPassword(final String password, final String hash) {
+    public static boolean checkPassword(final String password, final String hash) {
         return myCrypt(password, hash).equals((Object)hash);
     }
     
-    public static final boolean isLegacyPassword(final String hash) {
+    public static boolean isLegacyPassword(final String hash) {
         return hash.substring(0, 3).equals((Object)"$H$");
     }
     
@@ -85,7 +85,7 @@ public class LoginCryptoLegacy
         return buf.toString();
     }
     
-    public static final String encodeSHA1(final String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static String encodeSHA1(final String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         final MessageDigest md = MessageDigest.getInstance("SHA-1");
         md.update(text.getBytes("iso-8859-1"), 0, text.length());
         return convertToHex(md.digest());

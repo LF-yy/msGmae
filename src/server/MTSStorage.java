@@ -47,11 +47,11 @@ public class MTSStorage
         this.cart_mutex = new ReentrantReadWriteLock();
     }
     
-    public static final MTSStorage getInstance() {
+    public static MTSStorage getInstance() {
         return MTSStorage.instance;
     }
     
-    public static final void load() {
+    public static void load() {
         if (MTSStorage.instance == null) {
             (MTSStorage.instance = new MTSStorage()).loadBuyNow();
         }
@@ -76,7 +76,7 @@ public class MTSStorage
         }
     }
     
-    public final void addToBuyNow(final MTSCart cart, final IItem item, final int price, final int cid, final String seller, final long expiration) {
+    public void addToBuyNow(final MTSCart cart, final IItem item, final int price, final int cid, final String seller, final long expiration) {
         this.mutex.writeLock().lock();
         int id;
         try {
@@ -124,7 +124,7 @@ public class MTSStorage
     
     private void loadBuyNow() {
         int lastPackage = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM mts_items WHERE tab = 1");
              final ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -148,7 +148,7 @@ public class MTSStorage
         this.packageId.set(lastPackage);
     }
     
-    public final void saveBuyNow(final boolean isShutDown) {
+    public void saveBuyNow(final boolean isShutDown) {
         if (this.end) {
             return;
         }
@@ -161,7 +161,7 @@ public class MTSStorage
         final long now = System.currentTimeMillis();
         final Map<Integer, ArrayList<Pair<IItem, MapleInventoryType>>> items = new HashMap<Integer, ArrayList<Pair<IItem, MapleInventoryType>>>();
         this.mutex.writeLock().lock();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("DELETE FROM mts_items WHERE tab = 1");
             ps.execute();
             ps.close();
@@ -245,7 +245,7 @@ public class MTSStorage
         this.lastUpdate = System.currentTimeMillis();
     }
     
-    public final void checkExpirations() {
+    public void checkExpirations() {
         if (System.currentTimeMillis() - this.lastUpdate > 3600000L) {
             this.saveBuyNow(false);
         }

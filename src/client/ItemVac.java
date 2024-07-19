@@ -18,10 +18,10 @@ public class ItemVac extends Thread
     private final ConcurrentLinkedQueue<MapleMapObject> itemVacs;
     private MapleMapItem item;
     private MapleMapObject object;
-    private final MapleCharacter chr;
+    private MapleCharacter chr;
     private final MapleClient c;
     
-    public ItemVac(final MapleCharacter chr) {
+    public ItemVac(MapleCharacter chr) {
         this.chr = chr;
         this.itemVacs = new ConcurrentLinkedQueue<MapleMapObject>();
         this.c = chr.getClient();

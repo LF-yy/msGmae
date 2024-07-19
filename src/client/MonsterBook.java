@@ -55,8 +55,8 @@ public class MonsterBook implements Serializable
         return (this.cards.get((Object)Integer.valueOf(cardid)) == null) ? 0 : ((int)Integer.valueOf(this.cards.get((Object)Integer.valueOf(cardid))));
     }
     
-    public static final MonsterBook loadCards(final int charid) throws SQLException {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public static MonsterBook loadCards(final int charid) throws SQLException {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM monsterbook WHERE charid = ? ORDER BY cardid ASC")) {
             ps.setInt(1, charid);
             Map<Integer, Integer> cards;
@@ -74,7 +74,7 @@ public class MonsterBook implements Serializable
         }
     }
     
-    public final void saveCards(final int charid, final Connection con) throws SQLException {
+    public void saveCards(final int charid, Connection con) throws SQLException {
         if (!this.changed || this.cards.isEmpty()) {
             return;
         }
@@ -120,7 +120,7 @@ public class MonsterBook implements Serializable
         }
     }
     
-    public final void addCardPacket(final MaplePacketLittleEndianWriter mplew) {
+    public void addCardPacket(final MaplePacketLittleEndianWriter mplew) {
         mplew.writeShort(this.cards.size());
         for (final Entry<Integer, Integer> all : this.cards.entrySet()) {
             mplew.writeShort(GameConstants.getCardShortId((int)Integer.valueOf(all.getKey())));
@@ -128,7 +128,7 @@ public class MonsterBook implements Serializable
         }
     }
     
-    public final void addCharInfoPacket(final int bookcover, final MaplePacketLittleEndianWriter mplew) {
+    public void addCharInfoPacket(final int bookcover, final MaplePacketLittleEndianWriter mplew) {
         mplew.writeInt(this.BookLevel);
         mplew.writeInt(this.NormalCard);
         mplew.writeInt(this.SpecialCard);
@@ -136,11 +136,11 @@ public class MonsterBook implements Serializable
         mplew.writeInt(MapleItemInformationProvider.getInstance().getCardMobId(bookcover));
     }
     
-    public final void updateCard(final MapleClient c, final int cardid) {
+    public void updateCard(final MapleClient c, final int cardid) {
         c.sendPacket(MonsterBookPacket.changeCover(cardid));
     }
     
-    public final void addCard(final MapleClient c, final int cardid) {
+    public void addCard(final MapleClient c, final int cardid) {
         this.changed = true;
         c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MonsterBookPacket.showForeginCardEffect(c.getPlayer().getId()), false);
         if (this.cards.containsKey((Object)Integer.valueOf(cardid))) {

@@ -45,7 +45,7 @@ public class HiredMerchant extends AbstractPlayerStore
         return 1;
     }
     
-    public final void setStoreId(final int storeid) {
+    public void setStoreId(final int storeid) {
         this.storeid = storeid;
     }
     
@@ -105,7 +105,7 @@ public class HiredMerchant extends AbstractPlayerStore
             }
             final StringBuilder sb = new StringBuilder("[GM 密语] 玩家 " + c.getPlayer().getName() + " 從  " + this.getOwnerName() + " 的精灵商人购买了 " + MapleItemInformationProvider.getInstance().getName(newItem.getItemId()) + "(" + newItem.getItemId() + ") x" + (int)quantity + " 單個價錢為 : " + pItem.price);
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                     if (chr.get_control_精灵商人()) {
                         chr.dropMessage(sb.toString());
                     }
@@ -172,19 +172,19 @@ public class HiredMerchant extends AbstractPlayerStore
         return this.blacklist.contains((Object)bl);
     }
     
-    public final void addBlackList(final String bl) {
+    public void addBlackList(final String bl) {
         this.blacklist.add(bl);
     }
     
-    public final void removeBlackList(final String bl) {
+    public void removeBlackList(final String bl) {
         this.blacklist.remove((Object)bl);
     }
     
-    public final void sendBlackList(final MapleClient c) {
+    public void sendBlackList(final MapleClient c) {
         c.sendPacket(PlayerShopPacket.MerchantBlackListView(this.blacklist));
     }
     
-    public final void sendVisitor(final MapleClient c) {
+    public void sendVisitor(final MapleClient c) {
         c.sendPacket(PlayerShopPacket.MerchantVisitorView(this.visitors));
     }
 }

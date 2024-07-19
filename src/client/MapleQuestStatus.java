@@ -52,7 +52,7 @@ public class MapleQuestStatus implements Serializable
         return this.status;
     }
     
-    public final void setStatus(final byte status) {
+    public void setStatus(final byte status) {
         this.status = status;
     }
     
@@ -60,7 +60,7 @@ public class MapleQuestStatus implements Serializable
         return this.npc;
     }
     
-    public final void setNpc(final int npc) {
+    public void setNpc(final int npc) {
         this.npc = npc;
     }
     
@@ -133,7 +133,7 @@ public class MapleQuestStatus implements Serializable
         return false;
     }
     
-    public final void setMobKills(final int id, final int count) {
+    public void setMobKills(final int id, final int count) {
         if (this.killedMobs == null) {
             this.registerMobs();
         }
@@ -160,7 +160,7 @@ public class MapleQuestStatus implements Serializable
         return this.completionTime;
     }
     
-    public final void setCompletionTime(final long completionTime) {
+    public void setCompletionTime(final long completionTime) {
         this.completionTime = completionTime;
     }
     
@@ -168,7 +168,7 @@ public class MapleQuestStatus implements Serializable
         return this.forfeited;
     }
     
-    public final void setForfeited(final int forfeited) {
+    public void setForfeited(final int forfeited) {
         if (forfeited >= this.forfeited) {
             this.forfeited = forfeited;
             return;
@@ -176,7 +176,7 @@ public class MapleQuestStatus implements Serializable
         throw new IllegalArgumentException("Can't set forfeits to something lower than before.");
     }
     
-    public final void setCustomData(final String customData) {
+    public void setCustomData(final String customData) {
         this.customData = customData;
     }
     

@@ -253,7 +253,7 @@ public enum RecvPacketOpcode implements WritableIntValueHolder
         }
     }
     
-    public static final void reloadValues() {
+    public static void reloadValues() {
         final String fileName = "recv.ini";
         final Properties props = new Properties();
         try (final FileInputStream fileInputStream = new FileInputStream(fileName);

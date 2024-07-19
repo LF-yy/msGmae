@@ -48,7 +48,7 @@ public class Forum_Section
     }
     
     public static ArrayList<Forum_Section> loadAllSection() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_section");
             final ResultSet rs = ps.executeQuery();
@@ -68,7 +68,7 @@ public class Forum_Section
     }
     
     public static boolean addSection(final String name) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             if (getSectionByName(name) != null) {
                 return false;
@@ -89,7 +89,7 @@ public class Forum_Section
     }
     
     public static boolean deleteSection(final int id) {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             boolean isExist = false;
             if (getSectionById(id) != null) {
@@ -126,7 +126,7 @@ public class Forum_Section
     
     public static Forum_Section getSectionByIdToSql(final int id) {
         String name = "";
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_section WHERE id = ?");
             ps.setInt(1, id);
@@ -154,7 +154,7 @@ public class Forum_Section
     
     public static Forum_Section getSectionByNameToSql(final String name) {
         int id = 0;
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_section WHERE name = ?");
             ps.setString(1, name);

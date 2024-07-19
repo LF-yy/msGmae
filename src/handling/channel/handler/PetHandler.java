@@ -28,18 +28,18 @@ import tools.data.LittleEndianAccessor;
 
 public class PetHandler
 {
-    public static final void SpawnPet(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void SpawnPet(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         chr.updateTick(slea.readInt());
         chr.spawnPet((byte)slea.readShort(), slea.readByte() > 0);
     }
     
-    public static final void Pet_AutoPotion(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void Pet_AutoPotion(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         slea.skip(13);
         final byte slot = slea.readByte();
         if (chr == null || !chr.isAlive() || chr.getMapId() == 749040100 || chr.getMap() == null || chr.hasDisease(MapleDisease.POTION)) {
             return;
         }
-        final IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
+        IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         if (toUse == null || toUse.getQuantity() < 1) {
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
@@ -63,7 +63,7 @@ public class PetHandler
         }
     }
     
-    public static final void PetChat(final int petid, final short command, final String text, final MapleCharacter chr) {
+    public static void PetChat(final int petid, final short command, final String text, MapleCharacter chr) {
         if (chr == null || chr.getMap() == null || chr.getPetIndex(petid) < 0) {
             return;
         }
@@ -74,7 +74,7 @@ public class PetHandler
         chr.getMap().broadcastMessage(chr, PetPacket.petChat(chr.getId(), (int)command, text, chr.getPetIndex(petid)), true);
     }
     
-    public static final void PetCommand(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void PetCommand(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final byte petIndex = chr.getPetIndex(slea.readInt());
         if (petIndex == -1) {
             return;
@@ -106,7 +106,7 @@ public class PetHandler
         chr.getMap().broadcastMessage(chr, PetPacket.commandResponse(chr.getId(), command, petIndex, success, false), true);
     }
     
-    public static final void PetFood(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void PetFood(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         int previousFullness = 100;
         MaplePet pet = null;
         if (chr == null) {
@@ -174,7 +174,7 @@ public class PetHandler
         c.sendPacket(MaplePacketCreator.enableActions());
     }
     
-    public static final void MovePet(final LittleEndianAccessor slea, final MapleCharacter chr) {
+    public static void MovePet(final LittleEndianAccessor slea, MapleCharacter chr) {
         final int petId = slea.readInt();
         slea.skip(8);
         final List<LifeMovementFragment> res = MovementParse.parseMovement(slea, 3);
@@ -267,7 +267,7 @@ public class PetHandler
         }
     }
     
-    public static void PetIgnoreTag(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void PetIgnoreTag(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         final int petSlot = (int)slea.readLong();
         final MaplePet pet = chr.getPet((int)chr.getPetIndex(petSlot));
         if (pet == null || !PetFlag.UNPICKABLE.check((int)pet.getFlags())) {

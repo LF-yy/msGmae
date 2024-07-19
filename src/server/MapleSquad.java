@@ -255,12 +255,12 @@ public class MapleSquad
         }
     }
     
-    public void reAddMember(final MapleCharacter chr) {
+    public void reAddMember(MapleCharacter chr) {
         this.removeMember(chr);
         this.members.put(chr.getName(), MapleCarnivalChallenge.getJobNameById((int)chr.getJob()));
     }
     
-    public void removeMember(final MapleCharacter chr) {
+    public void removeMember(MapleCharacter chr) {
         if (this.members.containsKey((Object)chr.getName())) {
             this.members.remove((Object)chr.getName());
         }

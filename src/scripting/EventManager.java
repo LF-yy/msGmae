@@ -177,7 +177,7 @@ public class EventManager
         }
     }
     
-    public void startInstance(final String mapid, final MapleCharacter chr) {
+    public void startInstance(final String mapid, MapleCharacter chr) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)this.iv.invokeFunction("setup", mapid);
             eim.registerCarnivalParty(chr, chr.getMap(), (byte)0);
@@ -188,7 +188,7 @@ public class EventManager
         }
     }
     
-    public void startInstance_Party(final String mapid, final MapleCharacter chr) {
+    public void startInstance_Party(final String mapid, MapleCharacter chr) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)this.iv.invokeFunction("setup", mapid);
             eim.registerParty(chr.getParty(), chr.getMap());
@@ -391,7 +391,7 @@ public class EventManager
         }
     }
     
-    public final void invokeFunctionMethod(final String methodName) {
+    public void invokeFunctionMethod(final String methodName) {
         try {
             this.iv.invokeFunction(methodName, this);
         }
@@ -401,7 +401,7 @@ public class EventManager
         }
     }
     
-    public final void worldMessage(final int type, final String message) {
+    public void worldMessage(final int type, final String message) {
         Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(type, message));
     }
     
@@ -417,28 +417,28 @@ public class EventManager
         return this.c;
     }
     
-    public final void openNpc(final int id) {
+    public void openNpc(final int id) {
         this.openNpc(id, null);
     }
     
-    public final void openNpc(final int id, final int mode) {
+    public void openNpc(final int id, final int mode) {
         this.openNpc(this.getClient(), id, mode, null);
     }
     
-    public final void openNpc(final MapleClient cg, final int id) {
+    public void openNpc(final MapleClient cg, final int id) {
         NPCScriptManager.getInstance().dispose(cg);
         this.openNpc(cg, id, 0, null);
     }
     
-    public final void openNpc(final int id, final String script) {
+    public void openNpc(final int id, final String script) {
         this.openNpc(this.getClient(), id, script);
     }
     
-    public final void openNpc(final MapleClient cg, final int id, final String script) {
+    public void openNpc(final MapleClient cg, final int id, final String script) {
         this.openNpc(this.getClient(), id, 0, script);
     }
     
-    public final void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
+    public void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
         cg.removeClickedNPC();
         NPCScriptManager.getInstance().start(cg, id, mode, script);
     }

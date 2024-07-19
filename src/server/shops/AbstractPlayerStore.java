@@ -135,7 +135,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
         if (this.getShopType() != 1) {
             return false;
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("DELETE FROM hiredmerch WHERE accountid = ? OR characterid = ?");
             ps.setInt(1, this.ownerAccount);
             ps.setInt(2, this.ownerId);
@@ -331,7 +331,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
     }
     
     @Override
-    public boolean isOwner(final MapleCharacter chr) {
+    public boolean isOwner(MapleCharacter chr) {
         return chr.getId() == this.ownerId && chr.getName().equals((Object)this.ownerName);
     }
     
@@ -419,7 +419,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
         return this.messages;
     }
     
-    public static final class BoughtItem
+    public static class BoughtItem
     {
         public int id;
         public int quantity;

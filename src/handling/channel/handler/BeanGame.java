@@ -28,7 +28,7 @@ public class BeanGame
     public static int 红;
     public static int 黄金狗设置局数;
     
-    public static final void BeansGameAction(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void BeansGameAction(final LittleEndianAccessor slea, final MapleClient c) {
         final BeansConstants Beans = new BeansConstants();
         final int 海洋帽子几率 = Beans.get海洋帽子几率();
         final int 力度搞假 = Beans.get力度搞假();
@@ -48,7 +48,7 @@ public class BeanGame
         final String[] 色怪奖励 = Beans.get色怪獎勵();
         final String[] 五职业奖励 = Beans.get五职业獎勵();
         final String[] 女皇奖励 = Beans.get女皇獎勵();
-        final MapleCharacter chr = c.getPlayer();
+        MapleCharacter chr = c.getPlayer();
         final List<MapleBeans> beansInfo = new ArrayList<MapleBeans>();
         final int type = slea.readByte();
         int 力度 = 0;
@@ -469,15 +469,15 @@ public class BeanGame
         return beanType;
     }
     
-    public static final int get进洞次数() {
+    public static int get进洞次数() {
         return BeanGame.进洞次数;
     }
     
-    public static final void gain进洞次数(final int a) {
+    public static void gain进洞次数(final int a) {
         BeanGame.进洞次数 += a;
     }
     
-    public static final void set进洞次数(final int a) {
+    public static void set进洞次数(final int a) {
         BeanGame.进洞次数 = a;
     }
     
@@ -485,7 +485,7 @@ public class BeanGame
         return (int)(Math.random() * (double)(ubound - lbound + 1) + (double)lbound);
     }
     
-    public static final void updateBeans(final LittleEndianAccessor slea, final MapleClient c) {
+    public static void updateBeans(final LittleEndianAccessor slea, final MapleClient c) {
         c.getSession().write((Object)MaplePacketCreator.updateBeans(c.getPlayer()));
         c.getSession().write((Object)MaplePacketCreator.enableActions());
     }

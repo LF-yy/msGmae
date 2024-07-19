@@ -33,7 +33,7 @@ public enum MapleStat
         return this.i;
     }
     
-    public static final MapleStat getByValue(final int value) {
+    public static MapleStat getByValue(final int value) {
         for (final MapleStat stat : values()) {
             if (stat.i == value) {
                 return stat;

@@ -32,7 +32,7 @@ public class MapleTrade
     private final WeakReference<MapleCharacter> chr;
     private final byte tradingslot;
     
-    public MapleTrade(final byte tradingslot, final MapleCharacter chr) {
+    public MapleTrade(final byte tradingslot, MapleCharacter chr) {
         this.partner = null;
         this.items = new LinkedList<IItem>();
         this.meso = 0;
@@ -42,7 +42,7 @@ public class MapleTrade
         this.chr = new WeakReference<MapleCharacter>(chr);
     }
     
-    public final void CompleteTrade() {
+    public void CompleteTrade() {
         final MapleTrade local = ((MapleCharacter)this.chr.get()).getTrade();
         final MapleTrade partner = local.getPartner();
         if (this.exchangeItems != null) {
@@ -84,11 +84,11 @@ public class MapleTrade
         }
     }
     
-    public final void cancel(final MapleClient c) {
+    public void cancel(final MapleClient c) {
         this.cancel(c, 0, false);
     }
     
-    public final void cancel(final MapleClient c, final int unsuccessful, final boolean check) {
+    public void cancel(final MapleClient c, final int unsuccessful, final boolean check) {
         final MapleTrade local = c.getPlayer().getTrade();
         final MapleTrade partners = local.getPartner();
         if (local.isLocked() && partners.isLocked() && !check) {
@@ -112,7 +112,7 @@ public class MapleTrade
         return this.locked;
     }
     
-    public final void setMeso(final int meso) {
+    public void setMeso(final int meso) {
         if (this.locked || this.partner == null || meso <= 0 || this.meso + meso <= 0) {
             return;
         }
@@ -126,7 +126,7 @@ public class MapleTrade
         }
     }
     
-    public final void addItem(final IItem item) {
+    public void addItem(final IItem item) {
         if (this.locked || this.partner == null) {
             return;
         }
@@ -137,7 +137,7 @@ public class MapleTrade
         }
     }
     
-    public final void chat(final String message) {
+    public void chat(final String message) {
         if (this.partner == null) {
             return;
         }
@@ -150,7 +150,7 @@ public class MapleTrade
             }
             final StringBuilder sb = new StringBuilder("[GM 密语] 『" + ((MapleCharacter)this.chr.get()).getName() + "』對『" + this.partner.getChr().getName() + "』的交易聊天：  " + message);
             for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (final MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
+                for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
                     if (chr_.get_control_玩家私聊()) {
                         chr_.dropMessage(sb.toString());
                     }
@@ -166,7 +166,7 @@ public class MapleTrade
         return this.partner;
     }
     
-    public final void setPartner(final MapleTrade partner) {
+    public void setPartner(final MapleTrade partner) {
         if (this.locked) {
             return;
         }
@@ -280,7 +280,7 @@ public class MapleTrade
         return 0;
     }
     
-    public static final void completeTrade(final MapleCharacter c) {
+    public static void completeTrade(final MapleCharacter c) {
         final MapleTrade local = c.getTrade();
         final MapleTrade partner = local.getPartner();
         if (partner == null || local.locked) {
@@ -313,7 +313,7 @@ public class MapleTrade
         }
     }
     
-    public static final void cancelTrade(final MapleTrade Localtrade, final MapleClient c) {
+    public static void cancelTrade(final MapleTrade Localtrade, final MapleClient c) {
         Localtrade.cancel(c);
         final MapleTrade partner = Localtrade.getPartner();
         if (partner != null && partner.getChr() != null) {
@@ -327,7 +327,7 @@ public class MapleTrade
         }
     }
     
-    public static final void startTrade(final MapleCharacter c) {
+    public static void startTrade(final MapleCharacter c) {
         if (c.getTrade() == null) {
             c.setTrade(new MapleTrade((byte)0, c));
             c.getClient().sendPacket(MaplePacketCreator.getTradeStart(c.getClient(), c.getTrade(), (byte)0));
@@ -337,7 +337,7 @@ public class MapleTrade
         }
     }
     
-    public static final void inviteTrade(final MapleCharacter c1, final MapleCharacter c2) {
+    public static void inviteTrade(final MapleCharacter c1, final MapleCharacter c2) {
         final int 玩家交易开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"玩家交易开关"));
         if (玩家交易开关 > 0) {
             c1.getClient().sendPacket(MaplePacketCreator.serverNotice(1, "管理员从后台关闭了交易功能。"));
@@ -368,7 +368,7 @@ public class MapleTrade
         }
     }
     
-    public static final void visitTrade(final MapleCharacter c1, final MapleCharacter c2) {
+    public static void visitTrade(final MapleCharacter c1, final MapleCharacter c2) {
         if (c1.getTrade() != null && c1.getTrade().getPartner() == c2.getTrade() && c2.getTrade() != null && c2.getTrade().getPartner() == c1.getTrade()) {
             c2.getClient().sendPacket(MaplePacketCreator.getTradePartnerAdd(c1));
             c1.getClient().sendPacket(MaplePacketCreator.getTradeStart(c1.getClient(), c1.getTrade(), (byte)1));
@@ -378,7 +378,7 @@ public class MapleTrade
         }
     }
     
-    public static final void declineTrade(final MapleCharacter c) {
+    public static void declineTrade(final MapleCharacter c) {
         final MapleTrade trade = c.getTrade();
         if (trade != null) {
             if (trade.getPartner() != null) {

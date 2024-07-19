@@ -22,7 +22,7 @@ public class BuddyListHandler
         }
     }
     
-    public static final void BuddyOperationHandler(final LittleEndianAccessor slea, final MapleClient client) {
+    public static void BuddyOperationHandler(final LittleEndianAccessor slea, final MapleClient client) {
         final MapleCharacter player = client.getPlayer();
         final int mode = slea.readByte();
         final BuddyList buddyList = player.getBuddylist();

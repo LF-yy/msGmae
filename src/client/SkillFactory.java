@@ -58,7 +58,7 @@ public class SkillFactory
         }
     }
     
-    public static final ISkill getSkill(final int id) {
+    public static ISkill getSkill(final int id) {
         if (!SkillFactory.skills.isEmpty()) {
             return (ISkill)SkillFactory.skills.get((Object)Integer.valueOf(id));
         }
@@ -72,11 +72,11 @@ public class SkillFactory
         return skill.isTimeLimited() ? (System.currentTimeMillis() + 2592000000L) : -1L;
     }
     
-    public static final List<Integer> getSkillsByJob(final int jobId) {
+    public static List<Integer> getSkillsByJob(final int jobId) {
         return (List<Integer>)SkillFactory.summonSkills.get((Object)Integer.valueOf(jobId));
     }
     
-    public static final String getSkillName(final int id) {
+    public static String getSkillName(final int id) {
         final ISkill skil = getSkill(id);
         if (skil != null) {
             return skil.getName();
@@ -84,7 +84,7 @@ public class SkillFactory
         return "";
     }
     
-    public static final String getName(final int id) {
+    public static String getName(final int id) {
         String strId = Integer.toString(id);
         strId = StringUtil.getLeftPaddedStr(strId, '0', 7);
         final MapleData skillroot = SkillFactory.stringSkills.getChildByPath(strId);
@@ -94,11 +94,11 @@ public class SkillFactory
         return "";
     }
     
-    public static final SummonSkillEntry getSummonData(final int skillid) {
+    public static SummonSkillEntry getSummonData(final int skillid) {
         return (SummonSkillEntry)SkillFactory.summonSkillsInfo.get((Object)Integer.valueOf(skillid));
     }
     
-    public static final Collection<ISkill> getAllSkills() {
+    public static Collection<ISkill> getAllSkills() {
         return SkillFactory.skills.values();
     }
     

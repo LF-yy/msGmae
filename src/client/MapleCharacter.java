@@ -2,6 +2,7 @@ package client;
 
 import abc.离线人偶;
 import bean.UserAttraction;
+import bean.UserLhAttraction;
 import client.inventory.*;
 import gui.LtMS;
 import scripting.EventManager;
@@ -207,6 +208,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private boolean gashponmega;
     private boolean hidden;
     private boolean hasSummon;
+    private long 经验池;
     private boolean 精灵商人购买开关;
     private boolean 玩家私聊开关;
     private boolean 玩家密语开关;
@@ -221,6 +223,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private boolean DebugMessage;
     private boolean itemVacs;
     private boolean mobVacs;
+    private boolean mobLhVacs;
     private boolean mobMapVacs;
     private boolean beansStart;
     private int[] wishlist;
@@ -281,6 +284,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private MapleKeyLayout keylayout;
     private ItemVac ItemVac;
     private MobVac mobVac;
+    private MobLhVac mobLhVac;
     private MobMapVac mobMapVac;
     private transient ScheduledFuture<?> beholderHealingSchedule;
     private transient ScheduledFuture<?> beholderBuffSchedule;
@@ -364,6 +368,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 吸怪指数;
     public int 打怪地图;
     public int 打怪数量;
+    public int 打Boss数量;
     public int 被触碰次数;
     public long 累计掉血;
     public double X坐标误差;
@@ -671,7 +676,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.prefix = "";
         ret.PGSXDJ = 0;
         ret.gachexp = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT name, 2ndpassword, mPoints,  vpoints, VIP, loginkey, serverkey, clientkey FROM accounts WHERE id = ?");
             ps.setInt(1, ret.accountid);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -695,7 +700,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return ret;
     }
     
-    public static final MapleCharacter ReconstructChr(final CharacterTransfer ct, final MapleClient client, final boolean isChannel) {
+    public static MapleCharacter ReconstructChr(final CharacterTransfer ct, final MapleClient client, final boolean isChannel) {
         final MapleCharacter ret = new MapleCharacter(true);
         ret.client = client;
         if (!isChannel) {
@@ -889,7 +894,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         final MapleCharacter ret = new MapleCharacter(channelserver);
         ret.client = client;
         ret.id = charid;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             ResultSet rs = null;
             try {
@@ -897,7 +902,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.setInt(1, charid);
                 rs = ps.executeQuery();
                 if (!rs.next()) {
-                    throw new RuntimeException("Loading the Char Failed (char not found)");
+                    System.out.println("Loading the Char Failed (char not found)==>查询角色ID: = "+charid );
+                    System.out.println("Loading the Char Failed (char not found)==>查询语句:"+ps.toString() );
+                    System.out.println("Loading the Char Failed (char not found)===>查询到的结果数:"+rs.getRow());
+                    System.out.println("Loading the Char Failed (char not found)===>异常点:loadCharFromDB");
+                    return null;
                 }
                 ret.Vip_Medal = (rs.getShort("VipMedal") > 0);
                 ret.name = rs.getString("name");
@@ -1292,7 +1301,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return ret;
     }
     
-    public static void saveNewCharToDB(final MapleCharacter chr, final int type, final boolean db) {
+    public static void saveNewCharToDB(MapleCharacter chr, final int type, final boolean db) {
         Connection con = null;
         PreparedStatement ps = null;
         PreparedStatement pse = null;
@@ -1493,6 +1502,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.isClone()) {
             return -1;
         }
+        this.setBossLog1("打Boss数量",1,this.打Boss数量);
+        this.setBossLog1("打怪数量",1,this.打怪数量);
+        this.打怪数量 = 0;
+        this.打Boss数量 = 0;
         int retValue = 1;
         Connection con = null;
         PreparedStatement ps = null;
@@ -1871,11 +1884,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return retValue;
     }
     
-    private void deleteWhereCharacterId(final Connection con, final String sql) throws SQLException {
+    private void deleteWhereCharacterId(Connection con, final String sql) throws SQLException {
         deleteWhereCharacterId(con, sql, this.id);
     }
     
-    public static void deleteWhereCharacterId(final Connection con, final String sql, final int id) {
+    public static void deleteWhereCharacterId(Connection con, final String sql, final int id) {
         try {
             final PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
@@ -1887,7 +1900,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public void saveInventory(final Connection con) {
+    public void saveInventory(Connection con) {
         final List<Pair<IItem, MapleInventoryType>> listing = new ArrayList<Pair<IItem, MapleInventoryType>>();
         for (final MapleInventory iv : this.inventory) {
             for (final IItem item : iv.list()) {
@@ -1922,7 +1935,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.CRand;
     }
     
-    public final void QuestInfoPacket(final MaplePacketLittleEndianWriter mplew) {
+    public void QuestInfoPacket(final MaplePacketLittleEndianWriter mplew) {
         mplew.writeShort(this.questinfo.size());
         for (final Entry<Integer, String> q : this.questinfo.entrySet()) {
             mplew.writeShort((int)Integer.valueOf(q.getKey()));
@@ -1930,7 +1943,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void updateInfoQuest(final int questid, final String data) {
+    public void updateInfoQuest(final int questid, final String data) {
         this.questinfo.put(Integer.valueOf(questid), data);
         this.client.sendPacket(MaplePacketCreator.updateInfoQuest(questid, data));
     }
@@ -1963,7 +1976,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return (MapleQuestStatus)this.quests.get((Object)quest);
     }
     
-    public final void setQuestAdd(final MapleQuest quest, final byte status, final String customData) {
+    public void setQuestAdd(final MapleQuest quest, final byte status, final String customData) {
         if (!this.quests.containsKey((Object)quest)) {
             final MapleQuestStatus stat = new MapleQuestStatus(quest, (int)status);
             stat.setCustomData(customData);
@@ -1988,11 +2001,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return (MapleQuestStatus)this.quests.remove((Object)quest);
     }
     
-    public final void updateQuest(final MapleQuestStatus quest) {
+    public void updateQuest(final MapleQuestStatus quest) {
         this.updateQuest(quest, false);
     }
     
-    public final void updateQuest(final MapleQuestStatus quest, final boolean update) {
+    public void updateQuest(final MapleQuestStatus quest, final boolean update) {
         this.quests.put(quest.getQuest(), quest);
         if (!quest.isCustom()) {
             this.client.sendPacket(MaplePacketCreator.updateQuest(quest));
@@ -2613,7 +2626,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getSkillLevel(SkillFactory.getSkill(skillid));
     }
     
-    public final void handleEnergyCharge(final int skillid, final int targets) {
+    public void handleEnergyCharge(final int skillid, final int targets) {
         final ISkill echskill = SkillFactory.getSkill(skillid);
         final byte skilllevel = this.getSkillLevel(echskill);
         if (skilllevel > 0) {
@@ -2643,7 +2656,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void handleBattleshipHP(final int damage) {
+    public void handleBattleshipHP(final int damage) {
         if (this.isActiveBuffedValue(5221006)) {
             this.battleshipHP -= damage;
             if (this.battleshipHP <= 0) {
@@ -2656,7 +2669,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void handleOrbgain() {
+    public void handleOrbgain() {
         final int orbcount = (int)this.getBuffedValue(MapleBuffStat.COMBO);
         ISkill theCombol = null;
         ISkill advcombo = null;
@@ -2821,7 +2834,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.client;
     }
     
-    public final void setClient(final MapleClient client) {
+    public void setClient(final MapleClient client) {
         this.client = client;
     }
     
@@ -3513,9 +3526,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             if ( this.level >= 等级上限) {
                 //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
-                if (LtMS.ConfigValuesMap.get("经验叠加开关")==0){
-                    return;
+                if(经验池>Integer.MAX_VALUE ) {
+                this.经验入池(this.id,(long)total);
+                }else{
+                    经验池 = 经验池 + total;
                 }
+                return;
             }
             final int prevexp = this.getExp();
             int needed = GameConstants.getExpNeededForLevel((int)this.level);
@@ -3607,10 +3623,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (shijiedengji > 等级上限){
             等级上限 = shijiedengji;
         }
-        if ( this.level >= 等级上限) {
-            //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
-            return;
-        }
+
         this.expirationTask(true, false);
         if (this.getExpm() > 1.0) {
             gain = (int)((double)gain * this.getExpm());
@@ -3664,6 +3677,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (total > 0) {
             this.stats.checkEquipLevels(this, total);
         }
+
+        if ( this.level >= 等级上限) {
+            //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
+            this.exp += total;
+            return;
+        }
+
         final int 冒险家等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
         final int 骑士团等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
         int needed = GameConstants.getExpNeededForLevel((int)this.level);
@@ -3801,15 +3821,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.inventory;
     }
     
-    public final void expirationTask() {
+    public void expirationTask() {
         this.expirationTask(false);
     }
     
-    public final void expirationTask(final boolean pending) {
+    public void expirationTask(final boolean pending) {
         this.expirationTask(false, pending);
     }
     
-    public final void expirationTask(final boolean packet, final boolean pending) {
+    public void expirationTask(final boolean packet, final boolean pending) {
         if (pending) {
             if (this.pendingExpiration != null) {
                 for (final Integer z : this.pendingExpiration) {
@@ -4309,7 +4329,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void tempban(final String reason, final Calendar duration, final int greason, final boolean bandIp) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             FileoutputUtil.logToFile("logs/Hack/Ban/MySql_input.txt", "\r\n[tempBan] " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " MAC: " + (Object)this.getClient().getMacs() + " 理由: " + reason, false, false);
             PreparedStatement ps = con.prepareStatement("INSERT INTO ipbans (ip) VALUES (?)");
             ps.setString(1, this.client.getSession().remoteAddress().toString().split(":")[0]);
@@ -4332,7 +4352,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public static boolean ban(final String ip, final String id, final String reason, final boolean accountId, final int gmlevel, final boolean hellban) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             if (!isVpn(ip) && id.matches("/[0-9]{1,3}\\..*")) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/MySql_input.txt", "\r\n[Ban-1] " + FileoutputUtil.NowTime() + " IP: " + ip + " 理由: " + reason, false, false);
                 final PreparedStatement ps = con.prepareStatement("INSERT INTO ipbans (ip) VALUES (?)");
@@ -4404,7 +4424,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             throw new RuntimeException("Trying to ban a non-loaded character (testhack)");
         }
         final String ip = this.client.getSessionIPAddress();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("UPDATE accounts SET banned = ?, banreason = ? WHERE id = ?");
             ps.setInt(1, autoban ? 2 : 1);
             ps.setString(2, reason);
@@ -4419,7 +4439,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.close();
                 try {
                     for (final ChannelServer cs : ChannelServer.getAllInstances()) {
-                        for (final MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
+                        for (MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
                             if (chr.getClient().getSessionIPAddress().equals((Object)this.client.getSessionIPAddress()) && !chr.getClient().isGm()) {
                                 chr.getClient().disconnect(true, false);
                                 chr.getClient().getSession().close();
@@ -4463,7 +4483,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public boolean OfflineBanByName(final String name, final String reason) {
         int id = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             final Statement stmt = con.createStatement();
             ps = con.prepareStatement("select id from characters where name = ?");
@@ -4480,7 +4500,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public boolean OfflineBanById(final int id, final String reason) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final Statement stmt = con.createStatement();
             final int z = id;
             int acid = 0;
@@ -4512,7 +4532,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.close();
                 try {
                     for (final ChannelServer cs : ChannelServer.getAllInstances()) {
-                        for (final MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
+                        for (MapleCharacter chr : cs.getPlayerStorage().getAllCharactersThreadSafe()) {
                             if (chr.getClient().getSessionIPAddress().equals((Object)ip) && !chr.getClient().isGm()) {
                                 chr.getClient().disconnect(true, false);
                                 chr.getClient().getSession().close();
@@ -4637,7 +4657,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void equipChanged() {
+    public void equipChanged() {
         if (this.map == null) {
             return;
         }
@@ -4706,7 +4726,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return null;
     }
     
-    public final void shiftPetsRight() {
+    public void shiftPetsRight() {
         final List<MaplePet> petsz = this.getSummonedPets();
         if (petsz.size() >= 3 || petsz.size() < 1) {
             return;
@@ -4782,7 +4802,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.pets;
     }
     
-    public final void unequipAllPets() {
+    public void unequipAllPets() {
         for (final MaplePet pet : this.getSummonedPets()) {
             this.unequipPet(pet, false);
         }
@@ -4833,7 +4853,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void hasGivenFame(final MapleCharacter to) {
         this.lastfametime = System.currentTimeMillis();
         this.lastmonthfameids.add(Integer.valueOf(to.getId()));
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO famelog (characterid, characterid_to) VALUES (?, ?)")) {
             ps.setInt(1, this.getId());
             ps.setInt(2, to.getId());
@@ -5107,7 +5127,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void saveFamilyStatus() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE characters SET familyid = ?, seniorid = ?, junior1 = ?, junior2 = ? WHERE id = ?")) {
             if (this.mfc == null) {
                 ps.setInt(1, 0);
@@ -5261,6 +5281,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         (this.mobVac = new MobVac(this,userAttraction)).start();
         this.mobVacs = true;
     }
+    public void startMobLhVac(UserLhAttraction userAttraction) {
+        (this.mobLhVac = new MobLhVac(this,userAttraction)).start();
+        this.mobLhVacs = true;
+    }
     public void startMobMapVac(UserAttraction userAttraction,int mobId,String mobName,String adress,String value, long hp) {
         (this.mobMapVac = new MobMapVac(this,userAttraction,mobId,mobName, adress, value,hp)).start();
         this.mobMapVacs = true;
@@ -5278,6 +5302,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.mobVacs) {
             this.mobVac.interrupt();
             this.mobVacs = false;
+        }
+    }
+    public void stopMobLhVac() {
+        if (this.mobLhVacs) {
+            this.mobLhVac.interrupt();
+            this.mobLhVacs = false;
         }
     }
     public void stopMobMapVac() {
@@ -5380,7 +5410,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         else {
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                  final PreparedStatement ps = con.prepareStatement("SELECT SkillID,StartTime,length FROM skills_cooldowns WHERE charid = ?")) {
                 ps.setInt(1, this.getId());
                 final ResultSet rs = ps.executeQuery();
@@ -5462,7 +5492,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void giveSilentDebuff(final List<MapleDiseaseValueHolder> ld) {
+    public void giveSilentDebuff(final List<MapleDiseaseValueHolder> ld) {
         if (ld != null) {
             for (final MapleDiseaseValueHolder disease : ld) {
                 this.diseases.put(disease.disease, disease);
@@ -5506,7 +5536,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void showNote() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM notes WHERE `to`=?", 1005, 1008)) {
             ps.setString(1, this.getName());
             try (final ResultSet rs = ps.executeQuery()) {
@@ -5523,7 +5553,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void deleteNote(final int id, final int fame) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT gift FROM notes WHERE `id`=?");
             ps.setInt(1, id);
             final ResultSet rs = ps.executeQuery();
@@ -5793,7 +5823,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int 获得破功() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             int count = 0;
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM z_pg WHERE CharID = ? ");
@@ -5816,7 +5846,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int 创建破功() {
-        final Connection con = DatabaseConnection.getConnection();
+        Connection con = DatabaseConnection.getConnection();
         try {
             final int count = 0;
             final PreparedStatement ps = con.prepareStatement("Insert into z_pg(CharID,PG) values (?,?)");
@@ -5834,7 +5864,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void 添加破功(final int pg) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE z_pg SET PG = ? WHERE CharID = ?");
             ps.setInt(1, pg + this.获得破功());
             ps.setInt(2, this.accountid);
@@ -5870,7 +5900,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getBossLog(final String boss, final int type) {
         try {
             int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ?");
             ps.setInt(1, this.id);
             ps.setString(2, boss);
@@ -5918,7 +5948,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getBossLog1(final String boss, final int type) {
         try {
             int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ?");
             ps.setInt(1, this.id);
             ps.setString(2, boss);
@@ -6030,7 +6060,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getPublicRecord(final String boss, final int type) {
         try {
             int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM lt_public_record WHERE  record_name = ? and type = ?");
             ps.setString(1, boss);
             ps.setInt(2, type);
@@ -6114,7 +6144,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getBossLogAcc(final String boss) {
         try {
             int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE accountid = ? AND bossid = ?");
             ps.setInt(1, this.accountid);
             ps.setString(2, boss);
@@ -6179,7 +6209,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAccNewTime(final String time) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from accounts where id = ? and createdat <= '" + time + "'");
             ps.setInt(1, this.accountid);
             int ret_count;
@@ -6201,7 +6231,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getOneTimeLog(final String log) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
             final PreparedStatement ps = con.prepareStatement("select count(*) from OneTimelog where characterid = ? and log = ?");
             ps.setInt(1, this.id);
@@ -6224,7 +6254,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAddLog() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int money = 0;
             final PreparedStatement ps = con.prepareStatement("SELECT money FROM addlog WHERE accid = ?");
             ps.setInt(1, this.getClient().getAccID());
@@ -6243,7 +6273,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setOneTimeLog(final String log) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into OneTimelog (characterid, log) values (?,?)");
             ps.setInt(1, this.id);
             ps.setString(2, log);
@@ -6256,7 +6286,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void deleteOneTimeLog(final String log) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("DELETE FROM onetimelog WHERE characterid = ? and log = ?");
             ps.setInt(1, this.id);
             ps.setString(2, log);
@@ -6269,7 +6299,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setPrizeLog(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into Prizelog (accid, bossid) values (?,?)");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, bossid);
@@ -6282,7 +6312,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getPrizeLog(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
             final PreparedStatement ps = con.prepareStatement("select count(*) from Prizelog where accid = ? and bossid = ?");
             ps.setInt(1, this.getClient().getAccID());
@@ -6305,7 +6335,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setAcLog(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into Aclog (accid, bossid) values (?,?)");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, bossid);
@@ -6318,7 +6348,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setAcLogS(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into Aclog (accid, bossid) values (?,?)");
             ps.setInt(1, this.getAccountID());
             ps.setString(2, bossid);
@@ -6331,7 +6361,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAcLog(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
             final PreparedStatement ps = con.prepareStatement("select count(*) from Aclog where accid = ? and bossid = ? and lastattempt >= subtime(current_timestamp, '1 0:0:0.0')");
             ps.setInt(1, this.getClient().getAccID());
@@ -6354,7 +6384,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAcLogS(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
             final PreparedStatement ps = con.prepareStatement("select count(*) from Aclog where accid = ? and bossid = ?");
             ps.setInt(1, this.getClient().getAccID());
@@ -6451,7 +6481,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public static int getIdByName(final String name) {
         try {
             int id;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
                  final PreparedStatement ps = con.prepareStatement("SELECT id FROM characters WHERE name = ?")) {
                 ps.setString(1, name);
                 try (final ResultSet rs = ps.executeQuery()) {
@@ -6826,7 +6856,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.movedMobs.containsKey((Object)Integer.valueOf(mobid))) {
             this.movedMobs.put(Integer.valueOf(mobid), Integer.valueOf((int)Integer.valueOf(this.movedMobs.get((Object)Integer.valueOf(mobid))) + 1));
             if ((int)Integer.valueOf(this.movedMobs.get((Object)Integer.valueOf(mobid))) > 30) {
-                for (final MapleCharacter chr : this.getMap().getCharactersThreadsafe()) {
+                for (MapleCharacter chr : this.getMap().getCharactersThreadsafe()) {
                     if (chr.getMoveMobs().containsKey((Object)Integer.valueOf(mobid))) {
                         chr.getClient().sendPacket(MobPacket.killMonster(mobid, 1));
                         chr.getMoveMobs().remove((Object)Integer.valueOf(mobid));
@@ -6965,7 +6995,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return ret;
     }
     
-    public final void cloneLook() {
+    public void cloneLook() {
         if (this.clone) {
             return;
         }
@@ -6981,13 +7011,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
-    
-    public final void disposeClones() {
+
+    //20240622修复
+    public void disposeClones() {
         this.numClones = 0;
         for (int i = 0; i < this.clones.length; ++i) {
             if (this.clones[i].get() != null) {
                 this.map.removePlayer((MapleCharacter)this.clones[i].get());
-                ((MapleCharacter)this.clones[i].get()).getClient().disconnect(false, false);
+                MapleCharacter mapleCharacter = this.clones[i].get();
+                if (mapleCharacter==null){
+                    continue;
+                }
+                mapleCharacter.getClient().disconnect(false, false);
                 this.clones[i] = new WeakReference<MapleCharacter>(null);
                 ++this.numClones;
             }
@@ -7018,7 +7053,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.numClones;
     }
     
-    public final void spawnSavedPets() {
+    public void spawnSavedPets() {
         for (int i = 0; i < this.petStore.length; ++i) {
             if (this.petStore[i] > -1) {
                 this.spawnPet(this.petStore[i], false, false);
@@ -7636,10 +7671,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void removeDoor() {
         final MapleDoor door = (MapleDoor)this.getDoors().iterator().next();
-        for (final MapleCharacter chr : door.getTarget().getCharactersThreadsafe()) {
+        for (MapleCharacter chr : door.getTarget().getCharactersThreadsafe()) {
             door.sendDestroyData(chr.getClient());
         }
-        for (final MapleCharacter chr : door.getTown().getCharactersThreadsafe()) {
+        for (MapleCharacter chr : door.getTown().getCharactersThreadsafe()) {
             door.sendDestroyData(chr.getClient());
         }
         for (final MapleDoor destroyDoor : this.getDoors()) {
@@ -7771,7 +7806,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int 破功等级 = 0;
         try {
             final int cid = this.getId();
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM characters WHERE id=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -7962,7 +7997,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void showInstruction(final String msg, final int width, final int height) {
+    public void showInstruction(final String msg, final int width, final int height) {
         this.client.getSession().writeAndFlush((Object)MaplePacketCreator.sendHint(msg, width, height));
     }
     
@@ -8168,7 +8203,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getAcash(this);
     }
     
-    public int getAcash(final MapleCharacter chr) {
+    public int getAcash(MapleCharacter chr) {
         final int maxtimes = 10;
         int nowtime = 0;
         final int delay = 500;
@@ -8176,7 +8211,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select Acash from Accounts Where id = " + chr.getClient().getAccID());
                 while (rs.next()) {
@@ -8217,7 +8252,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setAcash(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set Acash = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -8239,7 +8274,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getCZJF(this);
     }
     
-    public int getCZJF(final MapleCharacter chr) {
+    public int getCZJF(MapleCharacter chr) {
         final int maxtimes = 10;
         int nowtime = 0;
         final int delay = 500;
@@ -8247,7 +8282,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select CZJF from Accounts Where id = " + chr.getClient().getAccID());
                 while (rs.next()) {
@@ -8288,7 +8323,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setCZJF(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set CZJF = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -8310,7 +8345,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getTGJF(this);
     }
     
-    public int getTGJF(final MapleCharacter chr) {
+    public int getTGJF(MapleCharacter chr) {
         final int maxtimes = 10;
         int nowtime = 0;
         final int delay = 500;
@@ -8318,7 +8353,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select TGJF from Accounts Where id = " + chr.getClient().getAccID());
                 while (rs.next()) {
@@ -8359,7 +8394,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setTGJF(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set TGJF = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -8381,7 +8416,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getTJJF(this);
     }
     
-    public int getTJJF(final MapleCharacter chr) {
+    public int getTJJF(MapleCharacter chr) {
         final int maxtimes = 10;
         int nowtime = 0;
         final int delay = 500;
@@ -8389,7 +8424,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select TJJF from Accounts Where id = " + chr.getClient().getAccID());
                 while (rs.next()) {
@@ -8430,7 +8465,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setTJJF(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set TJJF = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -8493,8 +8528,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.auto吸怪 = x;
     }
     
-    public void warpAuto吸怪(final MapleCharacter chr_) {
-        final MapleCharacter chr = this;
+    public void warpAuto吸怪(MapleCharacter chr_) {
+        MapleCharacter chr = this;
         try {
             if (chr.getMapId() != chr_.getMapId()) {
                 chr.changeMap(chr_.getMapId());
@@ -8516,7 +8551,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void RemoveHired() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = con.prepareStatement("Delete From hiredmerch Where characterid = ?");
             ps.setInt(1, this.id);
             ps.execute();
@@ -8531,19 +8566,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void maxSkills() {
+    public void maxSkills() {
         for (final ISkill skil : SkillFactory.getAllSkills()) {
             this.changeSkillLevel(skil, skil.getMaxLevel(), skil.getMaxLevel());
         }
     }
     
-    public final void clearSkills() {
+    public void clearSkills() {
         for (final ISkill skil : SkillFactory.getAllSkills()) {
             this.changeSkillLevel(skil, (byte)0, (byte)0);
         }
     }
     
-    public final void LearnSameSkill(final MapleCharacter victim) {
+    public void LearnSameSkill(final MapleCharacter victim) {
         for (final ISkill skil : SkillFactory.getAllSkills()) {
             if (victim.getSkillLevel(skil) > 0) {
                 this.changeSkillLevel(skil, victim.getSkillLevel(skil), victim.getMasterLevel(skil));
@@ -8730,11 +8765,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public static String getCharacterNameById(final int id) {
         String name = null;
-        final MapleCharacter chr = getOnlineCharacterById(id);
+        MapleCharacter chr = getOnlineCharacterById(id);
         if (chr != null) {
             return chr.getName();
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             final Statement stmt = con.createStatement();
             ps = con.prepareStatement("select name from characters where id = ?");
@@ -8754,7 +8789,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public static String getCharacterNameById2(final int id) {
         String name = null;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             final Statement stmt = con.createStatement();
             ps = con.prepareStatement("select name from characters where id = ?");
@@ -8774,11 +8809,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public static int getCharacterIdByName(final String name) {
         int id = -1;
-        final MapleCharacter chr = getOnlineCharacterByName(name);
+        MapleCharacter chr = getOnlineCharacterByName(name);
         if (chr != null) {
             return chr.getId();
         }
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             final Statement stmt = con.createStatement();
             ps = con.prepareStatement("select id from characters where name = ?");
@@ -8819,7 +8854,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public static MapleCharacter getCharacterById(final int cid) {
-        final MapleCharacter chr = getOnlineCharacterById(cid);
+        MapleCharacter chr = getOnlineCharacterById(cid);
         if (chr != null) {
             return chr;
         }
@@ -8828,7 +8863,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public static MapleCharacter getCharacterByName(final String name) {
-        final MapleCharacter chr = getOnlineCharacterByName(name);
+        MapleCharacter chr = getOnlineCharacterByName(name);
         if (chr != null) {
             return chr;
         }
@@ -8838,11 +8873,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public static void setMP(final Map<MapleCharacter, Integer> GiveList, final boolean showMessage) {
         final Iterator<MapleCharacter> iter = GiveList.keySet().iterator();
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             while (iter.hasNext()) {
                 final StringBuilder sql = new StringBuilder();
-                final MapleCharacter chr = (MapleCharacter)iter.next();
+                MapleCharacter chr = (MapleCharacter)iter.next();
                 final int MP = (int)Integer.valueOf(GiveList.get((Object)chr));
                 sql.append("Update Accounts set MP = ");
                 sql.append(chr.getMP() + MP);
@@ -8871,7 +8906,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setMP(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set MP = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -8897,7 +8932,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int mp = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select MP from Accounts Where id = " + this.getClient().getAccID());
                 while (rs.next()) {
@@ -8968,7 +9003,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public int loadVip(final int accountID) {
         int vip = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT vip FROM accounts WHERE id = ?");
             ps.setInt(1, accountID);
             final ResultSet rs = ps.executeQuery();
@@ -9022,7 +9057,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public boolean chrdangerousIp(final String lip) {
         final String ip = lip.substring(1, lip.lastIndexOf(58));
         boolean ret = false;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM dangerousip WHERE ? LIKE CONCAT(ip, '%')")) {
             ps.setString(1, ip);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -9041,7 +9076,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void setChrDangerousIp(final String lip) {
         final String ip = lip.substring(1, lip.lastIndexOf(58));
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("INSERT INTO dangerousip (ip) VALUES (?)");
             ps.setString(1, ip);
             ps.executeUpdate();
@@ -9052,8 +9087,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public final void updateNewState(final int newstate, final int accountId) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+    public void updateNewState(final int newstate, final int accountId) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `loggedin` = ? WHERE id = ?")) {
             ps.setInt(1, newstate);
             ps.setInt(2, accountId);
@@ -9091,7 +9126,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public long getChrMeso() {
         long meso = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters")) {
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -9108,7 +9143,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public long getStorageMeso() {
         long meso = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM storages")) {
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -9125,7 +9160,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public long getHiredMerchMeso() {
         long meso = 0L;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT * FROM hiredmerch")) {
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -9141,7 +9176,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getQianDaoTime(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from bosslog where characterid = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
             ps.setInt(1, this.id);
             ps.setString(2, bossid);
@@ -9164,7 +9199,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getQianDaoAcLog(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
             final PreparedStatement ps = con.prepareStatement("select count(*) from Aclog where accid = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
             ps.setInt(1, this.getClient().getAccID());
@@ -9188,7 +9223,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public boolean ChrDangerousAcc(final String acc) {
         boolean ret = false;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM dangerousacc WHERE ? LIKE CONCAT(acc, '%')")) {
             ps.setString(1, acc);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -9206,7 +9241,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setChrDangerousAcc(final String acc) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("INSERT INTO dangerousacc (acc) VALUES (?)");
             ps.setString(1, acc);
             ps.executeUpdate();
@@ -9232,7 +9267,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getDDJF(this);
     }
     
-    public int getDDJF(final MapleCharacter chr) {
+    public int getDDJF(MapleCharacter chr) {
         final int maxtimes = 10;
         int nowtime = 0;
         final int delay = 500;
@@ -9240,7 +9275,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select DDJF from Accounts Where id = " + chr.getClient().getAccID());
                 while (rs.next()) {
@@ -9281,7 +9316,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setDDJF(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set DDJF = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -9309,7 +9344,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void deleteAcLog(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("DELETE FROM Aclog WHERE accid = ? and bossid = ?");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, bossid);
@@ -9322,7 +9357,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAcLogD(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from Aclog where accid = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, bossid);
@@ -9345,7 +9380,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAclogY(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from Aclog where accid = ? and bossid = ? and DATE_FORMAT(lastattempt, '%Y%m') = DATE_FORMAT(CURDATE( ), '%Y%m')");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, bossid);
@@ -9368,7 +9403,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getBossLogS(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from bosslog where characterid = ? and bossid = ?");
             ps.setInt(1, this.id);
             ps.setString(2, bossid);
@@ -9392,7 +9427,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public int getBossLogC(final String bossid) {
         int ret_count = 0;
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from bosslog where characterid = ? and bossid = ?");
             ps.setInt(1, this.id);
             ps.setString(2, bossid);
@@ -9411,7 +9446,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getAcLogC(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
             final PreparedStatement ps = con.prepareStatement("select count(*) from Aclog where accid = ? and bossid = ?");
             ps.setInt(1, this.getClient().getAccID());
@@ -9431,7 +9466,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getBossLogD(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from bosslog where characterid = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
             ps.setInt(1, this.id);
             ps.setString(2, bossid);
@@ -9454,7 +9489,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getBossLogY(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from bosslog where characterid = ? and bossid = ? and DATE_FORMAT(lastattempt, '%Y%m') = DATE_FORMAT(CURDATE( ), '%Y%m')");
             ps.setInt(1, this.id);
             ps.setString(2, bossid);
@@ -9485,7 +9520,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getStChrLog() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from characterid where stlog = ?");
             ps.setInt(1, this.id);
             int ret_count;
@@ -9515,7 +9550,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         String name = "";
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select characterid from stlog Where stid = " + id);
                 while (rs.next()) {
@@ -9554,7 +9589,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getStLog() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from stlog where characterid = ?");
             ps.setInt(1, this.id);
             int ret_count;
@@ -9576,7 +9611,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getStjfLog(final int id) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from stjflog where characterid = ?");
             ps.setInt(1, id);
             int ret_count;
@@ -9605,7 +9640,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select stid from stlog Where characterid = " + id);
                 while (rs.next()) {
@@ -9643,7 +9678,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setStLog(final int stid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into stlog (characterid, stid) values (?,?)");
             ps.setInt(1, this.id);
             ps.setInt(2, stid);
@@ -9656,7 +9691,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setStjfLog(final int id, final int stid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into stjflog (characterid, stjf) values (?,?)");
             ps.setInt(1, id);
             ps.setInt(2, stid);
@@ -9669,7 +9704,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void updateStjfLog(final int id, final int stid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update stjflog SET stjf = ? WHERE characterid = ?");
             ps.setInt(1, stid);
             ps.setInt(2, id);
@@ -9689,7 +9724,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select stjf from stjflog Where characterid = " + id);
                 while (rs.next()) {
@@ -9746,7 +9781,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getPoints(this);
     }
     
-    public int getPoints(final MapleCharacter chr) {
+    public int getPoints(MapleCharacter chr) {
         final int maxtimes = 10;
         int nowtime = 0;
         final int delay = 500;
@@ -9754,7 +9789,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int x = 0;
         do {
             ++nowtime;
-            try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
                 final Statement stmt = con.createStatement();
                 final ResultSet rs = stmt.executeQuery("Select points from Accounts Where id = " + chr.getClient().getAccID());
                 while (rs.next()) {
@@ -9794,7 +9829,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setPoints(final int x) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set points = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getClient().getAccID());
@@ -9831,7 +9866,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getMoneyAll() {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int money = 0;
             final PreparedStatement ps = con.prepareStatement("SELECT amount FROM donate WHERE username = ?");
             ps.setString(1, this.getClient().getAccountName());
@@ -9850,7 +9885,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setBuLingZanZu(final int bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into donate (username, amount, paymentMethod, date) values (?,?,?,?)");
             ps.setString(1, this.getClient().getAccountName());
             ps.setString(2, String.valueOf(bossid));
@@ -9892,7 +9927,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setFxName(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into fxlog (bossid, characterid) values (?,?)");
             ps.setString(1, bossid);
             ps.setInt(2, this.id);
@@ -9905,7 +9940,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getFxName(final String bossid) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from fxlog where bossid = ?");
             ps.setString(1, bossid);
             int ret_count;
@@ -9956,7 +9991,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return -1;
     }
     
-    public final void maxSkillsByJob() {
+    public void maxSkillsByJob() {
         for (final ISkill skil : SkillFactory.getAllSkills()) {
             if (skil.canBeLearnedBy((int)this.job) && skil.getId() >= 1000000) {
                 this.changeSkillLevel(skil, skil.getMaxLevel(), skil.getMaxLevel());
@@ -9992,7 +10027,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePoints() {
         try {
             int gamePoints = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, this.getClient().getAccID());
                 ps.setInt(2, (int)this.getWorld());
@@ -10038,7 +10073,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePointsPD() {
         try {
             int gamePointsPD = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, this.getClient().getAccID());
                 ps.setInt(2, (int)this.getWorld());
@@ -10105,7 +10140,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void updateGamePointsPD(final int amount) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointspd = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, amount);
                 ps.setInt(2, this.getClient().getAccID());
@@ -10121,7 +10156,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void updateGamePoints(final int amount) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePoints = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, amount);
                 ps.setInt(2, this.getClient().getAccID());
@@ -10138,7 +10173,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePointsRQ() {
         try {
             int gamePointsRQ = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, this.getClient().getAccID());
                 ps.setInt(2, (int)this.getWorld());
@@ -10188,7 +10223,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void updateGamePointsRQ(final int amount) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointsrq = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
             ps.setInt(1, amount);
             ps.setInt(2, this.getClient().getAccID());
@@ -10204,7 +10239,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePointsPS() {
         try {
             int gamePointsRQ = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
             ps.setInt(1, this.getClient().getAccID());
             ps.setInt(2, (int)this.getWorld());
@@ -10254,7 +10289,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void updateGamePointsPS(final int amount) {
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointsps = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
             ps.setInt(1, amount);
             ps.setInt(2, this.getClient().getAccID());
@@ -10303,7 +10338,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
             ret += Piot;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps2 = con.prepareStatement("UPDATE charactera SET `Point` = ? WHERE Name = ? and channel = ?");
             ps2.setInt(1, ret);
             ps2.setString(2, Name);
@@ -10319,7 +10354,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int Getcharactera(final String Name, final int Channale) {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM charactera WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -10369,7 +10404,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
             ret += Piot;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps2 = con.prepareStatement("UPDATE personal SET `Point` = ? WHERE Name = ? and channel = ?");
             ps2.setInt(1, ret);
             ps2.setString(2, Name);
@@ -10385,7 +10420,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int Getpersonal(final String Name, final int Channale) {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM personal WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -10685,7 +10720,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT rmb FROM accounts WHERE name = ?");
             ps.setString(1, this.getClient().getAccountName());
             rs = ps.executeQuery();
@@ -10715,7 +10750,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setRMB(final int point) {
         PreparedStatement ps = null;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("UPDATE accounts SET rmb = ? WHERE name = ?");
             ps.setInt(1, point);
             ps.setString(2, this.getClient().getAccountName());
@@ -10740,7 +10775,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("SELECT jbjf FROM accounts WHERE name = ?");
             ps.setString(1, this.getClient().getAccountName());
             rs = ps.executeQuery();
@@ -10770,7 +10805,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setjifen(final int point) {
         PreparedStatement ps = null;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("UPDATE accounts SET jbjf = ? WHERE name = ?");
             ps.setInt(1, point);
             ps.setString(2, this.getClient().getAccountName());
@@ -10793,7 +10828,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void gainRMB(final int point) {
         PreparedStatement ps = null;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             ps = con.prepareStatement("UPDATE accounts SET rmb = rmb + ? WHERE name = ?");
             ps.setInt(1, point);
             ps.setString(2, this.getClient().getAccountName());
@@ -10830,7 +10865,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getPQLog(final String pqName, final int times, final int day) {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             int n4 = 0;
             try (final PreparedStatement ps = con.prepareStatement("SELECT `count`,`time` FROM pqlog WHERE characterid = ? AND pqname = ?")) {
                 ps.setInt(1, this.id);
@@ -10900,7 +10935,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void setPQLog(final String pqname, final int type, final int count) {
         final int times = this.getPQLog(pqname, type);
-        try (final Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE pqlog SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND pqname = ?")) {
             ps.setInt(1, times + count);
             ps.setInt(2, type);
@@ -10918,7 +10953,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void resetPQLog(final String pqname, final int type) {
-        try (final Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DatabaseConnection.getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE pqlog SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND pqname = ?")) {
             ps.setInt(1, 0);
             ps.setInt(2, type);
@@ -10938,7 +10973,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getEventCount(final String eventId, final int type) {
         try {
             int count = 0;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_event WHERE accId = ? AND eventId = ?");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, eventId);
@@ -11027,7 +11062,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public List<Integer> getiApprentice(final int charaid) {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             final List<Integer> charid = new ArrayList<Integer>();
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where worker = ? ");
@@ -11046,7 +11081,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getiLearnTeacher(final int charaid, final int tybe) {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             int charid = 0;
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where characterid = ? ");
@@ -11074,7 +11109,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setLearnteacher(final int workid) {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where  characterid = ?");
             ps.setInt(1, workid);
@@ -11101,7 +11136,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setApprentice(final int workid, final int apprentid) {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             String caozuo = "";
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where  characterid = ?");
@@ -11127,7 +11162,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void updateApprentice(final int workerid, final int apprentid, final int tybe) {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             String caozuo = "";
             switch (tybe) {
                 case 0: {
@@ -11153,7 +11188,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public String getCharaName(final int id) {
         String data = "";
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -11174,7 +11209,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getNowdaylog() {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             int ret_count = 0;
             final PreparedStatement ps = con1.prepareStatement("select * from nowdaylog where characterid = ? ");
@@ -11196,7 +11231,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setNowdaylog() {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             int nownuber = 0;
             String caozuo = "";
@@ -11223,7 +11258,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void RestNowdaylog() {
-        final Connection con1 = DatabaseConnection.getConnection();
+        Connection con1 = DatabaseConnection.getConnection();
         try {
             String caozuo = "";
             final PreparedStatement ps = con1.prepareStatement("select * from nowdaylog where  characterid = ?");
@@ -11245,7 +11280,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int 限制等级 = 0;
         try {
             final int cid = 4001128;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -11261,7 +11296,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 取限制等级1(final int cid) {
         try {
             int 限制等级 = LtMS.ConfigValuesMap.get("等级初始上限");
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
 
             final ResultSet rs = limitCheck.executeQuery();
@@ -11290,9 +11325,34 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return LtMS.ConfigValuesMap.get("等级初始上限");
         }
     }
-
+    public void 经验入池(final int cid,final long exp) {
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM lt_jingyanchi WHERE userId=" + cid + "");
+            final ResultSet rs = limitCheck.executeQuery();
+            if (rs.next()) {
+                final PreparedStatement psu = con.prepareStatement("update lt_jingyanchi  set exps = exps + ? where userId = ?");
+                psu.setLong(1, exp);
+                psu.setInt(2, cid);
+                psu.executeUpdate();
+                psu.close();
+            } else {
+                final PreparedStatement psu = con.prepareStatement("INSERT INTO lt_jingyanchi (userId, exps) VALUES (?, ?)");
+                psu.setInt(1, cid);
+                psu.setLong(2, exp);
+                psu.executeUpdate();
+                psu.close();
+                // return 限制等级;
+            }
+            rs.close();
+            limitCheck.close();
+        }
+        catch (Exception Ex) {
+            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+        }
+    }
     public void updateOfflineTime1() {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update lefttime set lefttime = ? Where accid = ?");
             ps.setLong(1, System.currentTimeMillis());
             ps.setInt(2, this.getClient().getAccID());
@@ -11305,7 +11365,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void updateOfflineTime() {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update lefttime set lefttime = ? Where accid = ?");
             ps.setLong(1, System.currentTimeMillis());
             ps.setInt(2, this.getClient().getAccID());
@@ -11448,7 +11508,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public long getLastOfflineTime() {
         long 离线时间 = 0L;
         try {
-            final Connection con1 = DatabaseConnection.getConnection();
+            Connection con1 = DatabaseConnection.getConnection();
             final PreparedStatement ps = con1.prepareStatement("select lefttime from lefttime WHERE accid = ?");
             ps.setInt(1, this.getClient().getAccID());
             final ResultSet rs = ps.executeQuery();
@@ -11495,7 +11555,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public boolean isReincarnationMob() {
         for (MapleMonster monster : getMap().getAllMonster()) {
-            if (monster.getId() == 9300329 && monster.getSpawnChrid() != this.getId()) { // 輪迴 mob id
+            if (monster.getId() == 9300329 && monster.getSpawnChrid() != this.getId()) { // 輪迴 mob id 轮回石碑
                 return true;
             }
         }
@@ -11860,7 +11920,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.吸怪RES = 吸怪RES;
     }
 
-    public final void openSkill(final MapleCharacter victim) {
+    public void openSkill(final MapleCharacter victim) {
         for (final ISkill skil : SkillFactory.getAllSkills()) {
             if (victim.getSkillLevel(skil) < 1) {
                 this.changeSkillLevel(skil, (byte)0, (byte)10);
@@ -11870,7 +11930,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public int getmoneyb() {
         int moneyb = 0;
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final int cid = this.getAccountID();
             ResultSet rs;
             try (final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM accounts WHERE id=" + cid + "")) {
@@ -11890,7 +11950,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return moneyb;
     }
     public void setmoneyb(final int slot) {
-        try (final Connection con = DatabaseConnection.getConnection()) {
+        try (Connection con = DatabaseConnection.getConnection()) {
             final int cid = this.getAccountID();
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET moneyb = " + slot + " WHERE id = " + cid + "")) {
                 ps.executeUpdate();
@@ -11980,4 +12040,46 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 //            this.setAccountidLog(log1, b);
 //        }
 //    }
+    //回收装备
+    public void recycleEquip(final MapleClient c, MapleCharacter chr) {
+
+        if (!chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具"),1)){
+            return;
+        }
+        if (chr.getBossLog1("开启自动回收",1)==0){
+            return;
+        }
+        if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)80) == null) {
+            return;
+        }
+        int mesosGained = 0;
+        MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        for (int i = 25; i <= 96; i++) {
+            if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)i) != null) {
+                IItem item = chr.getInventory(MapleInventoryType.EQUIP).getItem((short)i).copy();
+                if (ii.isCash(item.getItemId())) {
+                    break;
+                }
+                MapleInventoryManipulator.removeFromSlot( c,MapleInventoryType.EQUIP,(short)i,(short)1,true);
+                int mesos = calculateMesos(item);
+                mesosGained += mesos;
+            }
+        }
+        if (mesosGained>0){
+            c.getPlayer().gainMeso(mesosGained, true);
+        }else{
+            return;
+        }
+        c.getPlayer().dropMessage(6, "装备回收成功，共获得 " + mesosGained + " 冒险币！");
+    }
+    public static int calculateMesos(IItem item) {
+        int level = MapleItemInformationProvider.getInstance().getReqLevel( item.getItemId());
+        if (level < 1) {
+            level = 1;
+        }
+        // 生成一个 20000-170000 之间的随机整数，作为金币数量
+        double randomMesos = Math.floor(Math.random() * (1)) + (Objects.nonNull(LtMS.ConfigValuesMap.get("装备回收金额")) ? LtMS.ConfigValuesMap.get("装备回收金额") : 1000);//*(当前充值/1000+1)
+        return (int)Math.floor(level * randomMesos); // 根据随机金币数量计算返还的金币数量
+    }
+
 }

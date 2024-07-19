@@ -27,22 +27,22 @@ public class LoginServer
     private static final Map<Integer, Long> ChangeChannelTime;
     private static final Map<Integer, Long> EnterGameTime;
     
-    public static final void addChannel(final int channel) {
+    public static void addChannel(final int channel) {
         LoginServer.load.put(Integer.valueOf(channel), Integer.valueOf(0));
     }
     
-    public static final void removeChannel(final int channel) {
+    public static void removeChannel(final int channel) {
         LoginServer.load.remove((Object)Integer.valueOf(channel));
     }
     
-    public static final void setup() {
+    public static void setup() {
         LoginServer.port = Short.parseShort(ServerProperties.getProperty("LtMS.login.port"));
         (LoginServer.acceptor = new ServerConnection((int)LoginServer.port, 0, 0)).run();
         System.out.println("[正在启动] 服务器IP:" + MapleParty.IP地址);
         System.out.println("[正在启动] 登录端口:" + Short.toString(LoginServer.port) + "");
     }
     
-    public static final void shutdown() {
+    public static void shutdown() {
         if (LoginServer.finishedShutdown) {
             System.out.println("[登录器服务器] 已经关闭了，无法执行此操作。");
             return;
@@ -53,11 +53,11 @@ public class LoginServer
         LoginServer.finishedShutdown = true;
     }
     
-    public static final String getServerName() {
+    public static String getServerName() {
         return ServerConfig.SERVERNAME;
     }
     
-    public static final Map<Integer, Integer> getLoad() {
+    public static Map<Integer, Integer> getLoad() {
         return LoginServer.load;
     }
     
@@ -66,15 +66,15 @@ public class LoginServer
         LoginServer.usersOn = usersOn_;
     }
     
-    public static final int getUsersOn() {
+    public static int getUsersOn() {
         return LoginServer.usersOn;
     }
     
-    public static final boolean isShutdown() {
+    public static boolean isShutdown() {
         return LoginServer.finishedShutdown;
     }
     
-    public static final void setOn() {
+    public static void setOn() {
         LoginServer.finishedShutdown = false;
     }
     
@@ -117,11 +117,11 @@ public class LoginServer
         return LoginServer.clients;
     }
     
-    public static final void removeClient(final MapleClient c) {
+    public static void removeClient(final MapleClient c) {
         getClientStorage().deregisterAccount(c);
     }
     
-    public static final String getLoginMac(final MapleClient c) {
+    public static String getLoginMac(final MapleClient c) {
         String macs = null;
         if (LoginServer.LoginMacs.containsKey((Object)Integer.valueOf(c.getAccID()))) {
             macs = (String)LoginServer.LoginMacs.get((Object)Integer.valueOf(c.getAccID()));
@@ -129,7 +129,7 @@ public class LoginServer
         return macs;
     }
     
-    public static final String removeLoginMac(final MapleClient c) {
+    public static String removeLoginMac(final MapleClient c) {
         final String macs = null;
         if (LoginServer.LoginMacs.containsKey((Object)Integer.valueOf(c.getAccID()))) {
             LoginServer.LoginMacs.remove((Object)Integer.valueOf(c.getAccID()));

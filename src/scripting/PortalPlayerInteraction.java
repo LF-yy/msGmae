@@ -16,7 +16,7 @@ public class PortalPlayerInteraction extends AbstractPlayerInteraction
         return this.portal;
     }
     
-    public final void inFreeMarket() {
+    public void inFreeMarket() {
         if (this.getPlayer().getLevel() >= 10) {
             this.saveLocation("FREE_MARKET");
             this.playPortalSE();

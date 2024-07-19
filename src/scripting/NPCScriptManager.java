@@ -22,7 +22,7 @@ public class NPCScriptManager extends AbstractScriptManager
         this.cms = new WeakHashMap<MapleClient, NPCConversationManager>();
     }
     
-    public static final NPCScriptManager getInstance() {
+    public static NPCScriptManager getInstance() {
         return NPCScriptManager.instance;
     }
     
@@ -30,15 +30,15 @@ public class NPCScriptManager extends AbstractScriptManager
         this.start(client, id, wh);
     }
     
-    public final void start(final MapleClient c, final int npc) {
+    public void start(final MapleClient c, final int npc) {
         this.start(c, npc, null);
     }
     
-    public final void start(final MapleClient c, final int npc, final String script) {
+    public void start(final MapleClient c, final int npc, final String script) {
         this.start(c, npc, 0, script);
     }
     //脚本开始
-    public final void start(final MapleClient c, final int npc, final int mode, final String script) {
+    public void start(final MapleClient c, final int npc, final int mode, final String script) {
         final Lock lock = c.getNPCLock();
         lock.lock();
         try {
@@ -131,7 +131,7 @@ public class NPCScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void action(final MapleClient c, final byte mode, final byte type, final int selection) {
+    public void action(final MapleClient c, final byte mode, final byte type, final int selection) {
         if (mode != -1) {
             final NPCConversationManager cm = (NPCConversationManager)this.cms.get((Object)c);
             if (cm == null || cm.getLastMsg() > -1) {
@@ -163,7 +163,7 @@ public class NPCScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void startQuest(final MapleClient c, final int npc, final int quest) {
+    public void startQuest(final MapleClient c, final int npc, final int quest) {
         if (!MapleQuest.getInstance(quest).canStart(c.getPlayer(), null)) {
             return;
         }
@@ -200,7 +200,7 @@ public class NPCScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void startQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
+    public void startQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
         final Lock lock = c.getNPCLock();
         final NPCConversationManager cm = (NPCConversationManager)this.cms.get((Object)c);
         if (cm == null || cm.getLastMsg() > -1) {
@@ -230,7 +230,7 @@ public class NPCScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void endQuest(final MapleClient c, final int npc, final int quest, final boolean customEnd) {
+    public void endQuest(final MapleClient c, final int npc, final int quest, final boolean customEnd) {
         if (!customEnd && !MapleQuest.getInstance(quest).canComplete(c.getPlayer(), null)) {
             return;
         }
@@ -266,7 +266,7 @@ public class NPCScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void endQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
+    public void endQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
         final Lock lock = c.getNPCLock();
         final NPCConversationManager cm = (NPCConversationManager)this.cms.get((Object)c);
         if (cm == null || cm.getLastMsg() > -1) {
@@ -296,7 +296,7 @@ public class NPCScriptManager extends AbstractScriptManager
         }
     }
     
-    public final void dispose(final MapleClient c) {
+    public void dispose(final MapleClient c) {
         final NPCConversationManager npccm = (NPCConversationManager)this.cms.get((Object)c);
         if (npccm != null) {
             this.cms.remove((Object)c);
@@ -320,16 +320,127 @@ public class NPCScriptManager extends AbstractScriptManager
     public final NPCConversationManager getCM(final MapleClient c) {
         return (NPCConversationManager)this.cms.get((Object)c);
     }
-    
-    public final void cleanCMS() {
-        final List<MapleClient> clients = new ArrayList<MapleClient>();
-        for (final MapleClient c : this.cms.keySet()) {
-            if (c == null || c.getSession() == null || !c.getSession().isActive()) {
-                clients.add(c);
+
+    public final void onUserEnter(MapleClient c, String scriptname) {
+        try {
+            if (c.getPlayer().isAdmin()) {
+                c.getPlayer().dropMessage(5, "[地图脚本] 执行onUserEnter脚本：" + scriptname + " 地图：" + c.getPlayer().getMap().getMapName());
             }
+
+            Invocable iv = this.getInvocable("map/onUserEnter/" + scriptname + ".js", c, true);
+            ScriptEngine scriptEngine = (ScriptEngine)iv;
+            NPCConversationManager ms = new NPCConversationManager(c, c.getPlayer().getMap().getId(), -1, 0, scriptname, (byte)-1, iv);
+            if (this.cms.containsValue(ms)) {
+                if (c.getPlayer().isAdmin()) {
+                    c.getPlayer().dropMessage(5, "无法执行脚本:已有脚本执行 - " + this.cms.containsKey(c));
+                }
+
+                this.dispose(c);
+                return;
+            }
+
+            if (iv == null || getInstance() == null) {
+                if (iv == null && c.getPlayer().isAdmin()) {
+                    c.getPlayer().dropMessage(5, "[系统提示]:没有找到事件:" + scriptname + "脚本在map/onUserEnter里");
+                }
+
+                this.dispose(c);
+                return;
+            }
+
+            this.cms.put(c, ms);
+            scriptEngine.put("ms", ms);
+            c.getPlayer().setConversation(1);
+            c.setClickedNPC();
+
+            try {
+                iv.invokeFunction("start", new Object[0]);
+            } catch (NoSuchMethodException var7) {
+                iv.invokeFunction("action", new Object[]{1, 0, 0});
+            }
+        } catch (ScriptException | NoSuchMethodException var8) {
+            FilePrinter.printError("OnUserEnter.txt", "地图脚本 : " + scriptname + ", 型态 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
+            System.err.println("地图脚本 : " + scriptname + ", 型态 : onUserEnter - 地图ID " + c.getPlayer().getMapId() + ":" + var8);
+            if (c.getPlayer().isGM()) {
+                c.getPlayer().dropMessage("[系统提示]地图脚本:" + scriptname + "型态 : onUserEnter 错误...地图ID: " + c.getPlayer().getMap().getId() + ":" + var8);
+            }
+
+            this.dispose(c);
         }
-        for (final MapleClient c : clients) {
-            this.cms.remove((Object)c);
+
+    }
+
+    public final void onFirstUserEnter(MapleClient c, String scriptname) {
+        try {
+            if (c.getPlayer().isAdmin()) {
+                c.getPlayer().dropMessage(5, "[地图脚本] 执行onFirstUserEnter脚本：" + scriptname + " 地图：" + c.getPlayer().getMap().getMapName());
+            }
+
+            if (this.cms.containsKey(c)) {
+                if (c.getPlayer().isAdmin()) {
+                    c.getPlayer().dropMessage(5, "无法执行脚本:已有脚本执行 - " + this.cms.containsKey(c));
+                }
+
+                this.dispose(c);
+                return;
+            }
+
+            Invocable iv = this.getInvocable("map/onFirstUserEnter/" + scriptname + ".js", c, true);
+            ScriptEngine scriptEngine = (ScriptEngine)iv;
+            NPCConversationManager ms = new NPCConversationManager(c, c.getPlayer().getMap().getId(), -1, 0, scriptname, (byte)-1, iv);
+            if (iv == null || getInstance() == null) {
+                if (iv != null && c.getPlayer().isAdmin()) {
+                    c.getPlayer().dropMessage(5, "[系统提示]:没有找到事件:" + scriptname + "脚本在map/onFirstUserEnter里");
+                }
+
+                this.dispose(c);
+                return;
+            }
+
+            this.cms.put(c, ms);
+            scriptEngine.put("ms", ms);
+            c.getPlayer().setConversation(1);
+            c.setClickedNPC();
+
+            try {
+                iv.invokeFunction("start", new Object[0]);
+            } catch (NoSuchMethodException var7) {
+                iv.invokeFunction("action", new Object[]{1, 0, 0});
+            }
+        } catch (ScriptException | NoSuchMethodException var8) {
+            FilePrinter.printError("OnFirstUserEnter.txt", "地图脚本 : " + scriptname + ", 型态 : onFirstUserEnter - 地图ID " + c.getPlayer().getMapId() + var8);
+            System.err.println("地图脚本 : " + scriptname + ", 型态 : OnFirstUserEnter - 地图ID " + c.getPlayer().getMapId() + ":" + var8);
+            if (c.getPlayer().isGM()) {
+                c.getPlayer().dropMessage("[系统提示]地图脚本:" + scriptname + "型态 : onFirstUserEnter 错误...地图ID: " + c.getPlayer().getMap().getId() + ":" + var8);
+            }
+
+            this.dispose(c);
+        }
+
+    }
+
+    public final void cleanCMS() {
+        List<MapleClient> clients = new ArrayList();
+        Iterator var2 = this.cms.keySet().iterator();
+
+        while(true) {
+            MapleClient c;
+            do {
+                if (!var2.hasNext()) {
+                    var2 = clients.iterator();
+
+                    while(var2.hasNext()) {
+                        c = (MapleClient)var2.next();
+                        this.cms.remove(c);
+                    }
+
+                    return;
+                }
+
+                c = (MapleClient)var2.next();
+            } while(c != null && c.getSession() != null && c.getSession().isActive());
+
+            clients.add(c);
         }
     }
     

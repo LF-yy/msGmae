@@ -291,7 +291,7 @@ public class 活动魔族攻城
         final MapleMap mapleMap = channelServer.getMapFactory().getMap(a);
         mapleMap.resetFully();
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-            for (final MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 if (chr == null) {
                     continue;
                 }
@@ -339,7 +339,7 @@ public class 活动魔族攻城
                 }
             }
             ret += Piot;
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps2 = con.prepareStatement("UPDATE charactera SET `Point` = ? WHERE Name = ? and channel = ?");
             ps2.setInt(1, ret);
             ps2.setString(2, Name);
@@ -355,7 +355,7 @@ public class 活动魔族攻城
     public static int Getcharactera(final String Name, final int Channale) {
         int ret = -1;
         try {
-            final Connection con = DatabaseConnection.getConnection();
+            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM charactera WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);

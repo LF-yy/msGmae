@@ -4,14 +4,14 @@ import java.io.Serializable;
 
 public enum MapleBuffStat implements Serializable
 {
-    WATK(0), 
+    WATK(0), //物理防御
     WDEF(1), 
-    MATK(2), 
+    MATK(2), //魔法防御
     MDEF(3), 
     ACC(4), 
     AVOID(5), 
     HANDS(6), 
-    SPEED(7), 
+    SPEED(7), //速度
     JUMP(8), 
     MAGIC_GUARD(9), 
     DARKSIGHT(10), 
@@ -27,7 +27,7 @@ public enum MapleBuffStat implements Serializable
     DARKNESS(20), 
     COMBO(21), 
     SUMMON(21), 
-    WK_CHARGE(22), 
+    WK_CHARGE(22), //伤害加成
     DRAGONBLOOD(23), 
     HOLY_SYMBOL(24), 
     MESOUP(25), 
@@ -41,9 +41,9 @@ public enum MapleBuffStat implements Serializable
     MORPH(33), 
     RECOVERY(34), 
     HP_LOSS_GUARD(34), 
-    MAPLE_WARRIOR(35), 
+    MAPLE_WARRIOR(35), //全属性加成
     STANCE(36), 
-    SHARP_EYES(37), 
+    SHARP_EYES(37), //暴击率
     MANA_REFLECTION(38), 
     DRAGON_ROAR(39), 
     SPIRIT_CLAW(40), 
@@ -53,7 +53,7 @@ public enum MapleBuffStat implements Serializable
     BLIND(44), 
     CONCENTRATE(45), 
     ZOMBIFY(46), 
-    ECHO_OF_HERO(47), 
+    ECHO_OF_HERO(47), //双防   双攻?
     UNKNOWN3(48), 
     MESO_RATE(48), 
     GHOST_MORPH(49), 
@@ -64,18 +64,18 @@ public enum MapleBuffStat implements Serializable
     GM_HIDE(56), 
     UNKNOWN7(57), 
     ILLUSION(58), 
-    BERSERK_FURY(57), 
+    BERSERK_FURY(57), //伤害翻倍
     DIVINE_BODY(60), 
     SPARK(59), 
     ARIANT_COSS_IMU2(62), 
     FINALATTACK(61), 
     ELEMENT_RESET(63), 
-    WIND_WALK(64), 
-    ARAN_COMBO(66), 
+    WIND_WALK(64), //伤害加成
+    ARAN_COMBO(66), //物理防御   物理攻击?
     COMBO_DRAIN(67), 
     COMBO_BARRIER(68), 
     BODY_PRESSURE(69), 
-    SMART_KNOCKBACK(70), 
+    SMART_KNOCKBACK(70), //击退
     SOUL_STONE(73), 
     ENERGY_CHARGE(77), 
     DASH_SPEED(78), 
@@ -85,9 +85,9 @@ public enum MapleBuffStat implements Serializable
     HOMING_BEACON(82), 
     SOARING(82), 
     FREEZE(83), 
-    LIGHTNING_CHARGE(84), 
+    LIGHTNING_CHARGE(84), //伤害加成
     MIRROR_IMAGE(85), 
-    OWL_SPIRIT(86), 
+    OWL_SPIRIT(86),  //伤害加成
     召唤玩家1(77), 
     召唤玩家2(78), 
     召唤玩家3(79), 

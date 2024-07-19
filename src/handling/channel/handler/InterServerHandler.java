@@ -47,7 +47,7 @@ public class InterServerHandler
 {
     public static boolean 离线挂机;
     
-    public static final void EnterCashShop(final MapleClient c, final MapleCharacter chr, final boolean mts) {
+    public static void EnterCashShop(final MapleClient c, MapleCharacter chr, final boolean mts) {
         if (c.getCloseSession()) {
             return;
         }
@@ -98,7 +98,7 @@ public class InterServerHandler
         c.setReceiving(false);
     }
     
-    public static final void LoggedIn(final int playerid, final MapleClient c) {
+    public static void LoggedIn(final int playerid, final MapleClient c) {
         if (c.getCloseSession()) {
             System.out.println("PLAYER_LOGGEDIN Error_1");
             return;
@@ -407,7 +407,7 @@ public class InterServerHandler
         }
     }
     
-    public static final void ChangeChannel(final LittleEndianAccessor slea, final MapleClient c, final MapleCharacter chr) {
+    public static void ChangeChannel(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (c.getCloseSession()) {
             return;
         }

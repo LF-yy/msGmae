@@ -16,7 +16,7 @@ import java.util.Objects;
 public class MobMapVac extends Thread{
     private UserAttraction object;
     private MapleMap map;
-    private final MapleCharacter chr;
+    private MapleCharacter chr;
     private final MapleClient c;
     private final int mobId;
     private final String mobName;
@@ -24,7 +24,7 @@ public class MobMapVac extends Thread{
     private final String value;
     private final long hp;
 
-    public MobMapVac(final MapleCharacter chr, UserAttraction userAttraction,int mobId,String mobName,String adress,String value, long hp) {
+    public MobMapVac(MapleCharacter chr, UserAttraction userAttraction,int mobId,String mobName,String adress,String value, long hp) {
         this.chr = chr;
         this.mobName = mobName;
         this.adress = adress;

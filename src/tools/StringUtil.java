@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 
 public class StringUtil
 {
-    public static final String getLeftPaddedStr(final String in, final char padchar, final int length) {
+    public static String getLeftPaddedStr(final String in, final char padchar, final int length) {
         final StringBuilder builder = new StringBuilder(length);
         for (int x = in.getBytes().length; x < length; ++x) {
             builder.append(padchar);
@@ -19,12 +19,12 @@ public class StringUtil
         return builder.toString();
     }
     
-    public static final int getlength(final String str) {
+    public static int getlength(final String str) {
         final byte[] bt = str.getBytes(Charset.forName("BIG5"));
         return bt.length;
     }
     
-    public static final String getRightPaddedStr(final String in, final char padchar, final int length) {
+    public static String getRightPaddedStr(final String in, final char padchar, final int length) {
         final StringBuilder builder = new StringBuilder(in);
         for (int x = in.getBytes().length; x < length; ++x) {
             builder.append(padchar);
@@ -32,11 +32,11 @@ public class StringUtil
         return builder.toString();
     }
     
-    public static final String joinStringFrom(final String[] arr, final int start) {
+    public static String joinStringFrom(final String[] arr, final int start) {
         return joinStringFrom(arr, start, " ");
     }
     
-    public static final String joinStringFrom(final String[] arr, final int start, final String sep) {
+    public static String joinStringFrom(final String[] arr, final int start, final String sep) {
         final StringBuilder builder = new StringBuilder();
         for (int i = start; i < arr.length; ++i) {
             builder.append(arr[i]);
@@ -47,7 +47,7 @@ public class StringUtil
         return builder.toString();
     }
     
-    public static final String makeEnumHumanReadable(final String enumName) {
+    public static String makeEnumHumanReadable(final String enumName) {
         final StringBuilder builder = new StringBuilder(enumName.length() + 1);
         for (final String word : enumName.split("_")) {
             if (word.length() <= 2) {
@@ -62,7 +62,7 @@ public class StringUtil
         return builder.substring(0, enumName.length());
     }
     
-    public static final int countCharacters(final String str, final char chr) {
+    public static int countCharacters(final String str, final char chr) {
         int ret = 0;
         for (int i = 0; i < str.getBytes().length; ++i) {
             if (str.charAt(i) == chr) {
@@ -72,7 +72,7 @@ public class StringUtil
         return ret;
     }
     
-    public static final String getReadableMillis(final long startMillis, final long endMillis) {
+    public static String getReadableMillis(final long startMillis, final long endMillis) {
         final StringBuilder sb = new StringBuilder();
         final double elapsedSeconds = (double)(endMillis - startMillis) / 1000.0;
         final int elapsedSecs = (int)elapsedSeconds % 60;
@@ -145,7 +145,7 @@ public class StringUtil
         return sb.toString();
     }
     
-    public static final int getDaysAmount(final long startMillis, final long endMillis) {
+    public static int getDaysAmount(final long startMillis, final long endMillis) {
         final double elapsedSeconds = (double)(endMillis - startMillis) / 1000.0;
         final int elapsedMinutes = (int)(elapsedSeconds / 60.0);
         final int elapsedHrs = elapsedMinutes / 60;

@@ -43,15 +43,15 @@ public class ModifyInventory
         return this.item;
     }
     
-    public final void clear() {
+    public void clear() {
         this.item = null;
     }
     
     public static class Types
     {
-        public static final int ADD = 0;
-        public static final int UPDATE = 1;
-        public static final int MOVE = 2;
-        public static final int REMOVE = 3;
+        public static int ADD = 0;
+        public static int UPDATE = 1;
+        public static int MOVE = 2;
+        public static int REMOVE = 3;
     }
 }

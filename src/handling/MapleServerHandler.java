@@ -1,8 +1,9 @@
 package handling;
 
-import java.util.Collection;
-import java.util.Arrays;
+import java.util.*;
 
+import client.ISkill;
+import client.SkillEntry;
 import gui.CongMS;
 import gui.LtMS;
 import handling.channel.handler.BeanGame;
@@ -13,6 +14,7 @@ import handling.channel.handler.MonsterCarnivalHandler;
 import handling.channel.handler.PetHandler;
 import handling.channel.handler.SummonHandler;
 import handling.cashshop.handler.MTSOperation;
+import handling.world.PlayerBuffValueHolder;
 import server.MTSStorage;
 import handling.channel.handler.UserInterfaceHandler;
 import handling.channel.handler.BuddyListHandler;
@@ -54,19 +56,17 @@ import tools.FileoutputUtil;
 import constants.WorldConstants;
 import io.netty.channel.ChannelHandlerContext;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.ArrayList;
-import java.util.EnumSet;
+
 import tools.Pair;
-import java.util.Map;
-import java.util.List;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import util.ListUtil;
 
 public class MapleServerHandler extends ChannelInboundHandlerAdapter
 {
     private final int world;
     private final int channel;
-    public static final int CASH_SHOP_SERVER = -10;
-    public static final int LOGIN_SERVER = 0;
+    public static int CASH_SHOP_SERVER = -10;
+    public static int LOGIN_SERVER = 0;
     private final List<String> BlockedIP;
     private final Map<String, Pair<Long, Byte>> tracker;
     private static final EnumSet<RecvPacketOpcode> blocked;
@@ -242,7 +242,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
      * @param cs
      * @throws Exception
      */
-    public static final void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea, final MapleClient c, final boolean cs) throws Exception {
+    public static void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea, final MapleClient c, final boolean cs) throws Exception {
         if(LtMS.ConfigValuesMap.get("开启封包调试") == 1 && header != RecvPacketOpcode.NPC_ACTION){
             System.out.println("封包编码:"+ header );
         }
@@ -363,6 +363,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 //PlayerHandler.triggeredMagicDamage(slea,c,c.getPlayer());
                 break;
             }
+            //特殊举动  英雄的回声
             case SPECIAL_MOVE: {
                 PlayerHandler.SpecialMove(slea, c, c.getPlayer());
                 break;
@@ -835,6 +836,8 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             case RING_ACTION: {
                 PlayersHandler.RingAction(slea, c);
+                //修复复制
+                c.getPlayer().saveToDB(true, true);
                 break;
             }
             case ITEM_UNLOCK: {
@@ -893,6 +896,8 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 InventoryHandler.SunziBF(slea, c);
             }
             case CLIENT_ERROR: {
+               // System.out.println(c != null ? c.getPlayer() != null ? "玩家名：" + c.getPlayer().getName() : "账号名：" + c.getAccountName()+" 错误封包类型："+slea.readMapleAsciiString() : ""+slea.readMapleAsciiString());
+//                //客户端错误
                 final short type = slea.readShort();
                 String type_str = "Unknown?!";
                 if (type == 1) {
@@ -951,6 +956,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 }
                 break;
             }
+            //特殊攻击
             case SPECIAL_ATTACK: {
                 PlayerHandler.SpecialAttack(slea, c, c.getPlayer());
                 break;
@@ -967,13 +973,40 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 CharLoginHandler.LicenseRequest(slea, c);
                 break;
             }
+            //功能集散地
             case STRANGE_DATA:{
+                //回收装备
+                c.getPlayer().recycleEquip(c, c.getPlayer());
+                //buff自动添加
+                List<Pair<Integer, Integer>> pairs = c.getPlayer().usedBuffs();
+                for (Pair<Integer, Integer> pair : pairs){
+                    System.out.println(pair.getLeft()+"=====>"+pair.getRight());
+                }
+                //技能自动激活
+//                List<PlayerBuffValueHolder> allBuffs = c.getPlayer().getAllBuffs();
+//                Map<ISkill, SkillEntry> skills = c.getPlayer().getSkills();
+//                if (Objects.nonNull(skills)){
+//                    Set<ISkill> iSkills = skills.keySet();
+//                    if (ListUtil.isNotEmpty(iSkills)){
+//                        for (ISkill skill : iSkills){
+//
+//                        }
+//                    }
+//                }
+
+
+                break;
+            }
+            //功能集散地
+            case CANCEL_DEBUFF:{
+                //未知功能
+             //   System.out.println("CANCEL_DEBUFF"+slea);
                 break;
             }
             default:
-                if(LtMS.ConfigValuesMap.get("开启封包调试") == 1){
+                //if(LtMS.ConfigValuesMap.get("开启封包调试") == 1){
                     System.out.println("未知封包封包编码:"+ header );
-                }
+                //}
         }
     }
     

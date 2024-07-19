@@ -23,6 +23,7 @@ public class ServerConfig
     public static boolean DISCOUNTED;
     public static boolean 泡点系统;
     public static int 泡点地图;
+    public static int userlimit;
     public static int 点卷数量;
     public static int 抵用卷数量;
     public static int 豆豆数量;
@@ -49,8 +50,8 @@ public class ServerConfig
     public static int BeiShu3Minlevel = (ServerProperties.getProperty("LtMS.BeiShu3Minlevel", ServerConfig.BeiShu3Minlevel));
     public static int BeiShu3Maxlevel = (ServerProperties.getProperty("LtMS.BeiShu3Maxlevel", ServerConfig.BeiShu3Maxlevel));
     public static String[] ipStr;
-    public static final byte[] Gateway_IP;
-    public static final byte[] Gateway_IP2;
+    public static byte[] Gateway_IP;
+    public static byte[] Gateway_IP2;
     public static int ExpRate;
     public static int MesoRate;
     public static int DropRate;
@@ -187,6 +188,8 @@ public class ServerConfig
         ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
         ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
         ServerConfig.IP =  ServerProperties.getProperty("LtMS.ip.listen", Game.IP地址);
+        ServerConfig.userlimit =  ServerProperties.getProperty("LtMS.userlimit", 2);
+
         //ServerConfig.IP =  "101.34.216.55";
     }
     

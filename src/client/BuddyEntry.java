@@ -76,7 +76,7 @@ public class BuddyEntry
     }
     
     public static BuddyEntry getByNameFromDB(final String buddyName) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT id, name, level, job FROM characters WHERE name = ?");
             ps.setString(1, buddyName);
             final ResultSet rs = ps.executeQuery();
@@ -93,7 +93,7 @@ public class BuddyEntry
     }
     
     public static BuddyEntry getByIdfFromDB(final int buddyCharId) {
-        try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT id, name, level, job FROM characters WHERE id = ?");
             ps.setInt(1, buddyCharId);
             final ResultSet rs = ps.executeQuery();

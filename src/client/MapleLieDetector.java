@@ -40,7 +40,7 @@ public class MapleLieDetector
         this.inProgress = true;
         this.type = (byte)(byte)(isItem ? 0 : 1);
         ++this.attempt;
-        final MapleCharacter chrid = MapleCharacter.getOnlineCharacterById(this.cid);
+        MapleCharacter chrid = MapleCharacter.getOnlineCharacterById(this.cid);
         if (this.attempt < 3 && chrid != null) {
             chrid.getClient().getSession().writeAndFlush((Object)MaplePacketCreator.sendLieDetector(image, this.attempt));
         }
@@ -101,7 +101,7 @@ public class MapleLieDetector
         return this.lasttime + 300000L > time;
     }
     
-    public final void end() {
+    public void end() {
         this.inProgress = false;
         this.passed = true;
         this.attempt = 0;
@@ -112,7 +112,7 @@ public class MapleLieDetector
         }
     }
     
-    public final void reset() {
+    public void reset() {
         this.tester = "";
         this.answer = "";
         this.attempt = 0;

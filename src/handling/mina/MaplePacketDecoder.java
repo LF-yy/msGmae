@@ -17,7 +17,7 @@ import io.netty.util.AttributeKey;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 public class MaplePacketDecoder extends ByteToMessageDecoder {
-    public static final AttributeKey<DecoderState> DECODER_STATE_KEY;
+    public static AttributeKey<DecoderState> DECODER_STATE_KEY;
     
     protected void decode(final ChannelHandlerContext chc, final ByteBuf in, final List<Object> message) throws Exception {
         final MapleClient client = (MapleClient)chc.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();

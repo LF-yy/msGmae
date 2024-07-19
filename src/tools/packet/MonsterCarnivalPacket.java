@@ -7,7 +7,7 @@ import client.MapleCharacter;
 
 public class MonsterCarnivalPacket
 {
-    public static byte[] startMonsterCarnival(final MapleCharacter chr, final int enemyavailable, final int enemytotal) {
+    public static byte[] startMonsterCarnival(MapleCharacter chr, final int enemyavailable, final int enemytotal) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MONSTER_CARNIVAL_START.getValue());
         final MapleCarnivalParty friendly = chr.getCarnivalParty();

@@ -40,7 +40,7 @@ public class MapleMount implements Serializable
         this.owner = new WeakReference<MapleCharacter>(owner);
     }
     
-    public void saveMount(final int charid, final Connection con) {
+    public void saveMount(final int charid, Connection con) {
         if (!this.changed) {
             return;
         }
@@ -101,7 +101,7 @@ public class MapleMount implements Serializable
     }
     
     public void increaseFatigue() {
-        final MapleCharacter chr = (MapleCharacter)this.owner.get();
+        MapleCharacter chr = (MapleCharacter)this.owner.get();
         this.changed = true;
         ++this.fatigue;
         if (chr != null && chr.getMap() != null) {

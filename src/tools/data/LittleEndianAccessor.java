@@ -104,41 +104,41 @@ public class LittleEndianAccessor
         return ret;
     }
     
-    public final void unReadByte() {
+    public void unReadByte() {
         this.bs.unReadByte();
     }
     
-    public final void unReadInt() {
+    public void unReadInt() {
         for (int byte_ = 0; byte_ < 4; ++byte_) {
             this.bs.unReadByte();
         }
     }
     
-    public final void unReadShort() {
+    public void unReadShort() {
         for (int byte_ = 0; byte_ < 2; ++byte_) {
             this.bs.unReadByte();
         }
     }
     
-    public final void unReadLong() {
+    public void unReadLong() {
         for (int byte_ = 0; byte_ < 8; ++byte_) {
             this.bs.unReadByte();
         }
     }
     
-    public final void unReadAsciiString(final int n) {
+    public void unReadAsciiString(final int n) {
         for (int byte_ = 0; byte_ < n; ++byte_) {
             this.bs.unReadByte();
         }
     }
     
-    public final void unReadPos() {
+    public void unReadPos() {
         for (int byte_ = 0; byte_ < 4; ++byte_) {
             this.bs.unReadByte();
         }
     }
     
-    public final void unRead(final int num) {
+    public void unRead(final int num) {
         for (int byte_ = 0; byte_ < num; ++byte_) {
             this.bs.unReadByte();
         }
@@ -225,7 +225,7 @@ public class LittleEndianAccessor
         return this.bs.toString(b);
     }
     
-    public final void seek(final long offset) {
+    public void seek(final long offset) {
         try {
             this.bs.seek(offset);
         }
@@ -238,7 +238,7 @@ public class LittleEndianAccessor
         return this.bs.getPosition();
     }
     
-    public final void skip(final int num) {
+    public void skip(final int num) {
         this.seek(this.getPosition() + (long)num);
     }
     

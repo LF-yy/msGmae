@@ -24,9 +24,9 @@ public class WorldConstants
     public static String WORLD_TIP;
     public static String SCROLL_MESSAGE;
     public static boolean AVAILABLE;
-    public static final int gmserver = -1;
-    public static final byte recommended = -1;
-    public static final String recommendedmsg;
+    public static int gmserver = -1;
+    public static byte recommended = -1;
+    public static String recommendedmsg;
     
     public static Option[] values() {
         return ServerConstants.TESPIA ? TespiaWorldOption.values() : WorldOption.values();

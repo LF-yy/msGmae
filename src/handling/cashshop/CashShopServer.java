@@ -16,7 +16,7 @@ public class CashShopServer
     private static PlayerStorage playersMTS;
     private static boolean finishedShutdown;
     
-    public static final void setup() {
+    public static void setup() {
         CashShopServer.port = (short)Short.valueOf(ServerProperties.getProperty("LtMS.cashshop.port", "8600"));
         CashShopServer.ip = ServerConfig.IP + ":" + CashShopServer.port;
         CashShopServer.players = new PlayerStorage(-10);
@@ -25,19 +25,19 @@ public class CashShopServer
         System.out.println("[正在启动]游戏商城端口:" + CashShopServer.port);
     }
     
-    public static final String getIP() {
+    public static String getIP() {
         return CashShopServer.ip;
     }
     
-    public static final PlayerStorage getPlayerStorage() {
+    public static PlayerStorage getPlayerStorage() {
         return CashShopServer.players;
     }
     
-    public static final PlayerStorage getPlayerStorageMTS() {
+    public static PlayerStorage getPlayerStorageMTS() {
         return CashShopServer.playersMTS;
     }
     
-    public static final void shutdown() {
+    public static void shutdown() {
         if (CashShopServer.finishedShutdown) {
             return;
         }
