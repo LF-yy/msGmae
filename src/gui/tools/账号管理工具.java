@@ -2198,6 +2198,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
                 });
 
             }
+            ps.close(); rs.close(); con.close();
+
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -2220,6 +2222,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
             ps.setString(2, account);
             ps.execute();
             ps.close();
+             con.close();
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "错误!\r\n" + ex);
         }
@@ -2274,6 +2278,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
                     rs.getInt("gm")
                 });
             }
+            ps.close(); rs.close(); con.close();
+
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }

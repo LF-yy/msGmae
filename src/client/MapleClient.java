@@ -90,7 +90,7 @@ public class MapleClient
     public transient short loginAttempt;
     private final transient List<Integer> allowedChar;
     private final transient Set<String> macs;
-    private final transient Map<String, ScriptEngine> engines;
+    public final transient Map<String, ScriptEngine> engines;
     private transient ScheduledFuture<?> idleTask;
     private transient String secondPassword;
     private final transient Lock mutex;
@@ -1877,8 +1877,8 @@ public class MapleClient
     
     public boolean hasCheck(final int accid) {
         boolean ret = false;
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE id = ?");
             ps.setInt(1, accid);
             final ResultSet rs = ps.executeQuery();
@@ -1890,6 +1890,10 @@ public class MapleClient
         }
         catch (SQLException ex) {
             System.err.println("Error checking ip Check" + (Object)ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         return ret;
     }

@@ -389,8 +389,8 @@ public class 商店管理控制台 extends javax.swing.JFrame {
             for (int i = ((DefaultTableModel) (this.游戏商店2.getModel())).getRowCount() - 1; i >= 0; i--) {
                 ((DefaultTableModel) (this.游戏商店2.getModel())).removeRow(i);
             }
+            Connection con = DatabaseConnection.getConnection();
             try {
-                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = null;
                 ResultSet rs = null;
                 if (lx == 0) {
@@ -413,6 +413,10 @@ public class 商店管理控制台 extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(null, "[信息]:商城物品查询成功。");
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+            }finally {
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             }
             游戏商店2.addMouseListener(new MouseAdapter() {
                 public void mouseClicked(MouseEvent e) {
@@ -478,6 +482,9 @@ public class 商店管理控制台 extends javax.swing.JFrame {
             ps.setInt(3, Channale);
             ps.execute();
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException sql) {
             System.err.println("Getcharacter7!!55" + sql);
         }
@@ -495,6 +502,9 @@ public class 商店管理控制台 extends javax.swing.JFrame {
             ret = rs.getInt("Point");
             rs.close();
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
         }
         return ret;
@@ -512,6 +522,9 @@ public class 商店管理控制台 extends javax.swing.JFrame {
             ret = rs.getInt("meso");
             rs.close();
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
         }
         return ret;
@@ -549,6 +562,9 @@ public class 商店管理控制台 extends javax.swing.JFrame {
             ps.setInt(2, serial);
             ps.execute();
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException sql) {
             System.err.println("获取错误!!55" + sql);
         }

@@ -5,6 +5,7 @@ import javax.script.ScriptEngine;
 import java.io.IOException;
 import tools.FilePrinter;
 import javax.script.ScriptException;
+import java.nio.file.Files;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.io.Reader;
@@ -43,15 +44,10 @@ public abstract class AbstractScriptManager
             if (c != null && c.getPlayer() != null && c.getPlayer().getDebugMessage()) {
                 c.getPlayer().dropMessage("getInvocable - Part2");
             }
-            if (c != null) {
-                c.setScriptEngine(path, engine);
-                if (c != null && c.getPlayer() != null && c.getPlayer().getDebugMessage()) {
-                    c.getPlayer().dropMessage("getInvocable - Part3");
-                }
-            }
+
             InputStream in = null;
             try {
-                in = new FileInputStream(scriptFile);
+                in = Files.newInputStream(scriptFile.toPath());
                 if (c != null && c.getPlayer() != null && c.getPlayer().getDebugMessage()) {
                     c.getPlayer().dropMessage("getInvocable - Part4");
                 }
@@ -61,9 +57,14 @@ public abstract class AbstractScriptManager
                 if (c != null && c.getPlayer() != null && c.getPlayer().getDebugMessage()) {
                     c.getPlayer().dropMessage("getInvocable - Part5");
                 }
+                if (c != null) {
+                    c.setScriptEngine(path, engine);
+                    if (c.getPlayer() != null && c.getPlayer().getDebugMessage()) {
+                        c.getPlayer().dropMessage("getInvocable - Part3");
+                    }
+                }
             }
-            catch (ScriptException ex) {}
-            catch (IOException e) {
+            catch (Exception e) {
                 FilePrinter.printError("AbstractScriptManager.txt", "Error executing script. Path: " + path + "\nException " + (Object)e);
                 return null;
             }
@@ -76,7 +77,7 @@ public abstract class AbstractScriptManager
                 catch (IOException ex2) {}
             }
         }
-        else if (c != null && npc) {
+        else if (npc) {
             c.removeClickedNPC();
             NPCScriptManager.getInstance().dispose(c);
             c.getPlayer().dropMessage(5, "你现在不能攻击或不能跟npc对话,请在对话框打 @解卡 來解除异常状态");

@@ -300,6 +300,7 @@ public class NPCHandler
                 MapleInventoryManipulator.addFromDrop(c, item, false);
                 storage.saveToDB();
                 storage.sendTakenOut(c, GameConstants.getInventoryType(item.getItemId()));
+                //todo 添加额外的一张记录表 实时同步对比,以新记录表的数据为基准,将多余的物品删除,并记录日志 修复仓库复制问题
                 FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作拿出物品:" + item.getItemId() + " 数量：" + (int)item.getQuantity());
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作拿出物品:" + item.getItemId() + " 数量：" + (int)item.getQuantity()));
                 break;
@@ -378,6 +379,8 @@ public class NPCHandler
                 item2.setQuantity(quantity);
                 storage.store(item2);
                 storage.sendStored(c, GameConstants.getInventoryType(itemId));
+                storage.saveToDB();
+                //todo 添加额外的一张记录表 实时同步对比,以新记录表的数据为基准,将多余的物品删除,并记录日志
                 FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作存入物品:" + item2.getItemId() + " 數量：" + (int)item2.getQuantity());
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作存入物品:" + item2.getItemId() + " 數量：" + (int)item2.getQuantity()));
                 break;

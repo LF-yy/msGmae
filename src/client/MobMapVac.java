@@ -96,7 +96,6 @@ public class MobMapVac extends Thread{
                                         shanghai  = Math.ceil(l2) +"";
                                     }
                                     World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, adress + ": " + c.getPlayer().getName() + " " + value + mobName + ",用时" + (time / 1000) + "秒==>秒伤:"+shanghai));
-
                             break;
                         }
                     }
@@ -105,9 +104,9 @@ public class MobMapVac extends Thread{
                 }
             }
         }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-            System.err.println("[ItemVac]未知錯誤" + (Object)e);
+        catch (Exception e) {
+        }finally {
+            NPCConversationManager.gain关闭BOSS击杀统计(c.getPlayer());
         }
     }
 

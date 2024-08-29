@@ -140,6 +140,7 @@ public class RandomRewards
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException Ex) {
             System.err.println("查询钓鱼奖励数据出错 - 数据库查询失败：" + (Object)Ex);
@@ -158,6 +159,7 @@ public class RandomRewards
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException Ex) {
             System.err.println("查询钓鱼奖励数据出错2 - 数据库查询失败：" + (Object)Ex);

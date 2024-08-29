@@ -346,6 +346,8 @@ public class 活动魔族攻城
             ps2.setInt(3, Channale);
             ps2.execute();
             ps2.close();
+            ps2.close();  con.close();
+
         }
         catch (SQLException sql) {
             System.err.println("Getcharactera!!55" + (Object)sql);
@@ -364,6 +366,7 @@ public class 活动魔族攻城
             ret = rs.getInt("Point");
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {}
         return ret;

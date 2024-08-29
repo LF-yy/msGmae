@@ -117,6 +117,53 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.script = npcscript;
     }
 
+    //accurateRankMap  段伤
+    //enhancedRankMap  赋能
+    //dropRankMap   爆率
+
+    /**
+     * 赋能查询
+     * @return
+     */
+    public int getUserFl() {
+        if (c.getPlayer() == null) {
+            return 0;
+        }
+        MapleGuildRanking.SponsorRank sponsorRank = Start.enhancedRankMap.get(c.getPlayer().getId());
+        if (sponsorRank!=null){
+           return sponsorRank.getCounts();
+        }
+        return 0;
+    }
+
+    /**
+     * 段伤查询
+     * @return
+     */
+    public int getUserDs() {
+        if (c.getPlayer() == null) {
+            return 0;
+        }
+        MapleGuildRanking.SponsorRank sponsorRank = Start.accurateRankMap.get(c.getPlayer().getId());
+        if (sponsorRank!=null){
+            return sponsorRank.getCounts();
+        }
+        return 0;
+    }
+    /**
+     * 爆率查询
+     * @return
+     */
+    public int getUserBl() {
+        if (c.getPlayer() == null) {
+            return 0;
+        }
+        MapleGuildRanking.SponsorRank sponsorRank = Start.dropRankMap.get(c.getPlayer().getId());
+        if (sponsorRank!=null){
+            return sponsorRank.getCounts();
+        }
+        return 0;
+    }
 
     public void setDamageSkin( int param) {
         PacketHelper.showDamageSkin(c.getPlayer().getId(),param);
@@ -777,17 +824,21 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             } else {
                 //获取身边的怪物
                 List<MapleMonster> list = new ArrayList<>();
-                for (final MapleMapObject monstermo : c.getPlayer().getMap().getMapObjectsInRange(c.getPlayer().getPosition(), 10000.0, Arrays.asList(MapleMapObjectType.MONSTER))) {
-                    MapleMonster monster = (MapleMonster)monstermo;
-                    if (monster.isAlive()) {
-                        list.add(monster);
+                final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
+
+                for (final MapleMonster monstermo : mapleMap.getAllMonster()) {
+                    if (monstermo.isAlive() && !monstermo.getStats().isBoss()) {
+                        list.add(monstermo);
                     }
                 }
 
                 this.轮回怪物.put(player.getId(), list);
-                //清除地图所有怪物
-                c.getPlayer().getMap().killAllMonsters(true);
                 UserLhAttraction userAttraction = new UserLhAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
+               // System.out.println("开启轮回怪物数量"+mapleMap.getAllMonster().size());
+                userAttraction.setMapMobCount(mapleMap.getAllMonster().size());
+                //清除地图所有怪物
+             //   c.getPlayer().getMap().killAllMonsters(true);
+
                 this.轮回集合.put(player.getId(), userAttraction);
                 c.getPlayer().startMobLhVac(userAttraction);
                 //开启吸怪();
@@ -798,10 +849,16 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void gain关闭吸怪(final MapleCharacter player){
         c.getPlayer().getMap().killAllMonsters(true);
         this.吸怪集合.remove(player.getId());
+        player.stopMobVac();
     }
-    public static void gain关闭轮回(int id){
-       // c.getPlayer().getMap().killAllMonsters(true);
-        轮回集合.remove(id);
+    public static void gain关闭轮回(final MapleCharacter player,final MapleMap mapleMap ){
+        try {
+            mapleMap.killAllMonsters(true);
+            轮回集合.remove(player.getId());
+            player.stopMobLhVac();
+        } catch (Exception e) {
+
+        }
     }
     public static void gain关闭吸怪(int id){
         吸怪集合.remove(id);
@@ -810,9 +867,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public  void gain开启BOSS击杀统计(final MapleCharacter player,int mobId,String mobName,String adress,String value, long hp){
         UserAttraction userAttraction = new UserAttraction(c.getChannel(), player.getMapId(), player.getPosition());
         c.getPlayer().startMobMapVac(userAttraction,mobId,mobName, adress, value,hp);
-
     }
-
+    public static  void gain关闭BOSS击杀统计(final MapleCharacter player){
+        if(player!=null) {
+            player.stopMobMapVac();
+        }
+    }
     public static void setBossLog统计用(final int id,final String boss, final int type, final int count) {
         final int bossCount = getBossLog1统计用(id,boss, type);
         try {
@@ -1139,9 +1199,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         if (def<min){
             return;
         }
-        if (def>30000){
-            return;
-        }
+
         if (def<0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
@@ -1614,7 +1672,26 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void displayGuildRanks() {
         this.c.sendPacket(MaplePacketCreator.showGuildRanks(this.npc, MapleGuildRanking.getInstance().getGuildRank()));
     }
-    
+    //cm.displayBossLogRanks("黑龙排行榜");
+    public void displayBossLogRanks(String type) {
+        if("赞助排行榜".equals(type)){
+            this.c.sendPacket(MaplePacketCreator.showSponsorRanks(this.npc, MapleGuildRanking.getInstance().getSponsorRank()));
+        }else if("破功排行榜".equals(type)){
+            this.c.sendPacket(MaplePacketCreator.showDefeatRanks(this.npc, MapleGuildRanking.getInstance().getDefeatRank()));
+        }else if("黑龙排行榜".equals(type)){
+            this.c.sendPacket(MaplePacketCreator.showBossRanks(this.npc, MapleGuildRanking.getInstance().getBossRank()));
+        }else if("绯红排行榜".equals(type)) {
+            this.c.sendPacket(MaplePacketCreator.showRedRanks(this.npc, MapleGuildRanking.getInstance().getRedRank()));
+        }else if("段伤排行榜".equals(type)) {
+            this.c.sendPacket(MaplePacketCreator.showAccurateRanks(this.npc, MapleGuildRanking.getInstance().getAccurateRank()));
+        }else if("赋能排行榜".equals(type)) {
+            this.c.sendPacket(MaplePacketCreator.showEnhancedRanks(this.npc, MapleGuildRanking.getInstance().getEnhancedRank()));
+        }else if("爆率排行榜".equals(type)) {
+            this.c.sendPacket(MaplePacketCreator.showDropRanks(this.npc, MapleGuildRanking.getInstance().getDropRank()));
+        }
+
+    }
+
     public void showlvl() {
         this.c.sendPacket(MaplePacketCreator.showlevelRanks(this.npc, MapleGuildRanking.getInstance().getLevelRank()));
     }
@@ -2458,15 +2535,18 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     //获取怪物爆率信息
     public String checkDrop(final int mobId) {
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+//        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.retrieveDrops(mobId);
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-
+        System.out.println("ranks查询爆率 = " + ranks.size());
         if (ranks != null && ranks.size() > 0) {
             int num = 0;
             int itemId = 0;
             int ch = 0;
             final StringBuilder name = new StringBuilder();
             for (int i = 0; i < ranks.size(); ++i) {
-                final MonsterDropEntry de = (MonsterDropEntry)ranks.get(i);
+                final MonsterDropEntry de = ranks.get(i);
+//                System.out.println("ranks查询爆率 = " + de.dropperid + " " + de.itemId + " " + de.chance + " " + de.questid + " " + de.Minimum + " " + de.Maximum);
+
                 if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0))) {
                     itemId = de.itemId;
                     if (num == 0) {
@@ -2494,6 +2574,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
     public String dropList(final int mobId) {
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+//        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.retrieveDrops(mobId);
         if (ranks != null && ranks.size() > 0) {
             int num = 0;
             int itemId = 0;
@@ -2528,6 +2609,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public String checkDrop(MapleCharacter chr, final int mobId, final boolean GM) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+//        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.retrieveDrops(mobId);
         if (ranks != null && ranks.size() > 0) {
             int num = 0;
             int itemId = 0;
@@ -6271,7 +6353,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 //    }
 
     public String ms() {
-        return Game.服务端名字;
+        return ServerProperties.getProperty("Guai.serverName", "");
     }
 
     public int 召唤扎昆() {

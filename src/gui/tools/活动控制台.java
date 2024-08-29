@@ -560,6 +560,11 @@ public class 活动控制台 extends javax.swing.JFrame {
             while (rs.next()) {
                 ((DefaultTableModel) 野外BOSS刷新时间.getModel()).insertRow(野外BOSS刷新时间.getRowCount(), new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("Val")});
             }
+            ps.close();
+            rs.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             Logger.getLogger(活动控制台.class.getName()).log(Level.SEVERE, null, ex);
         }

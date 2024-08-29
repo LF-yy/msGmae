@@ -1341,6 +1341,7 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void openNpc(final int id) {
+        NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(id, null);
     }
     
@@ -1355,7 +1356,6 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void openNpc(final int id, final String script) {
-        NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(this.getClient(), id, script);
     }
     

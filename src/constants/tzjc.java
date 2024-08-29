@@ -1,12 +1,15 @@
 package constants;
 
+import bean.DsModel;
 import bean.Leveladdharm;
+import bean.LttItemAdditionalDamage;
 import bean.SuitSystem;
 import client.MapleCharacter;
 import client.MapleStat;
 import client.inventory.IItem;
 import gui.CongMS;
 import gui.LtMS;
+import handling.channel.MapleGuildRanking;
 import server.MapleItemInformationProvider;
 import server.Start;
 import server.life.MapleMonster;
@@ -16,10 +19,12 @@ import util.ListUtil;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class tzjc {
     private static List<tz_model> tz_list;
+    public static Map<Integer, Long> dsMap;
     public static Map<String,Double> tzMap;
     public static Map<Integer, Map<String, Integer>> sbMap;
     public static Map<String, List<SuitSystem>> suitSys;//套装列表
@@ -27,14 +32,14 @@ public class tzjc {
         try {
             if (player.get套装伤害加成() > 0.0) {
                 double jc_damage = totDamageToOneMonster * player.get套装伤害加成();
-                if(jc_damage>100000000L){
-                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/100000000L) + "亿");
-                }else if(jc_damage>10000){
-                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/10000) + "万");
-                }else{
-                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage)  + "");
-                }
-                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
+//                if(jc_damage>100000000L){
+//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/100000000L) + "亿");
+//                }else if(jc_damage>10000){
+//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/10000) + "万");
+//                }else{
+//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage)  + "");
+//                }
+                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage)+player.get最高伤害();
                 //player.getMap().broadcastMessage(MobPacket.healMonster(monster.getObjectId(), (int) jc_damage));
             }
         } catch (Exception e) {
@@ -47,14 +52,14 @@ public class tzjc {
         try {
             if (player.get套装伤害加成() > 0.0) {
                 double jc_damage = totDamageToOneMonster * player.get套装伤害加成()*damage;
-                if(jc_damage>100000000L){
-                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/100000000L) + "亿");
-                }else if(jc_damage>10000){
-                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage/10000) + "万");
-                }else{
-                    player.dropTopMsg("【赋能·伤害加成】:额外伤害" + Math.ceil(jc_damage)  + "");
-                }
-                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
+//                if(jc_damage>100000000L){
+//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/100000000L) + "亿");
+//                }else if(jc_damage>10000){
+//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/10000) + "万");
+//                }else{
+//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage)  + "");
+//                }
+                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage)+player.get最高伤害();
             }
         } catch (Exception e) {
             FileoutputUtil.outError("logs/套装伤害异常.txt", e);
@@ -67,7 +72,7 @@ public class tzjc {
        // tzjc.tz_map.clear();
         System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][========================================]");
         System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][信息]:初始化赋能装备加成");
-        if (((Integer) LtMS.ConfigValuesMap.get("赋能属性加成开关")).intValue() > 0) {
+        if ( LtMS.ConfigValuesMap.get("赋能属性加成开关") > 0) {
             for (int i = 0; i < Start.套装加成表.size(); ++i) {
                 if (((Integer) (Start.套装加成表.get(i)).getLeft()).intValue() == 0) {
                     tz_model tz = new tz_model();
@@ -75,12 +80,11 @@ public class tzjc {
                     tz.setJc((double) ((Integer) (((Start.套装加成表.get(i)).getRight()).getRight()).getRight()).intValue() / 100.0);
                     int[] list = {Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()};
                     tz.setList(list);
-                   // System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][赋能]:[" + tz.getName() + "] 添加成功 加成伤害：" + tz.getJc() * 100.0 + "%");
                     tzjc.tz_list.add(tz);
                 }
             }
 
-            for (int b = 1; b < ((Integer) LtMS.ConfigValuesMap.get("套装个数")).intValue(); ++b) {
+            for (int b = 1; b < LtMS.ConfigValuesMap.get("套装个数"); ++b) {
                 List<Integer> 套装 = (List<Integer>) new ArrayList();
                 int 加成 = 0;
                 String 套装名 = "";
@@ -99,12 +103,11 @@ public class tzjc {
                     list2[k] = ((Integer) 套装.get(k)).intValue();
                 }
                 tz2.setList(list2);
-                //System.out.println("[" + FileoutputUtil.CurrentReadable_Time() + "][赋能]:[" + tz2.getName() + "] 添加成功 加成伤害：" + tz2.getJc() * 100.0 + "%");
                 tzjc.tz_list.add(tz2);
             }
 
         }
-        if (((Integer) LtMS.ConfigValuesMap.get("个人赋能属性加成开关")).intValue() > 0) {
+        if (LtMS.ConfigValuesMap.get("个人赋能属性加成开关")> 0) {
             tzMap.putAll(Start.新套装加成表);
         }
         sbMap.putAll(Start.双爆加成);
@@ -112,8 +115,40 @@ public class tzjc {
     }
 
     public static double check_tz(MapleCharacter chr) {
-        //int id = chr.getClient().getPlayer().getId();
         Collection<IItem> hasEquipped = chr.getHasEquipped();
+        //accurateRankMap  段伤
+        //enhancedRankMap  赋能
+        //dropRankMap   爆率
+        //int id = chr.getClient().getPlayer().getId();
+        //段伤
+        AtomicLong additionalDamage = new AtomicLong(0L);
+        if ( LtMS.ConfigValuesMap.get("段伤开关") > 0) {
+            try {
+                    hasEquipped.forEach(iItem -> {
+                        Long integer = dsMap.get(iItem.getItemId());
+                        if (Objects.nonNull(integer)) {
+                                if (integer > 0) {
+                                    additionalDamage.updateAndGet(v -> (v + (integer/ 100L)));
+                                }
+                        }
+                    });
+
+            } catch (Exception e) {
+                System.out.println("段伤装备计算异常");
+            }
+        try {
+            Start.additionalDamage.forEach((k, v) -> {
+                for (LttItemAdditionalDamage lttItemAdditionalDamage : v) {
+                    additionalDamage.set(additionalDamage.get()+ (Math.max(chr.getItemQuantity(lttItemAdditionalDamage.getItemId()),0)*k));
+                }
+            });
+        } catch (Exception e) {
+            System.out.println("段伤物品计算异常");
+        }
+        chr.set最高伤害(additionalDamage.get());
+        Start.accurateRankMap.put(chr.getId(), new MapleGuildRanking.SponsorRank(chr.getName(), (int)(additionalDamage.get()/100000L),chr.getStr(),chr.getDex(),chr.getInt(),chr.getLuk()));
+        }
+
         AtomicInteger drop = new AtomicInteger(0);
         AtomicInteger exp = new AtomicInteger(0);
         AtomicReference<Double> number = new AtomicReference<>(0.0);
@@ -139,6 +174,7 @@ public class tzjc {
                 chr.setItemDropm(drop.get());
                 chr.dropMessage(5, "佩戴双爆装备,物品掉落概率总计加成：" + drop.get() + "%");
             }
+            Start.dropRankMap.put(chr.getId(), new MapleGuildRanking.SponsorRank(chr.getName(), drop.intValue(),chr.getStr(),chr.getDex(),chr.getInt(),chr.getLuk()));
         } catch (Exception e) {
             System.out.println("双爆装备装备加载异常");
         }
@@ -197,23 +233,21 @@ public class tzjc {
         } catch (Exception e) {
             System.out.println("装备等级附加加载异常");
         }
+        Start.enhancedRankMap.put(chr.getId(), new MapleGuildRanking.SponsorRank(chr.getName(), number.get().intValue()*100,chr.getStr(),chr.getDex(),chr.getInt(),chr.getLuk()));
         chr.dropMessage(5,
                 "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
-                        "血量：" + chr.getStat().localmaxhp + ">>" +
-                        "蓝量：" + chr.getStat().localmaxmp + ">>" +
                         "力量：" + chr.getStat().localstr + ">>" +
                         "敏捷：" + chr.getStat().localdex + ">>" +
                         "运气：" + chr.getStat().localluk + ">>" +
                         "智力：" + chr.getStat().localint_ + ">>" +
                         "物攻：" + chr.getStat().watk + ">>" +
                         "魔攻：" + chr.getStat().magic + ">>" +
-                        "手技：" + chr.getStat().hands + ">>" +
                         "武器熟练度：" + chr.getStat().passive_mastery + ">>" +
                         "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
                         "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
                         "最大攻击力：" + chr.getStat().localmaxbasedamage + ">>" +
-                        //"计算后的攻击：" + chr.getStat().damage + ">>" +
                         "伤害加成：" + chr.getStat().dam_r + ">>" +
+                        "段伤加成：" + additionalDamage.get() + ">>" +
                         "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")
         );
         return number.get();
@@ -221,6 +255,7 @@ public class tzjc {
 
     static {
         tz_list = (List<tz_model>) new LinkedList();
+        dsMap = new Hashtable<>();
         tzjc.tzMap = new Hashtable<>();
         tzjc.sbMap = new Hashtable<>();
         tzjc.suitSys = new Hashtable<>();

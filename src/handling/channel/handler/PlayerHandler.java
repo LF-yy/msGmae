@@ -669,13 +669,16 @@ public class PlayerHandler
             //段数
             attackCount = ((effect.getAttackCount() > effect.getBulletCount()) ? effect.getAttackCount() : effect.getBulletCount());
            // System.out.println("段数:"+attackCount);
+            //技能冷却时间处理
             if (effect.getCooldown() > 0 && !chr.isGM()) {
-                if (chr.skillisCooling(attack.skill)) {
-                    c.sendPacket(MaplePacketCreator.enableActions());
-                    return;
+                if(Objects.isNull(Start.ltSkillWucdTable.get(attack.skill))) {
+                    if (chr.skillisCooling(attack.skill)) {
+                        c.sendPacket(MaplePacketCreator.enableActions());
+                        return;
+                    }
+                    c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
+                    chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (effect.getCooldown() * 1000));
                 }
-                c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
-                chr.addCooldown(attack.skill, System.currentTimeMillis(), (long)(effect.getCooldown() * 1000));
             }
         }
         //判断是否有影子
@@ -852,12 +855,14 @@ public class PlayerHandler
                 }
             }
             if (effect.getCooldown() > 0 && !chr.isGM()) {
-                if (chr.skillisCooling(attack.skill)) {
-                    c.sendPacket(MaplePacketCreator.enableActions());
-                    return;
+                if (Objects.isNull(Start.ltSkillWucdTable.get(attack.skill))) {
+                    if (chr.skillisCooling(attack.skill)) {
+                        c.sendPacket(MaplePacketCreator.enableActions());
+                        return;
+                    }
+                    c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
+                    chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (effect.getCooldown() * 1000));
                 }
-                c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
-                chr.addCooldown(attack.skill, System.currentTimeMillis(), (long)(effect.getCooldown() * 1000));
             }
         }
         final Integer ShadowPartner = chr.getBuffedValue(MapleBuffStat.SHADOWPARTNER);
@@ -1053,12 +1058,14 @@ public class PlayerHandler
             return;
         }
         if (effect.getCooldown() > 0 && !chr.isGM()) {
-            if (chr.skillisCooling(attack.skill)) {
-                c.sendPacket(MaplePacketCreator.enableActions());
-                return;
+            if(Objects.isNull(Start.ltSkillWucdTable.get(attack.skill))) {
+                if (chr.skillisCooling(attack.skill)) {
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                    return;
+                }
+                c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
+                chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (effect.getCooldown() * 1000));
             }
-            c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
-            chr.addCooldown(attack.skill, System.currentTimeMillis(), (long)(effect.getCooldown() * 1000));
         }
         chr.checkFollow();
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());

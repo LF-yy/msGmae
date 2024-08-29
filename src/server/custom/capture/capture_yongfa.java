@@ -12,8 +12,8 @@ public class capture_yongfa
         final StringBuilder name = new StringBuilder();
         name.append("\t\t\t参赛人数([#b蓝队#k].").append(判断蓝色队伍()).append(" |[#r红队#k].").append(判断红色队伍()).append(")\r\n");
         name.append("——————————————————————————\r\n");
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM capture_cs order by id desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -33,7 +33,11 @@ public class capture_yongfa
                 }
             }
         }
-        catch (SQLException ex) {}
+        catch (SQLException ex) {}finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
+        }
         name.append("——————————————————————————\r\n");
         return name.toString();
     }

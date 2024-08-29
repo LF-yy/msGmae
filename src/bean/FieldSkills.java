@@ -17,7 +17,16 @@ public class FieldSkills {
     private int skillRX;// int(11) NOT NULL COMMENT '技能范围右x轴',
     private int skillRY;// int(11) NOT NULL COMMENT '技能范围右Y轴',
     private int range;// int(11) NOT NULL COMMENT '技能范围',
+    private int djCount;// int(11) NOT NULL COMMENT '技能范围',
     private double harm;// int(11) NOT NULL COMMENT '技能伤害',
+
+    public int getDjCount() {
+        return djCount;
+    }
+
+    public void setDjCount(int djCount) {
+        this.djCount = djCount;
+    }
 
     public double getHarm() {
         return harm;

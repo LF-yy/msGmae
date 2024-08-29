@@ -13,6 +13,7 @@ import gui.tools.*;
 import handling.RecvPacketOpcode;
 import handling.SendPacketOpcode;
 import handling.channel.ChannelServer;
+import handling.channel.handler.DamageParse;
 import handling.login.LoginServer;
 import handling.world.MapleParty;
 import handling.world.World;
@@ -42,6 +43,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.rmi.NotBoundException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -54,6 +58,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.lang.Integer.parseInt;
 
 /**
  *
@@ -352,6 +358,7 @@ public class LtMS extends JFrame {
                 }
             }
             ps.close();
+            con.close();
         } catch (SQLException Ex) {
             System.err.println("在线账号、出错");
         }
@@ -365,25 +372,33 @@ public class LtMS extends JFrame {
                 updateplayer = Timer.GuiTimer.getInstance().register(new Runnable() {
                     @Override
                     public void run() {
+                       Map<Integer,String> map = new HashMap<>();
                         playerTable.removeAll();
                         int cloumn = 0;
-                        for (ChannelServer cs : ChannelServer.getAllInstances()) {
-                            for (MapleCharacter player : cs.getPlayerStorage().getAllCharacters()) {
-                                if (player == null) {
-                                    continue;
+                        try {
+                            for (ChannelServer cs : ChannelServer.getAllInstances()) {
+                                for (MapleCharacter player : cs.getPlayerStorage().getAllCharacters()) {
+                                    if (player == null) {
+                                        continue;
+                                    }
+                                    if (Objects.nonNull(map.get(player.getId()))){
+                                        continue;
+                                    }
+                                    map.put(player.getId(),player.getName());
+                                    playerTable.setValueAt(player.getId(), cloumn, 0);//角色ID
+                                    playerTable.setValueAt(player.getName(), cloumn, 1);//角色名字
+                                    playerTable.setValueAt(cs.getChannel(), cloumn, 2);//频道
+                                    playerTable.setValueAt(player.getLevel(), cloumn, 3);//等级
+                                    playerTable.setValueAt(player.getJob(), cloumn, 4);//职业ID
+                                    playerTable.setValueAt(player.getMap().getMapName(), cloumn, 5);//所在地图
+                                    playerTable.setValueAt(player.getMeso(), cloumn, 6);//金币
+                                    playerTable.setValueAt(player.getCSPoints(1), cloumn, 7);//点卷
+                                    playerTable.setValueAt(player.getCSPoints(2), cloumn, 8);//抵用卷
+                                    playerTable.setValueAt(player.getmoneyb(), cloumn, 9);//元宝 余额
+                                    cloumn++;
                                 }
-                                playerTable.setValueAt(player.getId(), cloumn, 0);//角色ID
-                                playerTable.setValueAt(player.getName(), cloumn, 1);//角色名字
-                                playerTable.setValueAt(cs.getChannel(), cloumn, 2);//频道
-                                playerTable.setValueAt(player.getLevel(), cloumn, 3);//等级
-                                playerTable.setValueAt(player.getJob(), cloumn, 4);//职业ID
-                                playerTable.setValueAt(player.getMap().getMapName(), cloumn, 5);//所在地图
-                                playerTable.setValueAt(player.getMeso(), cloumn, 6);//金币
-                                playerTable.setValueAt(player.getCSPoints(1), cloumn, 7);//点卷
-                                playerTable.setValueAt(player.getCSPoints(2), cloumn, 8);//抵用卷
-                                playerTable.setValueAt(player.getmoneyb(), cloumn, 9);//元宝 余额
-                                cloumn++;
                             }
+                        } catch (Exception e) {
                         }
                         //PlayerCount.setText("【在线人数】：");
                         在线人数.setValue(cloumn);
@@ -406,6 +421,9 @@ public class LtMS extends JFrame {
                 }
             }
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             System.err.println("读取动态数据库出错：" + ex.getMessage());
         }
@@ -4387,23 +4405,43 @@ public class LtMS extends JFrame {
     }//GEN-LAST:event_重载包头按钮2ActionPerformed
 
     private void 重载配置按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载包头按钮2ActionPerformed
-        // TODO add your handling code here:
         Start.GetSuitDamTable();
         Start.GetSuitDamTableNew();
         Start.GetLtInitializationSkills();
+        Start.getDsTableInfo();
         Start.GetSuitSystem();
         Start.GetfiveTurn();
         Start.GetBreakthroughMechanism();
         Start.getleveladdharm();
+        Start.getAdditionalDamage();
+        Start.getNotParticipatingRecycling();
         Start.GetSuperSkills();
         Start.GetFieldSkills();
         Start.getAttackInfo();
         Start.getMobInfo();
+        Start.setLtSkillWucdTable();
         GetConfigValues();
         GetMobMapTable();
+        DamageParse.readMobRedDam();
         tzjc.sr_tz();
         World.registerRespawn();
         String 输出 = "[重载系统] 系统配置重载成功。";
+
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+
+        MemoryUsage heapMemoryUsage = memoryBean.getHeapMemoryUsage();
+        MemoryUsage nonHeapMemoryUsage = memoryBean.getNonHeapMemoryUsage();
+
+        System.out.println("堆内存使用:");
+        System.out.println("  初始内存: " + heapMemoryUsage.getInit() / 1024 + " KB");
+        System.out.println("  使用的内存: " + heapMemoryUsage.getUsed() / 1024 + " KB");
+        System.out.println("  已提交内存: " + heapMemoryUsage.getCommitted() / 1024 + " KB");
+        System.out.println("  最大内存: " + heapMemoryUsage.getMax() / 1024 + " KB");
+        System.out.println("非堆内存使用情况:");
+        System.out.println("  初始内存: " + nonHeapMemoryUsage.getInit() / 1024 + " KB");
+        System.out.println("  使用的内存: " + nonHeapMemoryUsage.getUsed() / 1024 + " KB");
+        System.out.println("  已提交内存: " + nonHeapMemoryUsage.getCommitted() / 1024 + " KB");
+        System.out.println("  最大内存: " + nonHeapMemoryUsage.getMax() / 1024 + " KB");
         JOptionPane.showMessageDialog(null, "系统配置重载成功。");
         printChatLog(输出);
     }//GEN-LAST:event_重载包头按钮2ActionPerformed
@@ -4451,6 +4489,10 @@ public class LtMS extends JFrame {
     private void 重载爆率按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载爆率按钮2ActionPerformed
         // TODO add your handling code here:
         MapleMonsterInformationProvider.getInstance().clearDrops();
+//        System.out.println("[重载全局爆率加载]");
+//        Start.setGlobaldrops();
+//        System.out.println("[重载怪物爆率加载]");
+//        Start.setdrops();
         String 输出 = "[重载系统] 爆率重载成功。";
         JOptionPane.showMessageDialog(null, "爆率重载成功。");
         printChatLog(输出);
@@ -4463,6 +4505,11 @@ public class LtMS extends JFrame {
                 instance.reloadEvents();
             }
         }
+//        try {
+//            WzStringDumper.main(null);
+//        } catch (IOException e) {
+//
+//        }
         JOptionPane.showMessageDialog(null, "副本重载成功。");
     }//GEN-LAST:event_重载副本按钮2ActionPerformed
 
@@ -4567,7 +4614,7 @@ public class LtMS extends JFrame {
 
                 ps1 = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM configvalues WHERE id = ?");
 
-                ps1.setInt(1, Integer.parseInt(this.泡点序号.getText()));
+                ps1.setInt(1, parseInt(this.泡点序号.getText()));
                 rs = ps1.executeQuery();
                 if (rs.next()) {
                     String sqlString1 = null;
@@ -4820,6 +4867,14 @@ public class LtMS extends JFrame {
 
     private void jButton17ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jButton17ActionPerformed
         System.gc();
+        for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+            for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                if (chr != null) {
+                    chr.getClient().engines.clear();
+                }
+            }
+        }
+
         JOptionPane.showMessageDialog(null, "回收服务端内存成功！");
     }//GEN-LAST:event_jButton17ActionPerformed
 
@@ -5166,7 +5221,7 @@ public class LtMS extends JFrame {
         if (result1) {
             try {
                 ps1 = DatabaseConnection.getConnection().prepareStatement("SELECT * FROM configvalues WHERE id = ?");
-                ps1.setInt(1, Integer.parseInt(this.经验加成表序号.getText()));
+                ps1.setInt(1, parseInt(this.经验加成表序号.getText()));
                 rs = ps1.executeQuery();
                 if (rs.next()) {
                     String sqlString1 = null;
@@ -5319,6 +5374,7 @@ public class LtMS extends JFrame {
             }
             for (ChannelServer cserv : ChannelServer.getAllInstances()) {
                 for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                    chr.getClient().getPlayer().saveData = 0;
                     chr.saveToDB(false, false);//保存角色
                 }
             }
@@ -5436,7 +5492,7 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "地图代码不能为空");
                 return;
             }
-            victim.changeMap(Integer.parseInt(角色所在地图编辑.getText()));
+            victim.changeMap(parseInt(角色所在地图编辑.getText()));
             JOptionPane.showMessageDialog(null, "成功");
         } else {
             JOptionPane.showMessageDialog(null, "该玩家不在线上");
@@ -5472,9 +5528,9 @@ public class LtMS extends JFrame {
         }
         final MapleCharacter victim = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
         if (victim != null) {
-            victim.modifyCSPoints(1, Integer.parseInt(角色点券编辑框.getText()));
-            victim.modifyCSPoints(2, Integer.parseInt(角色抵用编辑框.getText()));
-            victim.setmoneyb(Integer.parseInt(角色元宝编辑框.getText()));
+            victim.modifyCSPoints(1, parseInt(角色点券编辑框.getText()));
+            victim.modifyCSPoints(2, parseInt(角色抵用编辑框.getText()));
+            victim.setmoneyb(parseInt(角色元宝编辑框.getText()));
             victim.saveToDB(false, false);//保存角色
             JOptionPane.showMessageDialog(null, "成功");
         } else {
@@ -5489,11 +5545,11 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "持续时间不能为空");
                 return;
             }
-            int 原始经验 = Integer.parseInt(ServerProperties.getProperty("LtMS.expRate"));
+            int 原始经验 = parseInt(ServerProperties.getProperty("LtMS.expRate"));
             int 双倍经验活动 = 原始经验 * 2;
             int seconds = 0;
             int mins = 0;
-            int hours = Integer.parseInt(this.双倍经验持续时间.getText());
+            int hours = parseInt(this.双倍经验持续时间.getText());
             int time = seconds + (mins * 60) + (hours * 60 * 60);
             final String rate = "经验";
             World.scheduleRateDelay(rate, time);
@@ -5515,16 +5571,16 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "持续时间不能为空");
                 return;
             }
-            int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate"));
+            int 原始爆率 = parseInt(ServerProperties.getProperty("LtMS.dropRate"));
             int 双倍爆率活动 = 原始爆率 * 2;
             int seconds = 0;
             int mins = 0;
-            int hours = Integer.parseInt(this.双倍爆率持续时间.getText());
+            int hours = parseInt(this.双倍爆率持续时间.getText());
             int time = seconds + (mins * 60) + (hours * 60 * 60);
             final String rate = "爆率";
             World.scheduleRateDelay(rate, time);
             for (ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(双倍爆率活动);
+                cservs.setDropRate(双倍爆率活动);
             }
             World.Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 2 倍打怪爆率活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, "成功开启双倍爆率活动，持续 " + hours + " 小时");
@@ -5540,16 +5596,16 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "持续时间不能为空");
                 return;
             }
-            int 原始金币 = Integer.parseInt(ServerProperties.getProperty("LtMS.mesoRate"));
+            int 原始金币 = parseInt(ServerProperties.getProperty("LtMS.mesoRate"));
             int 双倍金币活动 = 原始金币 * 2;
             int seconds = 0;
             int mins = 0;
-            int hours = Integer.parseInt(this.双倍金币持续时间.getText());
+            int hours = parseInt(this.双倍金币持续时间.getText());
             int time = seconds + (mins * 60) + (hours * 60 * 60);
             final String rate = "金币";
             World.scheduleRateDelay(rate, time);
             for (ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(双倍金币活动);
+                cservs.setMesoRate(双倍金币活动);
             }
             World.Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 2 倍打怪金币活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, "成功开启双倍金币活动，持续 " + hours + " 小时");
@@ -5565,11 +5621,11 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "持续时间不能为空");
                 return;
             }
-            int 原始经验 = Integer.parseInt(ServerProperties.getProperty("LtMS.expRate"));
+            int 原始经验 = parseInt(ServerProperties.getProperty("LtMS.expRate"));
             int 三倍经验活动 = 原始经验 * 3;
             int seconds = 0;
             int mins = 0;
-            int hours = Integer.parseInt(this.三倍经验持续时间.getText());
+            int hours = parseInt(this.三倍经验持续时间.getText());
             int time = seconds + (mins * 60) + (hours * 60 * 60);
             final String rate = "经验";
             World.scheduleRateDelay(rate, time);
@@ -5590,16 +5646,16 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "持续时间不能为空");
                 return;
             }
-            int 原始爆率 = Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate"));
+            int 原始爆率 = parseInt(ServerProperties.getProperty("LtMS.dropRate"));
             int 三倍爆率活动 = 原始爆率 * 3;
             int seconds = 0;
             int mins = 0;
-            int hours = Integer.parseInt(this.三倍爆率持续时间.getText());
+            int hours = parseInt(this.三倍爆率持续时间.getText());
             int time = seconds + (mins * 60) + (hours * 60 * 60);
             final String rate = "爆率";
             World.scheduleRateDelay(rate, time);
             for (ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(三倍爆率活动);
+                cservs.setDropRate(三倍爆率活动);
             }
             World.Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 3 倍打怪爆率活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, "成功开启三倍爆率活动，持续 " + hours + " 小时");
@@ -5615,16 +5671,16 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "持续时间不能为空");
                 return;
             }
-            int 原始金币 = Integer.parseInt(ServerProperties.getProperty("LtMS.mesoRate"));
+            int 原始金币 = parseInt(ServerProperties.getProperty("LtMS.mesoRate"));
             int 三倍金币活动 = 原始金币 * 3;
             int seconds = 0;
             int mins = 0;
-            int hours = Integer.parseInt(this.三倍金币持续时间.getText());
+            int hours = parseInt(this.三倍金币持续时间.getText());
             int time = seconds + (mins * 60) + (hours * 60 * 60);
             final String rate = "金币";
             World.scheduleRateDelay(rate, time);
             for (ChannelServer cservs : ChannelServer.getAllInstances()) {
-                cservs.setExpRate(三倍金币活动);
+                cservs.setMesoRate(三倍金币活动);
             }
             World.Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, 20, "[倍率活动] : 游戏开始 3 倍打怪金币活动，将持续 " + hours + " 小时，请各位玩家狂欢吧！"));
             JOptionPane.showMessageDialog(null, "成功开启三倍金币活动，持续 " + hours + " 小时");
@@ -5634,7 +5690,7 @@ public class LtMS extends JFrame {
     }//GEN-LAST:event_开启三倍金币ActionPerformed
 
     private void 经验确认ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_经验确认ActionPerformed
-        int exp = Integer.valueOf(经验.getText());
+        int exp = parseInt(经验.getText());
 
         for (ChannelServer cserv : ChannelServer.getAllInstances()) {
             cserv.setExpRate(exp);
@@ -5650,7 +5706,7 @@ public class LtMS extends JFrame {
     }//GEN-LAST:event_物品ActionPerformed
 
     private void 物品确认ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_物品确认ActionPerformed
-        int drop = Integer.valueOf(物品.getText());
+        int drop = parseInt(物品.getText());
 
         for (ChannelServer cserv : ChannelServer.getAllInstances()) {
             cserv.setDropRate(drop);
@@ -5662,7 +5718,7 @@ public class LtMS extends JFrame {
     }//GEN-LAST:event_物品确认ActionPerformed
 
     private void 金币确认ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_金币确认ActionPerformed
-        int meso = Integer.valueOf(金币.getText());
+        int meso = parseInt(金币.getText());
 
         for (ChannelServer cserv : ChannelServer.getAllInstances()) {
             cserv.setMesoRate(meso);
@@ -5796,7 +5852,7 @@ public class LtMS extends JFrame {
     private void 修改背包扩充价格ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_修改背包扩充价格ActionPerformed
         boolean result1 = this.商城扩充价格修改.getText().matches("[0-9]+");
         if (result1) {
-            if (Integer.parseInt(this.商城扩充价格修改.getText()) < 0) {
+            if (parseInt(this.商城扩充价格修改.getText()) < 0) {
                 JOptionPane.showMessageDialog(null, "[信息]:请输入正确的修改值。");
                 return;
             }
@@ -5818,7 +5874,7 @@ public class LtMS extends JFrame {
             try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("INSERT INTO configvalues (id, name,Val) VALUES ( ?, ?, ?)")) {
                 ps.setInt(1, 999);
                 ps.setString(2, "商城扩充价格");
-                ps.setInt(3, Integer.parseInt(this.商城扩充价格修改.getText()));
+                ps.setInt(3, parseInt(this.商城扩充价格修改.getText()));
                 ps.executeUpdate();
                 刷新商城扩充价格();
                 GetConfigValues();
@@ -6066,7 +6122,7 @@ public class LtMS extends JFrame {
                 JOptionPane.showMessageDialog(null, "倍怪地图不能为空");
                 return;
             }
-            int 怪物倍率调整 = Integer.parseInt(this.怪物倍率.getText());
+            int 怪物倍率调整 = parseInt(this.怪物倍率.getText());
             if (怪物倍率调整 >= 2) {
                 MapleParty.怪物倍率 = 怪物倍率调整;
                 MapleParty.怪物倍怪 = true;
@@ -6095,7 +6151,7 @@ public class LtMS extends JFrame {
         if ("输入数字".equals(发放其他数量.getText())) {
             道具数量 = 0;
         } else {
-            道具数量 = Integer.parseInt(发放其他数量.getText());
+            道具数量 = parseInt(发放其他数量.getText());
         }
         int 发放范围 = 0;
         String 名字 = "";
@@ -6182,14 +6238,14 @@ public class LtMS extends JFrame {
             道具代码 = 4000000;
         }
         else {
-            道具代码 = ((Integer.parseInt(this.发放道具代码.getText()) < 1) ? 1 : Integer.parseInt(this.发放道具代码.getText()));
+            道具代码 = ((parseInt(this.发放道具代码.getText()) < 1) ? 1 : parseInt(this.发放道具代码.getText()));
         }
         int 道具数量 = 0;
         if ("输入数字".equals(this.发放道具数量.getText())) {
             道具数量 = 0;
         }
         else {
-            道具数量 = Integer.parseInt(this.发放道具数量.getText());
+            道具数量 = parseInt(this.发放道具数量.getText());
         }
         int 发放范围 = 0;
         String 名字 = "";
@@ -6245,49 +6301,49 @@ public class LtMS extends JFrame {
             if ("物品ID".equals(全服发送装备物品ID.getText())) {
                 物品ID = 0;
             } else {
-                物品ID = Integer.parseInt(全服发送装备物品ID.getText());
+                物品ID = parseInt(全服发送装备物品ID.getText());
             }
             int 力量;
             if ("力量".equals(全服发送装备装备力量.getText())) {
                 力量 = 0;
             } else {
-                力量 = Integer.parseInt(全服发送装备装备力量.getText());
+                力量 = parseInt(全服发送装备装备力量.getText());
             }
             int 敏捷;
             if ("敏捷".equals(全服发送装备装备敏捷.getText())) {
                 敏捷 = 0;
             } else {
-                敏捷 = Integer.parseInt(全服发送装备装备敏捷.getText());
+                敏捷 = parseInt(全服发送装备装备敏捷.getText());
             }
             int 智力;
             if ("智力".equals(全服发送装备装备智力.getText())) {
                 智力 = 0;
             } else {
-                智力 = Integer.parseInt(全服发送装备装备智力.getText());
+                智力 = parseInt(全服发送装备装备智力.getText());
             }
             int 运气;
             if ("运气".equals(全服发送装备装备运气.getText())) {
                 运气 = 0;
             } else {
-                运气 = Integer.parseInt(全服发送装备装备运气.getText());
+                运气 = parseInt(全服发送装备装备运气.getText());
             }
             int HP;
             if ("HP设置".equals(全服发送装备装备HP.getText())) {
                 HP = 0;
             } else {
-                HP = Integer.parseInt(全服发送装备装备HP.getText());
+                HP = parseInt(全服发送装备装备HP.getText());
             }
             int MP;
             if ("MP设置".equals(全服发送装备装备MP.getText())) {
                 MP = 0;
             } else {
-                MP = Integer.parseInt(全服发送装备装备MP.getText());
+                MP = parseInt(全服发送装备装备MP.getText());
             }
             int 可加卷次数;
             if ("加卷次数".equals(全服发送装备装备加卷.getText())) {
                 可加卷次数 = 0;
             } else {
-                可加卷次数 = Integer.parseInt(全服发送装备装备加卷.getText());
+                可加卷次数 = parseInt(全服发送装备装备加卷.getText());
             }
 
             String 制作人名字;
@@ -6300,32 +6356,32 @@ public class LtMS extends JFrame {
             if ("给予物品时间".equals(全服发送装备装备给予时间.getText())) {
                 给予时间 = 0;
             } else {
-                给予时间 = Integer.parseInt(全服发送装备装备给予时间.getText());
+                给予时间 = parseInt(全服发送装备装备给予时间.getText());
             }
             String 是否可以交易 = 全服发送装备装备可否交易.getText();
             int 攻击力;
             if ("攻击力".equals(全服发送装备装备攻击力.getText())) {
                 攻击力 = 0;
             } else {
-                攻击力 = Integer.parseInt(全服发送装备装备攻击力.getText());
+                攻击力 = parseInt(全服发送装备装备攻击力.getText());
             }
             int 魔法力;
             if ("魔法力".equals(全服发送装备装备魔法力.getText())) {
                 魔法力 = 0;
             } else {
-                魔法力 = Integer.parseInt(全服发送装备装备魔法力.getText());
+                魔法力 = parseInt(全服发送装备装备魔法力.getText());
             }
             int 物理防御;
             if ("物理防御".equals(全服发送装备装备物理防御.getText())) {
                 物理防御 = 0;
             } else {
-                物理防御 = Integer.parseInt(全服发送装备装备物理防御.getText());
+                物理防御 = parseInt(全服发送装备装备物理防御.getText());
             }
             int 魔法防御;
             if ("魔法防御".equals(全服发送装备装备魔法防御.getText())) {
                 魔法防御 = 0;
             } else {
-                魔法防御 = Integer.parseInt(全服发送装备装备魔法防御.getText());
+                魔法防御 = parseInt(全服发送装备装备魔法防御.getText());
             }
             MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
             MapleInventoryType type = GameConstants.getInventoryType(物品ID);
@@ -6482,7 +6538,7 @@ public class LtMS extends JFrame {
             if ("100000000".equals(a1.getText())) {
                 数量 = 100;
             } else {
-                数量 = Integer.parseInt(a1.getText());
+                数量 = parseInt(a1.getText());
             }
             if (数量 <= 0 || 数量 > 999999999) {
                 return;
@@ -6880,7 +6936,7 @@ public class LtMS extends JFrame {
         int 数量 = 0;
         String 类型 = "";
         String name = "";
-        数量 = Integer.parseInt(a2.getText());
+        数量 = parseInt(a2.getText());
         name = 个人发送物品玩家名字1.getText();
         for (ChannelServer cserv1 : ChannelServer.getAllInstances()) {
             for (MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
@@ -6939,7 +6995,7 @@ public class LtMS extends JFrame {
     private void 重启服务器() {
         try {
             String 输出 = "关闭服务器倒数时间";
-            minutesLeft = Integer.parseInt(jTextField22.getText());
+            minutesLeft = parseInt(jTextField22.getText());
             if (ts == null && (t == null || !t.isAlive())) {
                 t = new Thread(ShutdownServer.getInstance());
                 ts = EventTimer.getInstance().register(new Runnable() {
@@ -7029,7 +7085,7 @@ public class LtMS extends JFrame {
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, str));
                             break;
                         case 4:
-                            mch.startMapEffect(str, Integer.parseInt(公告发布喇叭代码.getText()));
+                            mch.startMapEffect(str, parseInt(公告发布喇叭代码.getText()));
                             break;
                         default:
                             break;
@@ -7061,6 +7117,7 @@ public class LtMS extends JFrame {
             Timer.WorldTimer.GuiTimer.getInstance().register(new Runnable() {
                 @Override
                 public void run() {
+                    //内存使用统计
                     Runtime rt = Runtime.getRuntime();
                     long totalMemory = rt.totalMemory() / 1024 / 1024;
                     long usedMemory = totalMemory - rt.freeMemory() / 1024 / 1024;
@@ -7623,7 +7680,7 @@ public class LtMS extends JFrame {
     private void 刷新禁止登陆开关() {
         String 刷新禁止登陆开关显示 = "";
         int 禁止登陆开关 = LtMS.ConfigValuesMap.get("禁止登陆开关");
-        if (禁止登陆开关 >= 1) {
+        if (禁止登陆开关 == 0) {
             this.禁止登陆开关.setIcon(new ImageIcon(getClass().getResource("ON3.png")));
         } else {
             this.禁止登陆开关.setIcon(new ImageIcon(getClass().getResource("OFF3.png")));

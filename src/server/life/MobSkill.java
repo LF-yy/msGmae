@@ -133,144 +133,138 @@ public class MobSkill
     }
     
     public void applyEffect(final MapleCharacter player, final MapleMonster monster, final boolean skill) {
-        //尝试使用线程
-        Thread newThread = new Thread(() -> {
+        if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+            return;
+        }
+        try {
+            MapleDisease disease = null;
+            final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
+            final List<Integer> reflection = new LinkedList<Integer>();
+            if (LtMS.ConfigValuesMap.get((Object)"怪物状态开关") >= 1) {
+                switch (this.skillId) {
+                    case 102:
+                    case 112:
+                    case 152: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
+                        break;
+                    }
+                    case 131: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
+                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
+                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
+                        break;
+                    }
+                    case 128: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
+                        break;
+                    }
+                    case 103:
+                    case 113:
+                    case 153: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
+                        //onster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
+                        //onster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
+                        break;
+                    }
+                    case 110:
+                    case 150: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
+                        break;
+                    }
+                    case 101:
+                    case 111:
+                    case 151: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
+                        break;
+                    }
+                    case 120: {
+                        if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 ){
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
+                        }
+                        break;
+                    }
+                    case 121: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
+                        break;
+                    }
+                    case 122: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
+                        break;
+                    }
+                    case 124: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
+                        break;
+                    }
+                    case 114: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
+                        break;
+                    }
+                    case 140: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
+                        break;
+                    }
+                    case 141: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
+                        break;
+                    }
+                    case 200: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
+                        break;
+                    }
+                    case 127: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
+                        break;
+                    }
+                    case 129: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
+                        break;
+                    }
+                    case 143: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 将开启物理反射"));
+                        break;
+                    }
+                    case 144: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 将开启魔法反射"));
 
-        MapleDisease disease = null;
-        final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
-        final List<Integer> reflection = new LinkedList<Integer>();
-            try {
-                if (LtMS.ConfigValuesMap.get((Object)"怪物状态开关") >= 1) {
-                    switch (this.skillId) {
-                        case 102:
-                        case 112:
-                        case 152: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
-                            break;
-                        }
-                        case 131: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
-                           // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
-                           // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
-                            break;
-                        }
-                        case 128: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
-                            break;
-                        }
-                        case 103:
-                        case 113:
-                        case 153: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
-                            //onster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
-                            //onster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
-                            break;
-                        }
-                        case 110:
-                        case 150: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
-                            break;
-                        }
-                        case 101:
-                        case 111:
-                        case 151: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
-                            break;
-                        }
-                        case 120: {
-                            if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 ){
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
-                            }
-                            break;
-                        }
-                        case 121: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
-                            break;
-                        }
-                        case 122: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
-                            break;
-                        }
-                        case 124: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
-                            break;
-                        }
-                        case 114: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
-                            break;
-                        }
-                        case 140: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
-                            break;
-                        }
-                        case 141: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
-                            break;
-                        }
-                        case 200: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
-                            break;
-                        }
-                        case 127: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
-                            break;
-                        }
-                        case 129: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
-                            break;
-                        }
-                        case 143: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 2秒后将开启物理反射"));
-                            Thread.sleep(2000);
-                            break;
-                        }
-                        case 144: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 2秒后将将开启魔法反射"));
-                            Thread.sleep(2000);
-
-                            break;
-                        }
-                        case 145: {
-                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 2秒后将开启物理魔法反射"));
-                            Thread.sleep(2000);
-                            break;
-                        }
-                        default: {
-                            //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用未知技能 " + this.skillId));
-                            return;
-                        }
+                        break;
+                    }
+                    case 145: {
+                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 将开启物理魔法反射"));
+                        break;
+                    }
+                    default: {
+                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用未知技能 " + this.skillId));
+                        return;
                     }
                 }
-            } catch (InterruptedException e) {
-
             }
 
             switch (this.skillId) {
@@ -343,9 +337,6 @@ public class MobSkill
             case 135:
             case 136:
             case 137: {
-                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
-                    return;
-                }
                 if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 && this.skillId ==120){
                     break;
                 }
@@ -353,6 +344,11 @@ public class MobSkill
                 break;
             }
             case 127: {
+                if (System.currentTimeMillis()-player.get被驱散时间() < LtMS.ConfigValuesMap.get("驱散冷却时间")){
+                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [驱散]未生效"));
+                    return;
+                }
+                player.set被驱散时间(System.currentTimeMillis());
                 if (this.lt != null && this.rb != null && skill && monster != null && player != null) {
                     for (final MapleCharacter character : this.getPlayersInRange(monster, player)) {
                         character.dispel();
@@ -393,16 +389,20 @@ public class MobSkill
                 break;
             }
             case 140: {
-                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                if (System.currentTimeMillis()-player.get物理无效时间() < LtMS.ConfigValuesMap.get("物理无效冷却时间")){
+                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [物理无效]未生效"));
                     return;
                 }
+                player.set物理无效时间(System.currentTimeMillis());
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 break;
             }
             case 141: {
-                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
+                if (System.currentTimeMillis()-player.get魔法无效时间() < LtMS.ConfigValuesMap.get("魔法无效冷却时间")){
+                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [魔法无效]未生效"));
                     return;
                 }
+                player.set魔法无效时间(System.currentTimeMillis());
                 stats.put(MonsterStatus.MAGIC_IMMUNITY, Integer.valueOf(this.x));
                 break;
             }
@@ -411,9 +411,7 @@ public class MobSkill
                 break;
             }
             case 143: {
-                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
-                    return;
-                }
+
                 stats.put(MonsterStatus.WEAPON_DAMAGE_REFLECT, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 reflection.add(Integer.valueOf(this.x));
@@ -428,9 +426,7 @@ public class MobSkill
                 break;
             }
             case 144: {
-                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
-                    return;
-                }
+
                 stats.put(MonsterStatus.MAGIC_DAMAGE_REFLECT, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.MAGIC_IMMUNITY, Integer.valueOf(this.x));
                 reflection.add(Integer.valueOf(this.x));
@@ -445,9 +441,7 @@ public class MobSkill
                 break;
             }
             case 145: {
-                if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
-                    return;
-                }
+
                 stats.put(MonsterStatus.WEAPON_DAMAGE_REFLECT, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 stats.put(MonsterStatus.MAGIC_DAMAGE_REFLECT, Integer.valueOf(this.x));
@@ -538,31 +532,32 @@ public class MobSkill
                 break;
             }
         }
-        if (stats.size() > 0 && monster != null) {
-            if (this.lt != null && this.rb != null && skill) {
-                for (final MapleMapObject mons2 : this.getObjectsInRange(monster, MapleMapObjectType.MONSTER)) {
-                    ((MapleMonster)mons2).applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration() > 10 ? LtMS.ConfigValuesMap.get("怪物BUFF持续时间") : this.getDuration(), this, reflection);
+            if (stats.size() > 0 && monster != null) {
+                if (this.lt != null && this.rb != null && skill) {
+                    for (final MapleMapObject mons2 : this.getObjectsInRange(monster, MapleMapObjectType.MONSTER)) {
+                        ((MapleMonster)mons2).applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration() > 10 ? LtMS.ConfigValuesMap.get("怪物BUFF持续时间") : this.getDuration(), this, reflection);
+                    }
+                }
+                else {
+                    monster.applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration() > 10 ? LtMS.ConfigValuesMap.get("怪物BUFF持续时间") : this.getDuration(), this, reflection);
                 }
             }
-            else {
-                monster.applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration() > 10 ? LtMS.ConfigValuesMap.get("怪物BUFF持续时间") : this.getDuration(), this, reflection);
-            }
-        }
-        if (disease != null && player != null) {
-            if (this.lt != null && this.rb != null && skill && monster != null) {
-                for (MapleCharacter chr2 : this.getPlayersInRange(monster, player)) {
-                    chr2.getDiseaseBuff(disease, this);
+            if (disease != null && player != null) {
+                if (this.lt != null && this.rb != null && skill && monster != null) {
+                    for (MapleCharacter chr2 : this.getPlayersInRange(monster, player)) {
+                        chr2.getDiseaseBuff(disease, this);
+                    }
+                }
+                else {
+                    player.getDiseaseBuff(disease, this);
                 }
             }
-            else {
-                player.getDiseaseBuff(disease, this);
+            if (monster != null) {
+                monster.setMp(monster.getMp() - this.getMpCon());
             }
+        } catch (Exception e) {
+
         }
-        if (monster != null) {
-            monster.setMp(monster.getMp() - this.getMpCon());
-        }
-        });
-        newThread.start();
 
     }
     

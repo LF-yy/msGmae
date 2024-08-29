@@ -8,6 +8,7 @@ import java.sql.SQLException;
 
 import gui.CongMS;
 import gui.LtMS;
+import handling.world.World;
 import tools.FileoutputUtil;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -106,7 +107,7 @@ public class MapleShop
     }
     
     public void sell(final MapleClient c, final MapleInventoryType type, final byte slot, short quantity) {
-        if (quantity == 65535 || quantity == 0) {
+        if (quantity >= 32767 || quantity == 0 || quantity<0) {
             quantity = 1;
         }
         final IItem item = c.getPlayer().getInventory(type).getItem((short)slot);
@@ -117,13 +118,46 @@ public class MapleShop
             quantity = item.getQuantity();
         }
         short iQuant = item.getQuantity();
-        if (iQuant == 65535) {
+        if (iQuant >= 32767) {
             iQuant = 1;
         }
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         if (ii.cantSell(item.getItemId())) {
             return;
         }
+        //校验
+       final MapleShopItem itemInfo = findById(item.getItemId());
+        long 付款金额 = GameConstants.isRechargable(itemInfo.getItemId()) ? itemInfo.getPrice(): (long) itemInfo.getPrice() * quantity;
+        if(付款金额<=0 || 付款金额>=Integer.MAX_VALUE){
+            c. sendPacket (MaplePacketCreator.confirmShopTransaction((byte)0));
+            c.sendPacket(MaplePacketCreator. enableActions());
+            return;
+        }
+
+        int 付款前拥有金币 = c.getPlayer().getMeso();
+        if (itemInfo != null && itemInfo.getPrice() > 0 && itemInfo.getReqItem() ==0){
+            if(付款金额>0&& c.getPlayer().getMeso()>=付款金额){
+                if (MapleInventoryManipulator.checkSpace(c, itemInfo.getItemId(), (int)quantity,"")){
+                    if(quantity >= 1){
+                        if(付款金额 != (itemInfo.getPrice() * quantity)) {//付款价格不等于数据库价格
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, c.getPlayer().getName() + "尝试使用" + 付款金额 + "金币购买"+itemInfo.getPrice() * quantity + "金币的道具，被系统警告,超过三次自动封号。"));
+                            c.getPlayer().gainrwjf(1);
+                            if (c.getPlayer().getrwjf() >= 3){
+                                //封号
+                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理員永久停封。"));
+                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理員永久停封。"));
+                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理員永久停封。"));
+                                c.getPlayer().ban("使用数值外挂",true,true,true);
+                                return;
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+
         if (quantity <= iQuant && (iQuant > 0 || GameConstants.isRechargable(item.getItemId()))) {
             MapleInventoryManipulator.removeFromSlot(c, type, (short)slot, quantity, false);
             double price;

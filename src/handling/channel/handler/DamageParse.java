@@ -53,7 +53,7 @@ import util.ListUtil;
 public class DamageParse
 {
     public static int 固定伤害;
-    public static Map<Integer, Integer> MobRedDam;
+    public static Map<Integer, Double> MobRedDam;
     public static void applyAttack(final AttackInfo attack, final ISkill theSkill, final MapleCharacter player, int attackCount, final double maxDamagePerMonster, final MapleStatEffect effect, final AttackType attack_type) {
         if (!player.isAlive()) {//判断角色是否还活着
             player.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
@@ -212,17 +212,21 @@ public class DamageParse
                     }
 
                     long pgsx = Math.min(((player.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
-                    if (eachd > (pgsx * 1.5)) {
+                    if (eachd > (pgsx * (LtMS.ConfigValuesMap.get("破功伤害检测倍数") /100.0 ))) {
                         FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
-//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
-//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
-//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
-//                            player.ban("开倍攻", true, true, false);
+                        if(LtMS.ConfigValuesMap.get("封停账号") >0) {
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+                            player.ban("开倍攻", true, true, false);
+                            return;
+                        }
                         if (player.getClient()!=null && LtMS.ConfigValuesMap.get("伤害检测") == 1){
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
                             player.getClient().disconnect(true, false);
                             player.getClient().getSession().close();
+                            return;
                         }
                         eachd = Integer.parseInt(pgsx+"");
                     }
@@ -231,6 +235,10 @@ public class DamageParse
                     if (monster.getId() == 9300021 && player.getPyramidSubway() != null) {
                         player.getPyramidSubway().onMiss(player);
                     }
+                }
+                //释魂射击减少25%伤害
+                if(attack.skill == 13111002 && LtMS.ConfigValuesMap.get("释魂射击削弱")>0){
+                    newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * 0.75);
                 }
                 int 套装1附加伤害 = 0, 套装2附加伤害 = 0, 套装3附加伤害 = 0, 套装4附加伤害 = 0, 套装5附加伤害 = 0, 套装6附加伤害 = 0;
                 int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
@@ -408,13 +416,15 @@ public class DamageParse
                 }
                 //套装伤害计算
                 tzjc t = new tzjc();
+                newtotDamageToOneMonster = 伤害减伤(monster, newtotDamageToOneMonster);
                 newtotDamageToOneMonster = t.star_damage(player, newtotDamageToOneMonster, monster);
                 if (attack.skill != 1221011) {
                    // monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
 //                    long newDamage = 0L;
 //                    newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
 //                    newtotDamageToOneMonster += newDamage;
-//                    newtotDamageToOneMonster = 伤害减伤(monster.getId(), newtotDamageToOneMonster);
+
+
                     monster.damage(player, newtotDamageToOneMonster + 附加伤害总和, true, attack.skill);
                 } else {
                     monster.damage(player, monster.getStats().isBoss() ? 500000L : (monster.getHp() - 1L), true, attack.skill);
@@ -433,11 +443,19 @@ public class DamageParse
                 }
                 //战神吸血
                 if (player.getBuffedValue(MapleBuffStat.COMBO_DRAIN) != null) {
-                    stats.setHp(stats.getHp() + (int)Math.min(monster.getMobMaxHp(), (long)Math.min((int)((double)totDamage * (double)player.getStatForBuff(MapleBuffStat.COMBO_DRAIN).getX() / 100.0), stats.getMaxHp() / 2)), true);
+                    try {
+                        int hp = (int)Math.min(3000, (long)(totDamage * player.getStatForBuff(MapleBuffStat.COMBO_DRAIN).getX() / 100.0));
+                        if(hp<0){
+                            hp = 3000;
+                        }
+                        stats.setHp(stats.getHp() + hp, true);
+                    } catch (Exception e) {
+                        stats.setHp(stats.getHp() + 3000, true);
+                    }
                 }
-                if (player.getBuffedValue(MapleBuffStat.COMBO_DRAIN) != null) {
-                    stats.setHp(stats.getHp() + (int)Math.min(monster.getMobMaxHp(), (long)Math.min((int)((double)totDamage * (double)player.getStatForBuff(MapleBuffStat.COMBO_DRAIN).getX() / 100.0), stats.getMaxHp() / 2)), true);
-                }
+//                if (player.getBuffedValue(MapleBuffStat.COMBO_DRAIN) != null) {
+//                    stats.setHp(stats.getHp() + (int)Math.min(monster.getMobMaxHp(), (long)Math.min((int)((double)totDamage * (double)player.getStatForBuff(MapleBuffStat.COMBO_DRAIN).getX() / 100.0), stats.getMaxHp() / 2)), true);
+//                }
                 if(attack.skill  == 14101006){
                     if(totDamage > 0) {stats.setHp(stats.getHp() +(int) Math.min(monster.getMobMaxHp(), Math.min(((int) ((double) totDamage * (double) effect.getX() / 100.0)), stats.getMaxHp() / 2)));}
                 }
@@ -732,12 +750,15 @@ public class DamageParse
                         eachd = Integer.valueOf(0);
                     }
                     long pgsx = Math.min(((player.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
-                    if (eachd > (pgsx * 1.5)) {
+                    if (eachd > (pgsx * (LtMS.ConfigValuesMap.get("破功伤害检测倍数") /100.0 ))) {
                         FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
-//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
-//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
-//                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
-//                            player.ban("开倍攻", true, true, false);
+                           if(LtMS.ConfigValuesMap.get("封停账号") >0) {
+                               World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+                               World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+                               World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
+                               player.ban("开倍攻", true, true, false);
+                               return;
+                           }
                         if (player.getClient()!=null && LtMS.ConfigValuesMap.get("伤害检测") == 1){
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
@@ -894,11 +915,11 @@ public class DamageParse
                     monster.damagefj(附加伤害总和); //魔法伤害的附加
                 }
                 tzjc t = new tzjc();
-//                long newDamage = 0L;
-//                newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
-//                newtotDamageToOneMonster += newDamage;
+               long newDamage = 0L;
+               newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
+               newtotDamageToOneMonster += newDamage;
+                newtotDamageToOneMonster = 伤害减伤(monster, newtotDamageToOneMonster);
                 newtotDamageToOneMonster = t.star_damage(player, newtotDamageToOneMonster, monster);
-//                newtotDamageToOneMonster = 伤害减伤(monster.getId(), newtotDamageToOneMonster);
                 monster.damage(player, newtotDamageToOneMonster+附加伤害总和, true, attack.skill);
                 //monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
 
@@ -1515,8 +1536,18 @@ public class DamageParse
             if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成开关")).intValue() < 1) {
                 return 数值;
             }
-            if (damage >= (long) ((Integer) LtMS.ConfigValuesMap.get("伤害高于次数值")).intValue() || (((Integer) LtMS.ConfigValuesMap.get("道具加成自定义伤害开关")).intValue() > 0 && play.getItemQuantity(((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成道具代码")).intValue(), false) > 0)) {
-                数值 = (long) play.getComStr() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义力量加成比例")).intValue() + (long) play.getComDex() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义敏捷加成比例")).intValue() + (long) play.getComInt() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义智力加成比例")).intValue() + (long) play.getComLuk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义运气加成比例")).intValue() + (long) play.getComWatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物攻加成比例")).intValue() + (long) play.getComMatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔攻加成比例")).intValue() + (long) play.getComWdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物防加成比例")).intValue() + (long) play.getComMdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔防加成比例")).intValue() + (long) play.getComHp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义血量加成比例")).intValue() + (long) play.getComMp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔量加成比例")).intValue();
+            if (damage >= (long) ((Integer) LtMS.ConfigValuesMap.get("伤害高于次数值")).intValue() ||
+                    (((Integer) LtMS.ConfigValuesMap.get("道具加成自定义伤害开关")).intValue() > 0 && play.getItemQuantity(((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成道具代码")).intValue(), false) > 0)) {
+                数值 = (long) play.getComStr() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义力量加成比例")).intValue() +
+                        (long) play.getComDex() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义敏捷加成比例")).intValue() +
+                        (long) play.getComInt() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义智力加成比例")).intValue() +
+                        (long) play.getComLuk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义运气加成比例")).intValue() +
+                        (long) play.getComWatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物攻加成比例")).intValue() +
+                        (long) play.getComMatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔攻加成比例")).intValue() +
+                        (long) play.getComWdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物防加成比例")).intValue() +
+                        (long) play.getComMdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔防加成比例")).intValue() +
+                        (long) play.getComHp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义血量加成比例")).intValue() +
+                        (long) play.getComMp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔量加成比例")).intValue();
             }
             if (((Integer) LtMS.ConfigValuesMap.get("扣除21E伤害")).intValue() > 0) {
                 数值 -= 2147483647L;
@@ -1540,20 +1571,20 @@ public class DamageParse
         }
         return 数值;
     }
-    public static long 伤害减伤(int mobid, long damage) {
+    public static long 伤害减伤(final MapleMonster monster, long damage) {
         long 数值 = 0L;
-        if (((Integer) LtMS.ConfigValuesMap.get("怪物减伤开关")).intValue() > 0) {
-            数值 = (long) Math.floor((double) (damage / (long) getMobRedDam(mobid)));
+        if (LtMS.ConfigValuesMap.get("怪物减伤开关")> 0) {
+            数值 = (long) Math.floor((damage * getMobRedDam(monster.getLevel())));
         } else {
             数值 = damage;
         }
         return 数值;
     }
-    public static int getMobRedDam(int mobid) {
+    public static Double getMobRedDam(int mobid) {
         if (DamageParse.MobRedDam.get(mobid) != null) {
-            return (Integer) DamageParse.MobRedDam.get(Integer.valueOf(mobid));
+            return  DamageParse.MobRedDam.get(Integer.valueOf(mobid));
         }
-        return 1;
+        return 1.0;
     }
     public static void readMobRedDam() {
         DamageParse.MobRedDam.clear();
@@ -1562,7 +1593,7 @@ public class DamageParse
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Integer sn = rs.getInt("mobid");
-                Integer numb = rs.getInt("numb");
+                Double numb = rs.getDouble("numb");
                 DamageParse.MobRedDam.put(sn, numb);
             }
             rs.close();
@@ -1575,7 +1606,7 @@ public class DamageParse
 
     static {
         DamageParse.固定伤害 = 50000;
-        MobRedDam = new HashMap();
+        MobRedDam = new Hashtable<>();
         readMobRedDam();
     }
 

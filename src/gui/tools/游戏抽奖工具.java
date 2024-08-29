@@ -146,8 +146,8 @@ public class 游戏抽奖工具 extends javax.swing.JFrame {
         for (int i = ((DefaultTableModel) (this.游戏抽奖.getModel())).getRowCount() - 1; i >= 0; i--) {
             ((DefaultTableModel) (this.游戏抽奖.getModel())).removeRow(i);
         }
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM gashapon_items");
@@ -157,6 +157,10 @@ public class 游戏抽奖工具 extends javax.swing.JFrame {
             }
         } catch (SQLException ex) {
             Logger.getLogger(游戏抽奖工具.class.getName()).log(Level.SEVERE, null, ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
 

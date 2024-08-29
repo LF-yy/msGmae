@@ -340,6 +340,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error/" + a + ":" + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -352,6 +356,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -364,6 +372,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -376,6 +388,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -388,6 +404,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -400,6 +420,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -412,6 +436,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -424,6 +452,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -436,6 +468,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -448,6 +484,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -460,6 +500,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -472,6 +516,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -503,6 +551,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -516,6 +568,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -566,7 +622,15 @@ public class 一键还原 extends JFrame
                 ps1.executeUpdate(sqlstr);
             }
         }
-        catch (SQLException ex) {}
+        catch (SQLException ex) {}finally {
+            try {
+                if (rs != null)
+                    rs.close();
+
+                if (ps1 != null)
+                    ps1.close();
+            } catch (SQLException e) {}
+        }
     }
     
     private void 清除商城所有商品() {
@@ -579,6 +643,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -592,6 +660,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -605,6 +677,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -618,6 +694,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -631,6 +711,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -643,6 +727,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -655,6 +743,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -668,6 +760,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -681,6 +777,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -694,6 +794,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -707,6 +811,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -720,6 +828,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -733,6 +845,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -746,6 +862,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -759,6 +879,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -772,6 +896,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -785,6 +913,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -798,6 +930,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -811,6 +947,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -824,6 +964,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -837,6 +981,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -850,6 +998,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -863,6 +1015,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         this.Z(8);
     }
@@ -877,6 +1033,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         this.Z(12);
     }
@@ -891,6 +1051,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         this.Z(16);
     }
@@ -905,6 +1069,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         this.Z(20);
     }
@@ -918,6 +1086,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         this.Z(22);
     }
@@ -932,6 +1104,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -945,6 +1121,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -958,6 +1138,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         this.Z(4);
     }
@@ -972,6 +1156,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -985,6 +1173,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -998,6 +1190,10 @@ public class 一键还原 extends JFrame
         }
         catch (SQLException e) {
             System.out.println("Error " + (Object)e);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     

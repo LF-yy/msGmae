@@ -197,7 +197,7 @@ public class InventoryHandler
             return false;
         }
         // 点击物品打开拍卖
-        if (toUse.getItemId() == 2022552) {
+        if (toUse.getItemId() == LtMS.ConfigValuesMap.get("拍卖箱子")) {
             c.sendPacket(MaplePacketCreator.enableActions());
             NPCScriptManager.getInstance().start(c, 9310100, "拍卖功能");
             return true;

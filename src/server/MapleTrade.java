@@ -339,7 +339,7 @@ public class MapleTrade
     
     public static void inviteTrade(final MapleCharacter c1, final MapleCharacter c2) {
         final int 玩家交易开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"玩家交易开关"));
-        if (玩家交易开关 > 0) {
+        if (玩家交易开关 == 0) {
             c1.getClient().sendPacket(MaplePacketCreator.serverNotice(1, "管理员从后台关闭了交易功能。"));
             return;
         }

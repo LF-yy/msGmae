@@ -279,6 +279,9 @@ public class 广播系统控制台 extends javax.swing.JFrame {
             }
             rs.close();
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -1,11 +1,9 @@
 package server;
 
-import abc.Game;
 import bean.*;
 import client.LoginCrypto;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.Connection;
@@ -53,19 +51,12 @@ import server.Timer.MobTimer;
 import server.Timer.PingTimer;
 import server.Timer.WorldTimer;
 import server.events.MapleOxQuizFactory;
-import server.life.MapleLifeFactory;
-import server.life.MapleMonster;
-import server.life.MapleMonsterInformationProvider;
-import server.life.PlayerNPC;
+import server.life.*;
 import server.maps.MapleMap;
 import server.maps.MapleMapFactory;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
 import server.quest.MapleQuest;
 import tools.*;
 import tools.packet.UIPacket;
-
-import javax.swing.*;
 
 
 public class Start
@@ -114,6 +105,7 @@ public class Start
     public static List<FieldSkills> fieldSkills;
     public static List<SuperSkills> superSkills;
     public static List<MobInfo> mobInfo;
+    public static List<Integer> NotParticipatingRecycling;
     public static Map<String, List<SuitSystem>> suitSystemsMap;
     //光环
     public static Map<Integer, List<FieldSkills>> fieldSkillsMap;
@@ -124,8 +116,21 @@ public class Start
     public static Map<Integer, List<BreakthroughMechanism>>  breakthroughMechanism;
     public static Map<Integer, List<Leveladdharm>>  leveladdharm;
     public static Map<Integer, List<MobInfo>>  mobInfoMap;
-    public static List<String> 授权IP = Arrays.asList("101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201");
+    public static Map<Integer, MapleGuildRanking.SponsorRank>  accurateRankMap;
+    public static Map<Integer, MapleGuildRanking.SponsorRank>  enhancedRankMap;
+    public static Map<Integer, MapleGuildRanking.SponsorRank>  dropRankMap;
+
+    public static Map<Long, List<LttItemAdditionalDamage>>  additionalDamage;
+    public static Map<Integer, Integer> ltSkillWucdTable;
+
+    public static List<MonsterGlobalDropEntry> globaldrops;
+    public static List<MonsterDropEntry> drops;
+
+    public static Map<Integer, List<MonsterDropEntry>> dropsMap;
+
+    public static List<String> 授权IP = Arrays.asList("222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23");
     public static int 计数器 = 0;
+    public static int 删除标记 = 0;
 
     public static void main(final String[] args) {
 
@@ -177,14 +182,18 @@ public class Start
                 Start.GetSuitDamTable();
                 Start.GetSuitDamTableNew();
                 Start.GetLtInitializationSkills();
+                Start.getDsTableInfo();
                 Start.GetSuitSystem();
                 Start.GetfiveTurn();
                 Start.GetBreakthroughMechanism();
                 Start.getleveladdharm();
+                Start.getAdditionalDamage();
+                Start.getNotParticipatingRecycling();
                 Start.GetSuperSkills();
                 Start.GetFieldSkills();
                 Start.getAttackInfo();
                 Start.getMobInfo();
+                Start.setLtSkillWucdTable();
                 //系统配置加载
             ServerConfig.loadSetting();
             World.init();
@@ -260,17 +269,22 @@ public class Start
             PlayerNPC.loadAll();
             LoginServer.setOn();
             MapleMapFactory.loadCustomLife();
+            //
+//            System.out.println("[开始全局爆率加载]");
+
+//            System.out.println("[开始怪物爆率加载]");
+//            setdrops();
             System.out.println("[开始加载地图吸怪检测]");
-            读取地图吸怪检测();
+            //读取地图吸怪检测();
             System.out.println("[启动角色福利泡点线程]");
             福利泡点(2);
-            自动存档(3);
+            自动存档(10);
             在线时间(1);
             回收内存(300);
             回收地图(180);
             在线统计(10);
             记录在线时间(1);
-            定时重载爆率(60);
+            定时重载爆率(30);
             //吸怪检测(3);
             World.isShutDown = false;
             OnlyID.getInstance();
@@ -289,8 +303,8 @@ public class Start
     protected static void checkCopyItemFromSql() {
         final List<Integer> equipOnlyIds = new ArrayList<Integer>();
         final Map<Integer, Integer> checkItems = new HashMap<Integer, Integer>();
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM inventoryitems WHERE equipOnlyId > 0");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -322,6 +336,10 @@ public class Start
         }
         catch (SQLException ex) {
             System.out.println("[EXCEPTION] 清理复制装备出现错误." + ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     //机器码
@@ -329,7 +347,7 @@ public class Start
 
 
         int ret =0;
-        String[] macs = {"fc3fe16273e5feb8acdd116c4fd7e8fc969bd692","fbdd68311756574a1590b60ed213b5ebef0f5dec","b675a9627e710594bce3bf0ba50ff751b57c5ede","ca8dc472950604e891460041a1e8c4c89731be1a"};
+        String[] macs = {"eacb06b904cfdf2609c63e552d727a79dca358e4","fc3fe16273e5feb8acdd116c4fd7e8fc969bd692","fbdd68311756574a1590b60ed213b5ebef0f5dec","b675a9627e710594bce3bf0ba50ff751b57c5ede","ca8dc472950604e891460041a1e8c4c89731be1a","422269a6582809acfd5cfc4b888f3739d9ff891e"};
 
                 String mac = MacAddressTool.getMacAddress(false);
                 String num = returnSerialNumber();
@@ -429,6 +447,10 @@ public class Start
         }
         catch (SQLException ex) {
             System.err.println("读取动态数据库出错：" + ex.getMessage());
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     public static void 定时重载爆率(final int time) {
@@ -580,25 +602,26 @@ public class Start
             @Override
             public void run() {
                 if (记录在线时间 > 0) {
+                    Connection con = DatabaseConnection.getConnection();
                     ++MapleParty.服务端运行时长;
                     final Calendar calendar = Calendar.getInstance();
                     final int 时 = Calendar.getInstance().get(11);
                     final int 分 = Calendar.getInstance().get(12);
                     final int 星期 = Calendar.getInstance().get(7);
-                    if (时 == 0 && !(boolean)isClearBossLog) {
+                    if (时 == 0 && !isClearBossLog) {
                         System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
                         System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端开始清理每日信息 √");
                         世界BOSS刷新记录 = 0;
                         try {
-                            try (final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE characters SET todayOnlineTime = 0")) {
+                            try (final PreparedStatement ps = con.prepareStatement("UPDATE characters SET todayOnlineTime = 0")) {
                                 ps.executeUpdate();
                                 System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日在线时间完成 √");
                             }
-                            try (final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE accountidbosslog SET sz1 = 0")) {
+                            try (final PreparedStatement ps = con.prepareStatement("UPDATE accountidbosslog SET sz1 = 0")) {
                                 ps.executeUpdate();
                                 System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日在线时间完成 √");
                             }
-                            try (final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog SET characterid = 0")) {
+                            try (final PreparedStatement ps = con.prepareStatement("UPDATE bosslog SET characterid = 0 where type = 0")) {
                                 ps.executeUpdate();
                                 System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日log信息完成 √");
                             }
@@ -609,63 +632,63 @@ public class Start
                             System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端处理每日数据出错 × " + ex.getMessage());
                             System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
                         }
-                        isClearBossLog = Boolean.valueOf(true);
-                        魔族入侵 = Boolean.valueOf(false);
-                        魔族攻城 = Boolean.valueOf(false);
+                        isClearBossLog = true;
+                        魔族入侵 = false;
+                        魔族攻城 = false;
                     }
                     else if (时 == 23) {
-                        isClearBossLog = Boolean.valueOf(false);
+                        isClearBossLog = false;
                     }
-                    if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"魔族突袭开关")) == 1 && calendar.get(11) == 22 && !(boolean)魔族入侵) {
+                    if (LtMS.ConfigValuesMap.get("魔族突袭开关")== 1 && calendar.get(11) == 22 && !魔族入侵) {
                         活动魔族入侵.魔族入侵线程();
-                        魔族入侵 = Boolean.valueOf(true);
+                        魔族入侵 = true;
                     }
-                    if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"魔族攻城开关")) == 1 && Calendar.getInstance().get(7) == 1 && 时 == 21 && 分 <= 10 && !(boolean)魔族攻城) {
+                    if (LtMS.ConfigValuesMap.get("魔族攻城开关") == 1 && Calendar.getInstance().get(7) == 1 && 时 == 21 && 分 <= 10 && !魔族攻城) {
                         活动魔族攻城.魔族攻城线程();
-                        魔族攻城 = Boolean.valueOf(true);
+                        魔族攻城 = true;
                     }
-                    if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"幸运职业开关")) == 1) {
-                        if (时 == 11 && !(boolean)幸运职业) {
+                    if (LtMS.ConfigValuesMap.get("幸运职业开关") == 1) {
+                        if (时 == 11 && !幸运职业) {
                             Start.幸运职业();
-                            幸运职业 = Boolean.valueOf(true);
+                            幸运职业 = true;
                         }
-                        else if (时 == 23 && (boolean)幸运职业) {
+                        else if (时 == 23 && 幸运职业) {
                             Start.幸运职业();
-                            幸运职业 = Boolean.valueOf(false);
+                            幸运职业 = false;
                         }
                         else if (MapleParty.幸运职业 == 0) {
                             Start.幸运职业();
                         }
                     }
-                    if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"周末倍率开关")) == 1) {
+                    if (LtMS.ConfigValuesMap.get("周末倍率开关") == 1) {
                         switch (Calendar.getInstance().get(7)) {
                             case 7: {
-                                if (时 == 0 && !(boolean)倍率活动) {
+                                if (时 == 0 && !倍率活动) {
                                     活动倍率活动.倍率活动线程();
-                                    倍率活动 = Boolean.valueOf(true);
+                                    倍率活动 = true;
                                     break;
                                 }
                                 if (时 == 23) {
-                                    倍率活动 = Boolean.valueOf(false);
+                                    倍率活动 = false;
                                     break;
                                 }
                                 break;
                             }
                             case 1: {
-                                if (时 == 0 && !(boolean)倍率活动) {
+                                if (时 == 0 && !倍率活动) {
                                     活动倍率活动.倍率活动线程();
-                                    倍率活动 = Boolean.valueOf(true);
+                                    倍率活动 = true;
                                     break;
                                 }
                                 if (时 == 23) {
-                                    倍率活动 = Boolean.valueOf(false);
+                                    倍率活动 = false;
                                     break;
                                 }
                                 break;
                             }
                             case 6: {
-                                if ((boolean)倍率活动) {
-                                    倍率活动 = Boolean.valueOf(false);
+                                if (倍率活动) {
+                                    倍率活动 = false;
                                     break;
                                 }
                                 break;
@@ -673,7 +696,7 @@ public class Start
                         }
                     }
                     int time = new Date().getHours();
-                    if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"神秘商人开关")) == 1) {
+                    if (LtMS.ConfigValuesMap.get("神秘商人开关")== 1) {
                         if (MapleParty.神秘商人线程 == 0) {
                             活动神秘商人.启动神秘商人();
                             ++MapleParty.神秘商人线程;
@@ -686,7 +709,7 @@ public class Start
                         WorldBoss.随机通缉();
                             世界BOSS刷新记录 = 1;
                     }
-                    if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "野外通缉开关")) == 1) {
+                    if (LtMS.ConfigValuesMap.get( "野外通缉开关")== 1) {
                         if (初始通缉令 == 30) {
                             活动野外通缉.随机通缉();
                             初始通缉令++;
@@ -694,7 +717,7 @@ public class Start
                             初始通缉令++;
                         }
                     }
-                    if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "喜从天降开关")) == 1) {
+                    if (LtMS.ConfigValuesMap.get( "喜从天降开关") == 1) {
                         if (喜从天降 == 30) {
                             活动喜从天降.喜从天降();
                             喜从天降++;
@@ -708,7 +731,6 @@ public class Start
                             if (chr == null) {
                                 continue;
                             }
-                            Connection con = DatabaseConnection.getConnection();
                             try {
                                 try (final PreparedStatement psu = con.prepareStatement("UPDATE characters SET todayOnlineTime = todayOnlineTime + ?, totalOnlineTime = totalOnlineTime + ? WHERE id = ?")) {
                                     psu.setInt(1, time);
@@ -732,6 +754,9 @@ public class Start
                             }
                         }
                     }
+                    try {
+                        con.close();
+                    } catch (SQLException e) {}
                 }
                 else {
                     记录在线时间++;
@@ -748,9 +773,12 @@ public class Start
             psu.setInt(3, a);
             psu.executeUpdate();
             psu.close();
-        }
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             记录在线时间补救2(a);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -765,7 +793,10 @@ public class Start
         }
         catch (SQLException ex) {
             记录在线时间补救3(a);
-        }
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}        }
     }
     
     public static void 记录在线时间补救3(final int a) {
@@ -777,7 +808,12 @@ public class Start
             psu.executeUpdate();
             psu.close();
         }
-        catch (SQLException ex) {}
+        catch (SQLException ex) {
+
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}        }
     }
     
     public static void 幸运职业() {
@@ -1008,10 +1044,11 @@ public class Start
             @Override
             public void run() {
                 int ppl = 0;
+
                 for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
                     Collection<MapleCharacter> allCharacters = null;
                     try {
-                        allCharacters = cserv.getPlayerStorage().getAllCharacters();
+                        allCharacters = Collections.synchronizedCollection(cserv.getPlayerStorage().getAllCharacters());
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -1032,7 +1069,9 @@ public class Start
                                         cserv.getLastOfflineTime2();
                                         ++over;
                                     }
-                                    chr.saveToDB(false, false);
+                                    if(chr.saveData == 0) {
+                                        chr.saveToDB(false, false);
+                                    }
                                 }
                                 flag = false;
                             }
@@ -1041,12 +1080,43 @@ public class Start
                                 System.err.println("自动存档出错2：" + (Object)e2);
                             }
                         }
+
+
                     }
+                }
+                删除标记++;
+                if (删除标记 >= 5 ){
+                    Connection con = DatabaseConnection.getConnection();
+                    try {
+                        deleteInventoryequipment(con, "delete from  inventoryequipment where inventoryitemid not in (select aa.inventoryitemid from (\n" +
+                                "                select  b.inventoryitemid as inventoryitemid from  inventoryitems as a\n" +
+                                "                left join inventoryequipment as b on  a.inventoryitemid = b.inventoryitemid where b.inventoryitemid is not null) as aa)");
+                    } catch (SQLException e) {
+                        FilePrinter.printError("Inventoryequipment.txt", (Throwable) e, "[Inventoryequipment]");
+                    }finally {
+                        try {
+                            con.close();
+                        } catch (SQLException e) {}
+                    }
+                    删除标记 = 0;
                 }
             }
         }, (long)(60000 * time));
     }
-    
+    public static void deleteInventoryequipment(Connection con, final String sql) throws SQLException {
+        deleteInventoryequipmentS(con,sql);
+    }
+    public static void deleteInventoryequipmentS(Connection con, final String sql) {
+        try {
+            final PreparedStatement ps = con.prepareStatement(sql);
+            ps.executeUpdate();
+            ps.close();
+            con.close();
+        }
+        catch (Exception ex) {
+            FilePrinter.printError("Inventoryequipment.txt", (Throwable)ex, "[Inventoryequipment]");
+        }
+    }
     public static void 回收内存(final int time) {
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
@@ -1066,35 +1136,45 @@ public class Start
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
             public void run() {
-                for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                    for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
-                        for (int i = 0; i < 6; ++i) {
-                            int mapidA = 100000000 + (i + 1000000 - 2000000);
-                            final MapleCharacter player = chr;
-                            if (i == 6) {
-                                mapidA = 910000000;
-                            }
-                            final int mapid = mapidA;
-                            final MapleMap map = player.getClient().getChannelServer().getMapFactory().getMap(mapid);
-                            if (player.getClient().getChannelServer().getMapFactory().destroyMap(mapid)) {
-                                final MapleMap newMap = player.getClient().getChannelServer().getMapFactory().getMap(mapid);
-                                final MaplePortal newPor = newMap.getPortal(0);
-                                final LinkedHashSet<MapleCharacter> mcs = new LinkedHashSet<MapleCharacter>((Collection<? extends MapleCharacter>)map.getCharacters());
-                                for (final MapleCharacter m : mcs) {
-                                    int x = 0;
-                                    while (x < 5) {
-                                        try {
-                                            m.changeMap(newMap, newPor);
-                                        }
-                                        catch (Throwable t) {
-                                            System.err.println("○【地图回收】 " + FileoutputUtil.CurrentReadable_Time() + " : 系统正在回收地图 √");
-                                            ++x;
-                                            continue;
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
+//                for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                    for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+//                        for (int i = 0; i < 6; ++i) {
+//                            int mapidA = 100000000 + (i + 1000000 - 2000000);
+//                            final MapleCharacter player = chr;
+//                            if (i == 6) {
+//                                mapidA = 910000000;
+//                            }
+//
+//                            final int mapid = mapidA;
+//                            final MapleMap map = player.getClient().getChannelServer().getMapFactory().getMap(mapid);
+//                            if (player.getClient().getChannelServer().getMapFactory().destroyMap(mapid)) {
+//                                final MapleMap newMap = player.getClient().getChannelServer().getMapFactory().getMap(mapid);
+//                                final MaplePortal newPor = newMap.getPortal(0);
+//                                final LinkedHashSet<MapleCharacter> mcs = new LinkedHashSet<MapleCharacter>((Collection<? extends MapleCharacter>)map.getCharacters());
+//                                for (final MapleCharacter m : mcs) {
+//                                    int x = 0;
+//                                    while (x < 5) {
+//                                        try {
+//                                            m.changeMap(newMap, newPor);
+//                                        }
+//                                        catch (Throwable t) {
+//                                            System.err.println("○【地图回收】 " + FileoutputUtil.CurrentReadable_Time() + " : 系统正在回收地图 √");
+//                                            ++x;
+//                                            continue;
+//                                        }
+//                                        break;
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+                for ( ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    Collection<MapleMap> allInstanceMaps = cserv.getMapFactory().getAllInstanceMaps();
+                    for (MapleMap allInstanceMap : allInstanceMaps) {
+                        if(allInstanceMap.getAllMonstersThreadsafe().size()>0 && allInstanceMap.characterSize() == 0 && allInstanceMap.getAllMonstersThreadsafe().stream().noneMatch(monstermo ->  monstermo.getStats().isBoss())) {
+                            cserv.getMapFactory().destroyMap(allInstanceMap.getId(), true);
+                            cserv.getMapFactory().HealMap(allInstanceMap.getId());
                         }
                     }
                 }
@@ -1344,7 +1424,18 @@ public class Start
         suitSystems = new ArrayList<>();
         fieldSkills = new ArrayList<>();
         superSkills = new ArrayList<>();
+
+         accurateRankMap = new Hashtable<>();
+         enhancedRankMap = new Hashtable<>();
+         dropRankMap = new Hashtable<>();
+        additionalDamage = new Hashtable<>();
+        globaldrops = new ArrayList<>();
+        drops = new ArrayList<>();
+
+        dropsMap = new Hashtable<>();
+        ltSkillWucdTable = new Hashtable<>();
         mobInfo = new ArrayList<>();
+        NotParticipatingRecycling = new ArrayList<>();
         breakthroughMechanism = new Hashtable<>();
         leveladdharm = new Hashtable<>();
         fieldSkillsMap = new Hashtable<>();
@@ -1366,11 +1457,11 @@ public class Start
         Start.更新时间3=0;
         Start.喜从天降 = 0;;
         Start.初始通缉令 = 0;
-        Start.倍率活动 = Boolean.valueOf(false);
-        Start.幸运职业 = Boolean.valueOf(false);
-        Start.魔族入侵 = Boolean.valueOf(false);
-        Start.isClearBossLog = Boolean.valueOf(false);
-        Start.魔族攻城 = Boolean.valueOf(false);
+        Start.倍率活动 = false;
+        Start.幸运职业 = false;
+        Start.魔族入侵 = false;
+        Start.isClearBossLog = false;
+        Start.魔族攻城 = false;
         Start.Z = 0;
         Start.福利泡点 = 0;
         Start.回收内存 = 0;
@@ -1427,6 +1518,7 @@ public class Start
             }
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("双爆装备加载失败：" + ex.getMessage());
         }
@@ -1443,6 +1535,7 @@ public class Start
             }
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("怪物替换表加载失败：" + ex.getMessage());
         }
@@ -1462,8 +1555,29 @@ public class Start
             }
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("个人赋能加成表出错：" + ex.getMessage());
+        }
+    }
+    public static void getDsTableInfo() {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT name, itemid,numb FROM lt_ds_table");
+            rs = ps.executeQuery();
+            tzjc.dsMap.clear();
+            while (rs.next()) {
+                int name = rs.getInt("itemid");
+                long val = rs.getLong("numb");
+                tzjc.dsMap.put(name, val);
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            System.out.println("段伤表加载失败：" + ex.getMessage());
         }
     }
 
@@ -1484,6 +1598,7 @@ public class Start
             }
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("加载初始化技能等级表出错：" + ex.getMessage());
         }
@@ -1523,6 +1638,7 @@ public class Start
             suitSystemsMap = suitSystems.stream().collect(Collectors.groupingBy(SuitSystem::getEquipList));
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("套装属性异常：" + ex.getMessage());
         }
@@ -1536,7 +1652,7 @@ public class Start
         ResultSet rs = null;
         try {
             Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
-            ps = con.prepareStatement("SELECT characterid,skillid,skill_name,skill_leve,injuryinterval,injurydelaytime,damagedestructiontime,skillLX,skillLY,skillRX,skillRY,ranges,harm FROM lt_field_skills");
+            ps = con.prepareStatement("SELECT characterid,skillid,skill_name,skill_leve,injuryinterval,injurydelaytime,damagedestructiontime,skillLX,skillLY,skillRX,skillRY,ranges,harm,dj_count FROM lt_field_skills");
 
 
             rs = ps.executeQuery();
@@ -1555,11 +1671,13 @@ public class Start
                 su.setSkillRY(rs.getInt("skillRY"));
                 su.setRange(rs.getInt("ranges"));
                 su.setHarm(rs.getDouble("harm"));
+                su.setDjCount(rs.getInt("dj_count"));
                 fieldSkills.add(su);
             }
             fieldSkillsMap = fieldSkills.stream().collect(Collectors.groupingBy(FieldSkills::getCharacterid));
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("光环信息加载异常：" + ex.getMessage());
         }
@@ -1599,6 +1717,7 @@ public class Start
             superSkillsMap = superSkills.stream().collect(Collectors.groupingBy(SuperSkills::getCharacterid));
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("超级技能信息加载异常：" + ex.getMessage());
         }
@@ -1642,6 +1761,25 @@ public class Start
             System.out.println("境界系统加载异常：" + ex.getMessage());
         }
     }
+    public static void getNotParticipatingRecycling(){
+        List<Integer> list = new ArrayList<>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try  {
+            Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT numb FROM lt_notparticipatingrecycling");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("numb"));
+            }
+            ps.execute();
+            ps.close();
+            con.close();
+            NotParticipatingRecycling = list;
+        } catch (SQLException ex) {
+            System.out.println("getNotParticipatingRecycling出错：" + ex.getMessage());
+        }
+    }
     public static void getleveladdharm(){
         List<Leveladdharm> list = new ArrayList<>();
         PreparedStatement ps = null;
@@ -1655,7 +1793,27 @@ public class Start
             }
             ps.execute();
             ps.close();
+            con.close();
             leveladdharm = list.stream().collect(Collectors.groupingBy(Leveladdharm::getLevel));
+        } catch (SQLException ex) {
+            System.out.println("getleveladdharm出错：" + ex.getMessage());
+        }
+    }
+    public static void getAdditionalDamage(){
+        List<LttItemAdditionalDamage> list = new ArrayList<>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try  {
+            Connection con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT * FROM ltt_item_additional_damage");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new LttItemAdditionalDamage(rs.getLong("id"),rs.getInt("item_id"),rs.getString("item_name"),rs.getLong("type"),rs.getInt("remark")));
+            }
+            ps.execute();
+            ps.close();
+            con.close();
+            additionalDamage = list.stream().collect(Collectors.groupingBy(LttItemAdditionalDamage::getType));
         } catch (SQLException ex) {
             System.out.println("getleveladdharm出错：" + ex.getMessage());
         }
@@ -1686,8 +1844,54 @@ public class Start
             mobInfoMap = mobInfoList.stream().collect(Collectors.groupingBy(MobInfo::getMobId));
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("怪物血量重载表加载异常：" + ex.getMessage());
+        }
+    }
+
+    /**
+     * 全局爆率
+     */
+    public static void setGlobaldrops() {
+        globaldrops.clear();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM drop_data_global WHERE chance > 0");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                globaldrops.add(new MonsterGlobalDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("continent"), rs.getByte("dropType"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
+            }
+            rs.close();
+            ps.close();
+            con.close();
+            System.out.println("全局爆率加载成功,加载的怪物数量：" + globaldrops.size());
+
+        } catch (SQLException ex) {
+            System.out.println("全局爆率加载异常：" + ex.getMessage());
+        }
+    }
+    /**
+     * 全局爆率
+     */
+    public static void setLtSkillWucdTable() {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM lt_skill_wucd_table");
+            rs = ps.executeQuery();
+            ltSkillWucdTable.clear();
+            while (rs.next()) {
+                ltSkillWucdTable.put(rs.getInt("skillid"),rs.getInt("skillid"));
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            System.out.println("无CD技能加载异常：" + ex.getMessage());
         }
     }
 
@@ -1710,6 +1914,7 @@ public class Start
             fiveTurn = list.stream().collect(Collectors.groupingBy(FiveTurn::getCharactersid));
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("5转数据获取异常：" + ex.getMessage());
         }
@@ -1736,6 +1941,7 @@ public class Start
             ps.setInt(13,info.unk);
             ps.execute();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("技能封包保存异常：" + ex.getMessage());
         }
@@ -1769,6 +1975,7 @@ public class Start
             allAttackInfo = list.stream().collect(Collectors.groupingBy(AttackInfo::getSkill));
             rs.close();
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.out.println("技能封包保存异常：" + ex.getMessage());
         }

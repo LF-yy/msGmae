@@ -14,6 +14,7 @@ import handling.channel.handler.MonsterCarnivalHandler;
 import handling.channel.handler.PetHandler;
 import handling.channel.handler.SummonHandler;
 import handling.cashshop.handler.MTSOperation;
+import handling.world.MaplePartyCharacter;
 import handling.world.PlayerBuffValueHolder;
 import server.MTSStorage;
 import handling.channel.handler.UserInterfaceHandler;
@@ -976,24 +977,11 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             //功能集散地
             case STRANGE_DATA:{
                 //回收装备
-                c.getPlayer().recycleEquip(c, c.getPlayer());
-                //buff自动添加
-                List<Pair<Integer, Integer>> pairs = c.getPlayer().usedBuffs();
-                for (Pair<Integer, Integer> pair : pairs){
-                    System.out.println(pair.getLeft()+"=====>"+pair.getRight());
+                if (c==null){
+                    break;
                 }
-                //技能自动激活
-//                List<PlayerBuffValueHolder> allBuffs = c.getPlayer().getAllBuffs();
-//                Map<ISkill, SkillEntry> skills = c.getPlayer().getSkills();
-//                if (Objects.nonNull(skills)){
-//                    Set<ISkill> iSkills = skills.keySet();
-//                    if (ListUtil.isNotEmpty(iSkills)){
-//                        for (ISkill skill : iSkills){
-//
-//                        }
-//                    }
-//                }
-
+                c.getPlayer().recycleEquip(c, c.getPlayer());
+                c.getPlayer().openAutoSkillBuff(c, c.getPlayer());
 
                 break;
             }

@@ -7,6 +7,7 @@ import bean.BreakthroughMechanism;
 import bean.FiveTurn;
 import gui.CongMS;
 import gui.LtMS;
+import handling.channel.MapleGuildRanking;
 import server.*;
 import server.maps.MapleDragon;
 import client.MapleBeans;
@@ -3438,6 +3439,119 @@ public class MaplePacketCreator
             mplew.writeInt(info.getLogoColor());
             mplew.writeInt(info.getLogoBg());
             mplew.writeInt(info.getLogoBgColor());
+        }
+        return mplew.getPacket();
+    }
+
+    public static byte[] showSponsorRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
+        }
+        return mplew.getPacket();
+    }
+    public static byte[] showDefeatRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
+        }
+        return mplew.getPacket();
+    }
+    public static byte[] showBossRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
+        }
+        return mplew.getPacket();
+    }
+    public static byte[] showRedRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
+        }
+        return mplew.getPacket();
+    }
+    public static byte[] showAccurateRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
+        }
+        return mplew.getPacket();
+    }
+    public static byte[] showEnhancedRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
+        }
+        return mplew.getPacket();
+    }
+    public static byte[] showDropRanks(final int npcid, final List<MapleGuildRanking.SponsorRank> all) {
+        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());
+        mplew.write(73);
+        mplew.writeInt(npcid);
+        mplew.writeInt(all.size());
+        for (final MapleGuildRanking.SponsorRank info : all) {
+            mplew.writeMapleAsciiString(info.getName());
+            mplew.writeInt(info.getCounts());
+            mplew.writeInt(info.getStr());
+            mplew.writeInt(info.getDex());
+            mplew.writeInt(info.getInt());
+            mplew.writeInt(info.getLuk());
         }
         return mplew.getPacket();
     }

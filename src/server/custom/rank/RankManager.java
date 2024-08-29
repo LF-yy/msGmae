@@ -76,12 +76,16 @@ public class RankManager
         }
         finally {
             try {
+
                 if (rs != null) {
                     rs.close();
                 }
                 if (ps != null) {
                     ps.close();
                 }
+
+                if (con != null){
+                    con.close();}
             }
             catch (SQLException ex2) {
                 Logger.getLogger(RankManager.class.getName()).log(Level.SEVERE, null, (Throwable)ex2);

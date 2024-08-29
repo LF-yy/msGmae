@@ -426,7 +426,6 @@ public class EventManager
     }
     
     public void openNpc(final MapleClient cg, final int id) {
-        NPCScriptManager.getInstance().dispose(cg);
         this.openNpc(cg, id, 0, null);
     }
     
@@ -439,6 +438,7 @@ public class EventManager
     }
     
     public void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
+        NPCScriptManager.getInstance().dispose(cg);
         cg.removeClickedNPC();
         NPCScriptManager.getInstance().start(cg, id, mode, script);
     }

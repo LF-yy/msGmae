@@ -246,11 +246,19 @@ public class World
     
     public static void handleCooldowns(MapleCharacter chr, final int numTimes, final boolean hurt) {
         final long now = System.currentTimeMillis();
-        for (final MapleCoolDownValueHolder m : chr.getCooldowns()) {
-            if (m.startTime + m.length < now) {
-                final int skil = m.skillId;
-                chr.removeCooldown(skil);
-                chr.getClient().sendPacket(MaplePacketCreator.skillCooldown(skil, 0));
+        try {
+            for (final MapleCoolDownValueHolder m : chr.getCooldowns()) {
+                if (m.startTime + m.length < now) {
+                    final int skil = m.skillId;
+                    chr.removeCooldown(skil);
+                    chr.getClient().sendPacket(MaplePacketCreator.skillCooldown(skil, 0));
+                }
+            }
+        } catch (Exception e) {
+            if (LtMS.ConfigValuesMap.get("开启负数数组检测")>1) {
+                chr.getClient().disconnect(true, false);
+                chr.getClient().getSession().close();
+                return;
             }
         }
         if (chr.getDiseaseSize() > 0) {
@@ -1638,7 +1646,7 @@ public class World
                     World.handleMap(map, this.numTimes, map.getCharactersSize());
                 }
             }
-            if (this.numTimes % 4800 == 0) {
+            if (this.numTimes % 2400 == 0) {
                 MapleMonsterInformationProvider.getInstance().clearDrops();
                 ReactorScriptManager.getInstance().clearDrops();
             }

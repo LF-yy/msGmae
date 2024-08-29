@@ -983,6 +983,9 @@ public class 爆率设置 extends javax.swing.JFrame {
                 }
                 rs.close();
                 ps.close();
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1016,6 +1019,9 @@ public class 爆率设置 extends javax.swing.JFrame {
                 }
                 rs.close();
                 ps.close();
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1252,6 +1258,9 @@ public class 爆率设置 extends javax.swing.JFrame {
                 }
                 rs.close();
                 ps.close();
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1441,6 +1450,9 @@ public class 爆率设置 extends javax.swing.JFrame {
                 }
                 rs.close();
                 ps.close();
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1523,6 +1535,9 @@ public class 爆率设置 extends javax.swing.JFrame {
                 }
                 rs.close();
                 ps.close();
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1664,6 +1679,11 @@ public void 刷新反应堆() {
             while (rs.next()) {
                 ((DefaultTableModel) 反应堆.getModel()).insertRow(反应堆.getRowCount(), new Object[]{rs.getInt("reactordropid"), rs.getInt("reactorid"), rs.getInt("itemid"), rs.getInt("chance"), MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))});
             }
+            ps.close();
+            rs.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1701,6 +1721,11 @@ public void 刷新反应堆() {
                     MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                 });
             }
+        ps.close();
+            rs.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1742,6 +1767,11 @@ public void 刷新反应堆() {
                     MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                 });
             }
+        ps.close();
+            rs.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
             世界爆物.addMouseListener(new MouseAdapter() {
                 public void mouseClicked(MouseEvent e) {
                     int i = 世界爆物.getSelectedRow();
@@ -1778,6 +1808,12 @@ public void 刷新反应堆() {
                 while (rs.next()) {
                     ((DefaultTableModel) 怪物爆物.getModel()).insertRow(怪物爆物.getRowCount(), new Object[]{rs.getInt("id"), rs.getInt("dropperid"), rs.getInt("itemid"), rs.getInt("chance"), MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))});
                 }
+                rs.close();
+                ps.close();
+
+                try {
+                    con.close();
+                } catch (SQLException e) {}
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1821,6 +1857,11 @@ public void 刷新反应堆() {
                     MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                 });
             }
+            rs.close();
+            ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1862,6 +1903,9 @@ public void 刷新反应堆() {
             }
             rs.close();
             ps.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         } catch (SQLException ex) {
             Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
         }

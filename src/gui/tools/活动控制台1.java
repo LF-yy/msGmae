@@ -547,12 +547,16 @@ public class 活动控制台1 extends JFrame
                 JOptionPane.showMessageDialog(null, (Object)"[信息]:请填写正确的值。");
                 return;
             }
-            try (Connection con = DatabaseConnection.getConnection();
-                 final PreparedStatement ps = con.prepareStatement("INSERT INTO 钓鱼物品 (itemid, chance ,expiration) VALUES (?, ?, ?)")) {
-                ps.setInt(1, Integer.parseInt(this.钓鱼物品代码.getText()));
+                try {
+                    Connection con = DatabaseConnection.getConnection();
+                    final PreparedStatement ps = con.prepareStatement("INSERT INTO 钓鱼物品 (itemid, chance ,expiration) VALUES (?, ?, ?)");
+                    ps.setInt(1, Integer.parseInt(this.钓鱼物品代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.钓鱼物品概率.getText()));
                 ps.setInt(3, 1);
                 ps.executeUpdate();
+                    try {
+                        con.close();
+                    } catch (SQLException e) {}
                 JOptionPane.showMessageDialog(null, (Object)"[信息]:新增钓鱼奖励成功。");
                 this.刷新钓鱼();
             }
@@ -775,6 +779,9 @@ public class 活动控制台1 extends JFrame
             while (rs.next()) {
                 ((DefaultTableModel)this.钓鱼物品.getModel()).insertRow(this.钓鱼物品.getRowCount(), new Object[] { Integer.valueOf(rs.getInt("id")), Integer.valueOf(rs.getInt("itemid")), Integer.valueOf(rs.getInt("chance")), MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid")) });
             }
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         catch (SQLException ex) {
             Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
@@ -806,6 +813,9 @@ public class 活动控制台1 extends JFrame
             while (rs.next()) {
                 ((DefaultTableModel)this.野外BOSS刷新时间.getModel()).insertRow(this.野外BOSS刷新时间.getRowCount(), new Object[] { rs.getString("id"), rs.getString("name"), rs.getString("Val") });
             }
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         catch (SQLException ex) {
             Logger.getLogger(活动控制台1.class.getName()).log(Level.SEVERE, null, (Throwable)ex);

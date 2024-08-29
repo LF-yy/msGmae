@@ -927,6 +927,11 @@ public class CongMS extends JFrame
             while (rs.next()) {
                 ((DefaultTableModel)this.钓鱼物品.getModel()).insertRow(this.钓鱼物品.getRowCount(), new Object[] { Integer.valueOf(rs.getInt("id")), Integer.valueOf(rs.getInt("itemid")), Integer.valueOf(rs.getInt("chance")), MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid")) });
             }
+            ps.close();
+            rs.close();
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         catch (SQLException ex) {
             Logger.getLogger(CongMS.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
@@ -9213,7 +9218,9 @@ public class CongMS extends JFrame
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
             for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
                 ++p;
-                chr.saveToDB(true, true);
+                if(chr.saveData == 0) {
+                    chr.saveToDB(true, true);
+                }
             }
         }
         final String 输出 = "[保存数据系统] 保存" + p + "个成功。";

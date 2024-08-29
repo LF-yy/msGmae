@@ -313,6 +313,9 @@ public class 物品删除管理工具 extends javax.swing.JFrame {
                         MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                     });
                 }
+                ps.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -369,6 +372,9 @@ public class 物品删除管理工具 extends javax.swing.JFrame {
                         MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                     });
                 }
+                ps.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -423,6 +429,7 @@ public class 物品删除管理工具 extends javax.swing.JFrame {
                         MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                     });
                 }
+                ps.close(); rs.close(); con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -478,6 +485,7 @@ public class 物品删除管理工具 extends javax.swing.JFrame {
                         MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                     });
                 }
+                ps.close(); rs.close(); con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -533,6 +541,8 @@ public class 物品删除管理工具 extends javax.swing.JFrame {
                         MapleItemInformationProvider.getInstance().getName(rs.getInt("itemid"))
                     });
                 }
+                ps.close(); rs.close(); con.close();
+
             } catch (SQLException ex) {
                 Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }

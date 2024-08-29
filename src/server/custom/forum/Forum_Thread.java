@@ -167,6 +167,10 @@ public class Forum_Thread
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
             return null;
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -202,6 +206,10 @@ public class Forum_Thread
         }
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
         return null;
     }
@@ -228,6 +236,10 @@ public class Forum_Thread
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
             return false;
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -258,6 +270,10 @@ public class Forum_Thread
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
             return ret;
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     
@@ -303,6 +319,10 @@ public class Forum_Thread
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
             return false;
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {}
         }
     }
     

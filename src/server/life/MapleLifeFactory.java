@@ -276,6 +276,9 @@ public class MapleLifeFactory
     public static Map<Integer, MapleMonsterStats> getMonsterStats() {
         return MapleLifeFactory.monsterStats;
     }
+    public static MapleMonsterStats getMonsterStats(final int mid) {
+        return MapleLifeFactory.monsterStats.get(mid);
+    }
 
     static {
         data = MapleDataProviderFactory.getDataProvider("Mob.wz");

@@ -15,6 +15,10 @@ public class UserLhAttraction {
      * 吸怪定点位置
      */
     private Point position;
+    /**
+     * 吸怪定点位置
+     */
+    private int mapMobCount;
 
     public UserLhAttraction(int pinDao, int mapId, Point position) {
         this.pinDao = pinDao;
@@ -44,5 +48,13 @@ public class UserLhAttraction {
 
     public void setPosition(Point position) {
         this.position = position;
+    }
+
+    public int getMapMobCount() {
+        return mapMobCount;
+    }
+
+    public void setMapMobCount(int mapMobCount) {
+        this.mapMobCount = mapMobCount;
     }
 }

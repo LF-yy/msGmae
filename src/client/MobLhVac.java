@@ -32,46 +32,64 @@ public class MobLhVac extends Thread{
 
     @Override
     public synchronized void run() {
+        final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
         try {
+           int indexs =  0;
             Random rand = new Random();
-            int ID = c.getPlayer().getId();
-            final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
-            List<MapleMonster> mapleMonsters = NPCConversationManager.轮回怪物.get(ID);
             while (!Thread.interrupted()) {
                 if(c.getPlayer()!=null){
                     if (!c.isLoggedIn()){
-                        NPCConversationManager.gain关闭轮回(ID);
-                        map.killAllMonsters(true);
-
+                        NPCConversationManager.gain关闭轮回(c.getPlayer(),mapleMap);
                         break;
                     }
                     if (c.getPlayer().getMapId() != object.getMapId()){
-                        NPCConversationManager.gain关闭轮回(ID);
-                        map.killAllMonsters(true);
+                        NPCConversationManager.gain关闭轮回(c.getPlayer(),mapleMap);
                         break;
                     }
                 }else{
-                    NPCConversationManager.gain关闭轮回(ID);
-                    map.killAllMonsters(true);
+                    NPCConversationManager.gain关闭轮回(c.getPlayer(),mapleMap);
                     break;
                 }
-                if (ListUtil.isEmpty(mapleMonsters)){
-                    NPCConversationManager.gain关闭轮回(ID);
-                    break;
-                }
+
                 //召唤怪物
-                if (mapleMonsters.size() > 0 && c.getPlayer().getMap().getAllMonster().size()< (Objects.nonNull(LtMS.ConfigValuesMap.get("轮回判定怪物數量")) ? LtMS.ConfigValuesMap.get("轮回判定怪物數量") : 150)) {
-                    for (MapleMonster mapleMonster : mapleMonsters) {
-                        mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mapleMonster.getId()), new Point(c.getPlayer().getPosition().x+rand.nextInt(300), c.getPlayer().getPosition().y));
+                boolean b = mapleMap.getAllMonster().stream().anyMatch(mapleMonster -> mapleMonster.getId() == 9300329);
+                if (!b && indexs == 0 ){
+                    mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(9300329), new Point(c.getPlayer().getPosition().x, c.getPlayer().getPosition().y));
+                    indexs++;
+                }
+                if ( mapleMap.getAllMonster().size()< object.getMapMobCount()+LtMS.ConfigValuesMap.get("轮回判定怪物數量")) {
+                    int index = 0;
+                    Thread.sleep(LtMS.ConfigValuesMap.get("轮回频率"));
+                    int i = rand.nextInt(200);
+                    for (MapleMonster mapleMonster : mapleMap.getAllMonster()) {
+                        if (mapleMap.getAllMonster().size() >= object.getMapMobCount()+LtMS.ConfigValuesMap.get("轮回判定怪物數量")){
+                            break;
+                        }
+                        if (mapleMonster.getId() == 9300329){
+                            continue;
+                        }
+                        if (mapleMonster.getStats().isBoss()){
+                            continue;
+                        }
+                        if (LtMS.ConfigValuesMap.get("轮回判定怪物數量") <=index){
+                            break;
+                        }
+                        index++;
+                        mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mapleMonster.getId()), new Point(i>100 ? object.getPosition().x + i : c.getPlayer().getPosition().x - i, object.getPosition().y));
                     }
                 }
-                this.wait(1000L);
+                this.wait(2000L);
             }
         }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-            System.err.println("[轮回]未知錯誤" + (Object)e);
+        catch (Exception e) {
+
+        }finally {
+            try {
+                NPCConversationManager.gain关闭轮回(c.getPlayer(),mapleMap);
+                c.getPlayer().dropMessage(5, "轮回已关闭");
+            } catch (Exception e) {
+            }
         }
-        c.getPlayer().dropMessage(5, "轮回已关闭");
     }
+
 }

@@ -203,6 +203,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int vip;
     private int CsMod;
     private int 在线时间;
+    private long 被驱散时间;
+    private long 物理无效时间;
+    private long 魔法无效时间;
     private Point old;
     private boolean smega;
     private boolean gashponmega;
@@ -418,6 +421,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int 等级上限;
     private int corona;
     private int coronaMap;
+    public int saveData;
+    public long buffTime;
     private Map<Integer, Integer> _equippedFuMoMap;
     private transient List<LifeMovementFragment> 吸怪RES;
 
@@ -456,6 +461,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.battleshipHP = 0;
         this.attractValue = 0;
         this.noAttractValue = 0;
+        this.saveData = 0;
+        this.buffTime = 0L;
         this.MSG = 0;
         this.打怪 = 0;
         this.吸怪 = 0;
@@ -573,6 +580,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.记录移动坐标X2 = 0.0;
         this.记录移动坐标Y2 = 0.0;
         this.等级上限 = 0;
+        this.被驱散时间 = System.currentTimeMillis();
+        this.物理无效时间 = System.currentTimeMillis();
+        this.魔法无效时间 = System.currentTimeMillis();
         this.isCheating = Boolean.valueOf(false);
         this._isCheatingPlayer = 0;
         this._equippedFuMoMap = new HashMap<Integer, Integer>();
@@ -631,6 +641,28 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
+    public long get被驱散时间() {
+        return 被驱散时间;
+    }
+
+    public void set被驱散时间(long 被驱散时间) {
+        this.被驱散时间 = 被驱散时间;
+    }
+    public long get物理无效时间() {
+        return 物理无效时间;
+    }
+
+    public void set物理无效时间(long 物理无效时间) {
+        this.物理无效时间 = 物理无效时间;
+    }
+    public long get魔法无效时间() {
+        return 魔法无效时间;
+    }
+
+    public void set魔法无效时间(long 魔法无效时间) {
+        this.魔法无效时间 = 魔法无效时间;
+    }
+
     public int getCorona() {
         return corona;
     }
@@ -638,7 +670,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setCorona(int corona) {
         this.corona = corona;
     }
-
+    public void set最高伤害(long corona) {
+        this.最高伤害 = corona;
+    }
+    public long get最高伤害() {
+        return this.最高伤害;
+    }
     public int getCoronaMap() {
         return coronaMap;
     }
@@ -1498,10 +1535,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     
-    public int saveToDB(final boolean dc, final boolean fromcs) {
-        if (this.isClone()) {
+    public  int saveToDB(final boolean dc, final boolean fromcs) {
+        if (this.isClone() || saveData > 0) {
             return -1;
         }
+        this.saveData = 1;
+
         this.setBossLog1("打Boss数量",1,this.打Boss数量);
         this.setBossLog1("打怪数量",1,this.打怪数量);
         this.打怪数量 = 0;
@@ -1722,6 +1761,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
             ps.close();
+            //技能冷却
             final List<MapleCoolDownValueHolder> cd = this.getCooldowns();
             if (dc && cd.size() > 0) {
                 ps = con.prepareStatement("INSERT INTO skills_cooldowns (charid, SkillID, StartTime, length) VALUES (?, ?, ?, ?)");
@@ -1813,8 +1853,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ps.close();
                 }
             }
+
             con.commit();
         }
+
+
+
         catch (UnsupportedOperationException ex2) {}
         catch (SQLException ex3) {}
         catch (DatabaseException e) {
@@ -1880,6 +1924,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable)es2);
                 FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)es2);
             }
+            this.saveData = 0;
         }
         return retValue;
     }
@@ -1887,7 +1932,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private void deleteWhereCharacterId(Connection con, final String sql) throws SQLException {
         deleteWhereCharacterId(con, sql, this.id);
     }
-    
+
     public static void deleteWhereCharacterId(Connection con, final String sql, final int id) {
         try {
             final PreparedStatement ps = con.prepareStatement(sql);
@@ -3525,62 +3570,61 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 等级上限 = shijiedengji;
             }
             if ( this.level >= 等级上限) {
-                //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
-                if(经验池>Integer.MAX_VALUE ) {
-                this.经验入池(this.id,(long)total);
-                }else{
-                    经验池 = 经验池 + total;
-                }
-                return;
-            }
-            final int prevexp = this.getExp();
-            int needed = GameConstants.getExpNeededForLevel((int)this.level);
-            final int 骑士团等级上限 = LtMS.ConfigValuesMap.get("骑士团等级上限");
-            final int 冒险家等级上限 = LtMS.ConfigValuesMap.get("冒险家等级上限");
-            if (total > 0) {
-                this.stats.checkEquipLevels(this, total);
-            }
-            if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && this.level >= 骑士团等级上限)) {
-                if (this.exp + total > needed) {
-                    this.setExp(needed);
-                }
-                else {
-                    this.exp += total;
+                if(this.exp + total >= Integer.MAX_VALUE) {
+                this.经验入池(this.id,total);
                 }
             }
-            else {
-                boolean leveled = false;
-                this.exp += total;
-                long oexp = (long)this.exp;
-                short olevel = this.level;
-                while (oexp >= (long)needed) {
-                    this.levelUp();
-                    leveled = true;
-                    oexp -= (long)needed;
-                    ++olevel;
-                    needed = GameConstants.getExpNeededForLevel((int)olevel);
-                    if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && olevel >= 骑士团等级上限) || oexp < (long)needed) {
-                        break;
-                    }
-                }
+                final int prevexp = this.getExp();
+                int needed = GameConstants.getExpNeededForLevel((int) this.level);
+                final int 骑士团等级上限 = LtMS.ConfigValuesMap.get("骑士团等级上限");
+                final int 冒险家等级上限 = LtMS.ConfigValuesMap.get("冒险家等级上限");
                 if (total > 0) {
-                    this.familyRep(prevexp, needed, leveled);
+                    this.stats.checkEquipLevels(this, total);
                 }
-            }
-            if (total != 0) {
-                if (this.exp < 0) {
-                    if (total > 0) {
+                if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && this.level >= 骑士团等级上限)) {
+                    if (this.exp + total > needed) {
                         this.setExp(needed);
+                    } else {
+                        if (this.exp + total < Integer.MAX_VALUE) {
+                            this.exp += total;
+                        }
                     }
-                    else if (total < 0) {
-                        this.setExp(0);
+                } else {
+                    boolean leveled = false;
+                    if (this.exp + total < Integer.MAX_VALUE) {
+                        this.exp += total;
+                    }
+                    long oexp = (long) this.exp;
+                    short olevel = this.level;
+                    while (oexp >= (long) needed) {
+                        this.levelUp();
+                        leveled = true;
+                        oexp -= (long) needed;
+                        ++olevel;
+                        needed = GameConstants.getExpNeededForLevel((int) olevel);
+                        if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && olevel >= 骑士团等级上限) || oexp < (long) needed) {
+                            break;
+                        }
+                    }
+                    if (total > 0) {
+                        this.familyRep(prevexp, needed, leveled);
                     }
                 }
-                this.updateSingleStat(MapleStat.EXP, this.getExp());
-                if (show) {
-                    this.client.sendPacket(MaplePacketCreator.GainEXP_Others(total, inChat, white));
+                if (total != 0) {
+                    if (this.exp < 0) {
+                        if (total > 0) {
+                            this.setExp(needed);
+                        }
+                        else if (total < 0) {
+                            this.setExp(0);
+                        }
+                    }
+                    this.updateSingleStat(MapleStat.EXP, this.getExp());
+                    if (show) {
+                        this.client.sendPacket(MaplePacketCreator.GainEXP_Others(total, inChat, white));
+                    }
                 }
-            }
+
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -3678,16 +3722,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.stats.checkEquipLevels(this, total);
         }
 
-        if ( this.level >= 等级上限) {
-            //this.client.sendPacket(MaplePacketCreator.serverNotice(5, "当前等级已经超过世界限制等级，暂时无法升级，请突破世界等级之后才能继续升级！"));
-            this.exp += total;
-            return;
-        }
 
         final int 冒险家等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
         final int 骑士团等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
         int needed = GameConstants.getExpNeededForLevel((int)this.level);
-        if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && this.level >= 骑士团等级上限)) {
+        if ( this.level >= 等级上限) {
+            if(this.exp + gain >= Integer.MAX_VALUE) {
+                this.经验入池(this.id,gain);
+            }else {
+                this.exp += total;
+            }
+        }else if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && this.level >= 骑士团等级上限)) {
             if (this.exp + total > needed) {
                 this.setExp(needed);
             }
@@ -4228,7 +4273,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void DoLevelMsg() {
         final int 升级快讯 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"升级快讯开关"));
-        if (升级快讯 <= 0 && !this.isGM() && this.level >= 1) {
+        if (升级快讯 > 0 && !this.isGM() && this.level >= 1) {
             final String 最高等级玩家 = NPCConversationManager.获取最高等级玩家名字();
             final StringBuilder sb = new StringBuilder("[升级快讯]: 恭喜玩家【");
             final IItem medal = this.getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-26));
@@ -5901,31 +5946,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         try {
             int count = 0;
             Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ?");
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ? and type = ?");
             ps.setInt(1, this.id);
             ps.setString(2, boss);
+            ps.setInt(3, type);
             final ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 count = rs.getInt("count");
                 if (count < 0) {
                     return count;
                 }
-                final Timestamp bossTime = rs.getTimestamp("time");
                 rs.close();
                 ps.close();
-                if (type == 0) {
-                    final Calendar sqlcal = Calendar.getInstance();
-                    if (bossTime != null) {
-                        sqlcal.setTimeInMillis(bossTime.getTime());
-                    }
-                    if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
-                        count = 0;
-                        ps = con.prepareStatement("UPDATE bosslog SET count = 0, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-                        ps.setInt(1, this.id);
-                        ps.setString(2, boss);
-                        ps.executeUpdate();
-                    }
-                }
             }
             else {
                 final PreparedStatement psu = con.prepareStatement("INSERT INTO bosslog (characterid, bossid, count, type) VALUES (?, ?, ?, ?)");
@@ -5946,34 +5978,21 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     public int getBossLog1(final String boss, final int type) {
+        Connection con = DatabaseConnection.getConnection();
         try {
             int count = 0;
-            Connection con = DatabaseConnection.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ?");
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ? and type = ?");
             ps.setInt(1, this.id);
             ps.setString(2, boss);
+            ps.setInt(3, type);
             final ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 count = rs.getInt("count");
                 if (count < 0) {
                     return count;
                 }
-                final Timestamp bossTime = rs.getTimestamp("time");
                 rs.close();
                 ps.close();
-                if (type == 0) {
-                    final Calendar sqlcal = Calendar.getInstance();
-                    if (bossTime != null) {
-                        sqlcal.setTimeInMillis(bossTime.getTime());
-                    }
-                    if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
-                        count = 0;
-                        ps = con.prepareStatement("UPDATE bosslog2 SET count = 0, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-                        ps.setInt(1, this.id);
-                        ps.setString(2, boss);
-                        ps.executeUpdate();
-                    }
-                }
             }
             else {
                 final PreparedStatement psu = con.prepareStatement("INSERT INTO bosslog2 (characterid, bossid, count, type) VALUES (?, ?, ?, ?)");
@@ -5991,6 +6010,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         catch (Exception Ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
             return -1;
+        }finally {
+            try {
+                con.close();
+            } catch (Exception e){}
         }
     }
     public void setBossLog(final String boss) {
@@ -6012,11 +6035,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setBossLog(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog(boss, type);
         try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog SET count = ?,  time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ? and type = ?");
             ps.setInt(1, bossCount + count);
-            ps.setInt(2, type);
-            ps.setInt(3, this.id);
-            ps.setString(4, boss);
+            ps.setInt(2, this.id);
+            ps.setString(3, boss);
+            ps.setInt(4, type);
             ps.executeUpdate();
             ps.close();
         }
@@ -6030,11 +6053,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setBossLog1(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog1(boss, type);
         try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?,  time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ? and type = ?");
             ps.setInt(1, bossCount + count);
-            ps.setInt(2, type);
-            ps.setInt(3, this.id);
-            ps.setString(4, boss);
+            ps.setInt(2, this.id);
+            ps.setString(3, boss);
+            ps.setInt(4, type);
             ps.executeUpdate();
             ps.close();
         }
@@ -6058,9 +6081,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     public int getPublicRecord(final String boss, final int type) {
+        Connection con = DatabaseConnection.getConnection();
         try {
             int count = 0;
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM lt_public_record WHERE  record_name = ? and type = ?");
             ps.setString(1, boss);
             ps.setInt(2, type);
@@ -6102,6 +6125,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         catch (Exception Ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
             return -1;
+        }finally {
+            try {
+                con.close();
+            }catch (Exception e) {
+
+            }
         }
     }
     
@@ -6405,7 +6434,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
-    
+
     public void dropMessage(final int type, final String message) {
         if (type == -1) {
             this.client.sendPacket(UIPacket.getTopMsg(message));
@@ -6415,6 +6444,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         else if (type == -11) {
             this.client.getSession().writeAndFlush((Object)MaplePacketCreator.yellowChat(message));
+        }
+        else if (type == 6) {
+            this.client.getSession().write(MaplePacketCreator.serverNotice(type, message));
         }
         else {
             this.client.sendPacket(MaplePacketCreator.serverNotice(type, message));
@@ -7975,6 +8007,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public int getPGSXDJ() {
         return this.PGSXDJ;
+    }
+
+    public int getLimitBreak() {
+        return (this.PGSXDJ * 10000 + 200000 )/10 ;
     }
     
     public void gainItem(final int code, final int amount) {
@@ -12043,42 +12079,237 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     //回收装备
     public void recycleEquip(final MapleClient c, MapleCharacter chr) {
 
-        if (!chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具"),1)){
-            return;
-        }
-        if (chr.getBossLog1("开启自动回收",1)==0){
-            return;
-        }
-        if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)80) == null) {
-            return;
-        }
-        int mesosGained = 0;
-        MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        for (int i = 25; i <= 96; i++) {
-            if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)i) != null) {
-                IItem item = chr.getInventory(MapleInventoryType.EQUIP).getItem((short)i).copy();
-                if (ii.isCash(item.getItemId())) {
-                    break;
-                }
-                MapleInventoryManipulator.removeFromSlot( c,MapleInventoryType.EQUIP,(short)i,(short)1,true);
-                int mesos = calculateMesos(item);
-                mesosGained += mesos;
+        try {
+            if (!chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具"),1) && !chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具1"),1)){
+                return;
             }
+            if (chr.getBossLog1("开启自动回收",1)==0){
+                return;
+            }
+            if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)80) == null) {
+                return;
+            }
+            int mesosGained = 0;
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            for (int i = 25; i <= 96; i++) {
+                if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)i) != null) {
+                    IItem item = chr.getInventory(MapleInventoryType.EQUIP).getItem((short)i).copy();
+                    if (ii.isCash(item.getItemId())) {
+                        continue;
+                    }
+                    if(Start.NotParticipatingRecycling.contains(item.getItemId())){
+                        continue;
+                    }
+                    MapleInventoryManipulator.removeFromSlot( c,MapleInventoryType.EQUIP,(short)i,(short)1,true);
+                    int mesos = calculateMesos(item);
+                    mesosGained += mesos;
+                }
+            }
+            if (mesosGained>0){
+                c.getPlayer().gainMeso(mesosGained, true);
+            }else{
+                return;
+            }
+            c.getPlayer().dropMessage(6, "装备回收成功，共获得 " + mesosGained + " 冒险币！");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        if (mesosGained>0){
-            c.getPlayer().gainMeso(mesosGained, true);
-        }else{
-            return;
+    }  //回收装备
+    public void openAutoSkillBuff(final MapleClient c, MapleCharacter chr) {
+
+        try {
+
+            if(LtMS.ConfigValuesMap.get("开启自动BUFF") ==0 ) {
+                return;
+            }
+            if (!chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具"),1) && !chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具1"),1)){
+                return;
+            }
+            long l = System.currentTimeMillis();
+            if(l-this.buffTime < LtMS.ConfigValuesMap.get("BUFF时间间隔")) {
+                return;
+            }
+            this.buffTime = l;
+            //技能自动激活
+            switch (c.getPlayer().getJob()){
+                case 100:
+                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
+                    break;
+                //英雄
+                case 110:
+                case 111:
+                case 112:
+                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
+                    c.useSkill(c.getPlayer(),1121000,c.getPlayer().getSkillLevel(1121000));
+                    c.useSkill(c.getPlayer(),1101004,c.getPlayer().getSkillLevel(1101004));
+                    c.useSkill(c.getPlayer(),1101006,c.getPlayer().getSkillLevel(1101006));
+                    //c.useSkill(c.getPlayer(),1111002,c.getPlayer().getSkillLevel(1111002));
+                    c.useSkill(c.getPlayer(),1121002,c.getPlayer().getSkillLevel(1121002));
+                    break;
+                //圣骑士
+                case 120:
+                case 121:
+                case 122:
+                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
+                    c.useSkill(c.getPlayer(),1221000,c.getPlayer().getSkillLevel(1221000));
+                    c.useSkill(c.getPlayer(),1201005,c.getPlayer().getSkillLevel(1201005));
+                    c.useSkill(c.getPlayer(),1221002,c.getPlayer().getSkillLevel(1221002));
+
+                    break;
+                //龙骑
+                case 130:
+                case 131:
+                case 132:
+                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
+                    c.useSkill(c.getPlayer(),1301005,c.getPlayer().getSkillLevel(1301005));
+                    c.useSkill(c.getPlayer(),1321000,c.getPlayer().getSkillLevel(1321000));
+                    c.useSkill(c.getPlayer(),1301004,c.getPlayer().getSkillLevel(1301004));
+                    c.useSkill(c.getPlayer(),1321002,c.getPlayer().getSkillLevel(1321002));
+                    c.useSkill(c.getPlayer(),1301007,c.getPlayer().getSkillLevel(1301007));
+                    c.useSkill(c.getPlayer(),1301006,c.getPlayer().getSkillLevel(1301006));
+                    c.useSkill(c.getPlayer(),1311008,c.getPlayer().getSkillLevel(1311008));
+                    c.useSkill(c.getPlayer(),1321007,c.getPlayer().getSkillLevel(1321007));
+
+                    //法師
+                case 200:
+                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
+                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
+                    break;
+
+                //火毒
+                case 210:
+                case 211:
+                case 212:
+                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
+                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
+                    c.useSkill(c.getPlayer(),2121000,c.getPlayer().getSkillLevel(2121000));
+                    c.useSkill(c.getPlayer(),2101001,c.getPlayer().getSkillLevel(2101001));
+                    c.useSkill(c.getPlayer(),2111005,c.getPlayer().getSkillLevel(2111005));
+                    break;
+
+                //冰雷
+                case 220:
+                case 221:
+                case 222:
+                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
+                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
+                    c.useSkill(c.getPlayer(),2221000,c.getPlayer().getSkillLevel(2221000));
+                    c.useSkill(c.getPlayer(),2201001,c.getPlayer().getSkillLevel(2201001));
+                    c.useSkill(c.getPlayer(),2211005,c.getPlayer().getSkillLevel(2211005));
+                    break;
+                //主教
+                case 230:
+                case 231:
+                case 232:
+                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
+                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
+                    c.useSkill(c.getPlayer(),2321000,c.getPlayer().getSkillLevel(2321000));
+                    c.useSkill(c.getPlayer(),2311003,c.getPlayer().getSkillLevel(2311003));
+                    c.useSkill(c.getPlayer(),2301003,c.getPlayer().getSkillLevel(2301003));
+                    c.useSkill(c.getPlayer(),2301004,c.getPlayer().getSkillLevel(2301004));
+                    break;
+                //射手
+                case 300:
+                    c.useSkill(c.getPlayer(),3001003,c.getPlayer().getSkillLevel(3001003));
+                    break;
+                //神射
+                case 310:
+                case 311:
+                case 312:
+                    c.useSkill(c.getPlayer(),3001003,c.getPlayer().getSkillLevel(3001003));
+                    c.useSkill(c.getPlayer(),3121000,c.getPlayer().getSkillLevel(3121000));
+                    c.useSkill(c.getPlayer(),3101002,c.getPlayer().getSkillLevel(3101002));
+                    c.useSkill(c.getPlayer(),3101004,c.getPlayer().getSkillLevel(3101004));
+                    c.useSkill(c.getPlayer(),3121008,c.getPlayer().getSkillLevel(3121008));
+
+                    break;
+                //弩
+                case 320:
+                case 321:
+                case 322:
+                    c.useSkill(c.getPlayer(),3001003,c.getPlayer().getSkillLevel(3001003));
+                    c.useSkill(c.getPlayer(),3221000,c.getPlayer().getSkillLevel(3221000));
+                    c.useSkill(c.getPlayer(),3201002,c.getPlayer().getSkillLevel(3201002));
+                    c.useSkill(c.getPlayer(),3201004,c.getPlayer().getSkillLevel(3201004));
+
+                    break;
+                //飞侠
+                case 400:
+                    break;
+                //刀飞
+                case 410:
+                case 411:
+                case 412:
+                    c.useSkill(c.getPlayer(),4121000,c.getPlayer().getSkillLevel(4121000));
+                    c.useSkill(c.getPlayer(),4101003,c.getPlayer().getSkillLevel(4101003));
+                    c.useSkill(c.getPlayer(),4101004,c.getPlayer().getSkillLevel(4101004));
+                    c.useSkill(c.getPlayer(),4111001,c.getPlayer().getSkillLevel(4111001));
+                    c.useSkill(c.getPlayer(),4111002,c.getPlayer().getSkillLevel(4111002));
+                    c.useSkill(c.getPlayer(),4121006,c.getPlayer().getSkillLevel(4121006));
+
+                    break;
+                //标飞
+                case 420:
+                case 421:
+                case 422:
+                    c.useSkill(c.getPlayer(),4221000,c.getPlayer().getSkillLevel(4221000));
+                    c.useSkill(c.getPlayer(),4201002,c.getPlayer().getSkillLevel(4201002));
+                    c.useSkill(c.getPlayer(),4201003,c.getPlayer().getSkillLevel(4201003));
+                    c.useSkill(c.getPlayer(),4211005,c.getPlayer().getSkillLevel(4211005));
+
+                    break;
+                //海盗
+                case 500:
+                    break;
+                //拳手
+                case 510:
+                case 511:
+                case 512:
+                    c.useSkill(c.getPlayer(),5121000,c.getPlayer().getSkillLevel(5121000));
+                    c.useSkill(c.getPlayer(),5101006,c.getPlayer().getSkillLevel(5101006));
+
+                    break;
+                //船长
+                case 520:
+                case 521:
+                case 522:
+                    c.useSkill(c.getPlayer(),5221000,c.getPlayer().getSkillLevel(5221000));
+                    c.useSkill(c.getPlayer(),5201003,c.getPlayer().getSkillLevel(5201003));
+
+                    break;
+                //战童
+                case 2000:
+                    break;
+                //战神
+                case 2100:
+                case 2110:
+                case 2111:
+                case 2112:
+                    c.useSkill(c.getPlayer(),21001003,c.getPlayer().getSkillLevel(21001003));
+                    c.useSkill(c.getPlayer(),21100005,c.getPlayer().getSkillLevel(21100005));
+                    c.useSkill(c.getPlayer(),21111001,c.getPlayer().getSkillLevel(21111001));
+                    c.useSkill(c.getPlayer(),21121003,c.getPlayer().getSkillLevel(21121003));
+                    c.useSkill(c.getPlayer(),21121000,c.getPlayer().getSkillLevel(21121000));
+
+                    break;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        c.getPlayer().dropMessage(6, "装备回收成功，共获得 " + mesosGained + " 冒险币！");
     }
     public static int calculateMesos(IItem item) {
         int level = MapleItemInformationProvider.getInstance().getReqLevel( item.getItemId());
         if (level < 1) {
             level = 1;
         }
+
+        int m = (Objects.nonNull(LtMS.ConfigValuesMap.get("装备回收金额")) ? LtMS.ConfigValuesMap.get("装备回收金额") : 1000);
+        if (level < LtMS.ConfigValuesMap.get("装备回收最低等级") ) {
+            m = LtMS.ConfigValuesMap.get("装备回收最低金额");
+        }
         // 生成一个 20000-170000 之间的随机整数，作为金币数量
-        double randomMesos = Math.floor(Math.random() * (1)) + (Objects.nonNull(LtMS.ConfigValuesMap.get("装备回收金额")) ? LtMS.ConfigValuesMap.get("装备回收金额") : 1000);//*(当前充值/1000+1)
+        double randomMesos = Math.floor(Math.random() * (1)) + m;//*(当前充值/1000+1)
         return (int)Math.floor(level * randomMesos); // 根据随机金币数量计算返还的金币数量
     }
 

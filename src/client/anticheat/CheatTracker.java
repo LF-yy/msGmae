@@ -125,8 +125,8 @@ public class CheatTracker
                     final String reason = "使用违法程式练功";
                     Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "攻击无延续自动封锁。"));
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + ((MapleCharacter)this.chr.get()).getName() + " 攻击无延续自动封锁! "));
-                    if ((LtMS.ConfigValuesMap.get("开启封锁")).intValue() > 0) {
-                        if ((LtMS.ConfigValuesMap.get("封停账号")).intValue() > 0) {
+                    if (LtMS.ConfigValuesMap.get("开启封锁")> 0) {
+                        if (LtMS.ConfigValuesMap.get("封停账号") > 0) {
                             //this.chr.get().ban("攻击速度异常攻", true, true, false);
                             if (Objects.requireNonNull(chr.get()).getClient()!=null){
                                 chr.get().getClient().disconnect(true, false);

@@ -119,6 +119,8 @@ public class SummonHandler
         if (summonEffect == null) {
             return;
         }
+        long pgsx = Math.min(((chr.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
+
         for (final SummonAttackEntry attackEntry : allDamage) {
             final int toDamage = attackEntry.getDamage();
             final MapleMonster mob2 = attackEntry.getMonster();
@@ -127,7 +129,7 @@ public class SummonHandler
                     mob2.applyStatus(chr, new MonsterStatusEffect((MonsterStatus)z.getKey(), Integer.valueOf(z.getValue()), summonSkill.getId(), null, false), summonEffect.isPoison(), 4000L, true, summonEffect);
                 }
             }
-            if (chr.isGM() || toDamage < 120000) {
+            if (chr.isGM() || toDamage <= pgsx) {
                 mob2.damage(chr, (long)toDamage, true);
                 chr.checkMonsterAggro(mob2);
                 if (mob2.isAlive()) {

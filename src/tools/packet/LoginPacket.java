@@ -46,7 +46,7 @@ public class LoginPacket
         return mplew.getPacket();
     }
     
-    public static byte[] getPermBan(final byte reason) {
+    public static byte[] getPermLtMSfinal( byte reason) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter(16);
         mplew.writeShort((int)SendPacketOpcode.LOGIN_STATUS.getValue());
         mplew.writeShort(2);

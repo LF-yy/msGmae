@@ -1,5 +1,6 @@
 package handling.channel;
 
+import server.Start;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import server.Timer.WorldTimer;
@@ -8,10 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import database.DatabaseConnection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MapleGuildRanking
 {
@@ -57,9 +57,24 @@ public class MapleGuildRanking
     private final List<levelRankingInfo> ranks火枪手;
     private final List<levelRankingInfo> ranks大副;
     private final List<levelRankingInfo> ranks船长;
-    
+
+    private List<SponsorRank> sponsorRank;
+    private List<SponsorRank> privDefeatRank;
+    private List<SponsorRank> privBossRank;
+    private List<SponsorRank> privRedRank;
+    private List<SponsorRank> privAccurateRank;
+    private List<SponsorRank> privEnhancedRank;
+    private List<SponsorRank> privDropRank;
     public MapleGuildRanking() {
         this.职业排行显示 = 10;
+        this.sponsorRank = new LinkedList<SponsorRank>();
+        this.privDefeatRank = new LinkedList<SponsorRank>();
+        this.privBossRank = new LinkedList<SponsorRank>();
+        this.privRedRank = new LinkedList<SponsorRank>();
+        this.privAccurateRank = new LinkedList<SponsorRank>();
+        this.privEnhancedRank = new LinkedList<SponsorRank>();
+        this.privDropRank = new LinkedList<SponsorRank>();
+
         this.ranks = new LinkedList<GuildRankingInfo>();
         this.ranks1 = new LinkedList<levelRankingInfo>();
         this.ranks2 = new LinkedList<mesoRankingInfo>();
@@ -100,6 +115,7 @@ public class MapleGuildRanking
         this.ranks火枪手 = new LinkedList<levelRankingInfo>();
         this.ranks大副 = new LinkedList<levelRankingInfo>();
         this.ranks船长 = new LinkedList<levelRankingInfo>();
+
     }
     
     public List<levelRankingInfo> 剑客() {
@@ -1001,7 +1017,144 @@ public class MapleGuildRanking
             System.err.println("船长排行错误");
         }
     }
-    
+
+    /**
+     * 赞助排行榜
+     */
+    private void querySponsorRank() {
+        this.sponsorRank.clear();
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("select  a.name,b.moneyc,a.level,a.str,a.dex,a.int,a.luk from  characters as a\n" +
+                    "left join accounts as b on a.accountid = b.id\n" +
+                    "where b.moneyc!= 0\n" +
+                    "order by b.moneyc desc limit 10 ");
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                final SponsorRank rank1 = new SponsorRank(rs.getString("name"), rs.getInt("moneyc"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                this.sponsorRank.add(rank1);
+            }
+            ps.close();
+            rs.close();
+        }
+        catch (SQLException e) {
+            System.err.println("querySponsorRank错误");
+        }
+    }
+    /**
+     * 破功排行榜
+     */
+    private void queryDefeatRank() {
+        this.privDefeatRank.clear();
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("select  name,CONVERT(PGSXDJ, UNSIGNED INTEGER) as PGSXDJ,level,str,dex,int,luk  from  characters \n" +
+                    "where PGSXDJ is not null " +
+                    "order by PGSXDJ desc limit 10 ");
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                final SponsorRank rank1 = new SponsorRank(rs.getString("name"), rs.getInt("PGSXDJ"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                this.privDefeatRank.add(rank1);
+            }
+            ps.close();
+            rs.close();
+        }
+        catch (SQLException e) {
+            System.err.println("queryDefeatRank错误");
+        }
+    }
+
+    /**
+     * 黑龙排行榜
+     */
+    private void queryBossRank() {
+        this.privBossRank.clear();
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("select  c.name,a.count,c.level,c.str,c.dex,c.int,c.luk  from  bosslog2  as a\n" +
+                    "left join characters as c on  a.characterid = c.id\n" +
+                    "where a.bossid = '击杀黑龙' and a.type = 1\n" +
+                    "order by a.count desc limit 10 ");
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                final SponsorRank rank1 = new SponsorRank(rs.getString("name"), rs.getInt("count"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                this.privBossRank.add(rank1);
+            }
+            ps.close();
+            rs.close();
+        }
+        catch (SQLException e) {
+            System.err.println("queryBossRank错误");
+        }
+    }
+    /**
+     * 绯红排行榜 绯红四人帮
+     */
+    private void queryRedRank() {
+        this.privRedRank.clear();
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("select  c.name,a.count,c.level,c.str,c.dex,c.int,c.luk  from  bosslog2  as a "+
+                    "     left join characters as c on  a.characterid = c.id " +
+                    "     where a.bossid = '绯红四人帮' and a.type = 1 "+
+                    "     order by a.count desc limit 10 ");
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                final SponsorRank rank1 = new SponsorRank(rs.getString("name"), rs.getInt("count"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                this.privRedRank.add(rank1);
+            }
+            ps.close();
+            rs.close();
+        }
+        catch (SQLException e) {
+            System.err.println("queryRedRank错误");
+        }
+    }
+    /**
+     * 段伤排行榜
+     */
+    private void queryAccurateRank() {
+        try {
+            this.privAccurateRank.clear();
+            for (Map.Entry<Integer, SponsorRank> integerSponsorRankEntry : Start.accurateRankMap.entrySet()) {
+                privAccurateRank.add(integerSponsorRankEntry.getValue());
+            }
+            this.privAccurateRank = privAccurateRank.stream().sorted(Comparator.comparing(SponsorRank::getCounts).reversed()).collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("queryAccurateRank错误");
+        }
+
+    }
+    /**
+     * 赋能排行榜
+     */
+    private void queryEnhancedRank() {
+        try {
+            this.privEnhancedRank.clear();
+            for (Map.Entry<Integer, SponsorRank> integerSponsorRankEntry : Start.enhancedRankMap.entrySet()) {
+                privEnhancedRank.add(integerSponsorRankEntry.getValue());
+            }
+            //sponsorRank.stream().sorted()排序
+            this.privEnhancedRank = privEnhancedRank.stream().sorted(Comparator.comparing(SponsorRank::getCounts).reversed()).collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("queryEnhancedRank错误");
+        }
+    }
+    /**
+     * 爆率排行榜
+     */
+    private void queryDropRank() {
+        try {
+            this.privDropRank.clear();
+            for (Map.Entry<Integer, SponsorRank> integerSponsorRankEntry : Start.dropRankMap.entrySet()) {
+                privDropRank.add(integerSponsorRankEntry.getValue());
+            }
+            //sponsorRank.stream().sorted()排序
+            this.privDropRank = privDropRank.stream().sorted(Comparator.comparing(SponsorRank::getCounts).reversed()).collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("queryDropRank错误");
+        }
+    }
     public void RankingUpdate() {
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
@@ -1035,6 +1188,48 @@ public class MapleGuildRanking
             this.showLevelRank();
         }
         return this.ranks1;
+    }
+    public List<SponsorRank> getSponsorRank() {
+        if (this.sponsorRank.isEmpty()) {
+            this.querySponsorRank();
+        }
+        return this.sponsorRank;
+    }
+    public List<SponsorRank> getDefeatRank() {
+        if (this.privDefeatRank.isEmpty()) {
+            this.queryDefeatRank();
+        }
+        return this.privDefeatRank;
+    }
+    public List<SponsorRank> getBossRank() {
+        if (this.privBossRank.isEmpty()) {
+            this.queryBossRank();
+        }
+        return this.privBossRank;
+    }
+    public List<SponsorRank> getRedRank() {
+        if (this.privRedRank.isEmpty()) {
+            this.queryRedRank();
+        }
+        return this.privRedRank;
+    }
+    public List<SponsorRank> getAccurateRank() {
+        if (this.privAccurateRank.isEmpty()) {
+            this.queryAccurateRank();
+        }
+        return this.privAccurateRank;
+    }
+    public List<SponsorRank> getEnhancedRank() {
+        if (this.privEnhancedRank.isEmpty()) {
+            this.queryEnhancedRank();
+        }
+        return this.privEnhancedRank;
+    }
+    public List<SponsorRank> getDropRank() {
+        if (this.privDropRank.isEmpty()) {
+            this.queryDropRank();
+        }
+            return this.privDropRank;
     }
     
     public List<mesoRankingInfo> getMesoRank() {
@@ -1146,6 +1341,47 @@ public class MapleGuildRanking
         instance = new MapleGuildRanking();
     }
     
+    public static class SponsorRank {
+        private final String name;
+        private final int counts;
+        private final int str;
+        private final int dex;
+        private final int _int;
+        private final int luk;
+
+        public SponsorRank(final String name, final int counts, final int str, final int dex, final int intt, final int luk) {
+            this.name = name;
+            this.counts = counts;
+            this.str = str;
+            this.dex = dex;
+            this._int = intt;
+            this.luk = luk;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public int getCounts() {
+            return this.counts;
+        }
+
+        public int getStr() {
+            return this.str;
+        }
+
+        public int getDex() {
+            return this.dex;
+        }
+
+        public int getInt() {
+            return this._int;
+        }
+
+        public int getLuk() {
+            return this.luk;
+        }
+    }
     public static class mesoRankingInfo
     {
         private final String name;
@@ -1154,7 +1390,7 @@ public class MapleGuildRanking
         private final int dex;
         private final int _int;
         private final int luk;
-        
+
         public mesoRankingInfo(final String name, final long meso, final int str, final int dex, final int intt, final int luk) {
             this.name = name;
             this.meso = meso;
@@ -1323,4 +1559,5 @@ public class MapleGuildRanking
             return this.logobgcolor;
         }
     }
+
 }

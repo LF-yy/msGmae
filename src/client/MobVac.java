@@ -45,9 +45,7 @@ public class MobVac  extends Thread{
                 this.wait(1000L);
             }
         }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-            System.err.println("[ItemVac]未知錯誤" + (Object)e);
+        catch (Exception e) {
         }
     }
 }
