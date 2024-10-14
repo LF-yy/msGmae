@@ -12,7 +12,7 @@ import tools.Pair;
 
 public class LieDetectorScript
 {
-    private static final String IMG_DIRECTORY = "脚本/验证码/";
+    private static final String IMG_DIRECTORY = "scripts/验证码/";
     private static final String CAPTCHA_VERIFIER = "98818D40B83AECCFB7AFD7FD9653E1037519AC61";
     private static final String CAPTCHA_SERVER = "http://localhost/captcha.php?verify=98818D40B83AECCFB7AFD7FD9653E1037519AC61";
     
@@ -30,7 +30,7 @@ public class LieDetectorScript
             return new Pair<String, String>(imgByte.substring(39, imgByte.length()), output.toString().split("CAPTCHA")[0]);
         }
         catch (IOException ex) {
-            final File directory = new File("脚本/验证码/");
+            final File directory = new File("scripts/验证码/");
             if (!directory.exists()) {
                 System.err.println("lieDetector folder does not exist!");
                 return null;
@@ -39,7 +39,7 @@ public class LieDetectorScript
             String answer = filename[Randomizer.nextInt(filename.length)];
             answer = answer.substring(0, answer.length() - 4);
             try {
-                return new Pair<String, String>(HexTool.toString(getBytesFromFile(new File("脚本/验证码/" + answer + ".jpg"))), answer);
+                return new Pair<String, String>(HexTool.toString(getBytesFromFile(new File("scripts/验证码/" + answer + ".jpg"))), answer);
             }
             catch (IOException ex2) {
                 return null;

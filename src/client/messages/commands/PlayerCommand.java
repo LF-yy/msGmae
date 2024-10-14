@@ -7,6 +7,7 @@ import gui.LtMS;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import scripting.EventManager;
+import server.Start;
 import server.gashapon.GashaponFactory;
 import client.inventory.MapleInventory;
 import server.MapleInventoryManipulator;
@@ -995,4 +996,31 @@ public class PlayerCommand
             return new StringBuilder().append("@副本拉人-副本或者boss击杀过程中有人掉线可以拉回").toString();
         }
     }
+
+    public static class 存档 extends CommandExecute {
+        public 存档() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+            c.getPlayer().saveToDB(false, false, true);
+            c.getPlayer().dropMessage(5, "当前时间是 " + FileoutputUtil.CurrentReadable_Time() + " ，角色信息存档成功了");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:指令信息 - [玩家:" + c.getPlayer().getName() + "]使用个人存档功能"));
+            return true;
+        }
+
+        public String getMessage() {
+            return "@存档     <保存当前数据>";
+        }
+    }
+
+    public static class cd extends 存档 {
+        public cd() {
+        }
+
+        public String getMessage() {
+            return "@存档     <保存当前数据>";
+        }
+    }
+
+
 }

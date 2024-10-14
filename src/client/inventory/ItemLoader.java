@@ -111,7 +111,12 @@ public enum ItemLoader
                         equip.setPotential3(rs.getShort("potential3"));
                         equip.setHpR(rs.getShort("hpR"));
                         equip.setMpR(rs.getShort("mpR"));
+                        equip.setHpRR(rs.getShort("hpRR"));
+                        equip.setMpRR(rs.getShort("mpRR"));
                         equip.setGiftFrom(rs.getString("sender"));
+                        equip.setEquipLevel(rs.getByte("itemlevel"));
+                        equip.setDaKongFuMo(rs.getString("mxmxd_dakong_fumo"));
+                        equip.setPotentials(rs.getString("snail_potentials"));
                         if (equip.getUniqueId() > -1 && GameConstants.isEffectRing(rs.getInt("itemid"))) {
                             final MapleRing ring = MapleRing.loadFromDb(equip.getUniqueId(), mit.equals((Object)MapleInventoryType.EQUIPPED));
                             if (ring != null) {
@@ -147,6 +152,7 @@ public enum ItemLoader
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
@@ -157,6 +163,7 @@ public enum ItemLoader
     public void saveItems(final List<Pair<IItem, MapleInventoryType>> items, final Integer... id) throws SQLException {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.saveItems(items, con, id);
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
@@ -169,6 +176,8 @@ public enum ItemLoader
             if (lulz.size() != this.arg.size()) {
                 return;
             }
+            //itemDelete(con, id);
+
             final StringBuilder query = new StringBuilder();
             query.append("DELETE FROM `");
             query.append(this.table);
@@ -206,7 +215,9 @@ public enum ItemLoader
             }
             query_2.append(")");
             ps = con.prepareStatement(query_2.toString(), 1);
-            final PreparedStatement pse = con.prepareStatement("INSERT INTO " + this.table_equip + " VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);
+             //PreparedStatement pse = con.prepareStatement("INSERT INTO " + this.table_equip + " VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);
+            PreparedStatement pse = con.prepareStatement("INSERT INTO " + this.table_equip + " VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);
+
             for (final Pair<IItem, MapleInventoryType> pair : items) {
                 final IItem item = (IItem)pair.getLeft();
                 final MapleInventoryType mit = (MapleInventoryType)pair.getRight();
@@ -262,6 +273,9 @@ public enum ItemLoader
                     pse.setInt(25, (int)equip.getPotential3());
                     pse.setInt(26, (int)equip.getHpR());
                     pse.setInt(27, (int)equip.getMpR());
+                    pse.setInt(30, equip.getEquipLevel());
+                    pse.setString(31, equip.getDaKongFuMo());
+                    pse.setString(32, equip.getPotentials());
                     pse.executeUpdate();
                 }
             }
@@ -269,11 +283,45 @@ public enum ItemLoader
             ps.close();
         }
         catch (SQLException ex) {
-            System.out.println((Object)ex);
+            //System.out.println((Object)ex);
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
     }
-    
+
+    public  void itemDelete( Connection con, Integer... id) {
+        try {
+            List<Integer> lulz = Arrays.asList(id);
+            if (lulz.size() != this.arg.size()) {
+                return;
+            }
+            final StringBuilder query = new StringBuilder();
+            query.append("select inventoryitemid FROM `");
+            query.append(this.table);
+            query.append("` WHERE `type` = ? AND (`");
+            query.append((String)this.arg.get(0));
+            query.append("` = ?");
+            if (this.arg.size() > 1) {
+                for (int i = 1; i < this.arg.size(); ++i) {
+                    query.append(" OR `");
+                    query.append((String)this.arg.get(i));
+                    query.append("` = ?");
+                }
+            }
+            query.append(")");
+            PreparedStatement ps = con.prepareStatement("delete from inventoryequipment where inventoryitemid in("+query.toString()+")");
+            ps.setInt(1, this.value);
+            for (int j = 0; j < lulz.size(); ++j) {
+                ps.setInt(j + 2, (int)Integer.valueOf(lulz.get(j)));
+            }
+            ps.executeUpdate();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error while deleting item");
+        }
+    }
+
+
     public static boolean isExistsByUniqueid(final int uniqueid) {
         for (final ItemLoader il : values()) {
             final StringBuilder query = new StringBuilder();
@@ -290,6 +338,7 @@ public enum ItemLoader
                 }
                 ps.close();
                 rs.close();
+                con.close();
             }
             catch (SQLException ex) {
                 Logger.getLogger(ItemLoader.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
@@ -297,5 +346,108 @@ public enum ItemLoader
             }
         }
         return false;
+    }
+
+
+    public Map<Integer, Pair<IItem, MapleInventoryType>> loadHiredItems(boolean login, int id) throws SQLException {
+        Map<Integer, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap();
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT * FROM `");
+        query.append(this.table);
+        query.append("` LEFT JOIN `");
+        query.append(this.table_equip);
+        query.append("` USING (`inventoryitemid`) WHERE `type` = ?");
+        query.append(" AND `");
+        query.append((String)this.arg.get(0));
+        query.append("` = ?");
+        if (login) {
+            query.append(" AND `inventorytype` = ");
+            query.append(MapleInventoryType.EQUIPPED.getType());
+        }
+
+        PreparedStatement ps = DBConPool.getConnection().prepareStatement(query.toString());
+        ps.setInt(1, this.value);
+        ps.setInt(2, id);
+        ResultSet rs = ps.executeQuery();
+
+        while(true) {
+            while(rs.next()) {
+                MapleInventoryType mit = MapleInventoryType.getByType(rs.getByte("inventorytype"));
+                if (!mit.equals(MapleInventoryType.EQUIP) && !mit.equals(MapleInventoryType.EQUIPPED)) {
+                    Item item = new Item(rs.getInt("itemid"), rs.getShort("position"),rs.getShort("quantity"), rs.getByte("flag"));
+                    item.setUniqueId(rs.getInt("uniqueid"));
+                    item.setOwner(rs.getString("owner"));
+                    item.setExpiration(rs.getLong("expiredate"));
+                    item.setGMLog(rs.getString("GM_Log"));
+                    item.setGiftFrom(rs.getString("sender"));
+                    item.setPrice(rs.getInt("price"));
+                    if (GameConstants.isPet(item.getItemId())) {
+                        if (item.getUniqueId() > -1) {
+                            MaplePet pet = MaplePet.loadFromDb(item.getItemId(), item.getUniqueId(), item.getPosition());
+                            if (pet != null) {
+                                item.setPet(pet);
+                            }
+                        } else {
+                            int new_unique = MapleInventoryIdentifier.getInstance();
+                            item.setUniqueId(new_unique);
+                            item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
+                        }
+                    }
+
+                    items.put(rs.getInt("inventoryitemid"), new Pair(item.copy(), mit));
+                } else {
+                    Equip equip = new Equip(rs.getInt("itemid"), rs.getShort("position"), rs.getInt("uniqueid"), rs.getByte("flag"));
+                    if (!login) {
+                        equip.setQuantity((short) 1);
+                        equip.setOwner(rs.getString("owner"));
+                        equip.setExpiration(rs.getLong("expiredate"));
+                        equip.setUpgradeSlots(rs.getByte("upgradeslots"));
+                        equip.setLevel(rs.getByte("level"));
+                        equip.setStr(rs.getShort("str"));
+                        equip.setDex(rs.getShort("dex"));
+                        equip.setInt(rs.getShort("int"));
+                        equip.setLuk(rs.getShort("luk"));
+                        equip.setHp(rs.getShort("hp"));
+                        equip.setMp(rs.getShort("mp"));
+                        equip.setWatk(rs.getShort("watk"));
+                        equip.setMatk(rs.getShort("matk"));
+                        equip.setWdef(rs.getShort("wdef"));
+                        equip.setMdef(rs.getShort("mdef"));
+                        equip.setAcc(rs.getShort("acc"));
+                        equip.setAvoid(rs.getShort("avoid"));
+                        equip.setHands(rs.getShort("hands"));
+                        equip.setSpeed(rs.getShort("speed"));
+                        equip.setJump(rs.getShort("jump"));
+                        equip.setViciousHammer(rs.getByte("ViciousHammer"));
+                        equip.setItemEXP(rs.getInt("itemEXP"));
+                        equip.setGMLog(rs.getString("GM_Log"));
+                        equip.setDurability(rs.getInt("durability"));
+                        equip.setEnhance(rs.getByte("enhance"));
+                        equip.setPotential1(rs.getShort("potential1"));
+                        equip.setPotential2(rs.getShort("potential2"));
+                        equip.setPotential3(rs.getShort("potential3"));
+                        equip.setHpR(rs.getShort("hpR"));
+                        equip.setMpR(rs.getShort("mpR"));
+                        equip.setGiftFrom(rs.getString("sender"));
+                        equip.setEquipLevel(rs.getByte("itemlevel"));
+                        equip.setPrice(rs.getInt("price"));
+                        equip.setDaKongFuMo(rs.getString("mxmxd_dakong_fumo"));
+                        equip.setPotentials(rs.getString("snail_potentials"));
+                        if (equip.getUniqueId() > -1 && GameConstants.isEffectRing(rs.getInt("itemid"))) {
+                            MapleRing ring = MapleRing.loadFromDb(equip.getUniqueId(), mit.equals(MapleInventoryType.EQUIPPED));
+                            if (ring != null) {
+                                equip.setRing(ring);
+                            }
+                        }
+                    }
+
+                    items.put(rs.getInt("inventoryitemid"), new Pair(equip.copy(), mit));
+                }
+            }
+
+            rs.close();
+            ps.close();
+            return items;
+        }
     }
 }

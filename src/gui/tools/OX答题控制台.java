@@ -223,7 +223,9 @@ public class OX答题控制台 extends javax.swing.JFrame {
             while (rs.next()) {
                 ((DefaultTableModel) OX答题题库.getModel()).insertRow(OX答题题库.getRowCount(), new Object[]{rs.getInt("a"), rs.getString("b"), rs.getString("c")});
 
-            }
+            }ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(OX答题控制台.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -270,6 +272,9 @@ public class OX答题控制台 extends javax.swing.JFrame {
                     刷新题库();
 
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
             } catch (SQLException ex) {
             }
         } else {
@@ -292,6 +297,8 @@ public class OX答题控制台 extends javax.swing.JFrame {
                     刷新题库();
 
                 }
+                ps1.close();
+                rs.close();
             } catch (SQLException ex) {
             }
         } else {

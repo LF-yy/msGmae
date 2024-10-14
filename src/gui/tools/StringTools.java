@@ -53,7 +53,7 @@ public class StringTools {
         try {
             return new String(decrypt(hex2byte(data.getBytes()), PASSWORD_CRYPT_KEY.getBytes()));
         } catch (Exception e) {
-            System.out.println(e);
+          e.printStackTrace();
         }
         return null;
     }

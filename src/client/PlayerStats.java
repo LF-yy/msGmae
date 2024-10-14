@@ -2,6 +2,7 @@ package client;
 
 import abc.套装系统完善版;
 import bean.SuitSystem;
+import fumo.FumoSkill;
 import gui.CongMS;
 import gui.LtMS;
 import server.*;
@@ -54,6 +55,10 @@ public class PlayerStats implements Serializable
     public transient int localdex; //敏捷
     public transient int localluk; //运气
     public transient int localint_;//智力
+    public short limitStr;
+    public short limitDex;
+    public short limitLuk;
+    public short limitInt;
     public transient int magic; //魔法防御
     public transient int watk;  //物理防御
     public transient int hands;//手技
@@ -118,7 +123,31 @@ public class PlayerStats implements Serializable
     public transient boolean 精灵吊坠;
     private int TZ1, TZ2, TZ3, TZ4, TZ5, TZ6;
     boolean 套装1是否共存, 套装2是否共存, 套装3是否共存, 套装4是否共存, 套装5是否共存, 套装6是否共存;
-
+    private boolean canRefresh = false;
+    private long lastMessageTime;
+    private long lastMessageTime2;
+    private long lastMessageTime3;
+    private long lastMessageTime4;
+    private long lastMessageTime5;
+    private long lastMessageTime6;
+    public int pWatk;
+    public int pMatk;
+    public int pWdef;
+    public int pMdef;
+    public int pAcc;
+    public int pAvoid;
+    public int pMaxHp;
+    public int pMaxMp;
+    public int pSpeed;
+    public int pJump;
+    public int pWatkPercent;
+    public int pMatkPercent;
+    public int pWdefPercent;
+    public int pMdefPercent;
+    public int pAccPercent;
+    public int pAvoidPercent;
+    public int pMaxHpPercent;
+    public int pMaxMpPercent;
     public transient int regularStr,regularDex,regularLuk,regularInt_;//潜能固定加成  力量,敏捷,运气,智力
     public transient int pgStr,pgDex,pgLuk,pgInt_;//潜能百分比加成  力量,敏捷,运气,智力
     public transient Map<String, List<SuitSystem>> suitSys;//套装列表
@@ -320,6 +349,13 @@ public class PlayerStats implements Serializable
         if (this.isRecalc) {
             return;
         }
+        chra.刷新身上装备镶嵌汇总数据();
+        chra.reloadPotentialMap();
+        chra.loadPackageList();
+        chra.solvePackageStats();
+
+
+
         this.isRecalc = true;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final int oldmaxhp = this.localmaxhp;
@@ -329,6 +365,10 @@ public class PlayerStats implements Serializable
         this.localint_ = this.getInt();
         this.localstr = this.getStr();
         this.localluk = this.getLuk();
+        this.limitStr = 0;
+        this.limitDex = 0;
+        this.limitLuk = 0;
+        this.limitInt = 0;
         int speed = 100;
         int jump = 100;
         this.dotTime = 0;
@@ -604,6 +644,179 @@ public class PlayerStats implements Serializable
             }
 
         }
+
+        int package_num;
+        if (chra.F().get(FumoSkill.FM("强身健体")) != null) {
+            package_num = (Integer)chra.F().get(FumoSkill.FM("强身健体"));
+            if (package_num > 0) {
+                this.localdex += package_num;
+                this.localint_ += package_num;
+                this.localstr += package_num;
+                this.localluk += package_num;
+                this.limitStr = (short)(this.limitStr + package_num);
+                this.limitInt = (short)(this.limitInt + package_num);
+                this.limitDex = (short)(this.limitDex + package_num);
+                this.limitLuk = (short)(this.limitLuk + package_num);
+                if (first_login && System.currentTimeMillis() - this.lastMessageTime > 2000L) {
+                    chra.dropMessage(5, "镶嵌效果：【强身健体】 全属性 + " + package_num + " 点");
+                    this.lastMessageTime = System.currentTimeMillis();
+                }
+            }
+        }
+
+        int p_dex;
+        int p_int;
+        int p_luk;
+        int package_luk;
+        int percentStr;
+        int eb_bonus;
+        int percentInt;
+        int i;
+        int percentTotal;
+        if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+            package_num = chra.getPotential(1);
+            p_dex = chra.getPotential(2);
+            p_int = chra.getPotential(3);
+            p_luk = chra.getPotential(4);
+            package_luk = chra.getPotential(9);
+            percentStr = chra.getPotential(5);
+            eb_bonus = chra.getPotential(6);
+            percentInt = chra.getPotential(7);
+            i = chra.getPotential(8);
+            percentTotal = chra.getPotential(10);
+            package_num += package_luk;
+            p_dex += package_luk;
+            p_int += package_luk;
+            p_luk += package_luk;
+            if (percentStr > 0) {
+                package_num += chra.getStat().getStr() * percentStr / 100;
+            }
+
+            if (eb_bonus > 0) {
+                p_dex += chra.getStat().getDex() * eb_bonus / 100;
+            }
+
+            if (percentInt > 0) {
+                p_int += chra.getStat().getInt() * percentInt / 100;
+            }
+
+            if (i > 0) {
+                p_luk += chra.getStat().getLuk() * i / 100;
+            }
+
+            if (percentTotal > 0) {
+                package_num += chra.getStat().getStr() * percentTotal / 100;
+                p_dex += chra.getStat().getDex() * percentTotal / 100;
+                p_int += chra.getStat().getInt() * percentTotal / 100;
+                p_luk += chra.getStat().getLuk() * percentTotal / 100;
+            }
+
+            if (package_num > 0 || p_dex > 0 || p_int > 0 || p_luk > 0) {
+                String text = "【潜能加成】：";
+                if (package_num > 0) {
+                    this.localstr += package_num;
+                    this.limitStr = (short)(this.limitStr + package_num);
+                    text = text + "力量+" + package_num + " ";
+                }
+
+                if (p_dex > 0) {
+                    this.localdex += p_dex;
+                    this.limitDex = (short)(this.limitDex + p_dex);
+                    text = text + "敏捷+" + p_dex + " ";
+                }
+
+                if (p_int > 0) {
+                    this.localint_ += p_int;
+                    this.limitInt = (short)(this.limitInt + p_int);
+                    text = text + "智力+" + p_int + " ";
+                }
+
+                if (p_luk > 0) {
+                    this.localluk += p_luk;
+                    this.limitLuk = (short)(this.limitLuk + p_luk);
+                    text = text + "运气+" + p_luk + " ";
+                }
+
+                if (first_login && System.currentTimeMillis() - this.lastMessageTime3 > 2000L) {
+                    chra.dropMessage(5, text);
+                    this.lastMessageTime3 = System.currentTimeMillis();
+                }
+            }
+        }
+
+        package_num = chra.getPackageList() == null ? 0 : chra.getPackageList().size();
+        int package_str = chra.package_str;
+        int package_dex = chra.package_dex;
+        int package_int = chra.package_int;
+         package_luk = chra.package_luk;
+        int package_total = chra.package_all_ap;
+        int package_percentStr = chra.package_str_percent;
+        int package_percentDex = chra.package_dex_percent;
+        int package_percentInt = chra.package_int_percent;
+        int package_percentLuk = chra.package_luk_percent;
+        int package_percentTotal = chra.package_all_ap_percent;
+        p_dex = package_str + package_total;
+        p_int = package_dex + package_total;
+        p_luk = package_int + package_total;
+        package_luk = package_luk + package_total;
+        if (package_percentStr > 0) {
+            p_dex += chra.getStat().getStr() * package_percentStr / 100;
+        }
+
+        if (package_percentDex > 0) {
+            p_int += chra.getStat().getDex() * package_percentDex / 100;
+        }
+
+        if (package_percentInt > 0) {
+            p_luk += chra.getStat().getInt() * package_percentInt / 100;
+        }
+
+        if (package_percentLuk > 0) {
+            package_luk += chra.getStat().getLuk() * package_percentLuk / 100;
+        }
+
+        if (package_percentTotal > 0) {
+            p_dex += chra.getStat().getStr() * package_percentTotal / 100;
+            p_int += chra.getStat().getDex() * package_percentTotal / 100;
+            p_luk += chra.getStat().getInt() * package_percentTotal / 100;
+            package_luk += chra.getStat().getLuk() * package_percentTotal / 100;
+        }
+
+        if (p_dex > 0 || p_int > 0 || p_luk > 0 || package_luk > 0) {
+            String text = "【套装加成】：穿戴了" + package_num + "组套装，";
+            if (p_dex > 0) {
+                this.localstr += p_dex;
+                this.limitStr = (short)(this.limitStr + p_dex);
+                text = text + "力量+" + p_dex + " ";
+            }
+
+            if (p_int > 0) {
+                this.localdex += p_int;
+                this.limitDex = (short)(this.limitDex + p_int);
+                text = text + "敏捷+" + p_int + " ";
+            }
+
+            if (p_luk > 0) {
+                this.localint_ += p_luk;
+                this.limitInt = (short)(this.limitInt + p_luk);
+                text = text + "智力+" + p_luk + " ";
+            }
+
+            if (package_luk > 0) {
+                this.localluk += package_luk;
+                this.limitLuk = (short)(this.limitLuk + package_luk);
+                text = text + "运气+" + package_luk + " ";
+            }
+
+            if (first_login && System.currentTimeMillis() - this.lastMessageTime5 > 2000L) {
+                chra.dropMessage(5, text);
+                this.lastMessageTime5 = System.currentTimeMillis();
+            }
+        }
+
+
+
+
         //套装属性设置
         AtomicInteger hp = new AtomicInteger();
         AtomicInteger mp = new AtomicInteger();
@@ -708,6 +921,12 @@ public class PlayerStats implements Serializable
                 }
                 else if (item2.getItemId() == 5360003 && hour >= 18 && hour <= 24) {
                     this.dropMod = 2;
+                }
+                else if (item2.getItemId() == 5360017) {
+                    this.dropMod = 5; //5倍卡
+                }
+                else if (item2.getItemId() == 5360018) {
+                    this.dropMod = 8; //8倍卡
                 }
             }
             if (item2.getItemId() == 5650000) {
@@ -998,18 +1217,18 @@ public class PlayerStats implements Serializable
             this.expBuff *= (double)buff / 100.0;
             this.realExpBuff += (double)buff;
         }
-        if (chra.isBuffedValue(2382046)) {
-//            this.realMesoBuff += 100.0;
-//            this.mesoBuff *= 2.0;
-//            this.realDropBuff += 200.0;
-//            this.dropBuff *= 3.0;
-        }
-        else if (chra.isBuffedValue(2382028)) {
-//            this.realMesoBuff += 100.0;
-//            this.mesoBuff *= 2.0;
-//            this.realDropBuff += 200.0;
-//            this.dropBuff *= 3.0;
-        }
+//        if (chra.isBuffedValue(2382046)) {
+////            this.realMesoBuff += 100.0;
+////            this.mesoBuff *= 2.0;
+////            this.realDropBuff += 200.0;
+////            this.dropBuff *= 3.0;
+//        }
+//        else if (chra.isBuffedValue(2382028)) {
+////            this.realMesoBuff += 100.0;
+////            this.mesoBuff *= 2.0;
+////            this.realDropBuff += 200.0;
+////            this.dropBuff *= 3.0;
+//        }
         buff = chra.getBuffedValue(MapleBuffStat.DROP_RATE);
         if (buff != null) {
               if (chra.getBuffSource(MapleBuffStat.DROP_RATE) == 2022462) {
@@ -1244,12 +1463,14 @@ public class PlayerStats implements Serializable
             case 130:
             case 131:
             case 132:
+                damage = (long) ((this.localstr*(LtMS.ConfigValuesMap.get("战士力量系数")/100.00)+this.localdex*0.1+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("战士物理系数")/100.00)))+1L;
+                break;
             case 2000:
             case 2100:
             case 2110:
             case 2111:
             case 2112:
-                damage = (long) ((this.localstr*4L+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*(LtMS.ConfigValuesMap.get("战神力量系数")/100.00)+this.localdex*0.1+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("战神物理系数")/100.00)))+1L;
                 break;
             //法师
             case 200:
@@ -1262,7 +1483,7 @@ public class PlayerStats implements Serializable
             case 230:
             case 231:
             case 232:
-                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_*4L)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*0.1+this.localluk*0.1+this.localint_*(LtMS.ConfigValuesMap.get("法师智力系数")/100.00))*(this.magic*(LtMS.ConfigValuesMap.get("法师魔力系数")/100.00)))+1L;
                 break;
             //射手
             case 300:
@@ -1273,7 +1494,7 @@ public class PlayerStats implements Serializable
             case 321:
             case 322:
 
-             damage = (long) ((this.localstr+this.localdex*4L+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*(LtMS.ConfigValuesMap.get("射手敏捷系数")/100.00)+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("射手物理系数")/100.00)))+1L;
                 break;
             //飞侠
             case 400:
@@ -1284,20 +1505,22 @@ public class PlayerStats implements Serializable
             case 421:
             case 422:
 
-                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*0.1+this.localluk*(LtMS.ConfigValuesMap.get("飞侠运气系数")/100.00)+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("飞侠物理系数")/100.00)))+1L;
                 break;
             //海盗
             case 500:
             case 510:
             case 511:
             case 512:
+                damage = (long) ((this.localstr*0.1+this.localdex*(LtMS.ConfigValuesMap.get("拳手敏捷系数")/100.00)+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("海盗物理系数")/100.00)))+1L;
+                break;
             case 520:
             case 521:
             case 522:
-                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*0.1+this.localluk*(LtMS.ConfigValuesMap.get("船长运气系数")/100.00)+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("海盗物理系数")/100.00)))+1L;
                 break;
             default:
-                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.3+this.localdex*0.3+this.localluk*0.3+this.localint_*0.3)*(this.watk*0.1))+1L;
                 break;
 
         }
@@ -1715,6 +1938,12 @@ public class PlayerStats implements Serializable
                 }
                 else if (item2.getItemId() == 5360003 && hour >= 18 && hour <= 24) {
                     this.dropMod = 2;
+                }
+                else if (item2.getItemId() == 5360017) {
+                    this.dropMod = 5; //5倍卡
+                }
+                else if (item2.getItemId() == 5360018) {
+                    this.dropMod = 8; //8倍卡
                 }
             }
             if (item2.getItemId() == 5650000) {
@@ -2256,7 +2485,7 @@ public class PlayerStats implements Serializable
             case 2110:
             case 2111:
             case 2112:
-                damage = (long) ((this.localstr*4L+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*(LtMS.ConfigValuesMap.get("战士力量系数")/100.00)+this.localdex*0.1+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("战士物理系数")/100.00)))+1L;
                 break;
             //法师
             case 200:
@@ -2269,7 +2498,7 @@ public class PlayerStats implements Serializable
             case 230:
             case 231:
             case 232:
-                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_*4L)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*0.1+this.localluk*0.1+this.localint_*(LtMS.ConfigValuesMap.get("法师智力系数")/100.00))*(this.magic*(LtMS.ConfigValuesMap.get("法师魔力系数")/100.00)))+1L;
                 break;
             //射手
             case 300:
@@ -2280,7 +2509,7 @@ public class PlayerStats implements Serializable
             case 321:
             case 322:
 
-                damage = (long) ((this.localstr+this.localdex*4L+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*(LtMS.ConfigValuesMap.get("射手敏捷系数")/100.00)+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("射手物理系数")/100.00)))+1L;
                 break;
             //飞侠
             case 400:
@@ -2291,20 +2520,22 @@ public class PlayerStats implements Serializable
             case 421:
             case 422:
 
-                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*0.1+this.localluk*(LtMS.ConfigValuesMap.get("飞侠运气系数")/100.00)+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("飞侠物理系数")/100.00)))+1L;
                 break;
             //海盗
             case 500:
             case 510:
             case 511:
             case 512:
+                damage = (long) ((this.localstr*0.1+this.localdex*(LtMS.ConfigValuesMap.get("拳手敏捷系数")/100.00)+this.localluk*0.1+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("海盗物理系数")/100.00)))+1L;
+                break;
             case 520:
             case 521:
             case 522:
-                damage = (long) ((this.localstr+this.localdex+this.localluk*4L+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.1+this.localdex*0.1+this.localluk*(LtMS.ConfigValuesMap.get("船长运气系数")/100.00)+this.localint_*0.1)*(this.watk*(LtMS.ConfigValuesMap.get("海盗物理系数")/100.00)))+1L;
                 break;
             default:
-                damage = (long) ((this.localstr+this.localdex+this.localluk+this.localint_)*this.passive_mastery*this.localmaxbasedamage/100);
+                damage = (long) ((this.localstr*0.3+this.localdex*0.3+this.localluk*0.3+this.localint_*0.3)*(this.watk*0.1))+1L;
                 break;
 
         }
@@ -2834,7 +3065,8 @@ public class PlayerStats implements Serializable
         this.shouldHealHP *= 2.0f;
         this.shouldHealMP *= 2.0f;
     }
-    
+
+    //封装四维属性
     public void connectData(final MaplePacketLittleEndianWriter mplew) {
         mplew.writeShort((int)this.str);
         mplew.writeShort((int)this.dex);
@@ -2912,5 +3144,1011 @@ public class PlayerStats implements Serializable
             return true;
         }
         return false;
+    }
+
+    public short getInt_() {
+        return int_;
+    }
+
+    public void setInt_(short int_) {
+        this.int_ = int_;
+    }
+
+    public void setHp(short hp) {
+        this.hp = hp;
+    }
+
+    public short getMaxhp() {
+        return maxhp;
+    }
+
+    public void setMaxhp(short maxhp) {
+        this.maxhp = maxhp;
+    }
+
+    public void setMp(short mp) {
+        this.mp = mp;
+    }
+
+    public short getMaxmp() {
+        return maxmp;
+    }
+
+    public void setMaxmp(short maxmp) {
+        this.maxmp = maxmp;
+    }
+
+    public short getPassive_sharpeye_percent() {
+        return passive_sharpeye_percent;
+    }
+
+    public void setPassive_sharpeye_percent(short passive_sharpeye_percent) {
+        this.passive_sharpeye_percent = passive_sharpeye_percent;
+    }
+
+    public short getLocalmaxhp() {
+        return localmaxhp;
+    }
+
+    public void setLocalmaxhp(short localmaxhp) {
+        this.localmaxhp = localmaxhp;
+    }
+
+    public short getLocalmaxmp() {
+        return localmaxmp;
+    }
+
+    public void setLocalmaxmp(short localmaxmp) {
+        this.localmaxmp = localmaxmp;
+    }
+
+    public byte getPassive_mastery() {
+        return passive_mastery;
+    }
+
+    public void setPassive_mastery(byte passive_mastery) {
+        this.passive_mastery = passive_mastery;
+    }
+
+    public byte getPassive_sharpeye_rate() {
+        return passive_sharpeye_rate;
+    }
+
+    public void setPassive_sharpeye_rate(byte passive_sharpeye_rate) {
+        this.passive_sharpeye_rate = passive_sharpeye_rate;
+    }
+
+    public int getLocalstr() {
+        return localstr;
+    }
+
+    public void setLocalstr(int localstr) {
+        this.localstr = localstr;
+    }
+
+    public int getLocaldex() {
+        return localdex;
+    }
+
+    public void setLocaldex(int localdex) {
+        this.localdex = localdex;
+    }
+
+    public int getLocalluk() {
+        return localluk;
+    }
+
+    public void setLocalluk(int localluk) {
+        this.localluk = localluk;
+    }
+
+    public int getLocalint_() {
+        return localint_;
+    }
+
+    public void setLocalint_(int localint_) {
+        this.localint_ = localint_;
+    }
+
+    public int getMagic() {
+        return magic;
+    }
+
+    public void setMagic(int magic) {
+        this.magic = magic;
+    }
+
+    public int getWatk() {
+        return watk;
+    }
+
+    public void setWatk(int watk) {
+        this.watk = watk;
+    }
+
+    public void setHands(int hands) {
+        this.hands = hands;
+    }
+
+    public int getAccuracy() {
+        return accuracy;
+    }
+
+    public void setAccuracy(int accuracy) {
+        this.accuracy = accuracy;
+    }
+
+    public boolean isEquippedWelcomeBackRing() {
+        return equippedWelcomeBackRing;
+    }
+
+    public void setEquippedWelcomeBackRing(boolean equippedWelcomeBackRing) {
+        this.equippedWelcomeBackRing = equippedWelcomeBackRing;
+    }
+
+    public boolean isEquippedFairy() {
+        return equippedFairy;
+    }
+
+    public void setEquippedFairy(boolean equippedFairy) {
+        this.equippedFairy = equippedFairy;
+    }
+
+    public boolean isHasMeso() {
+        return hasMeso;
+    }
+
+    public void setHasMeso(boolean hasMeso) {
+        this.hasMeso = hasMeso;
+    }
+
+    public boolean isHasItem() {
+        return hasItem;
+    }
+
+    public void setHasItem(boolean hasItem) {
+        this.hasItem = hasItem;
+    }
+
+    public boolean isHasVac() {
+        return hasVac;
+    }
+
+    public void setHasVac(boolean hasVac) {
+        this.hasVac = hasVac;
+    }
+
+    public boolean isHasClone() {
+        return hasClone;
+    }
+
+    public void setHasClone(boolean hasClone) {
+        this.hasClone = hasClone;
+    }
+
+    public boolean isHasPartyBonus() {
+        return hasPartyBonus;
+    }
+
+    public void setHasPartyBonus(boolean hasPartyBonus) {
+        this.hasPartyBonus = hasPartyBonus;
+    }
+
+    public boolean isBerserk() {
+        return Berserk;
+    }
+
+    public void setBerserk(boolean berserk) {
+        Berserk = berserk;
+    }
+
+    public boolean isRecalc() {
+        return isRecalc;
+    }
+
+    public void setRecalc(boolean recalc) {
+        isRecalc = recalc;
+    }
+
+    public boolean isEquippedRing() {
+        return equippedRing;
+    }
+
+    public void setEquippedRing(boolean equippedRing) {
+        this.equippedRing = equippedRing;
+    }
+
+    public int getEquipmentBonusExp() {
+        return equipmentBonusExp;
+    }
+
+    public void setEquipmentBonusExp(int equipmentBonusExp) {
+        this.equipmentBonusExp = equipmentBonusExp;
+    }
+
+    public int getExpMod() {
+        return expMod;
+    }
+
+    public void setExpMod(int expMod) {
+        this.expMod = expMod;
+    }
+
+    public int getDropMod() {
+        return dropMod;
+    }
+
+    public void setDropMod(int dropMod) {
+        this.dropMod = dropMod;
+    }
+
+    public int getCashMod() {
+        return cashMod;
+    }
+
+    public void setCashMod(int cashMod) {
+        this.cashMod = cashMod;
+    }
+
+    public int getLevelBonus() {
+        return levelBonus;
+    }
+
+    public void setLevelBonus(int levelBonus) {
+        this.levelBonus = levelBonus;
+    }
+
+    public int getExpMod_H() {
+        return expMod_H;
+    }
+
+    public void setExpMod_H(int expMod_H) {
+        this.expMod_H = expMod_H;
+    }
+
+    public double getExpBuff() {
+        return expBuff;
+    }
+
+    public void setExpBuff(double expBuff) {
+        this.expBuff = expBuff;
+    }
+
+    public double getDropBuff() {
+        return dropBuff;
+    }
+
+    public void setDropBuff(double dropBuff) {
+        this.dropBuff = dropBuff;
+    }
+
+    public double getMesoBuff() {
+        return mesoBuff;
+    }
+
+    public void setMesoBuff(double mesoBuff) {
+        this.mesoBuff = mesoBuff;
+    }
+
+    public double getCashBuff() {
+        return cashBuff;
+    }
+
+    public void setCashBuff(double cashBuff) {
+        this.cashBuff = cashBuff;
+    }
+
+    public double getRealExpBuff() {
+        return realExpBuff;
+    }
+
+    public void setRealExpBuff(double realExpBuff) {
+        this.realExpBuff = realExpBuff;
+    }
+
+    public double getRealDropBuff() {
+        return realDropBuff;
+    }
+
+    public void setRealDropBuff(double realDropBuff) {
+        this.realDropBuff = realDropBuff;
+    }
+
+    public double getRealMesoBuff() {
+        return realMesoBuff;
+    }
+
+    public void setRealMesoBuff(double realMesoBuff) {
+        this.realMesoBuff = realMesoBuff;
+    }
+
+    public double getRealCashBuff() {
+        return realCashBuff;
+    }
+
+    public void setRealCashBuff(double realCashBuff) {
+        this.realCashBuff = realCashBuff;
+    }
+
+    public double getDam_r() {
+        return dam_r;
+    }
+
+    public void setDam_r(double dam_r) {
+        this.dam_r = dam_r;
+    }
+
+    public double getBossdam_r() {
+        return bossdam_r;
+    }
+
+    public void setBossdam_r(double bossdam_r) {
+        this.bossdam_r = bossdam_r;
+    }
+
+    public double getDropm() {
+        return dropm;
+    }
+
+    public void setDropm(double dropm) {
+        this.dropm = dropm;
+    }
+
+    public double getExpm() {
+        return expm;
+    }
+
+    public void setExpm(double expm) {
+        this.expm = expm;
+    }
+
+    public int getItemExpm() {
+        return itemExpm;
+    }
+
+    public void setItemExpm(int itemExpm) {
+        this.itemExpm = itemExpm;
+    }
+
+    public int getItemDropm() {
+        return itemDropm;
+    }
+
+    public void setItemDropm(int itemDropm) {
+        this.itemDropm = itemDropm;
+    }
+
+    public int getRecoverHP() {
+        return recoverHP;
+    }
+
+    public void setRecoverHP(int recoverHP) {
+        this.recoverHP = recoverHP;
+    }
+
+    public int getRecoverMP() {
+        return recoverMP;
+    }
+
+    public void setRecoverMP(int recoverMP) {
+        this.recoverMP = recoverMP;
+    }
+
+    public int getMpconReduce() {
+        return mpconReduce;
+    }
+
+    public void setMpconReduce(int mpconReduce) {
+        this.mpconReduce = mpconReduce;
+    }
+
+    public int getIncMesoProp() {
+        return incMesoProp;
+    }
+
+    public void setIncMesoProp(int incMesoProp) {
+        this.incMesoProp = incMesoProp;
+    }
+
+    public int getIncRewardProp() {
+        return incRewardProp;
+    }
+
+    public void setIncRewardProp(int incRewardProp) {
+        this.incRewardProp = incRewardProp;
+    }
+
+    public int getDAMreflect() {
+        return DAMreflect;
+    }
+
+    public void setDAMreflect(int DAMreflect) {
+        this.DAMreflect = DAMreflect;
+    }
+
+    public int getDAMreflect_rate() {
+        return DAMreflect_rate;
+    }
+
+    public void setDAMreflect_rate(int DAMreflect_rate) {
+        this.DAMreflect_rate = DAMreflect_rate;
+    }
+
+    public int getMpRestore() {
+        return mpRestore;
+    }
+
+    public void setMpRestore(int mpRestore) {
+        this.mpRestore = mpRestore;
+    }
+
+    public int getHpRecover() {
+        return hpRecover;
+    }
+
+    public void setHpRecover(int hpRecover) {
+        this.hpRecover = hpRecover;
+    }
+
+    public int getHpRecoverProp() {
+        return hpRecoverProp;
+    }
+
+    public void setHpRecoverProp(int hpRecoverProp) {
+        this.hpRecoverProp = hpRecoverProp;
+    }
+
+    public int getMpRecover() {
+        return mpRecover;
+    }
+
+    public void setMpRecover(int mpRecover) {
+        this.mpRecover = mpRecover;
+    }
+
+    public int getMpRecoverProp() {
+        return mpRecoverProp;
+    }
+
+    public void setMpRecoverProp(int mpRecoverProp) {
+        this.mpRecoverProp = mpRecoverProp;
+    }
+
+    public int getRecoveryUP() {
+        return RecoveryUP;
+    }
+
+    public void setRecoveryUP(int recoveryUP) {
+        RecoveryUP = recoveryUP;
+    }
+
+    public int getIncAllskill() {
+        return incAllskill;
+    }
+
+    public void setIncAllskill(int incAllskill) {
+        this.incAllskill = incAllskill;
+    }
+
+    public void setSpeedMod(float speedMod) {
+        this.speedMod = speedMod;
+    }
+
+    public void setJumpMod(float jumpMod) {
+        this.jumpMod = jumpMod;
+    }
+
+    public float getLocalmaxbasedamage() {
+        return localmaxbasedamage;
+    }
+
+    public void setLocalmaxbasedamage(float localmaxbasedamage) {
+        this.localmaxbasedamage = localmaxbasedamage;
+    }
+
+    public int getDef() {
+        return def;
+    }
+
+    public void setDef(int def) {
+        this.def = def;
+    }
+
+    public int getElement_ice() {
+        return element_ice;
+    }
+
+    public void setElement_ice(int element_ice) {
+        this.element_ice = element_ice;
+    }
+
+    public int getElement_fire() {
+        return element_fire;
+    }
+
+    public void setElement_fire(int element_fire) {
+        this.element_fire = element_fire;
+    }
+
+    public int getElement_light() {
+        return element_light;
+    }
+
+    public void setElement_light(int element_light) {
+        this.element_light = element_light;
+    }
+
+    public int getElement_psn() {
+        return element_psn;
+    }
+
+    public void setElement_psn(int element_psn) {
+        this.element_psn = element_psn;
+    }
+
+    public static short getMaxStr() {
+        return maxStr;
+    }
+
+    public static void setMaxStr(short maxStr) {
+        PlayerStats.maxStr = maxStr;
+    }
+
+    public ReentrantLock getLock() {
+        return lock;
+    }
+
+    public void setLock(ReentrantLock lock) {
+        this.lock = lock;
+    }
+
+    public short getPickRate() {
+        return pickRate;
+    }
+
+    public void setPickRate(short pickRate) {
+        this.pickRate = pickRate;
+    }
+
+    public int getDefRange() {
+        return defRange;
+    }
+
+    public void setDefRange(int defRange) {
+        this.defRange = defRange;
+    }
+
+    public int getDotTime() {
+        return dotTime;
+    }
+
+    public void setDotTime(int dotTime) {
+        this.dotTime = dotTime;
+    }
+
+    public boolean is精灵吊坠() {
+        return 精灵吊坠;
+    }
+
+    public void set精灵吊坠(boolean 精灵吊坠) {
+        this.精灵吊坠 = 精灵吊坠;
+    }
+
+    public int getTZ1() {
+        return TZ1;
+    }
+
+    public void setTZ1(int TZ1) {
+        this.TZ1 = TZ1;
+    }
+
+    public int getTZ2() {
+        return TZ2;
+    }
+
+    public void setTZ2(int TZ2) {
+        this.TZ2 = TZ2;
+    }
+
+    public int getTZ3() {
+        return TZ3;
+    }
+
+    public void setTZ3(int TZ3) {
+        this.TZ3 = TZ3;
+    }
+
+    public int getTZ4() {
+        return TZ4;
+    }
+
+    public void setTZ4(int TZ4) {
+        this.TZ4 = TZ4;
+    }
+
+    public int getTZ5() {
+        return TZ5;
+    }
+
+    public void setTZ5(int TZ5) {
+        this.TZ5 = TZ5;
+    }
+
+    public int getTZ6() {
+        return TZ6;
+    }
+
+    public void setTZ6(int TZ6) {
+        this.TZ6 = TZ6;
+    }
+
+    public boolean is套装1是否共存() {
+        return 套装1是否共存;
+    }
+
+    public void set套装1是否共存(boolean 套装1是否共存) {
+        this.套装1是否共存 = 套装1是否共存;
+    }
+
+    public boolean is套装2是否共存() {
+        return 套装2是否共存;
+    }
+
+    public void set套装2是否共存(boolean 套装2是否共存) {
+        this.套装2是否共存 = 套装2是否共存;
+    }
+
+    public boolean is套装3是否共存() {
+        return 套装3是否共存;
+    }
+
+    public void set套装3是否共存(boolean 套装3是否共存) {
+        this.套装3是否共存 = 套装3是否共存;
+    }
+
+    public boolean is套装4是否共存() {
+        return 套装4是否共存;
+    }
+
+    public void set套装4是否共存(boolean 套装4是否共存) {
+        this.套装4是否共存 = 套装4是否共存;
+    }
+
+    public boolean is套装5是否共存() {
+        return 套装5是否共存;
+    }
+
+    public void set套装5是否共存(boolean 套装5是否共存) {
+        this.套装5是否共存 = 套装5是否共存;
+    }
+
+    public boolean is套装6是否共存() {
+        return 套装6是否共存;
+    }
+
+    public void set套装6是否共存(boolean 套装6是否共存) {
+        this.套装6是否共存 = 套装6是否共存;
+    }
+
+    public boolean isCanRefresh() {
+        return canRefresh;
+    }
+
+    public void setCanRefresh(boolean canRefresh) {
+        this.canRefresh = canRefresh;
+    }
+
+    public long getLastMessageTime() {
+        return lastMessageTime;
+    }
+
+    public void setLastMessageTime(long lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
+    }
+
+    public long getLastMessageTime2() {
+        return lastMessageTime2;
+    }
+
+    public void setLastMessageTime2(long lastMessageTime2) {
+        this.lastMessageTime2 = lastMessageTime2;
+    }
+
+    public long getLastMessageTime3() {
+        return lastMessageTime3;
+    }
+
+    public void setLastMessageTime3(long lastMessageTime3) {
+        this.lastMessageTime3 = lastMessageTime3;
+    }
+
+    public long getLastMessageTime4() {
+        return lastMessageTime4;
+    }
+
+    public void setLastMessageTime4(long lastMessageTime4) {
+        this.lastMessageTime4 = lastMessageTime4;
+    }
+
+    public long getLastMessageTime5() {
+        return lastMessageTime5;
+    }
+
+    public void setLastMessageTime5(long lastMessageTime5) {
+        this.lastMessageTime5 = lastMessageTime5;
+    }
+
+    public long getLastMessageTime6() {
+        return lastMessageTime6;
+    }
+
+    public void setLastMessageTime6(long lastMessageTime6) {
+        this.lastMessageTime6 = lastMessageTime6;
+    }
+
+    public int getpWatk() {
+        return pWatk;
+    }
+
+    public void setpWatk(int pWatk) {
+        this.pWatk = pWatk;
+    }
+
+    public int getpMatk() {
+        return pMatk;
+    }
+
+    public void setpMatk(int pMatk) {
+        this.pMatk = pMatk;
+    }
+
+    public int getpWdef() {
+        return pWdef;
+    }
+
+    public void setpWdef(int pWdef) {
+        this.pWdef = pWdef;
+    }
+
+    public int getpMdef() {
+        return pMdef;
+    }
+
+    public void setpMdef(int pMdef) {
+        this.pMdef = pMdef;
+    }
+
+    public int getpAcc() {
+        return pAcc;
+    }
+
+    public void setpAcc(int pAcc) {
+        this.pAcc = pAcc;
+    }
+
+    public int getpAvoid() {
+        return pAvoid;
+    }
+
+    public void setpAvoid(int pAvoid) {
+        this.pAvoid = pAvoid;
+    }
+
+    public int getpMaxHp() {
+        return pMaxHp;
+    }
+
+    public void setpMaxHp(int pMaxHp) {
+        this.pMaxHp = pMaxHp;
+    }
+
+    public int getpMaxMp() {
+        return pMaxMp;
+    }
+
+    public void setpMaxMp(int pMaxMp) {
+        this.pMaxMp = pMaxMp;
+    }
+
+    public int getpSpeed() {
+        return pSpeed;
+    }
+
+    public void setpSpeed(int pSpeed) {
+        this.pSpeed = pSpeed;
+    }
+
+    public int getpJump() {
+        return pJump;
+    }
+
+    public void setpJump(int pJump) {
+        this.pJump = pJump;
+    }
+
+    public int getpWatkPercent() {
+        return pWatkPercent;
+    }
+
+    public void setpWatkPercent(int pWatkPercent) {
+        this.pWatkPercent = pWatkPercent;
+    }
+
+    public int getpMatkPercent() {
+        return pMatkPercent;
+    }
+
+    public void setpMatkPercent(int pMatkPercent) {
+        this.pMatkPercent = pMatkPercent;
+    }
+
+    public int getpWdefPercent() {
+        return pWdefPercent;
+    }
+
+    public void setpWdefPercent(int pWdefPercent) {
+        this.pWdefPercent = pWdefPercent;
+    }
+
+    public int getpMdefPercent() {
+        return pMdefPercent;
+    }
+
+    public void setpMdefPercent(int pMdefPercent) {
+        this.pMdefPercent = pMdefPercent;
+    }
+
+    public int getpAccPercent() {
+        return pAccPercent;
+    }
+
+    public void setpAccPercent(int pAccPercent) {
+        this.pAccPercent = pAccPercent;
+    }
+
+    public int getpAvoidPercent() {
+        return pAvoidPercent;
+    }
+
+    public void setpAvoidPercent(int pAvoidPercent) {
+        this.pAvoidPercent = pAvoidPercent;
+    }
+
+    public int getpMaxHpPercent() {
+        return pMaxHpPercent;
+    }
+
+    public void setpMaxHpPercent(int pMaxHpPercent) {
+        this.pMaxHpPercent = pMaxHpPercent;
+    }
+
+    public int getpMaxMpPercent() {
+        return pMaxMpPercent;
+    }
+
+    public void setpMaxMpPercent(int pMaxMpPercent) {
+        this.pMaxMpPercent = pMaxMpPercent;
+    }
+
+    public int getRegularStr() {
+        return regularStr;
+    }
+
+    public void setRegularStr(int regularStr) {
+        this.regularStr = regularStr;
+    }
+
+    public int getRegularDex() {
+        return regularDex;
+    }
+
+    public void setRegularDex(int regularDex) {
+        this.regularDex = regularDex;
+    }
+
+    public int getRegularLuk() {
+        return regularLuk;
+    }
+
+    public void setRegularLuk(int regularLuk) {
+        this.regularLuk = regularLuk;
+    }
+
+    public int getRegularInt_() {
+        return regularInt_;
+    }
+
+    public void setRegularInt_(int regularInt_) {
+        this.regularInt_ = regularInt_;
+    }
+
+    public int getPgStr() {
+        return pgStr;
+    }
+
+    public void setPgStr(int pgStr) {
+        this.pgStr = pgStr;
+    }
+
+    public int getPgDex() {
+        return pgDex;
+    }
+
+    public void setPgDex(int pgDex) {
+        this.pgDex = pgDex;
+    }
+
+    public int getPgLuk() {
+        return pgLuk;
+    }
+
+    public void setPgLuk(int pgLuk) {
+        this.pgLuk = pgLuk;
+    }
+
+    public int getPgInt_() {
+        return pgInt_;
+    }
+
+    public void setPgInt_(int pgInt_) {
+        this.pgInt_ = pgInt_;
+    }
+
+    public Map<String, List<SuitSystem>> getSuitSys() {
+        return suitSys;
+    }
+
+    public void setSuitSys(Map<String, List<SuitSystem>> suitSys) {
+        this.suitSys = suitSys;
+    }
+
+    public long getDamage() {
+        return damage;
+    }
+
+    public void setDamage(long damage) {
+        this.damage = damage;
+    }
+
+    public void refreshLimitAP() {
+        MapleCharacter chra = (MapleCharacter)this.chr.get();
+        Map<MapleStat, Integer> statupdate = new EnumMap(MapleStat.class);
+        statupdate.put(MapleStat.STR, this.str + this.limitStr >= 32767 ? 32767 : this.str + this.limitStr);
+        statupdate.put(MapleStat.DEX, this.dex + this.limitDex >= 32767 ? 32767 : this.dex + this.limitDex);
+        statupdate.put(MapleStat.LUK, this.luk + this.limitLuk >= 32767 ? 32767 : this.luk + this.limitLuk);
+        statupdate.put(MapleStat.INT, this.int_ + this.limitInt >= 32767 ? 32767 : this.int_ + this.limitInt);
+        chra.getClient().sendPacket(MaplePacketCreator.updatePlayerStats(statupdate, true, chra));
+    }
+
+    public short getLimitStr() {
+        return limitStr;
+    }
+
+    public void setLimitStr(short limitStr) {
+        this.limitStr = limitStr;
+    }
+
+    public short getLimitDex() {
+        return limitDex;
+    }
+
+    public void setLimitDex(short limitDex) {
+        this.limitDex = limitDex;
+    }
+
+    public short getLimitLuk() {
+        return limitLuk;
+    }
+
+    public void setLimitLuk(short limitLuk) {
+        this.limitLuk = limitLuk;
+    }
+
+    public short getLimitInt() {
+        return limitInt;
+    }
+
+    public void setLimitInt(short limitInt) {
+        this.limitInt = limitInt;
     }
 }

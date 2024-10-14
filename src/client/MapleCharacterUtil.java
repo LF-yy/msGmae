@@ -69,6 +69,8 @@ public class MapleCharacterUtil
                 }
                 id = rs.getInt("id");
             }
+            ps.close();
+             con.close();
             return id;
         }
         catch (SQLException e) {
@@ -87,6 +89,9 @@ public class MapleCharacterUtil
             ps.setInt(1, accountid);
             rs = ps.executeQuery();
             prompt = !rs.next();
+            rs.close();
+            ps.close();
+            con.close();
         }
         catch (SQLException e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
@@ -110,6 +115,7 @@ public class MapleCharacterUtil
                 if (rs != null) {
                     rs.close();
                 }
+
             }
             catch (SQLException e2) {
                 FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
@@ -128,6 +134,8 @@ public class MapleCharacterUtil
             ps.setInt(1, accountid);
             ps.setInt(2, selection);
             ps.execute();
+            ps.close();
+            con.close();
         }
         catch (SQLException e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
@@ -171,6 +179,8 @@ public class MapleCharacterUtil
                 }
                 id = new Pair<Integer, Pair<Integer, Integer>>(Integer.valueOf(rs.getInt("id")), new Pair<Integer, Integer>(Integer.valueOf(rs.getInt("accountid")), Integer.valueOf(rs.getInt("gender"))));
             }
+            ps.close();
+             con.close();
             return id;
         }
         catch (Exception e) {
@@ -186,6 +196,8 @@ public class MapleCharacterUtil
             ps.setString(1, name);
             ps.setString(2, code);
             ps.execute();
+                    ps.close();
+                    con.close();
         }
         catch (SQLException ex) {
             ex.printStackTrace();
@@ -202,6 +214,8 @@ public class MapleCharacterUtil
             ps.setLong(4, System.currentTimeMillis());
             ps.setInt(5, fame);
             ps.executeUpdate();
+                ps.close();
+                con.close();
         }
         catch (SQLException e) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)e);
@@ -218,6 +232,8 @@ public class MapleCharacterUtil
                     validcode = (rs.getInt("valid") > 0);
                 }
             }
+            ps.close();
+             con.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
@@ -236,6 +252,8 @@ public class MapleCharacterUtil
                     type = rs.getInt("type");
                 }
             }
+            ps.close();
+             con.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
@@ -254,6 +272,8 @@ public class MapleCharacterUtil
                     item = rs.getInt("item");
                 }
             }
+            ps.close();
+             con.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
@@ -272,6 +292,8 @@ public class MapleCharacterUtil
                     item = rs.getInt("size");
                 }
             }
+            ps.close();
+             con.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
@@ -290,6 +312,8 @@ public class MapleCharacterUtil
                     item = rs.getInt("time");
                 }
             }
+            ps.close();
+             con.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);

@@ -1,14 +1,23 @@
 package handling.channel;
 
-import java.sql.PreparedStatement;
-import java.sql.Connection;
+import java.sql.*;
+
+import client.inventory.IItem;
+import client.inventory.ItemLoader;
+import client.inventory.MapleInventoryType;
+import com.sun.org.apache.xpath.internal.operations.Lt;
+import database.DBConPool;
 import database.DatabaseConnection;
 import gui.LtMS;
 import handling.cashshop.CashShopServer;
 import client.MapleClient;
-import tools.FileoutputUtil;
-import tools.CollectionUtil;
+import server.Start;
+import server.events.*;
+import server.maps.MapleMap;
+import server.shops.MaplePlayerShopItem;
+import tools.*;
 import handling.world.CheaterData;
+
 import java.util.LinkedList;
 import java.util.List;
 import server.maps.MapleMapObject;
@@ -19,23 +28,17 @@ import client.MapleCharacter;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import handling.login.LoginServer;
-import tools.MaplePacketCreator;
 import constants.ServerConfig;
 import server.ServerProperties;
-import server.events.MapleJewel;
-import server.events.MapleSnowball;
-import server.events.MapleOla;
-import server.events.MapleFitness;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.EnumMap;
 import java.util.HashMap;
-import tools.ConcurrentEnumMap;
+
 import abc.离线人偶;
 import java.util.ArrayList;
-import server.events.MapleEvent;
-import server.events.MapleEventType;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import server.life.PlayerNPC;
 import server.shops.MaplePlayerShop;
@@ -47,6 +50,8 @@ import scripting.EventScriptManager;
 import server.maps.MapleMapFactory;
 import handling.mina.ServerConnection;
 import configs.Config;
+import tools.packet.PlayerShopPacket;
+
 import java.io.Serializable;
 
 public class ChannelServer implements Serializable
@@ -77,7 +82,14 @@ public class ChannelServer implements Serializable
     private int eventmap;
     private final Map<MapleEventType, MapleEvent> events;
     public static ArrayList<离线人偶> clones;
-    
+    private int instanceId = 0;
+    public int getInstanceId() {
+        return this.instanceId;
+    }
+
+    public void addInstanceId() {
+        ++this.instanceId;
+    }
     private ChannelServer(final int channel) {
         this.port = (short)Integer.parseInt(ChannelServer.cf.getConfig("LtMS.channel.port1"));
         this.running_MerchantID = 0;
@@ -96,19 +108,23 @@ public class ChannelServer implements Serializable
         this.channel = channel;
         (this.mapFactory = new MapleMapFactory()).setChannel(channel);
     }
-    
+
     public static Set<Integer> getAllChannels() {
         return new HashSet<Integer>((Collection<? extends Integer>)ChannelServer.instances.keySet());
     }
-    
     public void loadEvents() {
-        if (!this.events.isEmpty()) {
-            return;
+        if (this.events.isEmpty()) {
+            this.events.put(MapleEventType.打瓶盖比赛, new MapleCoconut(this.channel, MapleEventType.打瓶盖比赛.mapids));
+            this.events.put(MapleEventType.打椰子比赛, new MapleCoconut(this.channel, MapleEventType.打椰子比赛.mapids));
+            this.events.put(MapleEventType.上楼上楼, new MapleOla(this.channel, MapleEventType.上楼上楼.mapids));
+            this.events.put(MapleEventType.OX答题比赛, new MapleOxQuiz(this.channel, MapleEventType.OX答题比赛.mapids));
+            this.events.put(MapleEventType.推雪球比赛, new MapleSnowball(this.channel, MapleEventType.推雪球比赛.mapids));
+            this.events.put(MapleEventType.寻宝, new MapleJewel(this.channel, MapleEventType.寻宝.mapids));
+            this.events.put(MapleEventType.向高地比赛, new MapleFitness(this.channel, MapleEventType.向高地比赛.mapids));
+            this.events.put(MapleEventType.家族对抗赛, new MapleGuildMatch(this.channel, MapleEventType.家族对抗赛.mapids));
+            this.events.put(MapleEventType.家族野外BOSS赛, new MapleGuildOutsideBoss(this.channel, MapleEventType.家族野外BOSS赛.mapids));
+            this.events.put(MapleEventType.怪物攻城, new MonsterComming(this.channel, MapleEventType.怪物攻城.mapids));
         }
-        this.events.put(MapleEventType.終極忍耐, new MapleFitness(this.channel, MapleEventType.終極忍耐.mapids));
-        this.events.put(MapleEventType.爬繩子, new MapleOla(this.channel, MapleEventType.爬繩子.mapids));
-        this.events.put(MapleEventType.滾雪球, new MapleSnowball(this.channel, MapleEventType.滾雪球.mapids));
-        this.events.put(MapleEventType.尋寶, new MapleJewel(this.channel, MapleEventType.尋寶.mapids));
     }
     
     public void setup() {
@@ -121,6 +137,10 @@ public class ChannelServer implements Serializable
         catch (Exception e) {
             throw new RuntimeException((Throwable)e);
         }
+//        int 双爆频道 = (Integer) LtMS.ConfigValuesMap.get("双爆频道开关");
+//        if (双爆频道 == 0 && this.channel == Integer.parseInt(ServerProperties.getProperty("ZEV.Count"))) {
+//            this.dropRate *= 2.0F;
+//        }
         this.socket = ServerConfig.IP + ":" + (int)this.port;
         this.players = new PlayerStorage(this.channel);
         this.loadEvents();
@@ -128,7 +148,13 @@ public class ChannelServer implements Serializable
         System.out.println("[正在启动] 频道" + this.getChannel() + "端口:" + (int)this.port + "");
         this.eventSM.init();
     }
-    
+    public float getMesoRateSpecial() {
+        return ServerConfig.getMyChannelMesoRate(this.channel);
+    }
+    public float getExpRateSpecial() {
+        return ServerConfig.getMyChannelExpRate(this.channel);
+    }
+
     public void shutdown() {
         if (this.finishedShutdown) {
             return;
@@ -171,7 +197,7 @@ public class ChannelServer implements Serializable
         }
         System.out.println("频道 " + this.channel + " 共保存雇佣商店: " + ret + " | 耗时: " + (System.currentTimeMillis() - Start) + " 毫秒");
     }
-    
+
     public final boolean hasFinishedShutdown() {
         return this.finishedShutdown;
     }
@@ -282,14 +308,11 @@ public class ChannelServer implements Serializable
     public final EventScriptManager getEventSM() {
         return this.eventSM;
     }
-    //重载单个事件
-    public void setEventSM(String script) {
-         this.eventSM.EventScript(this,script);
-    }
+
     public void reloadEvents() {
         this.eventSM.cancel();
-        //System.out.println(ServerProperties.getProperty("LtMS.events").split(",")[0]+"事件名称");
-        (this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","))).init();
+        this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","));
+        this.eventSM.init();
     }
     
     public Map<MapleSquadType, MapleSquad> getAllSquads() {
@@ -784,6 +807,16 @@ public class ChannelServer implements Serializable
         (this.eventSMA = new EventScriptManager(this, ServerProperties.getProperty("LtMS.活动事件脚本").split(","))).init();
     }
 
+    //重载指定事件
+    public final boolean reloadEvent(String script) {
+        boolean success = false;
+        this.eventSM.cancel(script);
+        if (this.eventSM.loadEntry(this, script) && this.eventSM.init(script)) {
+            success = true;
+        }
+
+        return success;
+    }
     public void reloadEventsb() {
         this.eventSMB.cancel();
         (this.eventSMB = new EventScriptManager(this, ServerProperties.getProperty("LtMS.BOSS事件脚本").split(","))).init();
@@ -793,4 +826,7 @@ public class ChannelServer implements Serializable
         this.eventSMC.cancel();
         (this.eventSMC = new EventScriptManager(this, ServerProperties.getProperty("LtMS.自定义事件脚本").split(","))).init();
     }
+
+
+
 }

@@ -26,6 +26,7 @@ public class FixShopItemsPrice
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("無法載入商店");
@@ -53,6 +54,7 @@ public class FixShopItemsPrice
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.out.println("處理商品失敗, 道具ID:" + itemId);

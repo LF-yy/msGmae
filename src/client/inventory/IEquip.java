@@ -68,7 +68,16 @@ public interface IEquip extends IItem
     short getHpR();
     
     short getMpR();
-    
+    String getDaKongFuMo();
+    String getPotentials();
+    int getHpRR();
+
+    int getMpRR();
+
+    void setHpRR(int var1);
+
+    void setMpRR(int var1);
+
     public enum ScrollResult
     {
         SUCCESS, 

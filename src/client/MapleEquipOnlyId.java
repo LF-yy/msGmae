@@ -37,6 +37,8 @@ public class MapleEquipOnlyId
                 ret = (long)(rs.getInt(1) + 1);
             }
             ps.close();
+            rs.close();
+
         }
         catch (SQLException e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);

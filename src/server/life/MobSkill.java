@@ -131,7 +131,53 @@ public class MobSkill
         }
         return stop;
     }
-    
+    /*
+     * 怪物BUFF解释
+     * 100 = 物理攻击提高
+     * 101 = 魔法攻击提高
+     * 102 = 物理防御提高
+     * 103 = 魔法防御提高
+     * 104 = 致命攻击 难道就是血蓝为1？
+     * 105 = 消费
+     * 110 = 周边物理攻击提高
+     * 111 = 周边魔法攻击提高
+     * 112 = 周边物理防御提高
+     * 113 = 周边魔法防御提高
+     * 114 = HP恢复
+     * 115 = 自己及周围移动速度变化
+     * 120 = 封印
+     * 121 = 黑暗
+     * 122 = 虚弱
+     * 123 = 晕眩
+     * 124 = 诅咒
+     * 125 = 中毒
+     * 126 = 慢动作
+     * 127 = 魔法无效
+     * 128 = 诱惑
+     * 129 = 逐出
+     * 131 = 区域中毒
+     * 133 = 不死化
+     * 134 = 药水停止
+     * 135 = 从不停止
+     * 136 = 致盲
+     * 137 = 中毒
+     * 138 = 潜在能力无效
+     * 140 = 物理防御
+     * 141 = 魔法防御
+     * 142 = 皮肤硬化
+     * 143 = 物理反击免疫
+     * 144 = 魔法反击免疫
+     * 145 = 物理魔法反击免疫
+     * 150 = PAD修改
+     * 151 = MAD修改
+     * 152 = PDD修改
+     * 153 = MDD修改
+     * 154 = ACC修改
+     * 155 = EVA修改
+     * 156 = Speed修改
+     * 170 = 传送
+     * 200 = 召唤
+     */
     public void applyEffect(final MapleCharacter player, final MapleMonster monster, final boolean skill) {
         if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
             return;
@@ -311,8 +357,14 @@ public class MobSkill
             case 114: {
                 if (this.lt != null && this.rb != null && skill && monster != null) {
                     final List<MapleMapObject> objects = this.getObjectsInRange(monster, MapleMapObjectType.MONSTER);
-                    final int healHP = this.getHP();
+                     int healHP = this.getHP();
                     for (final MapleMapObject mons : objects) {
+                        long hp = ((MapleMonster)mons).getHp()*LtMS.ConfigValuesMap.get("治愈比例")/100;
+                        if (hp > Integer.MAX_VALUE){
+                            healHP= Integer.MAX_VALUE;
+                        }else{
+                            healHP= (int)hp;
+                        }
                         ((MapleMonster)mons).heal(healHP, 0, true);
                     }
                     break;

@@ -529,12 +529,16 @@ public class 一键还原 extends JFrame
             final PreparedStatement ps = con.prepareStatement("Delete from bossrank8");
             ps.executeUpdate();
             ps.close();
-        }
-        catch (SQLException e) {
-            System.out.println("Error " + (Object)e);
+        } catch (SQLException e) {
+            System.out.println("Error " + (Object) e);
+        } finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                System.out.println("Error " + (Object) e);
+            }
         }
     }
-    
     private void 清除金币拍卖行ActionPerformed(final ActionEvent evt) {
         this.清空拍卖b1();
         this.清空拍卖b2();

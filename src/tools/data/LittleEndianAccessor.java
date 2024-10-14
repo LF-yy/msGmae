@@ -77,7 +77,7 @@ public class LittleEndianAccessor
             return new String(ret, ServerConstants.MAPLE_TYPE.getANSI());
         }
         catch (UnsupportedEncodingException ex) {
-            System.err.println((Object)ex);
+            //System.err.println((Object)ex);
             return "";
         }
     }
@@ -189,7 +189,7 @@ public class LittleEndianAccessor
             return new String(ret, ServerConstants.MAPLE_TYPE.getANSI());
         }
         catch (UnsupportedEncodingException ex) {
-            System.err.println((Object)ex);
+            //System.err.println((Object)ex);
             return "";
         }
     }

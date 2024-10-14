@@ -668,6 +668,8 @@ public class 锻造控制台 extends javax.swing.JFrame {
                 ps.setInt(2, Integer.parseInt(this.锻造材料代码.getText()));
                 ps.setInt(3, Integer.parseInt(this.锻造材料数量.getText()));
                 ps.executeUpdate();
+                ps.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -705,6 +707,10 @@ public class 锻造控制台 extends javax.swing.JFrame {
                     itemid.executeUpdate(sqlString3);
                     JOptionPane.showMessageDialog(null, "修改成功。");
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
 
             }
@@ -728,6 +734,9 @@ public class 锻造控制台 extends javax.swing.JFrame {
                     刷新锻造所需材料();
                     刷新锻造奖励();
                 }
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -752,6 +761,9 @@ public class 锻造控制台 extends javax.swing.JFrame {
                     刷新锻造奖励();
 
                 }
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -789,6 +801,8 @@ public class 锻造控制台 extends javax.swing.JFrame {
                 ps.setInt(19, Integer.parseInt(this.移速.getText()));
                 ps.setInt(20, Integer.parseInt(this.限时.getText()));
                 ps.executeUpdate();
+                ps.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -820,6 +834,9 @@ public class 锻造控制台 extends javax.swing.JFrame {
 
                 });
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -874,6 +891,9 @@ public class 锻造控制台 extends javax.swing.JFrame {
                     rs.getInt("限时")
                 });
             }
+            ps .close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(LtMS.class.getName()).log(Level.SEVERE, null, ex);
         }

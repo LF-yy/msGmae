@@ -101,6 +101,7 @@ public class InternCommand
                 }
                 rs.close();
                 ps.close();
+                con.close();
                 return ret;
             }
             catch (Exception ex) {

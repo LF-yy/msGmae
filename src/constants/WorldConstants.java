@@ -10,6 +10,7 @@ public class WorldConstants
     public static boolean ADMIN_ONLY;
     public static boolean JZSD;
     public static boolean WUYANCHI;
+    public static int petLootCoolTime;
     public static boolean LieDetector;
     public static boolean DropItem;
     public static int USER_LIMIT;
@@ -93,6 +94,7 @@ public class WorldConstants
         WorldConstants.SCROLL_MESSAGE = "";
         WorldConstants.AVAILABLE = true;
         recommendedmsg = "";
+        petLootCoolTime = 5;
         loadSetting();
     }
     

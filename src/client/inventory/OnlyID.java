@@ -148,13 +148,14 @@ public class OnlyID
                 String itemname = "null";
                 itemname = MapleItemInformationProvider.getInstance().getName(item);
                 final String msg = "發現复制,唯一ID [" + itemonly + "] " + chrs.toString() + " 物品[" + itemname + "](" + item + ")";
-                System.out.println(msg);
+                //System.out.println(msg);
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, msg));
                 FileoutputUtil.logToFile("Hack/复制装备.txt", FileoutputUtil.CurrentReadable_TimeGMT() + " " + msg + "\r\n");
             }
+            con.close();
         }
         catch (SQLException ex) {
-            System.out.println("[EXCEPTION] 复制装备出現錯誤." + (Object)ex);
+            //System.out.println("[EXCEPTION] 复制装备出現錯誤." + (Object)ex);
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
     }

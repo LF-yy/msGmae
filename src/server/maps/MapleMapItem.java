@@ -22,7 +22,10 @@ public class MapleMapItem extends AbstractMapleMapObject
     protected long nextExpiry;
     protected long nextFFA;
     private ReentrantLock lock;
-    
+
+    private int OnlySeeChrId = -1;
+
+
     public MapleMapItem(final IItem item, final Point position, final MapleMapObject dropper, final MapleCharacter owner, final byte type, final boolean playerDrop) {
         this.meso = 0;
         this.questid = -1;
@@ -188,5 +191,14 @@ public class MapleMapItem extends AbstractMapleMapObject
         if (this.randDrop) {
             map.spawnRandDrop();
         }
+    }
+
+
+    public int getOnlySeeChrId() {
+        return this.OnlySeeChrId;
+    }
+
+    public void setOnlySeeChrId(int onlySeeChrId) {
+        this.OnlySeeChrId = onlySeeChrId;
     }
 }

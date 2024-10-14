@@ -8,6 +8,7 @@ import java.util.Iterator;
 import client.inventory.MaplePet;
 import client.ISkill;
 import client.MapleQuestStatus;
+import server.bean.SkillSkin;
 import server.quest.MapleQuest;
 import java.util.Map.Entry;
 import client.MapleCharacter;
@@ -90,6 +91,7 @@ public class CharacterTransfer implements Externalizable
     public short str;
     public short dex;
     public short int_;
+    public long power;
     public short luk;
     public short maxhp;
     public short maxmp;
@@ -153,7 +155,10 @@ public class CharacterTransfer implements Externalizable
     public int jf8;
     public int jf9;
     public int jf10;
-    
+    public long max_damage;
+    public boolean backupInventory;
+    public SkillSkin skillSkin;
+    public ArrayList<Integer> dropItemFilterList = new ArrayList();
     public CharacterTransfer() {
         this.mbook = new LinkedHashMap<Integer, Integer>();
         this.keymap = new LinkedHashMap<Integer, Pair<Byte, Integer>>();
@@ -164,7 +169,7 @@ public class CharacterTransfer implements Externalizable
         this.InfoQuest = new LinkedHashMap<Integer, String>();
         this.Skills = new LinkedHashMap<Integer, SkillEntry>();
     }
-    
+
     public CharacterTransfer(MapleCharacter chr) {
         this.mbook = new LinkedHashMap<Integer, Integer>();
         this.keymap = new LinkedHashMap<Integer, Pair<Byte, Integer>>();
@@ -214,6 +219,7 @@ public class CharacterTransfer implements Externalizable
         this.mp = chr.getStat().getMp();
         this.maxhp = chr.getStat().getMaxHp();
         this.maxmp = chr.getStat().getMaxMp();
+        this.power = chr.getPower();
         this.exp = chr.getExp();
         this.hpApUsed = chr.getHpMpApUsed();
         this.remainingAp = chr.getRemainingAp();
@@ -275,6 +281,10 @@ public class CharacterTransfer implements Externalizable
         this.prefix = chr.getPrefix();
         this.gachexp = chr.getGachExp();
         this.PGSXDJ = chr.getPGSXDJ();
+        this.backupInventory = chr.getBackupInventory();
+        this.max_damage = chr.读取伤害上限值();
+        this.skillSkin = chr.getSkillSkin();
+        this.dropItemFilterList = chr.getDropItemFilterList();
         boolean uneq = false;
         for (int i = 0; i < this.petStore.length; ++i) {
             final MaplePet pet = chr.getPet(i);
@@ -333,7 +343,7 @@ public class CharacterTransfer implements Externalizable
         this.mount_exp = mount.getExp();
         this.TranferTime = System.currentTimeMillis();
     }
-    
+
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.nowmacs = in.readUTF();
@@ -519,7 +529,7 @@ public class CharacterTransfer implements Externalizable
         }
         this.TranferTime = System.currentTimeMillis();
     }
-    
+
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeUTF(this.nowmacs);

@@ -3,10 +3,12 @@ package tools;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 
+import abc.Game;
 import bean.BreakthroughMechanism;
 import bean.FiveTurn;
 import gui.CongMS;
 import gui.LtMS;
+import gui.服务端输出信息;
 import handling.channel.MapleGuildRanking;
 import server.*;
 import server.maps.MapleDragon;
@@ -389,7 +391,18 @@ public class MaplePacketCreator
         PacketHelper.addItemInfo(mplew, item, true, true);
         return mplew.getPacket();
     }
-    
+
+    public static byte[] getGachaponMega(String name, String message, byte type, IItem item, byte rareness, int Channel) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(SendPacketOpcode.SERVERMESSAGE.getValue());
+        mplew.write(type);
+        mplew.writeMapleAsciiString(name + message);
+        mplew.writeInt(Channel - 1);
+        PacketHelper.addItemInfo(mplew, item, true, true);
+        return mplew.getPacket();
+    }
+
+
     public static byte[] getGachaponMega(final String name, final String message, final IItem item, final byte rareness, final int Channel) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SERVERMESSAGE.getValue());
@@ -869,41 +882,16 @@ public class MaplePacketCreator
         }
         else {
             final MapleGuild gs = Guild.getGuild(chr.getGuildId());
-//            if (gs != null) {
-//                List<FiveTurn> fiveTurns = Start.fiveTurn.get(chr.getId());
-//                if(ListUtil.isNotEmpty(fiveTurns)){
-//                    List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(chr.getId());
-//                    if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-//                        mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
-//
-//                    }else{
-//                        mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + chr.getCombat());
-//                    }
-//                }else{
-//                    mplew.writeMapleAsciiString("[" + gs.getName() + "]||战力 :" + chr.getCombat());
-//                }
-//                mplew.writeShort(gs.getLogoBG());
-//                mplew.write(gs.getLogoBGColor());
-//                mplew.writeShort(gs.getLogo());
-//                mplew.write(gs.getLogoColor());
-//            }
-//            else {
-//                mplew.writeMapleAsciiString("战力 :" + chr.getCombat());
-//                mplew.writeZeroBytes(6);
-//            }
             if (gs != null) {
-                List<FiveTurn> fiveTurns = Start.fiveTurn.get(chr.getId());
-                if(ListUtil.isNotEmpty(fiveTurns)){
+
                     List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(chr.getId());
                     if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-                        mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]");
+                        mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"["+ breakthroughMechanisms.get(0).getName()+ breakthroughMechanisms.get(0).getEqualOrder()+ "]");
 
                     }else{
-                        mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"[" + fiveTurns.get(0).getOccupationName() + "]");
+                        mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"[" + gs.getName() + "]");
                     }
-                }else{
-                    mplew.writeMapleAsciiString(ServerConfig.SERVERNAME+"[" + gs.getName() + "]");
-                }
+
                 mplew.writeShort(gs.getLogoBG());
                 mplew.write(gs.getLogoBGColor());
                 mplew.writeShort(gs.getLogo());
@@ -2900,37 +2888,15 @@ public class MaplePacketCreator
 //        mplew.writeMapleAsciiString(guild.getName());
 
         if (c != null) {
-            List<FiveTurn> fiveTurns = Start.fiveTurn.get(c.getClient().getPlayer().getId());
-
-            if(ListUtil.isNotEmpty(fiveTurns)){
                 List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(c.getClient().getPlayer().getId());
                 if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]");
+                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getName()+ breakthroughMechanisms.get(0).getEqualOrder()+"]");
                 }else{
-                    mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]");
+                    mplew.writeMapleAsciiString("[" + guild.getName() + "]");
                 }
-            }else{
-                mplew.writeMapleAsciiString("[" + guild.getName() + "]");
-            }
         } else {
             mplew.writeMapleAsciiString("[" + guild.getName() + "]");
         }
-//        if (c != null) {
-//            List<FiveTurn> fiveTurns = Start.fiveTurn.get(c.getClient().getPlayer().getId());
-//
-//            if(ListUtil.isNotEmpty(fiveTurns)){
-//                List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(c.getClient().getPlayer().getId());
-//                if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-//                    mplew.writeMapleAsciiString("["+ breakthroughMechanisms.get(0).getEqualOrder()+ breakthroughMechanisms.get(0).getName()+">>"+ fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
-//                }else{
-//                    mplew.writeMapleAsciiString("[" + fiveTurns.get(0).getOccupationName() + "]||战力 :" + c.getCombat());
-//                }
-//            }else{
-//                mplew.writeMapleAsciiString("[" + guild.getName() + "]||战力 :" + c.getCombat());
-//            }
-//        } else {
-//            mplew.writeMapleAsciiString("[" + guild.getName() + "]");
-//        }
 
         for (int i = 1; i <= 5; ++i) {
             mplew.writeMapleAsciiString(guild.getRankTitle(i));
@@ -3803,7 +3769,16 @@ public class MaplePacketCreator
         mplew.write(0);
         return mplew.getPacket();
     }
-    
+    public static byte[] boatPacket(int effect) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        if (Game.调试2 == "开") {
+            服务端输出信息.println_out("boatPacket--------------------");
+        }
+
+        mplew.writeShort(SendPacketOpcode.BOAT_EFFECT.getValue());
+        mplew.writeShort(effect);
+        return mplew.getPacket();
+    }
     public static byte[] removeItemFromDuey(final boolean remove, final int Package) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.DUEY.getValue());
@@ -4899,5 +4874,85 @@ public class MaplePacketCreator
         final int[] secondaryStatRemote8 = MaplePacketCreator.SecondaryStatRemote;
         final int position8 = MapleBuffStat.召唤玩家8.getPosition();
         secondaryStatRemote8[position8] |= MapleBuffStat.召唤玩家8.getValue();
+    }
+
+
+
+    public static byte[] giveMount(MapleCharacter c, int buffid, int skillid, List<Pair<MapleBuffStat, Integer>> statups) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(SendPacketOpcode.GIVE_BUFF.getValue());
+        writeBuffState2(mplew, statups);
+        mplew.writeShort(0);
+        mplew.writeInt(buffid);
+        mplew.writeInt(skillid);
+        mplew.writeInt(0);
+        mplew.writeShort(0);
+        mplew.write(0);
+        mplew.write(2);
+        int a = giveBuff(buffid);
+        if (a > 0) {
+            mplew.write(a);
+        }
+
+        return mplew.getPacket();
+    }
+
+    public static int giveBuff(int buffid) {
+        int a = 0;
+        switch (buffid) {
+            case -2022458:
+            case 33121006:
+                a = 6;
+                break;
+            case 1002:
+            case 8000:
+            case 1121000:
+            case 1221000:
+            case 1321000:
+            case 2121000:
+            case 2221000:
+            case 2321000:
+            case 3121000:
+            case 3221000:
+            case 4101004:
+            case 4121000:
+            case 4201003:
+            case 4221000:
+            case 4341000:
+            case 5101007:
+            case 5121000:
+            case 5221000:
+            case 5321005:
+            case 9001001:
+            case 10001002:
+            case 10008000:
+            case 14101003:
+            case 20001002:
+            case 20008000:
+            case 20018000:
+            case 21121000:
+            case 22171000:
+            case 23121005:
+            case 30008000:
+            case 31121004:
+            case 32121007:
+            case 33121007:
+            case 35121007:
+                a = 5;
+                break;
+            case 5111005:
+            case 5121003:
+            case 13111005:
+            case 15111002:
+                a = 7;
+                break;
+            case 5301003:
+                a = 3;
+                break;
+            case 32101003:
+                a = 29;
+        }
+
+        return a;
     }
 }

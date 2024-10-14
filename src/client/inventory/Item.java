@@ -19,7 +19,15 @@ public class Item implements IItem, Serializable
     private String GameMaster_log;
     private String giftFrom;
     protected MapleRing ring;
-    
+    private int price = 0;
+    private String mxmxdDaKongFuMo = "";
+    private String potentials = "";
+    public String getDaKongFuMo() {
+        return this.mxmxdDaKongFuMo;
+    }
+    public void setDaKongFuMo(String mxmxdDaKongFuMo) {
+        this.mxmxdDaKongFuMo = mxmxdDaKongFuMo;
+    }
     public Item(final int id, final short position, final short quantity, final byte flag, final int uniqueid) {
         this.expiration = -1L;
         this.inventoryitemid = 0L;
@@ -168,7 +176,20 @@ public class Item implements IItem, Serializable
     public final String getGMLog() {
         return this.GameMaster_log;
     }
-    
+    public void setPotentials(String potentials) {
+        if (potentials != null) {
+            this.potentials = potentials;
+        }
+
+    }
+
+    public int getPrice() {
+        return this.price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
     @Override
     public void setGMLog(final String GameMaster_log) {
         this.GameMaster_log = GameMaster_log;
@@ -189,7 +210,10 @@ public class Item implements IItem, Serializable
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         return this.uniqueid <= 0 && !ii.isCash(this.id) && this.id / 1000000 == 1 && this.equipOnlyId <= 0L;
     }
-    
+    public String getPotentials() {
+        return this.potentials;
+    }
+
     @Override
     public long getEquipOnlyId() {
         return this.equipOnlyId;

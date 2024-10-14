@@ -100,6 +100,8 @@ public class MaplePet implements Serializable
                 }
                 ret.changed = false;
             }
+            ps.close();
+            con.close();
             return ret;
         }
         catch (SQLException ex) {

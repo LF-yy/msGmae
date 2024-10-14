@@ -2,9 +2,8 @@ package handling;
 
 import java.util.*;
 
-import client.ISkill;
-import client.SkillEntry;
-import gui.CongMS;
+
+import constants.ServerConstants;
 import gui.LtMS;
 import handling.channel.handler.BeanGame;
 import handling.channel.handler.FamilyHandler;
@@ -14,8 +13,6 @@ import handling.channel.handler.MonsterCarnivalHandler;
 import handling.channel.handler.PetHandler;
 import handling.channel.handler.SummonHandler;
 import handling.cashshop.handler.MTSOperation;
-import handling.world.MaplePartyCharacter;
-import handling.world.PlayerBuffValueHolder;
 import server.MTSStorage;
 import handling.channel.handler.UserInterfaceHandler;
 import handling.channel.handler.BuddyListHandler;
@@ -33,13 +30,14 @@ import handling.channel.handler.ItemMakerHandler;
 import handling.channel.handler.PlayersHandler;
 import handling.channel.handler.PlayerHandler;
 import scripting.NPCScriptManager;
+import server.Start;
+import server.maps.MapleMap;
 import tools.MaplePacketCreator;
 import handling.cashshop.handler.CashShopOperation;
 import handling.channel.handler.InterServerHandler;
 import handling.login.handler.CharLoginHandler;
 import tools.HexTool;
 import constants.ServerConfig;
-import java.util.concurrent.RejectedExecutionException;
 import tools.FilePrinter;
 import tools.data.LittleEndianAccessor;
 import tools.data.ByteArrayByteStream;
@@ -60,7 +58,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import tools.Pair;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import util.ListUtil;
 
 public class MapleServerHandler extends ChannelInboundHandlerAdapter
 {
@@ -198,15 +195,16 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                }
                 try {
                     handlePacket(recv, slea, c, this.channel == -10);
-                }
-                catch (RejectedExecutionException ex) {}
-                catch (Exception e) {
-                     if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
+                }catch (Exception e) {
+                    //e.printStackTrace();
+
+                    if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
                         c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
                     }
+
                     FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", (Throwable)e, false);
                     FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", (Throwable)e);
-                    FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int)header_num + "\r\n" + slea.toString(true));
+                    FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int)header_num + "\r\n" + ctx.name() + ":\r\n" +slea.toString(true));
                 }
                 return;
             }
@@ -377,6 +375,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 PlayerHandler.ChangeEmotion(slea.readInt(), c.getPlayer());
                 break;
             }
+            //受到伤害
             case TAKE_DAMAGE: {
                 PlayerHandler.TakeDamage(slea, c, c.getPlayer());
                 break;
@@ -592,7 +591,11 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case MOVE_LIFE: {
-                MobHandler.MoveMonster(slea, c);
+                if (MapleMap.canSpawnForCPU) {
+                    MobHandler.MoveMonster(slea, c);
+                } else {
+                    MobHandler.MoveMonster2(slea, c);
+                }
                 break;
             }
             case AUTO_AGGRO: {
@@ -766,7 +769,15 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case PET_LOOT: {
-                InventoryHandler.PetPickup(slea, c, c.getPlayer());
+                if (ServerConstants.canPetLoot) {
+                    InventoryHandler.PetPickup(slea, c, c.getPlayer());
+                } else {
+                    long nowPetLootTime = System.currentTimeMillis();
+                    if (nowPetLootTime - c.getPlayer().lastPetLootTime > LtMS.ConfigValuesMap.get("宠物捡取优化冷却毫秒")) {
+                        c.getPlayer().lastPetLootTime = nowPetLootTime;
+                        InventoryHandler.PetPickup(slea, c, c.getPlayer());
+                    }
+                }
                 break;
             }
             case PET_AUTO_POT: {
@@ -980,7 +991,15 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 if (c==null){
                     break;
                 }
-                c.getPlayer().recycleEquip(c, c.getPlayer());
+                if( System.currentTimeMillis() - c.getPlayer().getSaveTime() < 300000){
+                    c.getPlayer().saveToDB(false, false);
+                    c.getPlayer().setSaveTime(System.currentTimeMillis());
+                }
+                try {
+                    c.getPlayer().recycleEquip(c, c.getPlayer());
+                } catch (Exception e) {
+
+                }
                 c.getPlayer().openAutoSkillBuff(c, c.getPlayer());
 
                 break;

@@ -88,7 +88,8 @@ public class ChatHandler
                 else if ((chr.gmLevel() == 0 && !chr.isHidden()) || chr.isGod() || chr.gmLevel() == 6) {
                     chr.getCheatTracker().checkMsg();
                     map.broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), text, c.getPlayer().isGM(), (int)unk), c.getPlayer().getPosition());
-                    if (ServerConfig.LOG_CHAT) {
+                    if (ServerConfig.LOG_CHAT && chr.get对话冷却()<100)  {
+                        chr.set对话冷却(chr.get对话冷却()+1L);
                         FileoutputUtil.logToFile("logs/聊天/普通聊天.txt", "\r\n" + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 『" + chr.getName() + "』 地图『" + chr.getMapId() + "』：  " + text);
                     }
                     final StringBuilder sb = new StringBuilder("[GM 密语]『" + chr.getName() + "』(" + chr.getId() + ")地图『" + chr.getMapId() + "』普聊：  " + text);

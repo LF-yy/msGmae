@@ -1,67 +1,71 @@
 package handling.world;
 
 import bean.UserAttraction;
+import client.*;
+import constants.MapConstants;
 import constants.ServerConfig;
+import constants.WorldConstants;
 import gui.CongMS;
 import gui.LtMS;
+import gui.服务端输出信息;
 import scripting.NPCConversationManager;
 import scripting.ReactorScriptManager;
+import server.ShutdownServer;
+import server.Start;
 import server.life.MapleMonsterInformationProvider;
 import handling.world.family.MapleFamilyCharacter;
 import handling.world.family.MapleFamily;
 import handling.world.guild.MapleGuildAlliance;
-import java.util.LinkedHashMap;
+
+import java.util.*;
+
 import handling.world.guild.MapleGuildSummary;
 import handling.world.guild.MapleBBSThread;
 import handling.world.guild.MapleGuildCharacter;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import handling.world.guild.MapleGuild;
 import client.BuddyList.BuddyAddResult;
-import client.BuddyList;
 import client.BuddyList.BuddyOperation;
-import client.BuddyEntry;
+
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import tools.FileoutputUtil;
+
+import server.maps.MapleMapObject;
+import server.shops.HiredMerchant;
+import server.shops.IMaplePlayerShop;
+import tools.*;
 import database.DBConPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import server.Randomizer;
 import server.Timer.EventTimer;
-import client.MapleBuffStat;
 import tools.packet.PetPacket;
 import client.inventory.MapleInventoryType;
 import client.inventory.PetDataFactory;
 import client.inventory.MaplePet;
-import client.MapleDiseaseValueHolder;
-import client.MapleCoolDownValueHolder;
-import tools.MaplePacketCreator;
 import server.ServerProperties;
 import client.status.MonsterStatusEffect;
 import server.life.MapleMonster;
-import client.MapleCharacter;
 import server.maps.MapleMapItem;
 import server.maps.MapleMap;
 import server.Timer.WorldTimer;
 import handling.cashshop.CashShopServer;
 import handling.channel.PlayerStorage;
-import tools.CollectionUtil;
-import java.util.Collections;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
+
 import java.rmi.RemoteException;
-import java.util.Iterator;
+
 import handling.channel.ChannelServer;
+import tools.packet.PlayerShopPacket;
 
 public class World
 {
     public static boolean isShutDown;
     public static boolean isShopShutDown;
-    
+    private static ArrayList<Integer> outsideMap = new ArrayList();
+    public static ArrayList<Integer> getOutsideMap() {
+        return outsideMap;
+    }
     public static void init() {
         Find.findChannel(0);
         Guild.lock.toString();
@@ -88,7 +92,16 @@ public class World
         ret.append("\n");
         return ret.toString();
     }
-    
+    public static int 在线人数() {
+        int count = 0;
+
+        ChannelServer chl;
+        for(Iterator var1 = ChannelServer.getAllInstances().iterator(); var1.hasNext(); count += chl.getPlayerStorage().getAllCharacters().size()) {
+            chl = (ChannelServer)var1.next();
+        }
+
+        return count;
+    }
     public static Map<Integer, Integer> getConnected() {
         final Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
         int total = 0;
@@ -100,7 +113,57 @@ public class World
         ret.put(Integer.valueOf(0), Integer.valueOf(total));
         return ret;
     }
-    
+
+    private static ArrayList<MapleMonster> durationMonsterList = new ArrayList();
+
+    public static void addDurationMonster(MapleMonster mob) {
+        if (mob != null && mob.getDuration() > 0L) {
+            durationMonsterList.add(mob);
+        }
+
+    }
+    public static void clearDurationMonsterList() {
+        durationMonsterList.clear();
+    }
+
+    public static ArrayList<MapleMonster> getDurationMonsterList() {
+        return durationMonsterList;
+    }
+
+    public static void monitorDurationMonster(int sec) {
+        EventTimer.getInstance().register(new Runnable() {
+            public void run() {
+                try {
+                    if (!World.durationMonsterList.isEmpty()) {
+                        for(int i = 0; i < World.durationMonsterList.size(); ++i) {
+                            MapleMonster mob = (MapleMonster)World.durationMonsterList.get(i);
+                            if (mob == null) {
+                                World.durationMonsterList.remove(i);
+                                --i;
+                            } else if (mob.getLastDuration() <= 0L) {
+                                MapleMap map = mob.getMap();
+                                mob.setHp(0L);
+                                if (map != null) {
+                                    mob.getMap().killMonster(mob, true);
+                                    if (!map.haveMonster(9900000) && !map.haveMonster(9900001) && !map.haveMonster(9900002)) {
+                                        map.setHaveStone(false);
+                                        map.setStoneLevel(0);
+                                    }
+                                }
+
+                                World.durationMonsterList.remove(i);
+                                --i;
+                            }
+                        }
+                    }
+                } catch (Exception var4) {
+                    服务端输出信息.println_err("【错误】monitorDurationMonster执行错误，错误原因：" + var4);
+                    var4.printStackTrace();
+                }
+
+            }
+        }, (long)(sec * 1000), (long)(sec * 1000));
+    }
     public static List<CheaterData> getCheaters() {
         final List<CheaterData> allCheaters = new ArrayList<CheaterData>();
         for (final ChannelServer cs : ChannelServer.getAllInstances()) {
@@ -109,7 +172,23 @@ public class World
         Collections.sort(allCheaters);
         return CollectionUtil.copyFirst(allCheaters, 10);
     }
-    
+    public static ArrayList<Integer> getOutsideMapSQL() {
+        outsideMap.clear();
+        Connection con = DBConPool.getConnection();
+
+        try {
+            PreparedStatement ps = con.prepareStatement("SELECT  * FROM snail_outside_map");
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                outsideMap.add(rs.getInt("mapid"));
+            }
+        } catch (SQLException var3) {
+            服务端输出信息.println_err("getOutsideMap 错误，错误原因：" + var3);
+        }
+
+        return outsideMap;
+    }
     public static boolean isConnected(final String charName) {
         return Find.findChannel(charName) > 0;
     }
@@ -170,7 +249,7 @@ public class World
     }
     public static void handleMap(final MapleMap map, final int numTimes, final int size) {
         if (map.getItemsSize() > 0) {
-            for (final MapleMapItem item : map.getAllItemsThreadsafe()) {
+            for ( MapleMapItem item : map.getAllItemsThreadsafe()) {
                 if (item.shouldExpire()) {
                     item.expire(map);
                 }
@@ -187,21 +266,20 @@ public class World
             if (map.canSpawn()) {
                 map.respawn(false);
             }
-            //自定义轮回
-//            UserAttraction attractLhList = NPCConversationManager.getAttractLhList(map.getChannel(), map.getId());
-//            if (attractLhList!=null){
-//                map.respawn(false);
-//            }
-            final boolean hurt = map.canHurt();
+             boolean hurt = map.canHurt();
             for (MapleCharacter chr : map.getCharactersThreadsafe()) {
                 handleCooldowns(chr, numTimes, hurt);
             }
             if (map.getMobsSize() > 0) {
-                for (final MapleMonster mons : map.getAllMonstersThreadsafe()) {
+                for ( MapleMonster mons : map.getAllMonstersThreadsafe()) {
                     if (mons.isAlive() && mons.getStatiSize() > 0) {
-                        for (final MonsterStatusEffect mse : mons.getAllBuffs()) {
-                            if (mse.shouldCancel()) {
-                                mons.cancelSingleStatus(mse);
+                        for ( MonsterStatusEffect mse : mons.getAllBuffs()) {
+                            try {
+                                if (mse.shouldCancel()) {
+                                    mons.cancelSingleStatus(mse);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
                         }
                     }
@@ -1091,6 +1169,23 @@ public class World
     
     public static class Broadcast
     {
+        public static void broadcastSmega(int world, byte[] message) {
+            Iterator var2 = ChannelServer.getAllInstances().iterator();
+
+            while(true) {
+                ChannelServer cs;
+                do {
+                    if (!var2.hasNext()) {
+                        return;
+                    }
+
+                    cs = (ChannelServer)var2.next();
+                } while(world != -1 && cs.channel != world);
+
+                cs.broadcastSmega(message);
+            }
+        }
+
         public static void broadcastSmega(final byte[] message) {
             for (final ChannelServer cs : ChannelServer.getAllInstances()) {
                 cs.broadcastSmega(message);
@@ -1636,16 +1731,35 @@ public class World
         @Override
         public void run() {
             ++this.numTimes;
-            for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+            ChannelServer.getAllInstances().parallelStream().forEach(cserv -> {
                 Collection<MapleMap> maps = cserv.getMapFactory().getAllMapThreadSafe();
-                for (final MapleMap map : maps) {
+                maps.parallelStream().forEach(map -> {
                     World.handleMap(map, this.numTimes, map.getCharactersSize());
+                });
+
+//                for (final MapleMap map : maps) {
+//                    World.handleMap(map, this.numTimes, map.getCharactersSize());
+//                }
+                if (LtMS.ConfigValuesMap.get("开启双线刷怪")>0) {
+                    maps = cserv.getMapFactory().getAllInstanceMaps();
+                    maps.parallelStream().forEach(map -> {
+                        World.handleMap(map, this.numTimes, map.getCharactersSize());
+                    });
                 }
-                maps = cserv.getMapFactory().getAllInstanceMaps();
-                for (final MapleMap map : maps) {
-                    World.handleMap(map, this.numTimes, map.getCharactersSize());
-                }
-            }
+//                for (final MapleMap map : maps) {
+//                    World.handleMap(map, this.numTimes, map.getCharactersSize());
+//                }
+            });
+//            for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                Collection<MapleMap> maps = cserv.getMapFactory().getAllMapThreadSafe();
+//                for (final MapleMap map : maps) {
+//                    World.handleMap(map, this.numTimes, map.getCharactersSize());
+//                }
+//                maps = cserv.getMapFactory().getAllInstanceMaps();
+//                for (final MapleMap map : maps) {
+//                    World.handleMap(map, this.numTimes, map.getCharactersSize());
+//                }
+//            }
             if (this.numTimes % 2400 == 0) {
                 MapleMonsterInformationProvider.getInstance().clearDrops();
                 ReactorScriptManager.getInstance().clearDrops();
@@ -1694,5 +1808,499 @@ public class World
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "系统" + rate + "活动已经结束。系统已成功自动切换为正常游戏模式！"));
             }
         }, delay * 1000L);
+    }
+
+
+    public static int changeCharName(int chrId, String newName) {
+        if (处理字符串.hasSpecialCharacter(newName)) {
+            return 3;
+        } else {
+            Connection con = DBConPool.getConnection();
+            String oldName = "";
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE id = ?");
+                ps.setInt(1, chrId);
+
+                ResultSet rs;
+                for(rs = ps.executeQuery(); rs.next(); oldName = rs.getString("name")) {
+                }
+
+                if (newName.equals(oldName)) {
+                    return 1;
+                } else {
+                    ps = con.prepareStatement("SELECT * FROM characters WHERE name = ?");
+                    ps.setString(1, newName);
+                    rs = ps.executeQuery();
+                    if (rs.next()) {
+                        return 2;
+                    } else {
+                        MapleCharacter chr = MapleCharacter.getCharacterById(chrId);
+                        Iterator var10;
+                        Iterator var12;
+                        MapleGuild guild;
+                        Iterator var21;
+                        MapleGuildCharacter gchr;
+                        if (chr != null) {
+                            chr.dropNPC(9900004, "经查询，新角色名 #r" + newName + " #k可用，接下来系统会将你的客户端离线，以便进行改名，如果你有开店，系统也会#r自动将你的店铺关闭#k。如发现无法点击任何按键，#r下线重上#k即可。");
+                            IMaplePlayerShop merchant = chr.getPlayerShop();
+                            if (merchant != null && merchant.getShopType() == 1 && merchant.isOwner(chr) && merchant.isAvailable()) {
+                                chr.getClient().sendPacket(PlayerShopPacket.shopErrorMessage(21, 0));
+                                chr.getClient().sendPacket(MaplePacketCreator.enableActions());
+                                merchant.removeAllVisitors(-1, -1);
+                                chr.setPlayerShop((IMaplePlayerShop)null);
+                                merchant.closeShop(true, true);
+                            }
+
+                            var21 = ChannelServer.getAllInstances().iterator();
+
+                            while(true) {
+                                if (!var21.hasNext()) {
+                                    chr.setName(newName);
+                                    guild = chr.getGuild();
+                                    if (guild != null) {
+                                        gchr = guild.getMGC(chr.getId());
+                                        if (gchr != null) {
+                                            gchr.setName(newName);
+                                        }
+                                    }
+
+                                    var10 = ChannelServer.getAllInstances().iterator();
+
+                                    label205:
+                                    while(var10.hasNext()) {
+                                        ChannelServer cs = (ChannelServer)var10.next();
+                                        var12 = cs.getPlayerStorage().getAllCharactersThreadSafe().iterator();
+
+                                        while(true) {
+                                            while(true) {
+                                                MapleCharacter chr0;
+                                                do {
+                                                    if (!var12.hasNext()) {
+                                                        continue label205;
+                                                    }
+
+                                                    chr0 = (MapleCharacter)var12.next();
+                                                } while(chr0 == null);
+
+                                                Iterator var40 = chr0.getBuddylist().getBuddies().iterator();
+
+                                                while(var40.hasNext()) {
+                                                    BuddyEntry buddy = (BuddyEntry)var40.next();
+                                                    if (buddy != null && buddy.getName().equals(chr.getName())) {
+                                                        buddy.setName(newName);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    chr.getClient().disconnect(true, false, true);
+                                    break;
+                                }
+
+                                ChannelServer cs = (ChannelServer)var21.next();
+                                Iterator var26 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+
+                                while(var26.hasNext()) {
+                                    MapleMap map = (MapleMap)var26.next();
+                                    Iterator var35 = map.getAllMerchant().iterator();
+
+                                    while(var35.hasNext()) {
+                                        MapleMapObject obj = (MapleMapObject)var35.next();
+                                        if (obj instanceof IMaplePlayerShop && chr.getPlayerShop() == null) {
+                                            IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+                                            if (obj instanceof HiredMerchant) {
+                                                HiredMerchant merchant1 = (HiredMerchant)ips;
+                                                if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(chr) && merchant1.isAvailable()) {
+                                                    merchant1.removeAllVisitors(-1, -1);
+                                                    chr.setPlayerShop((IMaplePlayerShop)null);
+                                                    merchant1.closeShop(true, true);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Iterator var8 = ChannelServer.getAllInstances().iterator();
+
+                            label273:
+                            while(true) {
+                                ChannelServer cs;
+                                if (!var8.hasNext()) {
+                                    var8 = MapleGuild.loadAll().iterator();
+
+                                    while(var8.hasNext()) {
+                                        guild = (MapleGuild)var8.next();
+                                        if (guild != null) {
+                                            gchr = guild.getMGC(chrId);
+                                            if (gchr != null) {
+                                                gchr.setName(newName);
+                                            }
+                                        }
+                                    }
+
+                                    var8 = ChannelServer.getAllInstances().iterator();
+
+                                    label241:
+                                    while(true) {
+                                        if (!var8.hasNext()) {
+                                            break label273;
+                                        }
+
+                                        cs = (ChannelServer)var8.next();
+                                        var10 = cs.getPlayerStorage().getAllCharactersThreadSafe().iterator();
+
+                                        while(true) {
+                                            while(true) {
+                                                MapleCharacter chr0;
+                                                do {
+                                                    if (!var10.hasNext()) {
+                                                        continue label241;
+                                                    }
+
+                                                    chr0 = (MapleCharacter)var10.next();
+                                                } while(chr0 == null);
+
+                                                var12 = chr0.getBuddylist().getBuddies().iterator();
+
+                                                while(var12.hasNext()) {
+                                                    BuddyEntry buddy = (BuddyEntry)var12.next();
+                                                    if (buddy != null && buddy.getName().equals(oldName)) {
+                                                        buddy.setName(newName);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                cs = (ChannelServer)var8.next();
+                                var10 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+
+                                while(true) {
+                                    while(true) {
+                                        MapleMap map;
+                                        do {
+                                            if (!var10.hasNext()) {
+                                                continue label273;
+                                            }
+
+                                            map = (MapleMap)var10.next();
+                                        } while(!MapConstants.isMarket(map.getId()));
+
+                                        var12 = map.getAllMerchant().iterator();
+
+                                        while(var12.hasNext()) {
+                                            MapleMapObject obj = (MapleMapObject)var12.next();
+                                            if (obj instanceof IMaplePlayerShop) {
+                                                IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+                                                if (obj instanceof HiredMerchant) {
+                                                    HiredMerchant merchant = (HiredMerchant)ips;
+                                                    if (merchant != null && merchant.getShopType() == 1 && merchant.getOwnerName().equals(oldName) && merchant.isAvailable()) {
+                                                        merchant.removeAllVisitors(-1, -1);
+                                                        merchant.closeShop(true, true);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        ps = con.prepareStatement("UPDATE characters SET name = ? WHERE id = ?");
+                        ps.setString(1, newName);
+                        ps.setInt(2, chrId);
+                        ps.executeUpdate();
+                        changeNameWhereCharacterId(con, "bossrank", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank1", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank2", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank3", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank4", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank5", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank6", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank7", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank8", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "bossrank9", "cname", newName, oldName);
+                        changeNameWhereCharacterId(con, "gifts", "`from`", newName, oldName);
+                        changeNameWhereCharacterId(con, "notes", "`to`", newName, oldName);
+                        changeNameWhereCharacterId(con, "notes", "`from`", newName, oldName);
+                        changeNameWhereCharacterId(con, "rings", "partnername", newName, oldName);
+                        changeNameWhereCharacterId(con, "speedruns", "leader", newName, oldName);
+                        ps = con.prepareStatement("SELECT * FROM speedruns");
+                        rs = ps.executeQuery();
+                        Map<Integer, String> nameMap = new HashMap();
+
+                        while(true) {
+                            String members;
+                            String[] members2;
+                            boolean isExist = false;
+                            do {
+                                if (!rs.next()) {
+                                    if (!nameMap.isEmpty()) {
+                                        var21 = nameMap.entrySet().iterator();
+
+                                        while(var21.hasNext()) {
+                                            Map.Entry<Integer, String> entry = (Map.Entry)var21.next();
+                                            ps = con.prepareStatement("UPDATE speedruns SET members = ? WHERE id = ?");
+                                            ps.setString(1, (String)entry.getValue());
+                                            ps.setInt(2, (Integer)entry.getKey());
+                                            ps.executeUpdate();
+                                        }
+                                    }
+
+                                    changeNameWhereCharacterId(con, "徒弟列表", "chrname", newName, oldName);
+                                    changeNameWhereCharacterId(con, "徒弟列表", "student_name", newName, oldName);
+                                    ps = con.prepareStatement("SELECT * FROM 曾用名 WHERE chrid = ?");
+                                    ps.setInt(1, chrId);
+                                    rs = ps.executeQuery();
+
+                                    while(rs.next()) {
+                                        if (rs.getString("oldname").equals(oldName)) {
+                                            isExist = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!isExist) {
+                                        ps = con.prepareStatement("INSERT INTO 曾用名 (chrid, oldname) VALUES (?, ?)");
+                                        ps.setInt(1, chrId);
+                                        ps.setString(2, oldName);
+                                        ps.executeUpdate();
+                                    }
+
+                                    ps.close();
+                                    rs.close();
+                                    return 0;
+                                }
+
+                                members = rs.getString("members");
+                                members2 = members.split(",");
+                                isExist = false;
+
+                                for(int i = 0; i < members2.length; ++i) {
+                                    if (members2[i].equals(oldName)) {
+                                        members2[i] = newName;
+                                        isExist = true;
+                                    }
+                                }
+                            } while(!isExist);
+
+                            members = "";
+                            String[] var37 = members2;
+                            int var39 = members2.length;
+
+                            for(int var41 = 0; var41 < var39; ++var41) {
+                                String member = var37[var41];
+                                members = members + member + ",";
+                            }
+
+                            members = members.substring(0, members.length() - 1);
+                            nameMap.put(rs.getInt("id"), members);
+                        }
+                    }
+                }
+            } catch (SQLException var17) {
+                服务端输出信息.println_err("changeCharName出错，错误原因：" + var17);
+                var17.printStackTrace();
+                return 0;
+            }
+        }
+    }
+
+    private static void changeNameWhereCharacterId(Connection con, String tableName, String rowName, String newChrName, String oldChrName) {
+        try {
+            PreparedStatement ps = con.prepareStatement("UPDATE " + tableName + " SET " + rowName + " = ? WHERE " + rowName + " = ?");
+            ps.setString(1, newChrName);
+            ps.setString(2, oldChrName);
+            ps.executeUpdate();
+            ps.close();
+        } catch (Exception var6) {
+            服务端输出信息.println_err("changeNameWhereCharacterId出错，错误原因：" + var6);
+            var6.printStackTrace();
+        }
+
+    }
+
+
+    public static void check_single(int min, ArrayList<Pair<String, Boolean>> list) {
+        String mac = MacAddressTool.getMacAddress(false);
+        String num = Start.returnSerialNumber();
+        String localMac = LoginCrypto.hexSha1(num + mac);
+        boolean success = false;
+        if (localMac != null && !list.isEmpty()) {
+            Iterator var6 = list.iterator();
+
+            while(var6.hasNext()) {
+                Pair<String, Boolean> pair = (Pair)var6.next();
+                if (((String)pair.left).equals(localMac)) {
+                    success = (Boolean)pair.right;
+                    break;
+                }
+            }
+        }
+
+        if (!success) {
+            WorldTimer.getInstance().register(new Runnable() {
+                public void run() {
+                    int count = 0;
+                    WorldConstants.USER_LIMIT = 10;
+                    Iterator var2 = ChannelServer.getAllInstances().iterator();
+
+                    while(var2.hasNext()) {
+                        ChannelServer cs = (ChannelServer)var2.next();
+                        Iterator var4 = cs.getPlayerStorage().getAllCharacters().iterator();
+
+                        while(var4.hasNext()) {
+                            MapleCharacter chr = (MapleCharacter)var4.next();
+                            ++count;
+                            if (count > 10) {
+                                chr.getClient().disconnect(true, false, true);
+                            }
+                        }
+                    }
+
+                }
+            }, (long)(min * 60 * 1000), (long)(min * 60 * 1000));
+        }
+
+    }
+    public static void 踢全体玩家下线() {
+        int number = 0;
+        int gm_number = 0;
+        ArrayList<MapleCharacter> arraylist = new ArrayList();
+        Iterator var3 = ChannelServer.getAllInstances().iterator();
+
+        while(var3.hasNext()) {
+            ChannelServer cserv = (ChannelServer)var3.next();
+            Iterator var5 = cserv.getPlayerStorage().getAllCharacters().iterator();
+
+            while(var5.hasNext()) {
+                MapleCharacter mch = (MapleCharacter)var5.next();
+                if (!mch.isGM()) {
+                    mch.saveToDB(false, false);
+                    arraylist.add(mch);
+                    ++number;
+                } else {
+                    ++gm_number;
+                }
+            }
+        }
+
+        var3 = arraylist.iterator();
+
+        while(var3.hasNext()) {
+            MapleCharacter mch = (MapleCharacter)var3.next();
+            mch.getClient().sendPacket(MaplePacketCreator.serverBlocked(2));
+        }
+
+        服务端输出信息.println_out("[系统提示]共将" + number + "个玩家踢下线，还有" + gm_number + "个管理员在线。");
+    }
+
+    public static boolean backupInventoryItems(int chrid) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var2 = null;
+
+            try {
+                PreparedStatement ps1 = con.prepareStatement("Delete FROM inventoryitems_copy WHERE characterid = ?");
+                ps1.setInt(1, chrid);
+                ps1.executeUpdate();
+                ps1 = con.prepareStatement("SELECT * FROM inventoryitems WHERE characterid = ?");
+                ps1.setInt(1, chrid);
+                PreparedStatement ps2 = con.prepareStatement("INSERT INTO `inventoryitems_copy` (inventoryitemid, characterid, itemid, inventorytype, position, quantity, owner, GM_Log, uniqueid, expiredate, flag, `type`, sender, equipOnlyId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                ResultSet rs = ps1.executeQuery();
+
+                while(rs.next()) {
+                    ps2.setLong(1, rs.getLong("inventoryitemid"));
+                    ps2.setInt(2, rs.getInt("characterid"));
+                    ps2.setInt(3, rs.getInt("itemid"));
+                    ps2.setInt(4, rs.getInt("inventorytype"));
+                    ps2.setInt(5, rs.getInt("position"));
+                    ps2.setInt(6, rs.getInt("quantity"));
+                    ps2.setString(7, rs.getString("owner"));
+                    ps2.setString(8, rs.getString("GM_Log"));
+                    ps2.setInt(9, rs.getInt("uniqueid"));
+                    ps2.setLong(10, rs.getLong("expiredate"));
+                    ps2.setByte(11, rs.getByte("flag"));
+                    ps2.setByte(12, rs.getByte("type"));
+                    ps2.setString(13, rs.getString("sender"));
+                    ps2.setLong(14, rs.getLong("equipOnlyId"));
+                    ps2.executeUpdate();
+                }
+
+                ps1 = con.prepareStatement("SELECT * FROM `inventoryitems` LEFT JOIN `inventoryequipment` USING(`inventoryitemid`) WHERE `characterid` = ? AND (inventorytype = -1 OR inventorytype = 1)");
+                ps1.setInt(1, chrid);
+                ps2 = con.prepareStatement("INSERT INTO inventoryequipment_copy VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                rs = ps1.executeQuery();
+
+                while(rs.next()) {
+                    ps2.setLong(1, rs.getLong("inventoryitemid"));
+                    ps2.setInt(2, rs.getInt("upgradeslots"));
+                    ps2.setInt(3, rs.getInt("level"));
+                    ps2.setInt(4, rs.getInt("str"));
+                    ps2.setInt(5, rs.getInt("dex"));
+                    ps2.setInt(6, rs.getInt("int"));
+                    ps2.setInt(7, rs.getInt("luk"));
+                    ps2.setInt(8, rs.getInt("hp"));
+                    ps2.setInt(9, rs.getInt("mp"));
+                    ps2.setInt(10, rs.getInt("watk"));
+                    ps2.setInt(11, rs.getInt("matk"));
+                    ps2.setInt(12, rs.getInt("wdef"));
+                    ps2.setInt(13, rs.getInt("mdef"));
+                    ps2.setInt(14, rs.getInt("acc"));
+                    ps2.setInt(15, rs.getInt("avoid"));
+                    ps2.setInt(16, rs.getInt("hands"));
+                    ps2.setInt(17, rs.getInt("speed"));
+                    ps2.setInt(18, rs.getInt("jump"));
+                    ps2.setInt(19, rs.getInt("ViciousHammer"));
+                    ps2.setInt(20, rs.getInt("itemEXP"));
+                    ps2.setInt(21, rs.getInt("durability"));
+                    ps2.setByte(22, rs.getByte("enhance"));
+                    ps2.setInt(23, rs.getInt("potential1"));
+                    ps2.setInt(24, rs.getInt("potential2"));
+                    ps2.setInt(25, rs.getInt("potential3"));
+                    ps2.setInt(26, rs.getInt("hpR"));
+                    ps2.setInt(27, rs.getInt("mpR"));
+                    ps2.setInt(28, rs.getInt("hpRR"));
+                    ps2.setInt(29, rs.getInt("mpRR"));
+                    ps2.setInt(30, rs.getInt("itemlevel"));
+                    ps2.setString(31, rs.getString("mxmxd_dakong_fumo"));
+                    ps2.setString(32, rs.getString("snail_potentials"));
+                    ps2.executeUpdate();
+                }
+
+                ps1.close();
+                ps2.close();
+                rs.close();
+                boolean var6 = true;
+                return var6;
+            } catch (Throwable var16) {
+                var2 = var16;
+                throw var16;
+            } finally {
+                if (con != null) {
+                    if (var2 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var15) {
+                            var2.addSuppressed(var15);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var18) {
+            服务端输出信息.println_err("【错误】backupInventoryItems错误，错误原因：" + var18);
+            var18.printStackTrace();
+            return false;
+        }
     }
 }

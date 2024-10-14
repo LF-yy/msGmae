@@ -5,14 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -22,11 +15,13 @@ import client.MapleCharacterUtil;
 import client.MapleClient;
 import database.DBConPool;
 import database.DatabaseConnection;
+import gui.LtMS;
 import handling.world.World.Alliance;
 import handling.world.World.Broadcast;
 import handling.world.World.Guild;
 import handling.world.guild.MapleBBSThread.MapleBBSReply;
 import handling.world.guild.MapleBBSThread.ThreadComparator;
+import server.Start;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.data.MaplePacketLittleEndianWriter;
@@ -921,5 +916,363 @@ public class MapleGuild implements Serializable
         NONE, 
         DISBAND, 
         EMBELMCHANGE;
+    }
+
+    public static class 战斗力信息 {
+        private String name;
+        private int chrid;
+        private int level;
+        private int job;
+        private int str;
+        private int dex;
+        private int _int;
+        private int luk;
+        private int maxhp;
+        private int maxmp;
+        private long max_damage;
+        private int e_str;
+        private int e_dex;
+        private int e_int;
+        private int e_luk;
+        private int e_watk;
+        private int e_matk;
+        private int e_hp;
+        private int e_mp;
+        private String potentials;
+        private Map<Integer, Integer> potentialMap = new HashMap();
+        private int percentForce;
+        private long force;
+        private long chr_attack;
+
+        public 战斗力信息() {
+        }
+
+        public void solveChr_attack() {
+            if (this.job >= 100 && this.job < 200) {
+                this.chr_attack = (long)(this.str + this.e_str + (this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 200 && this.job < 300) {
+                this.chr_attack = (long)(this._int + this.e_int + (this.luk + this.e_luk) / 4) * (long)this.e_matk / 25L;
+            } else if (this.job >= 300 && this.job < 400) {
+                this.chr_attack = (long)(this.dex + this.e_dex + (this.str + this.e_str) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 400 && this.job < 500) {
+                this.chr_attack = (long)(this.luk + this.e_luk + (this.str + this.e_str + this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 500 && this.job < 520) {
+                this.chr_attack = (long)(this.str + this.e_str + (this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 520 && this.job < 600) {
+                this.chr_attack = (long)(this.dex + this.e_dex + (this.str + this.e_str) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 1000 && this.job < 1200) {
+                this.chr_attack = (long)(this.str + this.e_str + (this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 1200 && this.job < 1300) {
+                this.chr_attack = (long)(this._int + this.e_int + (this.luk + this.e_luk) / 4) * (long)this.e_matk / 25L;
+            } else if (this.job >= 1400 && this.job < 1500) {
+                this.chr_attack = (long)(this.luk + this.e_luk + (this.str + this.e_str + this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 1500 && this.job < 1600) {
+                this.chr_attack = (long)(this.str + this.e_str + (this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 2000 && this.job < 2200) {
+                this.chr_attack = (long)(this.str + this.e_str + (this.dex + this.e_dex) / 4) * (long)this.e_watk / 25L;
+            } else if (this.job >= 2200 && this.job < 2300) {
+                this.chr_attack = (long)(this._int + this.e_int + (this.luk + this.e_luk) / 4) * (long)this.e_matk / 25L;
+            }
+
+        }
+
+        public long getChr_attack() {
+            return this.chr_attack;
+        }
+
+        public void solveForce() {
+            this.solveChr_attack();
+            if ((Integer) LtMS.ConfigValuesMap.get("战斗力计算包含潜能开关") > 0) {
+                this.solvePotentials();
+            }
+
+            this.force = (long)(this.level * 15 + this.str + this.dex + this.luk + this._int) + this.chr_attack / 2L;
+            if (this.percentForce > 0) {
+                this.force += (long)this.percentForce * this.force / 100L;
+            }
+
+        }
+
+        private void solvePotentials() {
+            if (this.potentials != null) {
+                this.potentialMap.clear();
+                String[] ret1;
+                int v;
+                int b;
+                if (this.potentials.contains(",")) {
+                    ret1 = this.potentials.split(",");
+                    String[] var2 = ret1;
+                    v = ret1.length;
+
+                    for(b = 0; b < v; ++b) {
+                        String a = var2[b];
+                        if (a.contains(":")) {
+                            ret1 = a.split(":");
+                            int k = Integer.parseInt(ret1[0]);
+                            v = Integer.parseInt(ret1[1]);
+                            if (this.potentialMap.containsKey(k)) {
+                                b = (Integer)this.potentialMap.get(k);
+                                this.potentialMap.put(k, b + v);
+                            } else {
+                                this.potentialMap.put(k, v);
+                            }
+                        }
+                    }
+                } else {
+                    if (!this.potentials.contains(":")) {
+                        return;
+                    }
+
+                    ret1 = this.potentials.split(":");
+                    int k = Integer.parseInt(ret1[0]);
+                    v = Integer.parseInt(ret1[1]);
+                    if (this.potentialMap.containsKey(k)) {
+                        b = (Integer)this.potentialMap.get(k);
+                        this.potentialMap.put(k, b + v);
+                    } else {
+                        this.potentialMap.put(k, v);
+                    }
+                }
+
+                Iterator var10 = this.potentialMap.entrySet().iterator();
+
+                while(var10.hasNext()) {
+                    Map.Entry<Integer, Integer> entry = (Map.Entry)var10.next();
+                    switch ((Integer)entry.getKey()) {
+                        case 1:
+                            this.str += (Integer)entry.getValue();
+                            break;
+                        case 2:
+                            this.dex += (Integer)entry.getValue();
+                            break;
+                        case 3:
+                            this._int += (Integer)entry.getValue();
+                            break;
+                        case 4:
+                            this.luk += (Integer)entry.getValue();
+                            break;
+                        case 5:
+                            this.str += (Integer)entry.getValue() * this.str / 100;
+                            break;
+                        case 6:
+                            this.dex += (Integer)entry.getValue() * this.dex / 100;
+                            break;
+                        case 7:
+                            this._int += (Integer)entry.getValue() * this._int / 100;
+                            break;
+                        case 8:
+                            this.luk += (Integer)entry.getValue() * this.luk / 100;
+                            break;
+                        case 9:
+                            this.str += (Integer)entry.getValue();
+                            this.dex += (Integer)entry.getValue();
+                            this._int += (Integer)entry.getValue();
+                            this.luk += (Integer)entry.getValue();
+                            break;
+                        case 10:
+                            this.str += (Integer)entry.getValue() * this.str / 100;
+                            this.dex += (Integer)entry.getValue() * this.dex / 100;
+                            this._int += (Integer)entry.getValue() * this._int / 100;
+                            this.luk += (Integer)entry.getValue() * this.luk / 100;
+                            break;
+                        case 11:
+                        case 12:
+                            this.chr_attack += (long)(Integer)entry.getValue();
+                            break;
+                        case 13:
+                        case 14:
+                            this.chr_attack += (long)(Integer)entry.getValue() * this.chr_attack / 100L;
+                        case 15:
+                        case 16:
+                        case 17:
+                        case 18:
+                        case 19:
+                        case 20:
+                        case 21:
+                        case 22:
+                        case 23:
+                        case 24:
+                        case 25:
+                        case 26:
+                        case 27:
+                        case 28:
+                        default:
+                            break;
+                        case 29:
+                            this.percentForce += (Integer)entry.getValue();
+                            break;
+                        case 30:
+                            this.percentForce = (int)((double)this.percentForce + (double)(Integer)entry.getValue() * 0.5);
+                            break;
+                        case 31:
+                            this.percentForce = (int)((double)this.percentForce + (double)(Integer)entry.getValue() * 0.3);
+                    }
+                }
+
+            }
+        }
+
+        public long getForce() {
+            return this.force;
+        }
+
+        public int getChrid() {
+            return this.chrid;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public int getLevel() {
+            return this.level;
+        }
+
+        public int getJob() {
+            return this.job;
+        }
+
+        public int getStr() {
+            return this.str;
+        }
+
+        public int getDex() {
+            return this.dex;
+        }
+
+        public int getInt() {
+            return this._int;
+        }
+
+        public int getLuk() {
+            return this.luk;
+        }
+
+        public int getMaxhp() {
+            return this.maxhp;
+        }
+
+        public int getMaxmp() {
+            return this.maxmp;
+        }
+
+        public long getMax_damage() {
+            return this.max_damage;
+        }
+
+        public void setChrid(int chrid) {
+            this.chrid = chrid;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setLevel(int level) {
+            this.level = level;
+        }
+
+        public void setJob(int job) {
+            this.job = job;
+        }
+
+        public void setStr(int str) {
+            this.str = str;
+        }
+
+        public void setDex(int dex) {
+            this.dex = dex;
+        }
+
+        public void setInt(int _int) {
+            this._int = _int;
+        }
+
+        public void setLuk(int luk) {
+            this.luk = luk;
+        }
+
+        public void setMaxhp(int maxhp) {
+            this.maxhp = maxhp;
+        }
+
+        public void setMaxmp(int maxmp) {
+            this.maxmp = maxmp;
+        }
+
+        public void setMax_damage(long max_damage) {
+            this.max_damage = max_damage;
+        }
+
+        public void setE_str(int e_str) {
+            this.e_str = e_str;
+        }
+        public int getE_str() {
+            return this.e_str;
+        }
+
+        public void setE_dex(int e_dex) {
+            this.e_dex = e_dex;
+        }
+
+        public int getE_dex() {
+            return this.e_dex;
+        }
+
+        public void setE_int(int e_int) {
+            this.e_int = e_int;
+        }
+
+        public int getE_int() {
+            return this.e_int;
+        }
+
+        public void setE_luk(int e_luk) {
+            this.e_luk = e_luk;
+        }
+
+        public int getE_luk() {
+            return this.e_luk;
+        }
+
+        public void setE_watk(int e_watk) {
+            this.e_watk = e_watk;
+        }
+
+        public int getE_watk() {
+            return this.e_watk;
+        }
+
+        public void setE_matk(int e_matk) {
+            this.e_matk = e_matk;
+        }
+
+        public int getE_matk() {
+            return this.e_matk;
+        }
+
+        public void setE_hp(int e_hp) {
+            this.e_hp = e_hp;
+        }
+
+        public int getE_hp() {
+            return this.e_hp;
+        }
+
+        public void setE_mp(int e_mp) {
+            this.e_mp = e_mp;
+        }
+
+        public int getE_mp() {
+            return this.e_mp;
+        }
+
+        public String getPotentials() {
+            return this.potentials;
+        }
+
+        public void setPotentials(String potentials) {
+            this.potentials = potentials;
+        }
     }
 }

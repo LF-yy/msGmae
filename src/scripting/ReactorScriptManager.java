@@ -4,6 +4,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
+import gui.LtMS;
+import gui.服务端输出信息;
+import server.Start;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import java.util.LinkedList;
@@ -22,15 +26,15 @@ public class ReactorScriptManager extends AbstractScriptManager
 {
     private static final ReactorScriptManager instance;
     private final Map<Integer, List<ReactorDropEntry>> drops;
-    
+
     public ReactorScriptManager() {
         this.drops = new HashMap<Integer, List<ReactorDropEntry>>();
     }
-    
+
     public static ReactorScriptManager getInstance() {
         return ReactorScriptManager.instance;
     }
-    
+
     public void act(final MapleClient c, final MapleReactor reactor) {
         try {
             final Invocable iv = this.getInvocable("反应堆/" + reactor.getReactorId() + ".js", c);
@@ -50,7 +54,7 @@ public class ReactorScriptManager extends AbstractScriptManager
             FilePrinter.printError("ReactorScriptManager.txt", "Error executing reactor script. ReactorID: " + reactor.getReactorId() + ", ReactorName: " + reactor.getName() + ":" + (Object)ex2);
         }
     }
-    
+
     public final List<ReactorDropEntry> getDrops(final int rid) {
         List<ReactorDropEntry> ret = (List<ReactorDropEntry>)this.drops.get((Object)Integer.valueOf(rid));
         if (ret != null) {
@@ -105,11 +109,11 @@ public class ReactorScriptManager extends AbstractScriptManager
         this.drops.put(Integer.valueOf(rid), ret);
         return ret;
     }
-    
+
     public void clearDrops() {
         this.drops.clear();
     }
-    
+
     static {
         instance = new ReactorScriptManager();
     }

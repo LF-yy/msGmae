@@ -50,11 +50,149 @@ public class GameConstants
     public static int[] superDrops;
     public static int[] owlItems;
     private static final List<Balloon> lBalloon;
-    
+    private static ArrayList<Integer> banMultiMobRateMapIdList = new ArrayList();
+    private static ArrayList<ArrayList<Integer>> multiOnlyEquipList = new ArrayList();
+
+    private static String banMultiMobRateListString = "";
+    public static void setBanMultiMobRateList() {
+        ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", banMultiMobRateListString);
+    }
+    public static void loadMultiOnlyEquipList() {
+        multiOnlyEquipList.clear();
+        String list = ServerProperties.getProperty("server.settings.multiOnlyEquipList", "-1");
+        if (list.equals("-1")) {
+            list = "|1112446*1112447*1112448*1112449*1112450*1112451*1112452*1112453*1112454*1112455*1112456*1112457*1112458*1112459*1112460*1112461*1112462*1112463*1112464*1112465*1112466*1112467*1112468*1112469*1112470*1112471*1112472*1112473*1112474*1112475*1112476*1112477*1112478*1112479*1112480*1112481*1112482*1112483*1112484*1112485*1112486*1112487*1112488*1112489*1112490*1112491*1112492*1112493*1112494*1112495|\n|1112435*1112436*1112437*1112438*1112439|";
+            ServerProperties.setProperty("server.settings.multiOnlyEquipList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                ArrayList<Integer> list0 = new ArrayList();
+                String[] var6 = str.split("\\*");
+                int var7 = var6.length;
+
+                for(int var8 = 0; var8 < var7; ++var8) {
+                    String str1 = var6[var8];
+                    if (!str1.equals("")) {
+                        int a = Integer.parseInt(str1);
+                        if (a > 0) {
+                            list0.add(Integer.parseInt(str1));
+                        }
+                    }
+                }
+
+                if (!list0.isEmpty()) {
+                    multiOnlyEquipList.add(list0);
+                }
+            }
+        }
+
+    }
+    private static ArrayList<Integer> banChannelList = new ArrayList();
+
+    public static boolean isBanChannel(Integer channel) {
+        return channel == 0 ? false : banChannelList.contains(channel);
+    }
+
     public static boolean isLinkedAttackSkill(final int id) {
         return getLinkedAttackSkill(id) != id;
     }
-    
+    public static boolean isNoDoubleMap(int mapId) {
+        switch (mapId) {
+            case 103000800:
+            case 103000804:
+            case 103000805:
+            case 229000000:
+            case 229000010:
+            case 229000020:
+            case 229000030:
+            case 229000040:
+            case 229000100:
+            case 229000200:
+            case 229000210:
+            case 229000211:
+            case 229000220:
+            case 229000300:
+            case 229000310:
+            case 229000311:
+            case 910000000:
+            case 910000088:
+            case 920010100:
+            case 920010200:
+            case 920010300:
+            case 920010601:
+            case 920010602:
+            case 920010603:
+            case 920010800:
+            case 922010100:
+            case 922010300:
+            case 922010401:
+            case 922010402:
+            case 922010403:
+            case 922010404:
+            case 922010405:
+            case 922010500:
+            case 922010700:
+            case 922010900:
+            case 925100000:
+            case 925100100:
+            case 925100200:
+            case 925100300:
+            case 925100400:
+            case 925100500:
+            case 926100000:
+            case 926100100:
+            case 926100200:
+            case 926100401:
+            case 930000100:
+            case 930000200:
+            case 930000400:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static int checkMultiOnlyEquip(MapleCharacter chr, int itemId) {
+        if (chr == null) {
+            return -1;
+        } else {
+            Iterator var2 = multiOnlyEquipList.iterator();
+
+            while(true) {
+                ArrayList list;
+                do {
+                    if (!var2.hasNext()) {
+                        return -1;
+                    }
+
+                    list = (ArrayList)var2.next();
+                } while(!list.contains(itemId));
+
+                Iterator var4 = list.iterator();
+
+                while(var4.hasNext()) {
+                    int a = (Integer)var4.next();
+                    Iterator var6 = chr.getInventory(MapleInventoryType.EQUIPPED).list().iterator();
+
+                    while(var6.hasNext()) {
+                        IItem item = (IItem)var6.next();
+                        if (item != null && a == item.getItemId()) {
+                            return a;
+                        }
+                    }
+                }
+            }
+        }
+    }
     public static int getLinkedAttackSkill(final int id) {
         switch (id) {
             case 11101220: {
@@ -108,6 +246,19 @@ public class GameConstants
                 return id;
             }
         }
+    }
+
+    public static boolean isFakeRevive(int mobId) {
+        if (mobId >= 8810010 && mobId < 8810018) {
+            return true;
+        } else if (mobId >= 9300610 && mobId < 9300618) {
+            return true;
+        } else {
+            return mobId == 6160004;
+        }
+    }
+    public static boolean isBanMultiMobRateMap(Integer mapId) {
+        return banMultiMobRateMapIdList.contains(mapId);
     }
     public static int getExpRate_Below10(final int job, final MapleCharacter c) {
         int 实际经验 = 0;
@@ -3211,7 +3362,296 @@ public class GameConstants
     public static boolean isDropRestricted(final int itemId) {
         return itemId == 3012000 || itemId == 4030004 || itemId == 1052098 || itemId == 1052202;
     }
-    
+    public static void loadBanMultiMobRateList() {
+        banMultiMobRateMapIdList.clear();
+        banMultiMobRateListString = ServerProperties.getProperty("server.settings.banMultiMobRateMapIdList", "-1");
+        String list = banMultiMobRateListString;
+        if (list.equals("-1")) {
+            list = "|910000000|910000088|";
+            ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    banMultiMobRateMapIdList.add(a);
+                }
+            }
+        }
+
+    }
+    public static boolean isTownMap(int mapId) {
+        switch (mapId) {
+            case 1000000:
+            case 1000001:
+            case 1000002:
+            case 1000003:
+            case 2000000:
+            case 100000000:
+            case 100000001:
+            case 100000100:
+            case 100000101:
+            case 100000102:
+            case 100000103:
+            case 100000104:
+            case 100000105:
+            case 100000200:
+            case 100000202:
+            case 100000203:
+            case 100000204:
+            case 101000000:
+            case 101000001:
+            case 101000002:
+            case 101000003:
+            case 101000004:
+            case 101000200:
+            case 101000300:
+            case 101000301:
+            case 102000000:
+            case 102000001:
+            case 102000002:
+            case 102000003:
+            case 102000004:
+            case 103000000:
+            case 103000001:
+            case 103000002:
+            case 103000003:
+            case 103000004:
+            case 103000005:
+            case 103000006:
+            case 103000008:
+            case 103000100:
+            case 104000000:
+            case 104000001:
+            case 104000002:
+            case 104000003:
+            case 104000004:
+            case 105040300:
+            case 105040400:
+            case 105040401:
+            case 105040402:
+            case 106020000:
+            case 140000000:
+            case 140000001:
+            case 140000010:
+            case 140000011:
+            case 140000012:
+            case 140010110:
+            case 200000000:
+            case 200000001:
+            case 200000002:
+            case 200000100:
+            case 200000110:
+            case 200000111:
+            case 200000112:
+            case 200000120:
+            case 200000121:
+            case 200000122:
+            case 200000130:
+            case 200000131:
+            case 200000132:
+            case 200000140:
+            case 200000141:
+            case 200000150:
+            case 200000151:
+            case 200000152:
+            case 200000160:
+            case 200000161:
+            case 200000200:
+            case 200000201:
+            case 200000202:
+            case 200000203:
+            case 200000300:
+            case 200000301:
+            case 209000000:
+            case 209080000:
+            case 209080100:
+            case 211000000:
+            case 211000001:
+            case 211000100:
+            case 211000101:
+            case 211000102:
+            case 220000000:
+            case 220000001:
+            case 220000002:
+            case 220000003:
+            case 220000004:
+            case 220000005:
+            case 220000006:
+            case 220000100:
+            case 220000110:
+            case 220000111:
+            case 220000300:
+            case 220000301:
+            case 220000302:
+            case 220000303:
+            case 220000304:
+            case 220000305:
+            case 220000306:
+            case 220000307:
+            case 220000400:
+            case 220000500:
+            case 221000000:
+            case 221000001:
+            case 221000100:
+            case 221000200:
+            case 221000300:
+            case 222000000:
+            case 222020000:
+            case 230000000:
+            case 230000001:
+            case 230000002:
+            case 230000003:
+            case 240000000:
+            case 240000001:
+            case 240000002:
+            case 240000003:
+            case 240000004:
+            case 240000005:
+            case 240000006:
+            case 240000100:
+            case 240000110:
+            case 240000111:
+            case 250000000:
+            case 250000001:
+            case 250000002:
+            case 250000003:
+            case 250000100:
+            case 251000000:
+            case 260000000:
+            case 260000100:
+            case 260000110:
+            case 260000200:
+            case 260000201:
+            case 260000202:
+            case 260000203:
+            case 260000204:
+            case 260000205:
+            case 260000206:
+            case 260000207:
+            case 260000300:
+            case 260000301:
+            case 260000302:
+            case 260000303:
+            case 261000000:
+            case 261000001:
+            case 261000002:
+            case 261000010:
+            case 261000011:
+            case 261000020:
+            case 261000021:
+            case 270000000:
+            case 270010000:
+            case 300000000:
+            case 300000001:
+            case 300000002:
+            case 300000010:
+            case 300000011:
+            case 300000012:
+            case 500000000:
+            case 540000000:
+            case 541000000:
+            case 550000000:
+            case 551000000:
+            case 600000000:
+            case 600000001:
+            case 700000000:
+            case 700000100:
+            case 700000101:
+            case 700000200:
+            case 701000000:
+            case 701000100:
+            case 701000200:
+            case 701000201:
+            case 701000202:
+            case 701000203:
+            case 701000210:
+            case 702000000:
+            case 702050000:
+            case 702090102:
+            case 741000200:
+            case 741000201:
+            case 741000202:
+            case 741000203:
+            case 741000204:
+            case 741000205:
+            case 741000206:
+            case 741000207:
+            case 741000208:
+            case 800000000:
+            case 801000000:
+            case 801000001:
+            case 801000002:
+            case 801000100:
+            case 801000110:
+            case 801000200:
+            case 801000210:
+            case 801000300:
+            case 810000000:
+            case 910000000:
+            case 910110000:
+            case 930000700:
+                return true;
+            default:
+                return false;
+        }
+    }
+    public static boolean isActivityMap(int id) {
+        switch (id) {
+            case 109060000:
+            case 109080000:
+            case 229010000:
+            case 229010100:
+            case 910010000:
+            case 910010100:
+            case 933030000:
+                return true;
+            default:
+                if (id >= 103000800 && id <= 103000890) {
+                    return true;
+                } else if (id >= 922010000 && id <= 922010900) {
+                    return true;
+                } else if (id >= 920010000 && id <= 920011300) {
+                    return true;
+                } else if (id >= 925100000 && id <= 925100700) {
+                    return true;
+                } else if (id >= 980000000 && id <= 980002004) {
+                    return true;
+                } else if (id >= 926100000 && id <= 926100700) {
+                    return true;
+                } else if (id >= 930000000 && id <= 930000800) {
+                    return true;
+                } else if (id >= 109040000 && id <= 109040004) {
+                    return true;
+                } else if (id >= 209000001 && id <= 209000015) {
+                    return true;
+                } else if (id >= 229000000 && id <= 229000311) {
+                    return true;
+                } else if (id >= 744000000 && id <= 744000015) {
+                    return true;
+                } else {
+                    return id >= 211060010 && id <= 211070200;
+                }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
     static {
         GameConstants.冒险岛名字 = ServerProperties.getProperty("LtMS.serverName");
         rangedMapobjectTypes = Collections.unmodifiableList((List<? extends MapleMapObjectType>)Arrays.asList(MapleMapObjectType.ITEM, MapleMapObjectType.MONSTER, MapleMapObjectType.DOOR, MapleMapObjectType.REACTOR, MapleMapObjectType.SUMMON, MapleMapObjectType.NPC, MapleMapObjectType.MIST));

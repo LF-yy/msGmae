@@ -267,6 +267,7 @@ public class NPCHandler
         final MapleStorage storage = chr.getStorage();
         switch (mode) {
             case 4: {
+                //取出仓库
                 final byte type = slea.readByte();
                 final byte slot = storage.getSlot(MapleInventoryType.getByType(type), slea.readByte());
                 final IItem item = storage.takeOut(slot);
@@ -306,6 +307,7 @@ public class NPCHandler
                 break;
             }
             case 5: {
+                //存入仓库
                 final byte slot2 = (byte)slea.readShort();
                 final int itemId = slea.readInt();
                 short quantity = slea.readShort();

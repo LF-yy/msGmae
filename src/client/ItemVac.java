@@ -1,6 +1,5 @@
 package client;
 
-import java.util.Iterator;
 import java.util.List;
 import server.life.MapleMonster;
 import server.MapleInventoryManipulator;

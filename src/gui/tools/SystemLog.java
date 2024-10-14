@@ -36,8 +36,8 @@ public class SystemLog {
             filewriter.write(time + " " + filecontent + "\r\n");//这里每一条是一行
             filewriter.flush();
             filewriter.close();
-        } catch (Exception d) {
-            System.out.println(d.getMessage());
+        } catch (Exception e) {
+           e.printStackTrace();
         }
     }
 
@@ -57,7 +57,7 @@ public class SystemLog {
             filewriter.write(filecontent + "\r\n");//这里每一条是一行
             filewriter.flush();
         } catch (Exception d) {
-            System.out.println(d.getMessage());
+                d.printStackTrace();
         }
     }
 
@@ -80,7 +80,7 @@ public class SystemLog {
             filewriter.flush();
             filewriter.close();
         } catch (Exception d) {
-            System.out.println(d.getMessage());
+           d.printStackTrace();
         }
     }
 
@@ -111,7 +111,7 @@ public class SystemLog {
             filewriter.flush();
             filewriter.close();
         } catch (Exception d) {
-            System.out.println(d.getMessage());
+           d.printStackTrace();
         }
     }
 }

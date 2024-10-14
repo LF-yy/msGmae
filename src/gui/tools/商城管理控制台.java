@@ -48,7 +48,7 @@ public class 商城管理控制台 extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(null, "[信息]:上架成功。");
             }
         } catch (NumberFormatException e) {
-            System.err.println(e);
+            //System.err.println(e);
             JOptionPane.showMessageDialog(null, "[信息]:上架失败，请选中你要上架的道具。");
         }
     }
@@ -70,7 +70,7 @@ public class 商城管理控制台 extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(null, "[信息]:下架成功。");
             }
         } catch (NumberFormatException e) {
-            System.err.println(e);
+            //System.err.println(e);
             JOptionPane.showMessageDialog(null, "[信息]:下架失败，请选中你要上架的道具。");
         }
     }
@@ -85,7 +85,8 @@ public class 商城管理控制台 extends javax.swing.JFrame {
             ps.setInt(++i, merchandise.getOnSale());
             ps.setInt(++i, merchandise.getSN());
             resulet = ps.executeUpdate();
-
+        ps.close();
+        con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -156,6 +157,9 @@ public class 商城管理控制台 extends javax.swing.JFrame {
                 });
 
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -171,6 +175,7 @@ public class 商城管理控制台 extends javax.swing.JFrame {
                 }
             }
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.err.println("出错读取商品：" + ex.getMessage());
         }
@@ -391,7 +396,9 @@ public class 商城管理控制台 extends javax.swing.JFrame {
                 });
             }
             long now = System.currentTimeMillis() - start;
-
+ps.close();
+rs.close();
+con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class
                     .getName()).log(Level.SEVERE, null, ex);

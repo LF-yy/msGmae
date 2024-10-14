@@ -6,6 +6,10 @@ import handling.world.MapleParty;
 import server.maps.MapleMapObject;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
+import tools.SearchGenerator;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 public class MapConstants
 {
@@ -215,5 +219,23 @@ public class MapConstants
                 return false;
             }
         }
+    }
+
+    public static boolean isMarket(int mapId) {
+        return mapId >= 910000000 && mapId < 910000023;
+    }
+    public static String getMapNameById(int mapId) {
+        Map<Integer, String> mapIdMap = SearchGenerator.getSearchData(SearchGenerator.SearchType.地图, mapId + "");
+        return (String)mapIdMap.get(mapId);
+    }
+
+    public static ArrayList<Integer> getAllMarketMapId() {
+        ArrayList<Integer> mapId = new ArrayList();
+
+        for(int i = 910000000; i < 910000023; ++i) {
+            mapId.add(i);
+        }
+
+        return mapId;
     }
 }

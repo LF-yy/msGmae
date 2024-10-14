@@ -3,6 +3,9 @@ package constants;
 import abc.Game;
 import server.ServerProperties;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServerConfig
 {
@@ -29,7 +32,7 @@ public class ServerConfig
     public static int 豆豆数量;
     public static int 等级经验倍率;
     public static String SERVERNAME;
-    public static String version;
+    public static short version;
     public static String TOUDING;
     public static String IP;
     public static String wzpath;
@@ -56,17 +59,213 @@ public class ServerConfig
     public static int MesoRate;
     public static int DropRate;
     public static int CashRate;
+
+    private static Map<Integer, Float> channelExpRateMap = new HashMap();
+    private static Map<Integer, Float> channelMesoRateMap = new HashMap();
+    private static Map<Integer, Float> channelDropRateMap = new HashMap();
+    private static Map<Integer, Integer> channelNeedItemMap = new HashMap();
+    private static ArrayList<Integer> cashInventoryBanItemList = new ArrayList();
     public static boolean isPvPChannel(final int ch) {
         return ServerConfig.pvp && ch == ServerConfig.pvpch;
     }
-    
+    public static void loadChannelExpRateMap() {
+        Map<Integer, Float> ret = new HashMap();
+        String list = ServerProperties.getProperty("server.settings.ChannelExpRateMap", "-1");
+        if (list.equals("-1")) {
+            list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
+            ServerProperties.setProperty("server.settings.ChannelExpRateMap", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var2 = list.split("\\|");
+        int var3 = var2.length;
+
+        for(int var4 = 0; var4 < var3; ++var4) {
+            String str = var2[var4];
+            if (!str.equals("")) {
+                String[] a = str.split(":");
+                if (a.length >= 2) {
+                    int channel = Integer.parseInt(a[0]);
+                    float rate = Float.parseFloat(a[1]);
+                    ret.put(channel, rate);
+                }
+            }
+        }
+
+        channelExpRateMap.clear();
+        channelExpRateMap = ret;
+    }
+    public static void loadChannelMesoRateMap() {
+        Map<Integer, Float> ret = new HashMap();
+        String list = ServerProperties.getProperty("server.settings.ChannelMesoRateMap", "-1");
+        if (list.equals("-1")) {
+            list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
+            ServerProperties.setProperty("server.settings.ChannelMesoRateMap", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var2 = list.split("\\|");
+        int var3 = var2.length;
+
+        for(int var4 = 0; var4 < var3; ++var4) {
+            String str = var2[var4];
+            if (!str.equals("")) {
+                String[] a = str.split(":");
+                if (a.length >= 2) {
+                    int channel = Integer.parseInt(a[0]);
+                    float rate = Float.parseFloat(a[1]);
+                    ret.put(channel, rate);
+                }
+            }
+        }
+
+        channelMesoRateMap.clear();
+        channelMesoRateMap = ret;
+    }
+    public static float getMyChannelExpRate(int channel) {
+        if (channelExpRateMap.get(channel) != null) {
+            return (Float)channelExpRateMap.get(channel);
+        } else {
+            channelExpRateMap.put(channel, 1.0F);
+            return 1.0F;
+        }
+    }
+    public static float getMyChannelMesoRate(int channel) {
+        if (channelMesoRateMap.get(channel) != null) {
+            return (Float)channelMesoRateMap.get(channel);
+        } else {
+            channelMesoRateMap.put(channel, 1.0F);
+            return 1.0F;
+        }
+    }
+
+    public static void loadChannelDropRateMap() {
+        Map<Integer, Float> ret = new HashMap();
+        String list = ServerProperties.getProperty("server.settings.ChannelDropRateMap", "-1");
+        if (list.equals("-1")) {
+            list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
+            ServerProperties.setProperty("server.settings.ChannelDropRateMap", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var2 = list.split("\\|");
+        int var3 = var2.length;
+
+        for(int var4 = 0; var4 < var3; ++var4) {
+            String str = var2[var4];
+            if (!str.equals("")) {
+                String[] a = str.split(":");
+                if (a.length >= 2) {
+                    int channel = Integer.parseInt(a[0]);
+                    float rate = Float.parseFloat(a[1]);
+                    ret.put(channel, rate);
+                }
+            }
+        }
+
+        channelDropRateMap.clear();
+        channelDropRateMap = ret;
+    }
+
+    public static float getMyChannelDropRate(int channel) {
+        if (channelDropRateMap.get(channel) != null) {
+            return (Float)channelDropRateMap.get(channel);
+        } else {
+            channelDropRateMap.put(channel, 1.0F);
+            return 1.0F;
+        }
+    }
+
+    public static void loadChannelNeedItemMap() {
+        Map<Integer, Integer> ret = new HashMap();
+        String list = ServerProperties.getProperty("server.settings.ChannelNeedItemMap", "-1");
+        if (list.equals("-1")) {
+            list = "|11:4110002|12:4110003|";
+            ServerProperties.setProperty("server.settings.ChannelNeedItemMap", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var2 = list.split("\\|");
+        int var3 = var2.length;
+
+        for(int var4 = 0; var4 < var3; ++var4) {
+            String str = var2[var4];
+            if (!str.equals("")) {
+                String[] a = str.split(":");
+                if (a.length >= 2) {
+                    int channel = Integer.parseInt(a[0]);
+                    int itemId = Integer.parseInt(a[1]);
+                    ret.put(channel, itemId);
+                }
+            }
+        }
+
+        channelNeedItemMap.clear();
+        channelNeedItemMap = ret;
+    }
+
+    public static void loadCashInventoryBanItemList() {
+        ArrayList<Integer> ret = new ArrayList();
+        String list = ServerProperties.getProperty("server.settings.CashInventoryBanItemList", "-1");
+        if (list.equals("-1")) {
+            list = "|5150043|5150037|5590001|1602008|1602009|1602010|";
+            ServerProperties.setProperty("server.settings.CashInventoryBanItemList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var2 = list.split("\\|");
+        int var3 = var2.length;
+
+        for(int var4 = 0; var4 < var3; ++var4) {
+            String str = var2[var4];
+            if (!str.equals("")) {
+                int itemId = Integer.parseInt(str);
+                if (itemId > 0) {
+                    ret.add(itemId);
+                }
+            }
+        }
+
+        cashInventoryBanItemList.clear();
+        cashInventoryBanItemList = ret;
+    }
+
+    public static boolean isCashInventoryBanItem(int itemId) {
+        return cashInventoryBanItemList.contains(itemId);
+    }
+
+    public static int getMyChannelNeedItemId(int channel) {
+        if (channelNeedItemMap.get(channel) != null) {
+            return (Integer)channelNeedItemMap.get(channel);
+        } else {
+            channelNeedItemMap.put(channel, 0);
+            return 0;
+        }
+    }
+
+
     public static String[] getEvents(final boolean reLoad) {
         return getEventList(reLoad).split(",");
     }
     
     public static String getEventList(final boolean reLoad) {
         if (ServerConfig.EVENTS == null || reLoad) {
-            final File root = new File("脚本/事件");
+            final File root = new File("scripts/event");
             final File[] files = root.listFiles();
             ServerConfig.EVENTS = "";
             for (final File file : files) {
@@ -216,7 +415,7 @@ public class ServerConfig
         ServerConfig.豆豆数量 = 0;
         ServerConfig.等级经验倍率 = 0;
         ServerConfig.SERVERNAME = "冒险岛";
-        ServerConfig.version = "1.7版本[ 黑金用户版 ]";
+        ServerConfig.version = 79;
         ServerConfig.TOUDING = "Ver.079版本";
         ServerConfig.IP = Game.IP地址;
         //ServerConfig.IP = "101.34.216.55";

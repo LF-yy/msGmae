@@ -2,7 +2,6 @@ package abc;
 
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
-import java.util.Iterator;
 import java.sql.Connection;
 import handling.channel.ChannelServer;
 import database.DatabaseConnection;

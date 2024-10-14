@@ -27,6 +27,7 @@ import server.*;
 import server.Timer.EventTimer;
 import server.life.MapleMonsterInformationProvider;
 import server.quest.MapleQuest;
+import tools.FilePrinter;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import tools.wztosql.*;
@@ -513,6 +514,7 @@ public class LtMS extends JFrame {
         重载任务2 = new javax.swing.JButton();
         重载包头按钮2 = new javax.swing.JButton();
         重载配置按钮2 = new javax.swing.JButton();
+        重载脚本按钮2 = new javax.swing.JButton();
         jLabel28 = new JLabel();
         jPanel34 = new JPanel();
         startserverbutton = new javax.swing.JButton();
@@ -1311,6 +1313,13 @@ public class LtMS extends JFrame {
                 重载配置按钮2ActionPerformed(evt);
             }
         });
+        重载脚本按钮2.setIcon(new ImageIcon(getClass().getResource("/image2/更多设置.png"))); // NOI18N
+        重载脚本按钮2.setText("重载脚本");
+        重载脚本按钮2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                重载脚本按钮2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
         jPanel15.setLayout(jPanel15Layout);
@@ -1336,6 +1345,7 @@ public class LtMS extends JFrame {
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)//第三列
                             .addComponent(重载配置按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(重载脚本按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
                     )
                 .addGap(31, 31, 31)));
 
@@ -1352,15 +1362,19 @@ public class LtMS extends JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(重载商城按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(重载传送门按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(重载传送门按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(重载脚本按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                )
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(重载爆率按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(重载包头按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(重载包头按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                )
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(重载任务2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(重载副本按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(重载副本按钮2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                )
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -4404,13 +4418,28 @@ public class LtMS extends JFrame {
         printChatLog(输出);
     }//GEN-LAST:event_重载包头按钮2ActionPerformed
 
+    private void 重载脚本按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载包头按钮2ActionPerformed
+        try {
+            Start.in.clear();
+            Start.se.clear();
+            Start.iv.clear();
+            System.out.println("重载脚本成功");
+        } catch (Exception e) {
+            System.out.println("重载脚本失败");
+        }
+    }
+
     private void 重载配置按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载包头按钮2ActionPerformed
         Start.GetSuitDamTable();
         Start.GetSuitDamTableNew();
         Start.GetLtInitializationSkills();
         Start.getDsTableInfo();
+        Start.getDropCoefficient();
+        Start.getJobDamage();
         Start.GetSuitSystem();
         Start.GetfiveTurn();
+        Start.setLtMxdPrize();
+        Start.setLtZlTask();
         Start.GetBreakthroughMechanism();
         Start.getleveladdharm();
         Start.getAdditionalDamage();
@@ -4420,6 +4449,11 @@ public class LtMS extends JFrame {
         Start.getAttackInfo();
         Start.getMobInfo();
         Start.setLtSkillWucdTable();
+
+        Start.setdrops();
+//        System.out.println("清理物品表开始");
+//        //Start.清理物品表();
+//        System.out.println("清理物品表结束");
         GetConfigValues();
         GetMobMapTable();
         DamageParse.readMobRedDam();
@@ -4463,54 +4497,60 @@ public class LtMS extends JFrame {
     }//GEN-LAST:event_重载商店按钮2ActionPerformed
 
     private void 重载商城按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载商城按钮2ActionPerformed
-        // TODO add your handling code here:
-        CashItemFactory.getInstance().clearItems();
-        String 输出 = "[重载系统] 商城重载成功。";
-        JOptionPane.showMessageDialog(null, "商城重载成功。");
-        printChatLog(输出);
+        try {
+            CashItemFactory.getInstance().clearItems();
+            String 输出 = "[重载系统] 商城重载成功。";
+            JOptionPane.showMessageDialog(null, "商城重载成功。");
+            printChatLog(输出);
+        } catch (HeadlessException e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_重载商城按钮2ActionPerformed
 
     private void 重载传送门按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载传送门按钮2ActionPerformed
-        // TODO add your handling code here:
-        PortalScriptManager.getInstance().clearScripts();
-        String 输出 = "[重载系统] 传送门重载成功。";
-        JOptionPane.showMessageDialog(null, "传送门重载成功。");
-        printChatLog(输出);
+        try {
+            PortalScriptManager.getInstance().clearScripts();
+            String 输出 = "[重载系统] 传送门重载成功。";
+            JOptionPane.showMessageDialog(null, "传送门重载成功。");
+            printChatLog(输出);
+        } catch (HeadlessException e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_重载传送门按钮2ActionPerformed
 
     private void 重载反应堆按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载反应堆按钮2ActionPerformed
-        // TODO add your handling code here:
-        ReactorScriptManager.getInstance().clearDrops();
-        String 输出 = "[重载系统] 反应堆重载成功。";
-        JOptionPane.showMessageDialog(null, "反应堆重载成功。");
-        printChatLog(输出);
+        try {
+            ReactorScriptManager.getInstance().clearDrops();
+            String 输出 = "[重载系统] 反应堆重载成功。";
+            JOptionPane.showMessageDialog(null, "反应堆重载成功。");
+            printChatLog(输出);
+        } catch (HeadlessException e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_重载反应堆按钮2ActionPerformed
 
     private void 重载爆率按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载爆率按钮2ActionPerformed
-        // TODO add your handling code here:
-        MapleMonsterInformationProvider.getInstance().clearDrops();
-//        System.out.println("[重载全局爆率加载]");
-//        Start.setGlobaldrops();
-//        System.out.println("[重载怪物爆率加载]");
-//        Start.setdrops();
-        String 输出 = "[重载系统] 爆率重载成功。";
-        JOptionPane.showMessageDialog(null, "爆率重载成功。");
-        printChatLog(输出);
+        try {
+            MapleMonsterInformationProvider.getInstance().clearDrops();
+            String 输出 = "[重载系统] 爆率重载成功。";
+            JOptionPane.showMessageDialog(null, "爆率重载成功。");
+            printChatLog(输出);
+        } catch (HeadlessException e) {
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_重载爆率按钮2ActionPerformed
 
     private void 重载副本按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载副本按钮2ActionPerformed
-        // TODO add your handling code here:
-        for (ChannelServer instance : ChannelServer.getAllInstances()) {
-            if (instance != null) {
-                instance.reloadEvents();
+        try {
+            for (ChannelServer instance : ChannelServer.getAllInstances()) {
+                if (instance != null) {
+                    instance.reloadEvents();
+                }
             }
+            JOptionPane.showMessageDialog(null, "副本重载成功。");
+        } catch (HeadlessException e) {
+            e.printStackTrace();
         }
-//        try {
-//            WzStringDumper.main(null);
-//        } catch (IOException e) {
-//
-//        }
-        JOptionPane.showMessageDialog(null, "副本重载成功。");
     }//GEN-LAST:event_重载副本按钮2ActionPerformed
 
     private void jButton45ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jButton45ActionPerformed
@@ -4850,7 +4890,12 @@ public class LtMS extends JFrame {
     }//GEN-LAST:event_jButton70ActionPerformed
 
     private void jButton69ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jButton69ActionPerformed
-        runTool(Tools.DumpItems);
+        //runTool(Tools.DumpItems);
+        try {
+            WzStringDumper.main(null);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }//GEN-LAST:event_jButton69ActionPerformed
 
     private void 查询在线玩家人数按钮ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_查询在线玩家人数按钮ActionPerformed
@@ -4906,11 +4951,38 @@ public class LtMS extends JFrame {
                 chr.saveToDB(false, false);
             }
         }
+
+//           Connection con = DatabaseConnection.getConnection();
+//          try {
+//              deleteInventoryequipment(con, "delete from  inventoryequipment where inventoryitemid not in (select aa.inventoryitemid from (\n" +
+//                      "                select  b.inventoryitemid as inventoryitemid from  inventoryitems as a\n" +
+//                      "                left join inventoryequipment as b on  a.inventoryitemid = b.inventoryitemid where b.inventoryitemid is not null) as aa)");
+//          } catch (SQLException e) {
+//              FilePrinter.printError("Inventoryequipment.txt", (Throwable) e, "[Inventoryequipment]");
+//          }finally {
+//              try {
+//                  con.close();
+//              } catch (SQLException e) {}
+//          }
+
+
         String 输出 = "[保存数据系统] 保存" + p + "个成功。";
         JOptionPane.showMessageDialog(null, 输出);
         printChatLog(输出);
     }//GEN-LAST:event_jButton8ActionPerformed
-
+    public static void deleteInventoryequipment(Connection con, final String sql) throws SQLException {
+        deleteInventoryequipmentS(con,sql);
+    }
+    public static void deleteInventoryequipmentS(Connection con, final String sql) {
+        try {
+            final PreparedStatement ps = con.prepareStatement(sql);
+            ps.executeUpdate();
+            ps.close();
+        }
+        catch (Exception ex) {
+            FilePrinter.printError("Inventoryequipment.txt", (Throwable)ex, "[Inventoryequipment]");
+        }
+    }
     private void jButton9ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
         // TODO add your handling code here:
         int p = 0;
@@ -8327,6 +8399,7 @@ public class LtMS extends JFrame {
     private javax.swing.JButton 重载副本按钮2;
     private javax.swing.JButton 重载包头按钮2;
     private javax.swing.JButton 重载配置按钮2;
+    private javax.swing.JButton 重载脚本按钮2;
     private javax.swing.JButton 重载反应堆按钮2;
     private javax.swing.JButton 重载商城按钮2;
     private javax.swing.JButton 重载商店按钮2;

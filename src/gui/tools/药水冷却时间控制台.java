@@ -144,6 +144,9 @@ public class 药水冷却时间控制台 extends javax.swing.JFrame {
                     rs.getInt("Val")
                 });
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(药水冷却时间控制台.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -180,6 +183,10 @@ public class 药水冷却时间控制台 extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(null, "修改成功!");
                     刷新药水冷却();
                 }
+                ps.close();
+                rs.close();
+                ps1.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(药水冷却时间控制台.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -27,7 +27,7 @@ public class ServerConstants
     public static int MobDropMPointMin;
     public static int MopDropMPointMax;
     public static AtomicBoolean ENABLE_H_EXP;
-    
+    public static boolean canPetLoot;
     public static AtomicBoolean getENABLE_H_EXP() {
         return ServerConstants.ENABLE_H_EXP;
     }
@@ -48,6 +48,7 @@ public class ServerConstants
     }
     
     static {
+        canPetLoot = true;
         ServerConstants.TESPIA = false;
         Poll_Answers = new String[] { "test1", "test2", "test3" };
         ServerConstants.MAPLE_TYPE = MapleType.中国;

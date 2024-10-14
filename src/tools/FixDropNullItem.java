@@ -40,6 +40,7 @@ public class FixDropNullItem
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("無法載入掉落物");
@@ -69,12 +70,13 @@ public class FixDropNullItem
                         pp.close();
                     }
                     catch (Exception ex) {
-                        System.out.println((Object)ex);
+                       ex.printStackTrace();
                     }
                 }
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.out.println("處理掉落物失敗, 道具ID:" + itemId);

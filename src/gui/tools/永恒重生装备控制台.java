@@ -79,6 +79,10 @@ public class 永恒重生装备控制台 extends javax.swing.JFrame {
                     PreparedStatement dropperid = con.prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
+                ps.close();
+                rs.close();
+                ps1.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(永恒重生装备控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -96,6 +100,10 @@ public class 永恒重生装备控制台 extends javax.swing.JFrame {
                     PreparedStatement dropperid = con.prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
+                ps.close();
+                rs.close();
+                ps1.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(永恒重生装备控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -314,6 +322,9 @@ public class 永恒重生装备控制台 extends javax.swing.JFrame {
                     rs.getString("Val")
                 });
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(永恒重生装备控制台.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -346,6 +357,9 @@ public class 永恒重生装备控制台 extends javax.swing.JFrame {
                     rs.getString("Val")
                 });
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(永恒重生装备控制台.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -386,6 +400,10 @@ public class 永恒重生装备控制台 extends javax.swing.JFrame {
                     LtMS.GetConfigValues();
                     JOptionPane.showMessageDialog(null, "修改成功已经生效");
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(永恒重生装备控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -418,6 +436,10 @@ public class 永恒重生装备控制台 extends javax.swing.JFrame {
                     LtMS.GetConfigValues();
                     JOptionPane.showMessageDialog(null, "修改成功已经生效");
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(永恒重生装备控制台.class.getName()).log(Level.SEVERE, null, ex);
             }

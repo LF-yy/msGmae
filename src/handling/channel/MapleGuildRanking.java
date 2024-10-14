@@ -1048,7 +1048,7 @@ public class MapleGuildRanking
         this.privDefeatRank.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
-            final PreparedStatement ps = con.prepareStatement("select  name,CONVERT(PGSXDJ, UNSIGNED INTEGER) as PGSXDJ,level,str,dex,int,luk  from  characters \n" +
+            final PreparedStatement ps = con.prepareStatement("select  name,CONVERT(PGSXDJ, UNSIGNED INTEGER) as PGSXDJ,level,str,dex,int,luk  from  characters " +
                     "where PGSXDJ is not null " +
                     "order by PGSXDJ desc limit 10 ");
             final ResultSet rs = ps.executeQuery();

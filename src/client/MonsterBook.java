@@ -66,6 +66,9 @@ public class MonsterBook implements Serializable
                     cards.put(Integer.valueOf(rs.getInt("cardid")), Integer.valueOf(rs.getInt("level")));
                 }
             }
+            ps.close();
+            con.close();
+
             return new MonsterBook(cards);
         }
         catch (SQLException ex) {

@@ -6,6 +6,7 @@ import bean.UserLhAttraction;
 import gui.LtMS;
 import handling.channel.ChannelServer;
 import scripting.NPCConversationManager;
+import server.Start;
 import server.life.MapleLifeFactory;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
@@ -32,6 +33,7 @@ public class MobLhVac extends Thread{
 
     @Override
     public synchronized void run() {
+       int userId = c.getPlayer().getId();
         final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
         try {
            int indexs =  0;
@@ -88,6 +90,7 @@ public class MobLhVac extends Thread{
                 NPCConversationManager.gain关闭轮回(c.getPlayer(),mapleMap);
                 c.getPlayer().dropMessage(5, "轮回已关闭");
             } catch (Exception e) {
+                Start.轮回集合.remove(userId);
             }
         }
     }

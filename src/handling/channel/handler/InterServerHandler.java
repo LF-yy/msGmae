@@ -2,7 +2,11 @@ package handling.channel.handler;
 
 import constants.tzjc;
 import gui.LtMS;
+import gui.服务端输出信息;
+import scripting.NPCScriptManager;
 import server.ServerProperties;
+import server.Start;
+import server.bean.Potential;
 import server.maps.FieldLimitType;
 import tools.data.LittleEndianAccessor;
 import handling.world.guild.MapleGuild;
@@ -98,7 +102,7 @@ public class InterServerHandler
         c.setReceiving(false);
     }
     
-    public static void LoggedIn(final int playerid, final MapleClient c) {
+    public static void LoggedIn( int playerid,  MapleClient c) {
         if (c.getCloseSession()) {
             System.out.println("PLAYER_LOGGEDIN Error_1");
             return;
@@ -281,6 +285,10 @@ public class InterServerHandler
                 }
             }
         }
+
+        player.刷新身上装备镶嵌汇总数据();
+        player.reloadPotentialMap();
+        NPCScriptManager.getInstance().dispose(c);
         c.sendPacket(MaplePacketCreator.temporaryStats_Reset());
         c.sendPacket(MaplePacketCreator.showCharCash(player));
         player.getMap().addPlayer(player);
@@ -339,6 +347,20 @@ public class InterServerHandler
             FilePrinter.printError("LoginError.txt", (Throwable)e);
         }
         c.sendPacket(FamilyPacket.getFamilyData());
+
+
+            if (!player.getBackupInventory() && (Integer)LtMS.ConfigValuesMap.get("自动备份玩家背包开关") > 0 && player.getBossLog("自动备份背包") <= 0) {
+                if (World.backupInventoryItems(player.getId())) {
+                    player.setBossLog("自动备份背包");
+                } else {
+                    服务端输出信息.println_err("【错误】角色id" + player.getId() + "自动备份背包失败！");
+                }
+            }
+
+            player.setPower(player.获取角色战斗力());
+        if ((Integer) LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+            player.givePotentialBuff(Potential.buffItemId, Potential.duration, true);
+        }
         player.sendMacros();
         player.showNote();
         player.updatePartyMemberHP();
@@ -386,6 +408,7 @@ public class InterServerHandler
         if (player.getJob() == 132) {
             player.checkBerserk();
         }
+
         player.spawnClones();
         player.set在线时间(player.getGamePoints());
         //套装伤害加载

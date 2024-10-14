@@ -7,6 +7,7 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
 import bean.FieldSkills;
 import bean.SuperSkills;
@@ -76,6 +77,9 @@ public class MapleStatEffect implements Serializable
     private short dotTime;
     private double hpR;
     private double mpR;
+    /**
+     * 持续时间
+     */
     private int duration;
     private int sourceid;
     private int moveTo;
@@ -766,9 +770,12 @@ public class MapleStatEffect implements Serializable
                     if (mob.getStats().isBoss()) {
                         break;
                     }
-                    final int absorbMp = Math.min((int)((double)mob.getMobMaxMp() * ((double)this.getX() / 70.0)), mob.getMp());
+                     int absorbMp = Math.min((int)((double)mob.getMobMaxMp() * ((double)this.getX() / 70.0)), mob.getMp());
                     if (absorbMp > 0 && mob.canAbsorbMP()) {
                         mob.absorbMP(absorbMp);
+                        if (absorbMp > 3000 || absorbMp <0 ) {
+                            absorbMp = 3000;
+                        }
                         applyto.getStat().setMp((int)(short)(applyto.getStat().getMp() + absorbMp));
                         applyto.getClient().sendPacket(MaplePacketCreator.showOwnBuffEffect(this.sourceid, 1));
                         applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.showBuffeffect(applyto.getId(), this.sourceid, 1), false);
@@ -815,6 +822,13 @@ public class MapleStatEffect implements Serializable
         }
         int hpchange = this.calcHPChange(applyfrom, primary, dc);
         int mpchange = this.calcMPChange(applyfrom, primary, dc);
+        if (mpchange < 0 && applyfrom.getId() == applyto.getId() && applyto.haveItem(3700071)) {
+            mpchange = -mpchange;
+        }
+        if (applyto.isClone()) {
+            mpchange = 0;
+        }
+
         final PlayerStats stat = applyto.getStat();
         if (primary) {
             if (this.itemConNo != 0 && !applyto.isClone() && applyto.haveItem(this.itemCon, this.itemConNo, false, true)) {
@@ -910,7 +924,12 @@ public class MapleStatEffect implements Serializable
             }
         }
         if (this.overTime && !this.isEnergyCharge()) {
-            this.applyBuffEffect(applyfrom, applyto, primary, newDuration, dc);
+            if (this.sourceid >= 2380000 && this.sourceid < 2389000 && (Integer)LtMS.ConfigValuesMap.get("怪物卡片buff开关") < 1) {
+                applyto.dropMessage(5, "怪物卡片BUFF效果为关闭状态。");
+            } else {
+                this.applyBuffEffect(applyfrom, applyto, primary, newDuration, dc);
+            }
+
         }
         //if (this.skill) {}
         if (primary) {
@@ -968,10 +987,13 @@ public class MapleStatEffect implements Serializable
         }else if (this.getFieldSkillsStatus(applyfrom.getId(),this.sourceid)) {
             //光环处理
             List<FieldSkills> fieldSkills = Start.fieldSkillsMap.get(applyfrom.getId());
-            FieldSkills fieldSkills1 = fieldSkills.get(0);
-            Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(fieldSkills1.getSkillLX(),fieldSkills1.getSkillLY()), new Point(fieldSkills1.getSkillRX(),fieldSkills1.getSkillRY()),fieldSkills1.getRange() );
-            //System.out.println("释放随身光环");
-            applyfrom.getMap().spawnCoronaSkill(applyfrom,applyfrom.isFacingLeft(),this,bounds,fieldSkills1);
+            List<FieldSkills> collect = fieldSkills.stream().filter(f -> f.getSkillid() == this.sourceid).collect(Collectors.toList());
+            if (collect.size() > 0) {
+                FieldSkills fieldSkills1 = collect.get(0);
+                Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(fieldSkills1.getSkillLX(), fieldSkills1.getSkillLY()), new Point(fieldSkills1.getSkillRX(), fieldSkills1.getSkillRY()), fieldSkills1.getRange());
+                //System.out.println("释放随身光环");
+                applyfrom.getMap().spawnCoronaSkill(applyfrom, applyfrom.isFacingLeft(), this, bounds, fieldSkills1);
+            }
         }
         else if (this.isMist() && !this.getSuperSkillsStatus(applyfrom.getId(),this.sourceid)) {
             //致命毒雾处理
@@ -2099,5 +2121,406 @@ public class MapleStatEffect implements Serializable
                 realTarget.cancelEffect(this.effect, false, this.startTime);
             }
         }
+    }
+
+
+    public void setMastery(byte mastery) {
+        this.mastery = mastery;
+    }
+
+    public byte getMhpR() {
+        return mhpR;
+    }
+
+    public void setMhpR(byte mhpR) {
+        this.mhpR = mhpR;
+    }
+
+    public byte getMmpR() {
+        return mmpR;
+    }
+
+    public void setMmpR(byte mmpR) {
+        this.mmpR = mmpR;
+    }
+
+    public void setMobCount(byte mobCount) {
+        this.mobCount = mobCount;
+    }
+
+    public void setAttackCount(byte attackCount) {
+        this.attackCount = attackCount;
+    }
+
+    public void setBulletCount(byte bulletCount) {
+        this.bulletCount = bulletCount;
+    }
+
+    public void setHp(short hp) {
+        this.hp = hp;
+    }
+
+    public void setMp(short mp) {
+        this.mp = mp;
+    }
+
+    public void setWatk(short watk) {
+        this.watk = watk;
+    }
+
+    public void setMatk(short matk) {
+        this.matk = matk;
+    }
+
+    public void setWdef(short wdef) {
+        this.wdef = wdef;
+    }
+
+    public void setMdef(short mdef) {
+        this.mdef = mdef;
+    }
+
+    public void setAcc(short acc) {
+        this.acc = acc;
+    }
+
+    public void setAvoid(short avoid) {
+        this.avoid = avoid;
+    }
+
+    public void setHands(short hands) {
+        this.hands = hands;
+    }
+
+    public void setSpeed(short speed) {
+        this.speed = speed;
+    }
+
+    public void setJump(short jump) {
+        this.jump = jump;
+    }
+
+    public void setMpCon(short mpCon) {
+        this.mpCon = mpCon;
+    }
+
+    public short getHpCon() {
+        return hpCon;
+    }
+
+    public void setHpCon(short hpCon) {
+        this.hpCon = hpCon;
+    }
+
+    public void setDamage(short damage) {
+        this.damage = damage;
+    }
+
+    public short getProp() {
+        return prop;
+    }
+
+    public void setProp(short prop) {
+        this.prop = prop;
+    }
+
+    public short getEhp() {
+        return ehp;
+    }
+
+    public void setEhp(short ehp) {
+        this.ehp = ehp;
+    }
+
+    public short getEmp() {
+        return emp;
+    }
+
+    public void setEmp(short emp) {
+        this.emp = emp;
+    }
+
+    public short getEwatk() {
+        return ewatk;
+    }
+
+    public void setEwatk(short ewatk) {
+        this.ewatk = ewatk;
+    }
+
+    public short getEwdef() {
+        return ewdef;
+    }
+
+    public void setEwdef(short ewdef) {
+        this.ewdef = ewdef;
+    }
+
+    public short getEmdef() {
+        return emdef;
+    }
+
+    public void setEmdef(short emdef) {
+        this.emdef = emdef;
+    }
+
+    public short getThaw() {
+        return thaw;
+    }
+
+    public void setThaw(short thaw) {
+        this.thaw = thaw;
+    }
+
+    public short getDotTime() {
+        return dotTime;
+    }
+
+    public void setDotTime(short dotTime) {
+        this.dotTime = dotTime;
+    }
+
+    public double getHpR() {
+        return hpR;
+    }
+
+    public void setHpR(double hpR) {
+        this.hpR = hpR;
+    }
+
+    public double getMpR() {
+        return mpR;
+    }
+
+    public void setMpR(double mpR) {
+        this.mpR = mpR;
+    }
+
+    public int getSourceid() {
+        return sourceid;
+    }
+
+    public void setSourceid(int sourceid) {
+        this.sourceid = sourceid;
+    }
+
+    public int getMoveTo() {
+        return moveTo;
+    }
+
+    public void setMoveTo(int moveTo) {
+        this.moveTo = moveTo;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setZ(int z) {
+        this.z = z;
+    }
+
+    public int getItemCon() {
+        return itemCon;
+    }
+
+    public void setItemCon(int itemCon) {
+        this.itemCon = itemCon;
+    }
+
+    public int getItemConNo() {
+        return itemConNo;
+    }
+
+    public void setItemConNo(int itemConNo) {
+        this.itemConNo = itemConNo;
+    }
+
+    public void setBulletConsume(int bulletConsume) {
+        this.bulletConsume = bulletConsume;
+    }
+
+    public void setMoneyCon(int moneyCon) {
+        this.moneyCon = moneyCon;
+    }
+
+    public void setCooldown(int cooldown) {
+        this.cooldown = cooldown;
+    }
+
+    public int getMorphId() {
+        return morphId;
+    }
+
+    public void setMorphId(int morphId) {
+        this.morphId = morphId;
+    }
+
+    public int getExpinc() {
+        return expinc;
+    }
+
+    public void setExpinc(int expinc) {
+        this.expinc = expinc;
+    }
+
+    public int getExp() {
+        return exp;
+    }
+
+    public void setExp(int exp) {
+        this.exp = exp;
+    }
+
+    public void setFatigue(int fatigue) {
+        this.fatigue = fatigue;
+    }
+
+    public int getMhp_temp() {
+        return mhp_temp;
+    }
+
+    public void setMhp_temp(int mhp_temp) {
+        this.mhp_temp = mhp_temp;
+    }
+
+    public int getMmp_temp() {
+        return mmp_temp;
+    }
+
+    public void setMmp_temp(int mmp_temp) {
+        this.mmp_temp = mmp_temp;
+    }
+
+    public void setOverTime(boolean overTime) {
+        this.overTime = overTime;
+    }
+
+    public void setSkill(boolean skill) {
+        this.skill = skill;
+    }
+
+    public void setStatups(List<Pair<MapleBuffStat, Integer>> statups) {
+        this.statups = statups;
+    }
+
+    public Map<MonsterStatus, Integer> getMonsterStatus() {
+        return monsterStatus;
+    }
+
+    public void setMonsterStatus(Map<MonsterStatus, Integer> monsterStatus) {
+        this.monsterStatus = monsterStatus;
+    }
+
+    public Point getLt() {
+        return lt;
+    }
+
+    public void setLt(Point lt) {
+        this.lt = lt;
+    }
+
+    public Point getRb() {
+        return rb;
+    }
+
+    public void setRb(Point rb) {
+        this.rb = rb;
+    }
+
+    public int getExpBuff() {
+        return expBuff;
+    }
+
+    public void setExpBuff(int expBuff) {
+        this.expBuff = expBuff;
+    }
+
+    public int getItemup() {
+        return itemup;
+    }
+
+    public void setItemup(int itemup) {
+        this.itemup = itemup;
+    }
+
+    public int getMesoup() {
+        return mesoup;
+    }
+
+    public void setMesoup(int mesoup) {
+        this.mesoup = mesoup;
+    }
+
+    public int getCashup() {
+        return cashup;
+    }
+
+    public void setCashup(int cashup) {
+        this.cashup = cashup;
+    }
+
+    public void setBerserk(int berserk) {
+        this.berserk = berserk;
+    }
+
+    public int getIllusion() {
+        return illusion;
+    }
+
+    public void setIllusion(int illusion) {
+        this.illusion = illusion;
+    }
+
+    public int getBooster() {
+        return booster;
+    }
+
+    public void setBooster(int booster) {
+        this.booster = booster;
+    }
+
+    public int getBerserk2() {
+        return berserk2;
+    }
+
+    public void setBerserk2(int berserk2) {
+        this.berserk2 = berserk2;
+    }
+
+    public int getCp() {
+        return cp;
+    }
+
+    public void setCp(int cp) {
+        this.cp = cp;
+    }
+
+    public int getNuffSkill() {
+        return nuffSkill;
+    }
+
+    public void setNuffSkill(int nuffSkill) {
+        this.nuffSkill = nuffSkill;
+    }
+
+    public void setLevel(byte level) {
+        this.level = level;
+    }
+
+    public void setRange(int range) {
+        this.range = range;
+    }
+
+    public List<MapleDisease> getCureDebuffs() {
+        return cureDebuffs;
+    }
+
+    public void setCureDebuffs(List<MapleDisease> cureDebuffs) {
+        this.cureDebuffs = cureDebuffs;
     }
 }

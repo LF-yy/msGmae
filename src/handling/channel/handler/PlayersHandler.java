@@ -155,7 +155,7 @@ public class PlayersHandler
         String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
         String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm());// +  jiac
         String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate());
-
+        c.getPlayer().saveToDB(false, false, true);
         NPCScriptManager.getInstance().dispose(c);
         c.getSession().write(MaplePacketCreator.enableActions());
          c.getPlayer().dropMessage(1,"解卡完毕...");

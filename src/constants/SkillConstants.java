@@ -416,4 +416,177 @@ public class SkillConstants
         }
         return inc;
     }
+
+
+    public static boolean isJobSkill(int skillId, int jobId) {
+        switch (jobId) {
+            case 100:
+                return skillId >= 1000000 && skillId < 1100000;
+            case 110:
+                return skillId >= 1000000 && skillId < 1110000;
+            case 111:
+                return skillId >= 1000000 && skillId < 1120000;
+            case 112:
+                return skillId >= 1000000 && skillId < 1130000;
+            case 120:
+                return skillId >= 1000000 && skillId < 1100000 || skillId >= 1200000 && skillId < 1210000;
+            case 121:
+                return skillId >= 1000000 && skillId < 1100000 || skillId >= 1200000 && skillId < 1220000;
+            case 122:
+                return skillId >= 1000000 && skillId < 1100000 || skillId >= 1200000 && skillId < 1230000;
+            case 130:
+                return skillId >= 1000000 && skillId < 1100000 || skillId >= 1300000 && skillId < 1310000;
+            case 131:
+                return skillId >= 1000000 && skillId < 1100000 || skillId >= 1300000 && skillId < 1320000;
+            case 132:
+                return skillId >= 1000000 && skillId < 1100000 || skillId >= 1300000 && skillId < 1330000;
+            case 200:
+                return skillId >= 2000000 && skillId < 2100000;
+            case 210:
+                return skillId >= 2000000 && skillId < 2110000;
+            case 211:
+                return skillId >= 2000000 && skillId < 2120000;
+            case 212:
+                return skillId >= 2000000 && skillId < 2130000;
+            case 220:
+                return skillId >= 2000000 && skillId < 2100000 || skillId >= 2200000 && skillId < 2210000;
+            case 221:
+                return skillId >= 2000000 && skillId < 2100000 || skillId >= 2200000 && skillId < 2220000;
+            case 222:
+                return skillId >= 2000000 && skillId < 2100000 || skillId >= 2200000 && skillId < 2230000;
+            case 230:
+                return skillId >= 2000000 && skillId < 2100000 || skillId >= 2300000 && skillId < 2310000;
+            case 231:
+                return skillId >= 2000000 && skillId < 2100000 || skillId >= 2300000 && skillId < 2320000;
+            case 232:
+                return skillId >= 2000000 && skillId < 2100000 || skillId >= 2300000 && skillId < 2330000;
+            case 300:
+                return skillId >= 3000000 && skillId < 3100000;
+            case 310:
+                return skillId >= 3000000 && skillId < 3110000;
+            case 311:
+                return skillId >= 3000000 && skillId < 3120000;
+            case 312:
+                return skillId >= 3000000 && skillId < 3130000;
+            case 320:
+                return skillId >= 3000000 && skillId < 3100000 || skillId >= 3200000 && skillId < 3210000;
+            case 321:
+                return skillId >= 3000000 && skillId < 3100000 || skillId >= 3200000 && skillId < 3220000;
+            case 322:
+                return skillId >= 3000000 && skillId < 3100000 || skillId >= 3200000 && skillId < 3230000;
+            case 400:
+                return skillId >= 4000000 && skillId < 4100000;
+            case 410:
+                return skillId >= 4000000 && skillId < 4110000;
+            case 411:
+                return skillId >= 4000000 && skillId < 4120000;
+            case 412:
+                return skillId >= 4000000 && skillId < 4130000;
+            case 420:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4200000 && skillId < 4210000;
+            case 421:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4200000 && skillId < 4220000;
+            case 422:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4200000 && skillId < 4230000;
+            case 430:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4300000 && skillId < 4310000;
+            case 431:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4300000 && skillId < 4320000;
+            case 432:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4300000 && skillId < 4330000;
+            case 433:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4300000 && skillId < 4340000;
+            case 434:
+                return skillId >= 4000000 && skillId < 4110000 || skillId >= 4300000 && skillId < 4350000;
+            case 500:
+                return skillId >= 5000000 && skillId < 5100000;
+            case 510:
+                return skillId >= 5000000 && skillId < 5110000;
+            case 511:
+                return skillId >= 5000000 && skillId < 5120000;
+            case 512:
+                return skillId >= 5000000 && skillId < 5130000;
+            case 520:
+                return skillId >= 5000000 && skillId < 5100000 || skillId >= 5200000 && skillId < 5210000;
+            case 521:
+                return skillId >= 5000000 && skillId < 5100000 || skillId >= 5200000 && skillId < 5220000;
+            case 522:
+                return skillId >= 5000000 && skillId < 5100000 || skillId >= 5200000 && skillId < 5230000;
+            case 1100:
+                return skillId >= 11000000 && skillId < 11100000;
+            case 1110:
+                return skillId >= 11000000 && skillId < 11110000;
+            case 1111:
+                return skillId >= 11000000 && skillId < 11120000;
+            case 1112:
+                return skillId >= 11000000 && skillId < 11130000;
+            case 1200:
+                return skillId >= 12000000 && skillId < 12100000;
+            case 1210:
+                return skillId >= 12000000 && skillId < 12110000;
+            case 1211:
+                return skillId >= 12000000 && skillId < 12120000;
+            case 1212:
+                return skillId >= 12000000 && skillId < 12130000;
+            case 1300:
+                return skillId >= 13000000 && skillId < 13100000;
+            case 1310:
+                return skillId >= 13000000 && skillId < 13110000;
+            case 1311:
+                return skillId >= 13000000 && skillId < 13120000;
+            case 1312:
+                return skillId >= 13000000 && skillId < 13130000;
+            case 1400:
+                return skillId >= 14000000 && skillId < 14100000;
+            case 1410:
+                return skillId >= 14000000 && skillId < 14110000;
+            case 1411:
+                return skillId >= 14000000 && skillId < 14120000;
+            case 1412:
+                return skillId >= 14000000 && skillId < 14130000;
+            case 1500:
+                return skillId >= 15000000 && skillId < 15100000;
+            case 1510:
+                return skillId >= 15000000 && skillId < 15110000;
+            case 1511:
+                return skillId >= 15000000 && skillId < 15120000;
+            case 1512:
+                return skillId >= 15000000 && skillId < 15130000;
+            case 2100:
+                return skillId >= 21000000 && skillId < 21100000;
+            case 2110:
+                return skillId >= 21000000 && skillId < 21110000;
+            case 2111:
+                return skillId >= 21000000 && skillId < 21120000;
+            case 2112:
+                return skillId >= 21000000 && skillId < 21130000;
+            case 2200:
+                return skillId >= 22000000 && skillId < 22100000;
+            case 2210:
+                return skillId >= 22000000 && skillId < 22110000;
+            case 2211:
+                return skillId >= 22000000 && skillId < 22120000;
+            case 2212:
+                return skillId >= 22000000 && skillId < 22130000;
+            case 2213:
+                return skillId >= 22000000 && skillId < 22140000;
+            case 2214:
+                return skillId >= 22000000 && skillId < 22150000;
+            case 2215:
+                return skillId >= 22000000 && skillId < 22160000;
+            case 2216:
+                return skillId >= 22000000 && skillId < 22170000;
+            case 2217:
+                return skillId >= 22000000 && skillId < 22180000;
+            case 2218:
+                return skillId >= 22000000 && skillId < 22190000;
+            default:
+                return false;
+        }
+    }
+
+
+
+
+
 }

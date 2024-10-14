@@ -53,6 +53,8 @@ public class DumpMobSkills
                     ps.executeBatch();
                     ps.close();
                 }
+                ps.close();
+                con.close();
             }
             catch (SQLException ex) {
                 ex.printStackTrace();
@@ -65,6 +67,8 @@ public class DumpMobSkills
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
              final PreparedStatement ps = con.prepareStatement(sql)) {
             ps.executeUpdate();
+            ps.close();
+        con.close();
         }
         catch (SQLException ex) {
             ex.printStackTrace();
@@ -77,6 +81,8 @@ public class DumpMobSkills
              final PreparedStatement ps = con.prepareStatement(sql)) {
             final ResultSet rs = ps.executeQuery();
             final boolean ret = rs.next();
+            ps.close();
+            rs.close();
             rs.close();
             return ret;
         }

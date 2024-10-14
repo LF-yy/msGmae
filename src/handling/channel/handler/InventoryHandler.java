@@ -2,7 +2,9 @@ package handling.channel.handler;
 
 import database.DatabaseConnection;
 import gui.LtMS;
+import handling.world.MapleParty;
 import server.*;
+import server.bean.Potential;
 import tools.packet.PlayerShopPacket;
 import server.shops.IMaplePlayerShop;
 
@@ -101,12 +103,184 @@ public class InventoryHandler
             MapleInventoryManipulator.drop(c, type, src, quantity);
             //修复复制
             //c.getPlayer().saveToDB(true, true);
-        }
-        else {
+        } else {
+            IItem item = c.getPlayer().getInventory(type).getItem(src);
+            if (item == null) {
+                return;
+            }
+
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            int itemided = item.getItemId();
+            if (itemided < 2000000 && (Integer)LtMS.ConfigValuesMap.get("装备属性聊天栏显示开关") > 0) {
+                Equip nEquip = (Equip)item;
+                c.getPlayer().dropMessage(2, " : ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
+                c.getPlayer().dropMessage(2, "\t\t\t拥有者 : " + c.getPlayer().getName());
+                c.getPlayer().dropMessage(2, "\t\t\t装备名称 : " + MapleItemInformationProvider.getInstance().getName(itemided));
+                c.getPlayer().dropMessage(2, "\t\t\t穿戴等级 : " + ii.getReqLevel(itemided));
+                c.getPlayer().dropMessage(2, "\t\t\t装备等级 : " + nEquip.getEquipLevel());
+                c.getPlayer().dropMessage(2, "\t\t\t可砸卷 : " + nEquip.getUpgradeSlots());
+                if (nEquip.getStr() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t力量 : " + nEquip.getStr());
+                }
+
+                if (nEquip.getDex() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t敏捷 : " + nEquip.getDex());
+                }
+
+                if (nEquip.getInt() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t智力 : " + nEquip.getInt());
+                }
+
+                if (nEquip.getLuk() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t运气 : " + nEquip.getLuk());
+                }
+
+                if (nEquip.getHp() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\tMaxHP : " + nEquip.getHp());
+                }
+
+                if (nEquip.getMp() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\tMaxMP : " + nEquip.getMp());
+                }
+
+                if (nEquip.getWatk() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t攻击力 : " + nEquip.getWatk());
+                }
+
+                if (nEquip.getMatk() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t魔法力 : " + nEquip.getMatk());
+                }
+
+                if (nEquip.getWdef() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t物理防御力 : " + nEquip.getWdef());
+                }
+
+                if (nEquip.getMdef() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t魔法防御力 : " + nEquip.getMdef());
+                }
+
+                if (nEquip.getAcc() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t命中率 : " + nEquip.getAcc());
+                }
+
+                if (nEquip.getAvoid() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t回避率 : " + nEquip.getAvoid());
+                }
+
+                if (nEquip.getHands() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t手技 : " + nEquip.getHands());
+                }
+
+                if (nEquip.getSpeed() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t移动速度 : " + nEquip.getSpeed());
+                }
+
+                if (nEquip.getJump() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t\t跳跃力 : " + nEquip.getJump());
+                }
+
+                String mxmxdDaKongFuMo = item.getDaKongFuMo();
+                if (mxmxdDaKongFuMo != null && mxmxdDaKongFuMo.length() > 0) {
+                    c.getPlayer().dropMessage(2, "\t\t  : ---------------------------------------------------------------------------");
+                    输出装备打孔镶嵌信息(mxmxdDaKongFuMo, c.getPlayer());
+                    c.getPlayer().dropMessage(2, "\t\t  : ---------------------------------------------------------------------------");
+                }
+
+                String potentials = item.getPotentials();
+                if ((((Equip)item).getHpRR() > 0 || Potential.isPotentialExist(item, 11)) && potentials != null && potentials.length() > 0) {
+                    String msg = "\t\t\t潜能级别 :  ";
+                    switch (((Equip)item).getHpRR()) {
+                        case 1:
+                            msg = msg + "B";
+                            break;
+                        case 2:
+                            msg = msg + "A";
+                            break;
+                        case 3:
+                            msg = msg + "S";
+                            break;
+                        case 4:
+                            msg = msg + "SS";
+                            break;
+                        default:
+                            msg = msg + "C";
+                    }
+
+                    c.getPlayer().dropMessage(2, msg);
+                    outputPotentialInfo(potentials, c.getPlayer());
+                } else {
+                    c.getPlayer().dropMessage(2, "\t\t\t潜能级别 :  C");
+                }
+
+                c.getPlayer().dropMessage(2, "\t\t  : ---------------------------------------------------------------------------");
+                c.getPlayer().dropMessage(2, "\t\t\t区域 :  " + MapleParty.开服名字);
+                c.getPlayer().dropMessage(2, " : ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛");
+            }
+
+            if (c.getPlayer().getGMLevel() > 0 && (Integer)LtMS.ConfigValuesMap.get("脚本显码开关") > 0) {
+                c.getPlayer().dropMessage(5, "物品代码 : " + itemided);
+            }
             MapleInventoryManipulator.move(c, type, src, dst);
         }
+        c.getPlayer().刷新身上装备镶嵌汇总数据();
+        c.getPlayer().reloadPotentialMap();
+        NPCScriptManager.getInstance().dispose(c);
+        c.sendPacket(MaplePacketCreator.enableActions());
     }
-    
+    public static void outputPotentialInfo(String potentialInfo, MapleCharacter player) {
+        if (potentialInfo == null || potentialInfo.length() != 0) {
+            String[] arr1 = potentialInfo.split(",");
+
+            for(int i = 0; i < arr1.length; ++i) {
+                String pair = arr1[i];
+                if (pair.contains(":")) {
+                    String[] arr2 = pair.split(":");
+                    if (Integer.parseInt(arr2[0]) > 0) {
+                        String kongInfo = "●";
+                        int potentialType = Integer.parseInt(arr2[0]);
+                        int potentialVal = Integer.parseInt(arr2[1]);
+                        if (potentialType > 0 && Start.potentialListMap.containsKey(potentialType)) {
+                            String[] infoArr = (String[])Start.potentialListMap.get(potentialType);
+                            String potentialName = infoArr[0];
+                            String info = infoArr[1];
+                            kongInfo = kongInfo + potentialName + " " + info.replace("%s", potentialVal + "");
+                        } else {
+                            kongInfo = kongInfo + "[未激活潜能]";
+                        }
+
+                        player.dropMessage(2, "\t\t\t潜能 : " + kongInfo);
+                    }
+                }
+            }
+
+        }
+    }
+    public static void 输出装备打孔镶嵌信息(String mxmxdDaKongFuMo, MapleCharacter player) {
+        if (mxmxdDaKongFuMo == null || mxmxdDaKongFuMo.length() != 0) {
+            String[] arr1 = mxmxdDaKongFuMo.split(",");
+
+            for(int i = 0; i < arr1.length; ++i) {
+                String pair = arr1[i];
+                if (pair.contains(":")) {
+                    String kongInfo = "●";
+                    String[] arr2 = pair.split(":");
+                    int fumoType = Integer.parseInt(arr2[0]);
+                    int fumoVal = Integer.parseInt(arr2[1]);
+                    if (fumoType > 0 && Start.FuMoInfoMap.containsKey(fumoType)) {
+                        String[] infoArr = (String[])Start.FuMoInfoMap.get(fumoType);
+                        String fumoName = infoArr[0];
+                        String fumoInfo = infoArr[1];
+                        kongInfo = kongInfo + fumoName + " " + String.format(fumoInfo, fumoVal);
+                    } else {
+                        kongInfo = kongInfo + "[未镶嵌]";
+                    }
+
+                    player.dropMessage(2, "\t\t\t镶嵌 : " + kongInfo);
+                }
+            }
+
+        }
+    }
     
     public static void ItemSort(final LittleEndianAccessor slea, final MapleClient c) {
         c.getPlayer().updateTick(slea.readInt());
@@ -607,47 +781,39 @@ public class InventoryHandler
         if (!GameConstants.isSpecialScroll(scroll.getItemId()) && !GameConstants.isCleanSlate(scroll.getItemId()) && !GameConstants.isEquipScroll(scroll.getItemId()) && !GameConstants.isPotentialScroll(scroll.getItemId())) {
             if (toScroll.getUpgradeSlots() < 1) {
                 c.sendPacket(MaplePacketCreator.getInventoryFull());
-                System.out.println(1);
                 return false;
             }
         }
         else if (GameConstants.isEquipScroll(scroll.getItemId())) {
             if (toScroll.getUpgradeSlots() >= 1 || toScroll.getEnhance() >= 100 || vegas > 0 || ii.isCash(toScroll.getItemId())) {
                 c.sendPacket(MaplePacketCreator.getInventoryFull());
-                System.out.println(2);
                 return false;
             }
         }
         else if (GameConstants.isPotentialScroll(scroll.getItemId()) && (toScroll.getState() >= 1 || (toScroll.getLevel() == 0 && toScroll.getUpgradeSlots() == 0) || vegas > 0 || ii.isCash(toScroll.getItemId()))) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
-            System.out.println(3);
             return false;
         }
         if (!GameConstants.canScroll(toScroll.getItemId()) && !GameConstants.isChaosScroll(toScroll.getItemId())) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
-            System.out.println(4);
             return false;
         }
         if ((GameConstants.isCleanSlate(scroll.getItemId()) || GameConstants.isTablet(scroll.getItemId()) || GameConstants.isChaosScroll(scroll.getItemId())) && (vegas > 0 || ii.isCash(toScroll.getItemId()))) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
-            System.out.println(5);
             return false;
         }
         if (GameConstants.isTablet(scroll.getItemId()) && toScroll.getDurability() < 0) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
-            System.out.println(6);
             return false;
         }
         if (!GameConstants.isTablet(scroll.getItemId()) && toScroll.getDurability() >= 0) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
-            System.out.println(7);
             return false;
         }
         IItem wscroll = null;
         final List<Integer> scrollReqs = ii.getScrollReqs(scroll.getItemId());
         if (scrollReqs.size() > 0 && !scrollReqs.contains((Object)Integer.valueOf(toScroll.getItemId()))) {
             c.sendPacket(MaplePacketCreator.getInventoryFull());
-            System.out.println(8);
             return false;
         }
         if (whiteScroll) {
@@ -688,20 +854,16 @@ public class InventoryHandler
             }
         }
         else if (!GameConstants.isForwardScroll(scroll.getItemId()) && !GameConstants.isAccessoryScroll(scroll.getItemId()) && !GameConstants.isChaosScroll(scroll.getItemId()) && !GameConstants.isCleanSlate(scroll.getItemId()) && !GameConstants.isEquipScroll(scroll.getItemId()) && !GameConstants.isPotentialScroll(scroll.getItemId()) && !ii.canScroll(scroll.getItemId(), toScroll.getItemId())) {
-            System.out.println(9);
             return false;
         }
         if (GameConstants.isAccessoryScroll(scroll.getItemId()) && !GameConstants.isAccessory(toScroll.getItemId())) {
-            System.out.println(10);
             return false;
         }
         if (scroll.getQuantity() <= 0) {
-            System.out.println(11);
             return false;
         }
         if (legendarySpirit && vegas == 0 && chr.getSkillLevel(SkillFactory.getSkill(1003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(10001003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(20001003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(20011003)) <= 0 && chr.getSkillLevel(SkillFactory.getSkill(30001003)) <= 0) {
             AutobanManager.getInstance().addPoints(c, 50, 120000L, "Using the Skill 'Legendary Spirit' without having it.");
-            System.out.println(12);
             return false;
         }
         //上卷
@@ -1630,6 +1792,7 @@ public class InventoryHandler
                             break;
                         }
                     }
+                    //更新属性
                     c.sendPacket(MaplePacketCreator.updatePlayerStats(statupdate, true, c.getPlayer()));
                     break;
                 }

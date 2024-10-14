@@ -106,6 +106,7 @@ public class MapleInventoryIdentifier implements Serializable
                     ret = ids[i];
                 }
             }
+            con.close();
         }
         catch (Exception e) {
             e.printStackTrace();

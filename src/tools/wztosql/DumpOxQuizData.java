@@ -70,6 +70,8 @@ public class DumpOxQuizData
                     }
                 }
             }
+            ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             ex.printStackTrace();

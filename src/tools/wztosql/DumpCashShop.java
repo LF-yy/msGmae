@@ -36,8 +36,9 @@ public class DumpCashShop
                     ret = new CashModInfo(sn, rs.getInt("discount_price"), rs.getInt("mark"), rs.getInt("showup") > 0, rs.getInt("itemid"), rs.getInt("priority"), rs.getInt("package") > 0, rs.getInt("period"), rs.getInt("gender"), rs.getInt("count"), rs.getInt("meso"), rs.getInt("unk_1"), rs.getInt("unk_2"), rs.getInt("unk_3"), rs.getInt("extra_flags"), rs.getInt("mod"));
                 }
             }
-        }
-        catch (Exception ex) {
+            ps.close();
+            con.close();
+        }catch (Exception ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
         return ret;
@@ -142,9 +143,10 @@ public class DumpCashShop
                         ps.setInt(13, 0);
                         ps.setString(14, MapleItemInformationProvider.getInstance().getName(itemId));
                         ps.executeUpdate();
-                        ps.toString();
+                        ps.close();
                         ps.close();
                     }
+
                 }
                 catch (SQLException ex) {
                     FileoutputUtil.outError("logs/CashShopDumper.txt", (Throwable)ex);

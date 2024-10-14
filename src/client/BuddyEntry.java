@@ -9,11 +9,11 @@ import database.DBConPool;
 
 public class BuddyEntry
 {
-    private final String name;
+    private  String name;
     private String group;
-    private final int characterId;
-    private final int level;
-    private final int job;
+    private final  int characterId;
+    private final  int level;
+    private final  int job;
     private boolean visible;
     private int channel;
     
@@ -26,7 +26,11 @@ public class BuddyEntry
         this.level = level;
         this.job = job;
     }
-    
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public int getChannel() {
         return this.channel;
     }
@@ -77,19 +81,25 @@ public class BuddyEntry
     
     public static BuddyEntry getByNameFromDB(final String buddyName) {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
-            final PreparedStatement ps = con.prepareStatement("SELECT id, name, level, job FROM characters WHERE name = ?");
+             PreparedStatement ps = con.prepareStatement("SELECT id, name, level, job FROM characters WHERE name = ?");
             ps.setString(1, buddyName);
-            final ResultSet rs = ps.executeQuery();
+             ResultSet rs = ps.executeQuery();
+            BuddyEntry buddyEntry = null;
             if (rs.next()) {
-                return new BuddyEntry(rs.getString("name"), rs.getInt("id"), "其他", -1, false, rs.getInt("level"), rs.getInt("job"));
+                 buddyEntry = new BuddyEntry(rs.getString("name"), rs.getInt("id"), "其他", -1, false, rs.getInt("level"), rs.getInt("job"));
             }
-            return null;
+
+            ps.close();
+            rs.close();
+            con.close();
+            return buddyEntry;
         }
         catch (SQLException ex) {
             ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
             return null;
         }
+
     }
     
     public static BuddyEntry getByIdfFromDB(final int buddyCharId) {
@@ -97,10 +107,15 @@ public class BuddyEntry
             final PreparedStatement ps = con.prepareStatement("SELECT id, name, level, job FROM characters WHERE id = ?");
             ps.setInt(1, buddyCharId);
             final ResultSet rs = ps.executeQuery();
+            BuddyEntry buddyEntry = null;
             if (rs.next()) {
-                return new BuddyEntry(rs.getString("name"), rs.getInt("id"), "其他", -1, true, rs.getInt("level"), rs.getInt("job"));
+                 buddyEntry = new BuddyEntry(rs.getString("name"), rs.getInt("id"), "其他", -1, true, rs.getInt("level"), rs.getInt("job"));
+
             }
-            return null;
+            ps.close();
+            rs.close();
+            con.close();
+            return buddyEntry;
         }
         catch (SQLException ex) {
             ex.printStackTrace();

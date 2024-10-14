@@ -90,6 +90,16 @@ public class WzStringDumper
                 }
                 ps.addBatch();
             }
+            for (final MapleData child : etc.getChildren()) {
+                ps.setInt(1,Integer.parseInt(child.getName()));
+                final MapleData nameData = child.getChildByPath("name");
+                if (nameData != null) {
+                    ps.setString(2, (String)nameData.getData());
+                }else{
+                    ps.setString(2, "神秘物品");
+                }
+                ps.addBatch();
+            }
 
             for (final MapleData child : ins.getChildren()) {
 
@@ -113,9 +123,54 @@ public class WzStringDumper
                 }
                 ps.addBatch();
             }
+            for (final MapleData child : map.getChildren()) {
+
+                ps.setInt(1,Integer.parseInt(child.getName()));
+                final MapleData nameData = child.getChildByPath("name");
+                if (nameData != null) {
+                    ps.setString(2, (String)nameData.getData());
+                }else{
+                    ps.setString(2, "神秘物品");
+                }
+                ps.addBatch();
+            }
+            for (final MapleData child : mob.getChildren()) {
+
+                ps.setInt(1,Integer.parseInt(child.getName()));
+                final MapleData nameData = child.getChildByPath("name");
+                if (nameData != null) {
+                    ps.setString(2, (String)nameData.getData());
+                }else{
+                    ps.setString(2, "神秘物品");
+                }
+                ps.addBatch();
+            }
+            for (final MapleData child : skill.getChildren()) {
+
+                ps.setInt(1,Integer.parseInt(child.getName()));
+                final MapleData nameData = child.getChildByPath("name");
+                if (nameData != null) {
+                    ps.setString(2, (String)nameData.getData());
+                }else{
+                    ps.setString(2, "神秘物品");
+                }
+                ps.addBatch();
+            }
+            for (final MapleData child : npc.getChildren()) {
+
+                ps.setInt(1,Integer.parseInt(child.getName()));
+                final MapleData nameData = child.getChildByPath("name");
+                if (nameData != null) {
+                    ps.setString(2, (String)nameData.getData());
+                }else{
+                    ps.setString(2, "神秘物品");
+                }
+                ps.addBatch();
+            }
 
             ps.executeBatch();
             ps.close();
+            con.close();
         } catch (SQLException e) {
 
         }

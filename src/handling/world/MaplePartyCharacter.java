@@ -85,7 +85,10 @@ public class MaplePartyCharacter implements Serializable
         final MapleCharacter victim = MapleCharacter.getCharacterByName(this.name);
         return victim.getBossLogD(bossid);
     }
-    
+    public int getBossLog(final String bossid) {
+        final MapleCharacter victim = MapleCharacter.getCharacterByName(this.name);
+        return victim.getBossLog(bossid);
+    }
     public void setOnline(final boolean online) {
         this.online = online;
     }

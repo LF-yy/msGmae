@@ -151,6 +151,23 @@ public class MapleItemInformationProvider
         }
         this.getAllItems();
     }
+
+    public MapleStatEffect getItemEffect_s(int itemId, boolean save) {
+        MapleStatEffect ret = (MapleStatEffect)this.itemEffects.get(itemId);
+        if (ret == null || !save) {
+            MapleData item = this.getItemData(itemId);
+            if (item == null) {
+                return null;
+            }
+
+            ret = MapleStatEffect.loadItemEffectFromData(item.getChildByPath("spec"), itemId);
+            if (save) {
+                this.itemEffects.put(itemId, ret);
+            }
+        }
+
+        return ret;
+    }
     
     public final List<StructPotentialItem> getPotentialInfo(final int potId) {
         return (List<StructPotentialItem>)this.potentialCache.get((Object)Integer.valueOf(potId));

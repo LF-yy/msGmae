@@ -53,6 +53,7 @@ public class 鱼来鱼往 extends javax.swing.JFrame {
                 }
             }
             ps.close();
+            con.close();
         } catch (SQLException ex) {
             System.err.println("读取动态数据库出错：" + ex.getMessage());
         }
@@ -236,6 +237,9 @@ public class 鱼来鱼往 extends javax.swing.JFrame {
                     PreparedStatement dropperid = con.prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
+                rs.close();
+                ps1.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(鱼来鱼往.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -250,6 +254,9 @@ public class 鱼来鱼往 extends javax.swing.JFrame {
                     PreparedStatement dropperid = con.prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(鱼来鱼往.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -315,6 +322,9 @@ public class 鱼来鱼往 extends javax.swing.JFrame {
                     刷新飞鱼设置();
                     JOptionPane.showMessageDialog(null, "修改成功，已经生效");
                 }
+                ps.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(鱼来鱼往.class.getName()).log(Level.SEVERE, null, ex);
             }

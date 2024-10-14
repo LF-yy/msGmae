@@ -50,8 +50,9 @@ public class tzjc {
     }
     public long damage(MapleCharacter player, long totDamageToOneMonster, double damage) {
         try {
+            totDamageToOneMonster = (long) ((double) totDamageToOneMonster + damage);
             if (player.get套装伤害加成() > 0.0) {
-                double jc_damage = totDamageToOneMonster * player.get套装伤害加成()*damage;
+                double jc_damage = totDamageToOneMonster * player.get套装伤害加成();
 //                if(jc_damage>100000000L){
 //                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/100000000L) + "亿");
 //                }else if(jc_damage>10000){
@@ -59,7 +60,10 @@ public class tzjc {
 //                }else{
 //                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage)  + "");
 //                }
-                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage)+player.get最高伤害();
+                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
+            }
+            if (player.get最高伤害()>0){
+                totDamageToOneMonster += player.get最高伤害();
             }
         } catch (Exception e) {
             FileoutputUtil.outError("logs/套装伤害异常.txt", e);
@@ -234,22 +238,54 @@ public class tzjc {
             System.out.println("装备等级附加加载异常");
         }
         Start.enhancedRankMap.put(chr.getId(), new MapleGuildRanking.SponsorRank(chr.getName(), number.get().intValue()*100,chr.getStr(),chr.getDex(),chr.getInt(),chr.getLuk()));
-        chr.dropMessage(5,
-                "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
-                        "力量：" + chr.getStat().localstr + ">>" +
-                        "敏捷：" + chr.getStat().localdex + ">>" +
-                        "运气：" + chr.getStat().localluk + ">>" +
-                        "智力：" + chr.getStat().localint_ + ">>" +
-                        "物攻：" + chr.getStat().watk + ">>" +
-                        "魔攻：" + chr.getStat().magic + ">>" +
-                        "武器熟练度：" + chr.getStat().passive_mastery + ">>" +
-                        "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
-                        "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
-                        "最大攻击力：" + chr.getStat().localmaxbasedamage + ">>" +
-                        "伤害加成：" + chr.getStat().dam_r + ">>" +
-                        "段伤加成：" + additionalDamage.get() + ">>" +
-                        "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")
-        );
+        String damage ;
+            if(chr.getStat().damage>100000000L){
+                  damage = Math.ceil(chr.getStat().damage/100000000.0) + "亿";
+              }else if(chr.getStat().damage>10000){
+                  damage = Math.ceil(chr.getStat().damage/10000.0) + "万";
+              }else{
+                  damage = Math.ceil(chr.getStat().damage)  + "";
+              }
+        String dsDamage ;
+        if(additionalDamage.get()>100000000L){
+            dsDamage = Math.ceil(additionalDamage.get()/100000000.0) + "亿";
+        }else if(additionalDamage.get()>10000){
+            dsDamage = Math.ceil(additionalDamage.get()/10000.0) + "万";
+        }else{
+            dsDamage = Math.ceil(additionalDamage.get())  + "";
+        }
+        String str = "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
+                "力量：" + chr.getStat().localstr + ">>" +
+                "敏捷：" + chr.getStat().localdex + ">>" +
+                "运气：" + chr.getStat().localluk + ">>" +
+                "智力：" + chr.getStat().localint_ + ">>" +
+                "物攻：" + chr.getStat().watk + ">>" +
+                "魔攻：" + chr.getStat().magic + ">>" +
+                "武器熟练度：" + chr.getStat().passive_mastery + ">>" +
+                "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
+                "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
+                "最大伤害：" + damage + ">>" +
+                "伤害加成：" + chr.getStat().dam_r + ">>" +
+                "段伤加成：" + dsDamage + ">>" +
+                "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%");
+        chr.showInstruction(str,240,10);
+
+//        chr.dropMessage(5,
+//                "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
+//                        "力量：" + chr.getStat().localstr + ">>" +
+//                        "敏捷：" + chr.getStat().localdex + ">>" +
+//                        "运气：" + chr.getStat().localluk + ">>" +
+//                        "智力：" + chr.getStat().localint_ + ">>" +
+//                        "物攻：" + chr.getStat().watk + ">>" +
+//                        "魔攻：" + chr.getStat().magic + ">>" +
+//                        "武器熟练度：" + chr.getStat().passive_mastery + ">>" +
+//                        "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
+//                        "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
+//                        "最大攻击力：" + chr.getStat().localmaxbasedamage + ">>" +
+//                        "伤害加成：" + chr.getStat().dam_r + ">>" +
+//                        "段伤加成：" + additionalDamage.get() + ">>" +
+//                        "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")
+        //);
         return number.get();
     }
 

@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.File;
 import java.net.URL;
 
-class BytesEncodingDetect extends Encoding
+public class BytesEncodingDetect extends Encoding
 {
     int[][] GBFreq;
     int[][] GBKFreq;
@@ -118,7 +118,7 @@ class BytesEncodingDetect extends Encoding
             }
         }
         if (maxscore <= 50) {
-            encoding_guess = BytesEncodingDetect.OTHER;
+            encoding_guess = OTHER;
         }
         return encoding_guess;
     }

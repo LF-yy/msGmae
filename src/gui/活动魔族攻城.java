@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import database.DatabaseConnection;
-import java.util.Iterator;
 import client.MapleCharacter;
 import server.life.MapleMonster;
 import server.life.MapleLifeFactory;

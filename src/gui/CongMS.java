@@ -9183,6 +9183,7 @@ public class CongMS extends JFrame
 
     private void 重载爆率按钮ActionPerformed(final ActionEvent evt) {
         MapleMonsterInformationProvider.getInstance().clearDrops();
+        Start.setdrops();
         System.out.println("[重载系统] 爆率重载成功。");
         JOptionPane.showMessageDialog(null, (Object)"爆率重载成功。");
     }
@@ -9223,6 +9224,7 @@ public class CongMS extends JFrame
                 }
             }
         }
+        merchant_main.getInstance().save_data();
         final String 输出 = "[保存数据系统] 保存" + p + "个成功。";
         JOptionPane.showMessageDialog(null, (Object)输出);
         this.printChatLog(输出);

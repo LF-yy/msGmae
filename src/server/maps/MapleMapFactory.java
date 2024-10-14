@@ -56,7 +56,43 @@ public class MapleMapFactory
     public final MapleMap getMap(final int mapid, final boolean respawns, final boolean npcs) {
         return this.getMap(mapid, respawns, npcs, true);
     }
-    
+    public static String getMapPath(int mapid) {
+        String mapName = StringUtil.getLeftPaddedStr(Integer.toString(mapid), '0', 9);
+        StringBuilder builder = new StringBuilder("Map/Map");
+        builder.append(mapid / 100000000);
+        builder.append("/");
+        builder.append(mapName);
+        builder.append(".img");
+        mapName = builder.toString();
+        return mapName;
+    }
+
+    public static AbstractLoadedMapleLife reLoadLife(MapleData life, String id, String type) {
+        if (id.equals("")) {
+            return null;
+        } else {
+            AbstractLoadedMapleLife myLife = MapleLifeFactory.getLife(Integer.parseInt(id), type);
+            if (myLife == null) {
+                return null;
+            } else {
+                myLife.setCy(MapleDataTool.getInt(life.getChildByPath("cy")));
+                MapleData dF = life.getChildByPath("f");
+                if (dF != null) {
+                    myLife.setF(MapleDataTool.getInt(dF));
+                }
+
+                myLife.setFh(MapleDataTool.getInt(life.getChildByPath("fh")));
+                myLife.setRx0(MapleDataTool.getInt(life.getChildByPath("rx0")));
+                myLife.setRx1(MapleDataTool.getInt(life.getChildByPath("rx1")));
+                myLife.setPosition(new Point(MapleDataTool.getInt(life.getChildByPath("x")), MapleDataTool.getInt(life.getChildByPath("y"))));
+                if (MapleDataTool.getInt("hide", life, 0) == 1 && myLife instanceof MapleNPC) {
+                    myLife.setHide(true);
+                }
+
+                return myLife;
+            }
+        }
+    }
     public final MapleMap getMap(final int mapid, final boolean respawns, final boolean npcs, final boolean reactors) {
         final Integer omapid = Integer.valueOf(mapid);
         MapleMap map = (MapleMap)this.maps.get((Object)omapid);

@@ -14,9 +14,9 @@ import java.util.List;
 public class merchant_main
 {
     private static merchant_main instance;
-    private List<goods_model> goods_list;
-    private List<eqs_model> eq_list;
-    private boolean close;
+    private  List<goods_model> goods_list;
+    private  List<eqs_model> eq_list;
+    private  boolean close;
     
     public merchant_main() {
         this.goods_list = new LinkedList<goods_model>();
@@ -30,28 +30,38 @@ public class merchant_main
     
     public void add_good(MapleCharacter chr, final int good_id, final int good_num, final int good_price, final long createData) {
         this.goods_list.add(new goods_model(chr.getAccountID(), good_id, good_num, good_price, chr.getName(), createData));
-        FileoutputUtil.logToFile("日志/商人交易系统/上架物品_goods.txt", " 上架物品ID： " + good_id + " 上架数量： " + good_num + " 价格： " + good_price + "");
+
+        FileoutputUtil.logToFile("日志/商人交易系统/上架物品_goods.txt", "玩家:"+chr.getName()+"==>>"+" 上架物品ID： " + good_id + " 上架数量： " + good_num + " 价格： " + good_price  + "\r\n");
     }
     
     public void add_eq(MapleCharacter chr, final String owner, final int upgradeslots, final int level, final int str, final int dex, final int int_, final int luk, final int hp, final int mp, final int watk, final int matk, final int wdef, final int mdef, final int acc, final int avoid, final int hands, final int speed, final int jump, final byte viciousHammer, final int itemEXP, final int durability, final byte enhance, final short potential1, final short potential2, final short potential3, final short hpR, final short mpR, final int good_id, final int good_price) {
         final eqs_model add_eq = new eqs_model(owner, upgradeslots, level, str, dex, int_, luk, hp, mp, watk, matk, wdef, mdef, acc, avoid, hands, speed, jump, viciousHammer, itemEXP, durability, enhance, potential1, potential2, potential3, hpR, mpR, chr.getAccountID(), good_id, good_price, chr.getName(), System.currentTimeMillis(), 1);
         this.eq_list.add(add_eq);
-        FileoutputUtil.logToFile("日志/商人交易系统/上架物品_eqs.txt", add_eq.toString());
+
+        FileoutputUtil.logToFile("日志/商人交易系统/上架物品_eqs.txt", "玩家:"+chr.getName()+"==>>"+add_eq.toString() + "\r\n");
     }
     
     public List<goods_model> getGoods_list() {
+        if(this.isClose()){
+            return null;
+        }
         return this.goods_list;
     }
     
     public List<eqs_model> getEqs_list() {
+        if(this.isClose()){
+            return null;
+        }
         return this.eq_list;
     }
     
-    public void save_data() {
+    public synchronized void save_data() {
         if (this.isClose()) {
             return;
         }
+        this.setClose(true);
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            con.setAutoCommit(false);
             PreparedStatement ps = con.prepareStatement("Truncate Table merchant");
             ps.executeUpdate();
             for (int i = 0; i < this.goods_list.size(); ++i) {
@@ -67,7 +77,7 @@ public class merchant_main
                 }
             }
             ps.close();
-            this.goods_list.clear();
+            //this.goods_list.clear();
             PreparedStatement ps2 = con.prepareStatement("Truncate Table merchantEquip");
             ps2.executeUpdate();
             for (int j = 0; j < this.eq_list.size(); ++j) {
@@ -110,15 +120,18 @@ public class merchant_main
                 }
             }
             ps2.close();
-            this.eq_list.clear();
-            this.setClose(true);
+           // this.eq_list.clear();
+
         }
         catch (SQLException ex) {
             System.err.println("数据库操作错误:" + (Object)ex);
+        }finally {
+            this.setClose(false);
         }
     }
     
-    public void load_data() {
+    public synchronized void load_data() {
+        this.setClose(true);
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select * from merchant");
             final ResultSet rs = ps.executeQuery();
@@ -137,6 +150,8 @@ public class merchant_main
         }
         catch (SQLException ex) {
             System.err.println("数据库操作错误:" + (Object)ex);
+        }finally {
+            this.setClose(false);
         }
     }
     
@@ -148,7 +163,7 @@ public class merchant_main
         this.close = close;
     }
     
-    public List<Integer> getOnlygoods_list() {
+    public synchronized List<Integer> getOnlygoods_list() {
         final List<goods_model> w_list = this.goods_list;
         final ArrayList only_list = new ArrayList();
         for (int i = 0; i < w_list.size(); ++i) {
@@ -175,7 +190,7 @@ public class merchant_main
         return (List<Integer>)only_list;
     }
     
-    public List<Integer> getOnlyeq_list() {
+    public synchronized List<Integer> getOnlyeq_list() {
         final List<eqs_model> w_list = this.eq_list;
         final ArrayList only_list = new ArrayList();
         for (int i = 0; i < w_list.size(); ++i) {

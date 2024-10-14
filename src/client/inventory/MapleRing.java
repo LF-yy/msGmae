@@ -48,6 +48,8 @@ public class MapleRing implements Serializable
                     ret.setEquipped(equipped);
                 }
             }
+            ps.close();
+            con.close();
             return ret;
         }
         catch (SQLException ex) {

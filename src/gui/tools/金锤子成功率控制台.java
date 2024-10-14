@@ -57,6 +57,10 @@ public class 金锤子成功率控制台 extends javax.swing.JFrame {
                     PreparedStatement dropperid = con.prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(金锤子成功率控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -74,10 +78,15 @@ public class 金锤子成功率控制台 extends javax.swing.JFrame {
                     PreparedStatement dropperid = con.prepareStatement(sqlString2);
                     dropperid.executeUpdate(sqlString2);
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(金锤子成功率控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
         LtMS.GetConfigValues();
     }
 
@@ -200,6 +209,10 @@ public class 金锤子成功率控制台 extends javax.swing.JFrame {
                     LtMS.GetConfigValues();
                     JOptionPane.showMessageDialog(null, "修改成功已经生效");
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(金锤子成功率控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -229,6 +242,9 @@ public class 金锤子成功率控制台 extends javax.swing.JFrame {
             while (rs.next()) {
                 ((DefaultTableModel) 金锤子表.getModel()).insertRow(金锤子表.getRowCount(), new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("Val")});
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(金锤子成功率控制台.class.getName()).log(Level.SEVERE, null, ex);
         }

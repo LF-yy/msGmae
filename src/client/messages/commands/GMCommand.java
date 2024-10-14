@@ -282,121 +282,121 @@ public class GMCommand
         }
     }
     
-    public static class 推文 extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length < 3) {
-                return false;
-            }
-            final String playername = splitted[1];
-            final int playerid = MapleCharacter.getCharacterIdByName(playername);
-            if (playerid == -1) {
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
-                return true;
-            }
-            final MapleCharacter victim = MapleCharacter.getCharacterById(playerid);
-            if (victim != null) {
-                victim.modifyCSPoints(1, 300, true);
-                victim.modifyCSPoints(2, 500, true);
-                c.getPlayer().dropMessage(6, "推文玩家[" + playername + "] 300Gash 500枫叶点数发放成功。");
-            }
-            else {
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
-            }
-            return true;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!推文 <玩家名字>").toString();
-        }
-    }
+//    public static class 推文 extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length < 3) {
+//                return false;
+//            }
+//            final String playername = splitted[1];
+//            final int playerid = MapleCharacter.getCharacterIdByName(playername);
+//            if (playerid == -1) {
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
+//                return true;
+//            }
+//            final MapleCharacter victim = MapleCharacter.getCharacterById(playerid);
+//            if (victim != null) {
+//                victim.modifyCSPoints(1, 300, true);
+//                victim.modifyCSPoints(2, 500, true);
+//                c.getPlayer().dropMessage(6, "推文玩家[" + playername + "] 300Gash 500枫叶点数发放成功。");
+//            }
+//            else {
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
+//            }
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!推文 <玩家名字>").toString();
+//        }
+//    }
     
-    public static class 分享奖励 extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length < 2) {
-                return false;
-            }
-            final String playername = splitted[1];
-            c.getPlayer().setFxName(playername);
-            c.getPlayer().dropMessage(6, "添加玩家[" + playername + "] 分享奖励成功。");
-            return true;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!分享奖励 <玩家名字> - aclog类型").toString();
-        }
-    }
+//    public static class 分享奖励 extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length < 2) {
+//                return false;
+//            }
+//            final String playername = splitted[1];
+//            c.getPlayer().setFxName(playername);
+//            c.getPlayer().dropMessage(6, "添加玩家[" + playername + "] 分享奖励成功。");
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!分享奖励 <玩家名字> - aclog类型").toString();
+//        }
+//    }
     
-    public static class 补领赞助 extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length < 3) {
-                return false;
-            }
-            final String playername = splitted[1];
-            final int mod = Integer.parseInt(splitted[2]);
-            final int playerid = MapleCharacter.getCharacterIdByName(playername);
-            if (playerid == -1) {
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
-                return true;
-            }
-            final MapleCharacter victim = MapleCharacter.getCharacterById(playerid);
-            if (victim != null) {
-                victim.setBuLingZanZu(mod);
-                victim.modifyCSPoints(1, mod * 5, true);
-                victim.gainVip();
-                FileoutputUtil.logToFile("logs/Data/补领赞助.txt", "\r\n " + FileoutputUtil.NowTime() + " GM " + c.getPlayer().getName() + " 给了 " + victim.getName() + " " + mod + "台币补领赞助");
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "] 补领赞助 [" + mod + "] 台币。");
-            }
-            else {
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
-            }
-            return true;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!补领赞助 <玩家名字> - 赞助台币数量").toString();
-        }
-    }
-    
-    public static class 补领红利 extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length < 3) {
-                return false;
-            }
-            final String playername = splitted[1];
-            final int mod = Integer.parseInt(splitted[2]);
-            final int playerid = MapleCharacter.getCharacterIdByName(playername);
-            if (playerid == -1) {
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
-                return true;
-            }
-            final MapleCharacter victim = MapleCharacter.getCharacterById(playerid);
-            if (victim != null) {
-                victim.modifyCSPoints(3, mod, true);
-                FileoutputUtil.logToFile("logs/Data/补领红利.txt", "\r\n " + FileoutputUtil.NowTime() + " GM " + c.getPlayer().getName() + " 给了 " + victim.getName() + " " + mod + "点补领红利");
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "] 补领红利 [" + mod + "] 红利。");
-            }
-            else {
-                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
-            }
-            return true;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("!补领红利 <玩家名字> - 补领红利数量").toString();
-        }
-    }
+//    public static class 补领赞助 extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length < 3) {
+//                return false;
+//            }
+//            final String playername = splitted[1];
+//            final int mod = Integer.parseInt(splitted[2]);
+//            final int playerid = MapleCharacter.getCharacterIdByName(playername);
+//            if (playerid == -1) {
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
+//                return true;
+//            }
+//            final MapleCharacter victim = MapleCharacter.getCharacterById(playerid);
+//            if (victim != null) {
+//                victim.setBuLingZanZu(mod);
+//                victim.modifyCSPoints(1, mod * 5, true);
+//                victim.gainVip();
+//                FileoutputUtil.logToFile("logs/Data/补领赞助.txt", "\r\n " + FileoutputUtil.NowTime() + " GM " + c.getPlayer().getName() + " 给了 " + victim.getName() + " " + mod + "台币补领赞助");
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "] 补领赞助 [" + mod + "] 台币。");
+//            }
+//            else {
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
+//            }
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!补领赞助 <玩家名字> - 赞助台币数量").toString();
+//        }
+//    }
+//
+//    public static class 补领红利 extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length < 3) {
+//                return false;
+//            }
+//            final String playername = splitted[1];
+//            final int mod = Integer.parseInt(splitted[2]);
+//            final int playerid = MapleCharacter.getCharacterIdByName(playername);
+//            if (playerid == -1) {
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
+//                return true;
+//            }
+//            final MapleCharacter victim = MapleCharacter.getCharacterById(playerid);
+//            if (victim != null) {
+//                victim.modifyCSPoints(3, mod, true);
+//                FileoutputUtil.logToFile("logs/Data/补领红利.txt", "\r\n " + FileoutputUtil.NowTime() + " GM " + c.getPlayer().getName() + " 给了 " + victim.getName() + " " + mod + "点补领红利");
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "] 补领红利 [" + mod + "] 红利。");
+//            }
+//            else {
+//                c.getPlayer().dropMessage(6, "玩家[" + playername + "]不存在于资料库内。");
+//            }
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("!补领红利 <玩家名字> - 补领红利数量").toString();
+//        }
+//    }
     
     public static class MyPos extends CommandExecute
     {
@@ -754,6 +754,7 @@ public class GMCommand
                 }
                 rs.close();
                 ps.close();
+                con.close();
             }
             catch (SQLException ex2) {}
             return true;

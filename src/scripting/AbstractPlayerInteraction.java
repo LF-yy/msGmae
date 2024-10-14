@@ -8,7 +8,10 @@ import java.sql.SQLException;
 
 import client.inventory.*;
 import constants.ServerConstants;
+import database.DBConPool;
 import database.DatabaseConnection;
+import gui.服务端输出信息;
+import handling.SendPacketOpcode;
 import handling.world.World;
 import provider.MapleData;
 import provider.MapleDataDirectoryEntry;
@@ -48,6 +51,7 @@ import java.util.*;
 
 import constants.ServerConfig;
 import client.MapleStat;
+import server.events.DamageManage;
 import tools.FileoutputUtil;
 import client.messages.CommandProcessor;
 import constants.ServerConstants.CommandType;
@@ -59,6 +63,7 @@ import server.events.MapleEvent;
 import server.maps.Event_DojoAgent;
 import client.ISkill;
 import server.life.MapleMonster;
+import tools.data.MaplePacketLittleEndianWriter;
 import tools.packet.PetPacket;
 import tools.packet.UIPacket;
 import client.SkillFactory;
@@ -86,6 +91,8 @@ import client.MapleClient;
 
 public abstract class AbstractPlayerInteraction
 {
+    private static final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+
     protected MapleClient c;
     
     public AbstractPlayerInteraction(final MapleClient c) {
@@ -706,6 +713,8 @@ public abstract class AbstractPlayerInteraction
     public void gainItemF(final int id, final short quantity) {
         if (quantity >0){
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
            this.getPlayer().ban("刷物品", true, true, false);
         }else {
             this.gainItem(id, quantity, false, 0L, -1, "");
@@ -713,6 +722,8 @@ public abstract class AbstractPlayerInteraction
     }
     public void gainItemZ(final int id, final short quantity) {
         if (quantity<=0){
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷物品而被管理員永久停封。"));
             this.getPlayer().ban("刷物品", true, true, false);
         }else {
@@ -1356,6 +1367,7 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void openNpc(final int id, final String script) {
+        NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(this.getClient(), id, script);
     }
     
@@ -1407,12 +1419,20 @@ public abstract class AbstractPlayerInteraction
     }
     
     public void dojo_getUp() {
+
         this.getClient().sendPacket(MaplePacketCreator.updateInfoQuest(1207, "pt=1;min=4;belt=1;tuto=1"));
         this.getClient().sendPacket(MaplePacketCreator.Mulung_DojoUp2());
         this.getClient().sendPacket(MaplePacketCreator.instantMapWarp((byte)6));
     }
     
     public final boolean dojoAgent_NextMap(final boolean dojo, final boolean fromresting) {
+        if (System.currentTimeMillis() - this.c.getPlayer().getWlTime() < 5000){
+            return false;
+        }
+        this.c.getPlayer().setWlTime(System.currentTimeMillis());
+        if (this.c.getPlayer().getMapId() == 925033800){
+            this.c.getPlayer().setBossLog("累计武陵",1,1);
+        }
         if (dojo) {
             return Event_DojoAgent.warpNextMap(this.c.getPlayer(), fromresting);
         }
@@ -1434,7 +1454,7 @@ public abstract class AbstractPlayerInteraction
         }
         return (int)ret;
     }
-    
+
     public void saveLocation(final String loc) {
         this.getClient().getPlayer().saveLocation(SavedLocationType.fromString(loc));
     }
@@ -1602,7 +1622,35 @@ public abstract class AbstractPlayerInteraction
         }
         return ret;
     }
-    
+
+    public void 道具喇叭(int itemId, String msg) {
+        Object item;
+        if (GameConstants.getInventoryType(itemId) == MapleInventoryType.EQUIP) {
+            item = (Equip)ii.getEquipById(itemId);
+            ((IItem)item).setPosition((short)1);
+        } else {
+            item = new Item(itemId, (short)1, (short)1, (byte)0, -1);
+        }
+
+        this.道具喇叭((IItem)item, msg);
+    }
+
+    public void 道具喇叭(IItem item, String msg) {
+        StringBuilder sb = new StringBuilder();
+        IItem medal = this.c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-26);
+        if (medal != null) {
+            sb.append("<");
+            sb.append(ii.getName(medal.getItemId()));
+            sb.append("> ");
+        }
+
+        sb.append(this.c.getPlayer().getName());
+        sb.append(" : ");
+        sb.append(msg);
+        Broadcast.broadcastSmega(this.c.getWorld(), MaplePacketCreator.itemMegaphone(sb.toString(), true, this.c.getChannel() - this.c.getWorld() * 10, item));
+    }
+
+
     public long getCurrentTime() {
         return System.currentTimeMillis();
     }
@@ -1666,13 +1714,20 @@ public abstract class AbstractPlayerInteraction
     
     public int save(final boolean dc, final boolean fromcs) {
         try {
-            return this.getPlayer().saveToDB(dc, fromcs);
+            return this.getPlayer().saveToDB(dc, fromcs,true);
         }
         catch (UnsupportedOperationException ex) {
             return 0;
         }
     }
-    
+    public DamageManage.MobDamageData newDamageData() {
+        return DamageManage.getInstance().newDamageData();
+    }
+
+    public DamageManage getDamageManage() {
+        return DamageManage.getInstance();
+    }
+
     public void save() {
         this.save(false, false);
     }
@@ -2515,6 +2570,55 @@ public abstract class AbstractPlayerInteraction
                 curChar.setBossLog1(bossid);
             }
         }
+    }
+    public final void 给团队每日a(String bossid) {
+        if (this.getPlayer().getParty() != null && this.getPlayer().getParty().getMembers().size() != 1) {
+            Iterator var2 = this.getPlayer().getParty().getMembers().iterator();
+
+            while(var2.hasNext()) {
+                MaplePartyCharacter chr = (MaplePartyCharacter)var2.next();
+                MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+                if (curChar != null) {
+                    curChar.setBossLoga(bossid);
+                }
+            }
+
+        } else {
+            this.setBossLoga(bossid);
+        }
+    }
+    public void setBossLoga(String bossid) {
+        this.getPlayer().setBossLoga(bossid);
+    }
+
+    public void setBossLoga(String bossid, int count) {
+        this.getPlayer().setBossLoga(bossid, count);
+    }
+
+    public boolean 判断团队金币( Integer meso) {
+        boolean a = false;
+        for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            final MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                if (curChar.getMeso()<meso){
+                    a = true;
+                }
+            }
+        }
+        return a;
+    }
+
+    public boolean 判断团队道具( int id, int quantity) {
+        boolean a = false;
+        for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            final MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                if (!curChar.haveItem(id,quantity)){
+                    a = true;
+                }
+            }
+        }
+        return a;
     }
     public int 判断团队每日(final String bossid) {
         int a = 0;
@@ -3975,5 +4079,158 @@ public abstract class AbstractPlayerInteraction
             return  0;
         }
     }
+
+
+    public static void 雇佣写入(int Name, int Channale, int Piot) {
+        try {
+            int ret = 判断雇佣(Name, Channale);
+            if (ret == -1) {
+                ret = 0;
+                PreparedStatement ps = null;
+
+                try {
+                    ps = DBConPool.getConnection().prepareStatement("INSERT INTO hirex (channel, Name,Point) VALUES (?, ?, ?)");
+                    ps.setInt(1, Channale);
+                    ps.setInt(2, Name);
+                    ps.setInt(3, ret);
+                    ps.execute();
+                } catch (SQLException var15) {
+                    服务端输出信息.println_out("雇佣写入1:" + var15);
+                } finally {
+                    try {
+                        if (ps != null) {
+                            ps.close();
+                        }
+                    } catch (SQLException var14) {
+                        服务端输出信息.println_out("雇佣写入2:" + var14);
+                    }
+
+                }
+            }
+
+            ret += Piot;
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("UPDATE hirex SET `Point` = ? WHERE Name = ? and channel = ?");
+            ps.setInt(1, ret);
+            ps.setInt(2, Name);
+            ps.setInt(3, Channale);
+            ps.execute();
+            ps.close();
+        } catch (SQLException var17) {
+            服务端输出信息.println_err("雇佣写入3" + var17);
+        }
+
+    }
+
+    public static int 判断雇佣(int Name, int Channale) {
+        int ret = -1;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM hirex WHERE channel = ? and Name = ?");
+            ps.setInt(1, Channale);
+            ps.setInt(2, Name);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            ret = rs.getInt("Point");
+            rs.close();
+            ps.close();
+        } catch (SQLException var6) {
+        }
+
+        return ret;
+    }
+
+//    public void 开启储备经验() {
+//        this.c.getPlayer().开启储备经验();
+//    }
+//
+//    public void 关闭储备经验() {
+//        this.c.getPlayer().关闭储备经验();
+//    }
+//
+//    public boolean 是否储备经验() {
+//        return this.c.getPlayer().是否储备经验();
+//    }
+
+//    public long 读取储备经验() {
+//        return this.c.getPlayer().读取经验储备();
+//    }
+//
+//    public int 读取开店经验加成() {
+//        return this.c.getPlayer().读取开店经验加成();
+//    }
+
+    public void 全服道具公告(String head, String message, Item item) {
+        if (ServerConfig.version == 79) {
+            this.全服道具公告(head, message, item, (byte)14);
+        } else if (ServerConfig.version == 85) {
+            this.全服道具公告(head, message, item, (byte)15);
+        }
+
+    }
+
+    public void 全服道具公告(String head, String message, Item item, byte type) {
+        if (item != null) {
+            Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega(head, " : " + message, type, item, (byte)1, this.c.getChannel()));
+        }
+
+    }
+
+    public static byte[] 黄色喇叭(String text) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(SendPacketOpcode.SERVERMESSAGE.getValue());
+        mplew.write(9);
+        mplew.writeMapleAsciiString(text);
+        return mplew.getPacket();
+    }
+
+
+    public int getOneTimeLoga(String bossid) {
+        return this.getPlayer().getOneTimeLoga(bossid);
+    }
+
+    public void setOneTimeLoga(String bossid) {
+        this.getPlayer().setOneTimeLoga(bossid);
+    }
+
+    public void setOneTimeLoga(String bossid, int count) {
+        this.getPlayer().setOneTimeLoga(bossid, count);
+    }
+
+    public void deleteOneTimeLoga(String bossid) {
+        this.getPlayer().deleteOneTimeLoga(bossid);
+    }
+
+
+    public boolean deleteBossLog(String bossid) {
+        return this.c.getPlayer().deleteBossLog(bossid);
+    }
+
+    public boolean deleteBossLog(String bossid, int count) {
+        return this.c.getPlayer().deleteBossLog(bossid, count);
+    }
+
+    public int getBossLoga(String bossid) {
+        return this.getPlayer().getBossLoga(bossid);
+    }
+
+    public boolean deleteBossLoga(String bossid) {
+        return this.c.getPlayer().deleteBossLoga(bossid);
+    }
+
+    public boolean deleteBossLoga(String bossid, int count) {
+        return this.c.getPlayer().deleteBossLoga(bossid, count);
+    }
+
+    public int 查询当日BOSS记录(String bossid) {
+        return this.getPlayer().getBossLogC(bossid);
+    }
+
+
+
+
+
+
 
 }

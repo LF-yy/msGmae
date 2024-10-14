@@ -104,13 +104,13 @@ public class TableDemo extends JPanel
         @Override
         public void setValueAt(final Object value, final int row, final int col) {
             if (DEBUG) {
-                System.out.println("Setting value at " + row + "," + col + " to " + value + " (an instance of " + (Object)value.getClass() + ")");
+              //  System.out.println("Setting value at " + row + "," + col + " to " + value + " (an instance of " + (Object)value.getClass() + ")");
             }
             this.data[row][col] = value;
             this.fireTableCellUpdated(row, col);
             if (DEBUG) {
-                System.out.println("New value of data:");
-                this.printDebugData();
+             //   System.out.println("New value of data:");
+             //   this.printDebugData();
             }
         }
         
@@ -118,13 +118,11 @@ public class TableDemo extends JPanel
             final int numRows = this.getRowCount();
             final int numCols = this.getColumnCount();
             for (int i = 0; i < numRows; ++i) {
-                System.out.print("  row " + i + ":");
+             //   System.out.print("  row " + i + ":");
                 for (int j = 0; j < numCols; ++j) {
-                    System.out.print(" " + this.data[i][j]);
+                   // System.out.print(" " + this.data[i][j]);
                 }
-                System.out.println();
             }
-            System.out.println("--------------------------");
         }
     }
 }

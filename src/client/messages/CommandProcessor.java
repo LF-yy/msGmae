@@ -250,6 +250,8 @@ public class CommandProcessor
             ps.setString(2, command);
             ps.setInt(3, player.getMap().getId());
             ps.executeUpdate();
+            ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("CommandProccessor.txt", (Throwable)ex, "logGMCommandToDB");

@@ -20,4 +20,7 @@ public abstract class Spawns
     public abstract int getMobTime();
     
     public abstract Point getPosition();
+
+    public abstract void setPosition(Point var1);
+    public abstract String getMessage();
 }

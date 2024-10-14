@@ -171,8 +171,10 @@ public class MapleInventory implements Iterable<IItem>, Serializable
     public void removeItem(final short slot, final short quantity, final boolean allowZero) {
         this.removeItem(slot, quantity, allowZero, null);
     }
-    
-    public void removeItem(final short slot, final short quantity, final boolean allowZero, MapleCharacter chr) {
+    public void removeItem(short slot, long quantity, boolean allowZero) {
+        this.removeItem(slot, quantity, allowZero, (MapleCharacter)null);
+    }
+    public void removeItem( short slot,  short quantity,  boolean allowZero, MapleCharacter chr) {
         final IItem item = (IItem)this.inventory.get((Object)Short.valueOf(slot));
         if (item == null) {
             return;
@@ -189,7 +191,23 @@ public class MapleInventory implements Iterable<IItem>, Serializable
             chr.dropMessage(5, "加值道具[" + MapleItemInformationProvider.getInstance().getName(item.getItemId()) + "]因到期而消失了。");
         }
     }
-    
+    public void removeItem( short slot,  long quantity,  boolean allowZero, MapleCharacter chr) {
+        final IItem item = (IItem)this.inventory.get((Object)Short.valueOf(slot));
+        if (item == null) {
+            return;
+        }
+        item.setQuantity((short)(item.getQuantity() - (short) quantity));
+        if (item.getQuantity() < 0) {
+            item.setQuantity((short)0);
+        }
+        if (item.getQuantity() == 0 && !allowZero) {
+            this.removeSlot(slot);
+        }
+        if (chr != null) {
+            chr.getClient().sendPacket(MaplePacketCreator.modifyInventory(false, new ModifyInventory(3, item)));
+            chr.dropMessage(5, "加值道具[" + MapleItemInformationProvider.getInstance().getName(item.getItemId()) + "]因到期而消失了。");
+        }
+    }
     public void removeSlot(final short slot) {
         this.inventory.remove((Object)Short.valueOf(slot));
     }

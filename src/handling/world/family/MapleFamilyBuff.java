@@ -36,8 +36,8 @@ public class MapleFamilyBuff
         duration = new int[] { 0, 0, 15, 15, 30, 15, 15, 30, 30, 30, 30 };
         effect = new int[] { 0, 0, 150, 150, 200, 200, 200, 200, 200, 200, 200 };
         rep = new int[] { 0, 0, 300, 500, 700, 800, 1000, 1200, 1500, 2000, 2500, 4000, 5000 };
-        name = new String[] { "立刻移動至家族成員", "立刻召喚家族成員" };
-        desc = new String[] { "[對象] 自己\n[效果] 移動到想要的上線家族成員所在地图。", "[對象] 1個家族對象\n[效果] 召喚指定的上線家族成員到自己所在的地图。" };
+        name = new String[] { "立即移动至家族成员", "立即召唤家族成员" };
+        desc = new String[] { "[对象] 自己\n[效果] 移動到想要的上線家族成員所在地图。", "[对象] 1个家族成员\n[效果] 召喚指定的上線家族成員到自己所在的地图。" };
         buffEntries = new ArrayList<MapleFamilyBuffEntry>();
         for (int i = 0; i < 2; ++i) {
             MapleFamilyBuff.buffEntries.add(new MapleFamilyBuffEntry(i, MapleFamilyBuff.name[i], MapleFamilyBuff.desc[i], 1, MapleFamilyBuff.rep[i], MapleFamilyBuff.type[i], 190000 + i, MapleFamilyBuff.duration[i], MapleFamilyBuff.effect[i]));

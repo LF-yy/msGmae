@@ -7,7 +7,7 @@ public interface IItem extends Comparable<IItem>
     short getPosition();
     
     byte getFlag();
-    
+    String getDaKongFuMo();
     short getQuantity();
     
     String getOwner();
@@ -17,7 +17,8 @@ public interface IItem extends Comparable<IItem>
     int getItemId();
     
     void setItemId(final int p0);
-    
+    String getPotentials();
+    void setPotentials(String var1);
     MaplePet getPet();
     
     int getUniqueId();
@@ -57,6 +58,7 @@ public interface IItem extends Comparable<IItem>
     String getGiftFrom();
     
     MapleRing getRing();
+    void setDaKongFuMo(String var1);
 
-
+    int getPrice();
 }

@@ -18,6 +18,7 @@ import server.Timer.MapTimer;
 import server.Timer.MobTimer;
 import server.Timer.PingTimer;
 import server.Timer.WorldTimer;
+import server.bean.SkillSkin;
 
 public class ShutdownServer implements Runnable, ShutdownServerMBean
 {
@@ -62,6 +63,7 @@ public class ShutdownServer implements Runnable, ShutdownServerMBean
         CloneTimer.getInstance().stop();
         EtcTimer.getInstance().stop();
         PingTimer.getInstance().stop();
+        SkillSkin.saveChrSkillMapToDB();
         System.out.println("Timer 关闭完成");
         final Set<Integer> channels = ChannelServer.getAllChannels();
         for (final Integer channel : channels) {

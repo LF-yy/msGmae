@@ -305,6 +305,10 @@ public class 椅子控制台 extends javax.swing.JFrame {
                     刷新财神椅子();
                     JOptionPane.showMessageDialog(null, "修改成功");
                 }
+                ps.close();
+                ps1.close();
+                rs.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(椅子控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -386,6 +390,10 @@ public class 椅子控制台 extends javax.swing.JFrame {
                     刷新泡澡浴桶();
                     JOptionPane.showMessageDialog(null, "修改成功");
                 }
+                ps.close();
+                rs.close();
+                ps1.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(椅子控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -427,9 +435,14 @@ public class 椅子控制台 extends javax.swing.JFrame {
                     LtMS.GetConfigValues();
                     JOptionPane.showMessageDialog(null, "修改成功，已经生效");
                 }
+                ps.close();
+                rs.close();
+                ps1.close();
+                con.close();
             } catch (SQLException ex) {
                 Logger.getLogger(椅子控制台.class.getName()).log(Level.SEVERE, null, ex);
             }
+
         } else {
             JOptionPane.showMessageDialog(null, "？？？？？？？");
         }
@@ -461,6 +474,9 @@ public class 椅子控制台 extends javax.swing.JFrame {
                 刷新椅子备注();
                 JOptionPane.showMessageDialog(null, "修改成功，已经生效");
             }
+            ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(椅子控制台.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -508,6 +524,8 @@ public class 椅子控制台 extends javax.swing.JFrame {
                 }
             }
             ps.close();
+            rs.close();
+            con.close();
         } catch (SQLException ex) {
         }
         return data;

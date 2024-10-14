@@ -1,22 +1,26 @@
 package server.life;
 
+import gui.LtMS;
+import server.Start;
 import tools.MaplePacketCreator;
 import server.maps.MapleMap;
 import server.Randomizer;
+
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.Point;
 
 public class SpawnPointAreaBoss extends Spawns
 {
     private MapleMonster monster;
-    private final Point pos1;
-    private final Point pos2;
-    private final Point pos3;
+    private Point pos1;
+    private Point pos2;
+    private Point pos3;
     private long nextPossibleSpawn;
     private final int mobTime;
     private final AtomicBoolean spawned;
     private final String msg;
-    
+    private Point pos;
     public SpawnPointAreaBoss(final MapleMonster monster, final Point pos1, final Point pos2, final Point pos3, final int mobTime, final String msg) {
         this.spawned = new AtomicBoolean(false);
         this.monster = monster;
@@ -27,7 +31,11 @@ public class SpawnPointAreaBoss extends Spawns
         this.msg = msg;
         this.nextPossibleSpawn = System.currentTimeMillis();
     }
-    
+    public void setPosition(Point pos) {
+        this.pos1 = pos;
+        this.pos2 = pos;
+        this.pos3 = pos;
+    }
     @Override
     public final MapleMonster getMonster() {
         return this.monster;
@@ -68,7 +76,14 @@ public class SpawnPointAreaBoss extends Spawns
             public void monsterKilled() {
                 nextPossibleSpawn = System.currentTimeMillis();
                 if (mobTime > 0) {
-                    nextPossibleSpawn += (long)mobTime;
+                    if ((Integer) LtMS.ConfigValuesMap.get("野外BOSS重生时间波动开关") > 0) {
+                        Random rand = new Random();
+                        int addTime = (Integer)LtMS.ConfigValuesMap.get("野外BOSS重生波动百分比") * SpawnPointAreaBoss.this.mobTime / 100;
+                        addTime = (int)(rand.nextFloat() * (float)addTime * 2.0F - (float)addTime);
+                        SpawnPointAreaBoss.this.nextPossibleSpawn = SpawnPointAreaBoss.this.nextPossibleSpawn + (long)(SpawnPointAreaBoss.this.mobTime + addTime);
+                    } else {
+                        SpawnPointAreaBoss.this.nextPossibleSpawn = SpawnPointAreaBoss.this.nextPossibleSpawn + (long)SpawnPointAreaBoss.this.mobTime;
+                    }
                 }
                 spawned.set(false);
             }
@@ -79,7 +94,10 @@ public class SpawnPointAreaBoss extends Spawns
         }
         return this.monster;
     }
-    
+    public final String getMessage() {
+        return this.msg;
+    }
+
     @Override
     public final int getMobTime() {
         return this.mobTime;

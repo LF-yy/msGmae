@@ -3,9 +3,11 @@ package handling.channel.handler;
 import bean.UserAttraction;
 import gui.CongMS;
 import gui.LtMS;
+import gui.服务端输出信息;
 import scripting.NPCConversationManager;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
+import server.Timer;
 import server.maps.MapleNodes.MapleNodeInfo;
 import java.awt.geom.Point2D;
 
@@ -268,8 +270,8 @@ public class MobHandler
         }
         if (res != null) {
             if (slea.available() != 8L) {
-                System.err.println("slea.available != 8 (movement parsing error)");
-                System.err.println(slea.toString(true));
+                //System.err.println("slea.available != 8 (movement parsing error)");
+               // System.err.println(slea.toString(true));
                 c.getSession().close();
                 return;
             }
@@ -279,12 +281,7 @@ public class MobHandler
             if (Objects.isNull(c.getPlayer().getLastRes())){
                c.getPlayer().setLastRes(res);
            }
-
-            // MovementParse.updatePosition(res, (AnimatedMapleMapObject) monster, -1);
-            //map.moveMonster(monster, userAttraction.getPosition());
-            // map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int) skill, unk2, monster.getObjectId(), startPos, c.getPlayer().getPosition(), res),);
             map.broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(),userAttraction.getPosition(), null, c.getPlayer().getLastRes()));
-            //monster.setPosition(userAttraction.getPosition());
             monster.setPosition(userAttraction.getPosition());
             return;
         }
@@ -296,39 +293,87 @@ public class MobHandler
 //            }
         }
     }
+    public static final void MoveMonster2(final LittleEndianAccessor slea, final MapleClient c) {
+        Timer.MobTimer.getInstance().schedule(new Runnable() {
+            public void run() {
+                try {
+                    MapleCharacter chr = c.getPlayer();
+                    if (chr == null || chr.getMap() == null) {
+                        return;
+                    }
 
-    public static void main(String[] args) {
-        double ux = -550,uy = -600;
-        double mx = -555,my = -666;
-        int x = 0,y=0 ;
-        if (ux>0){
-            if (mx>0){
-                if (ux>mx){
-                    x = (int)Math.abs(ux - mx);
-                }else{
-                    x = (int)Math.abs(mx - ux);
-                }
-            }else{
-                x = (int)Math.abs(ux + mx);
-            }
-        }else {
-                x = (int)Math.abs(ux - mx);
-        }
-        if (uy>0){
-            if (my>0){
-                if (uy>my){
-                    y = (int)Math.abs(uy - my);
-                }else{
-                    y = (int)Math.abs(my -uy);
-                }
-            }else{
-                y= (int)Math.abs(uy + my);
-            }
-        }else{
-                y = (int)Math.abs(uy - my);
-        }
-        System.out.println((int)Math.sqrt(x*x + y*y));
+                    int objectId = slea.readInt();
+                    MapleMonster monster = chr.getMap().getMonsterByOid(objectId);
+                    if (monster == null) {
+                        chr.addMoveMob(objectId);
+                        return;
+                    }
 
+                    short moveid = slea.readShort();
+                    boolean useSkill = slea.readByte() > 0;
+                    byte skill = slea.readByte();
+                    int unk2 = slea.readInt();
+                    int realskill = 0;
+                    int level = 0;
+                    slea.readByte();
+                    int unk = slea.readInt();
+                    slea.readInt();
+                    slea.readInt();
+                    if (unk == 18) {
+                        short numCommands = slea.readShort();
+
+                        for(byte i = 0; i < numCommands; ++i) {
+                            slea.readByte();
+                        }
+                    }
+
+                    Point startPos = slea.readPos();
+
+                    List res;
+                    try {
+                        res = MovementParse.parseMovement(slea, 2);
+                    } catch (ArrayIndexOutOfBoundsException var15) {
+                        if (chr.isShowErr()) {
+                            chr.showInfo("移动", true, "怪物移动错误Move_life : AIOBE Type2");
+                        }
+
+                        FileoutputUtil.log("logs\\Log_Movement.txt", "怪物移动错误 AIOBE Type2 : 玩家: " + c.getPlayer().getName() + "(编号" + c.getPlayer().getId() + ") 怪物ID " + monster.getId() + "\r\n错误讯息:" + var15 + "\r\n封包:\r\n" + slea.toString(true));
+                        return;
+                    }
+
+                    MapleCharacter controller = monster.getController();
+                    MapleMap map = chr.getMap();
+                    c.sendPacket(MobPacket.moveMonsterResponse(monster.getObjectId(), moveid, monster.getMp(), monster.isControllerHasAggro(), realskill, level));
+                    if (controller != c.getPlayer()) {
+                        if (monster.isAttackedBy(c.getPlayer())) {
+                            monster.switchController(c.getPlayer(), true);
+                        } else if (controller != null && controller.getMapId() == monster.getMap().getId()) {
+                            monster.setController((MapleCharacter)null);
+                            return;
+                        }
+                    } else if (skill == -1 && monster.isControllerKnowsAboutAggro() && !monster.getStats().getMobile() && !monster.isFirstAttack()) {
+                        monster.setControllerHasAggro(false);
+                        monster.setControllerKnowsAboutAggro(false);
+                    }
+
+                    if (res != null) {
+                        if (slea.available() != 8L) {
+                            服务端输出信息.println_err("slea.available != 8 (movement parsing error)");
+                            服务端输出信息.println_err(slea.toString(true));
+                            return;
+                        }
+
+                        MovementParse.updatePosition(res, monster, -1);
+                        map.moveMonster(monster, monster.getPosition());
+                        map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
+                    }
+                } catch (Exception var16) {
+                    服务端输出信息.println_err("【错误】MoveMonster错误，错误原因：" + var16);
+                    var16.printStackTrace();
+                }
+
+            }
+        }, 5000L);
     }
     public static void CheckMobVac(final MapleClient c, final MapleMonster monster, final List<LifeMovementFragment> res, final Point startPos) {
         MapleCharacter chr = c.getPlayer();

@@ -122,6 +122,8 @@ public class 删除自添加NPC工具 extends JFrame
                     ps1.executeUpdate(sqlstr);
                     JOptionPane.showMessageDialog(null, (Object)("成功删除 " + Integer.parseInt(this.删除自添加npc代码.getText()) + " npc.重启生效。"));
                     this.刷新自添加NPC();
+                    ps1.close();
+                    rs.close();
                 }
             }
             catch (SQLException ex) {

@@ -36,7 +36,14 @@ public class Equip extends Item implements IEquip, Serializable
     private int itemEXP;
     private int durability;
     private int incSkill;
-    
+    private int hpRR = 0;
+    private int mpRR = 0;
+    private byte itemLevel;
+
+
+    public void setEquipLevel(byte gf) {
+        this.itemLevel = gf;
+    }
     public Equip(final int id, final short position, final byte flag) {
         super(id, position, (short)1, flag);
         this.upgradeSlots = 0;
@@ -102,7 +109,7 @@ public class Equip extends Item implements IEquip, Serializable
         this.durability = -1;
         this.incSkill = -1;
     }
-    
+
     @Override
     public IItem copy() {
         final Equip ret = new Equip(this.getItemId(), this.getPosition(), this.getUniqueId(), this.getFlag());
@@ -143,12 +150,16 @@ public class Equip extends Item implements IEquip, Serializable
         ret.hpR = this.hpR;
         ret.mpR = this.mpR;
         ret.incSkill = this.incSkill;
+        ret.hpRR = this.hpRR;
+        ret.mpRR = this.mpRR;
         ret.setGiftFrom(this.getGiftFrom());
         ret.setOwner(this.getOwner());
         ret.setQuantity(this.getQuantity());
         ret.setExpiration(this.getExpiration());
         ret.setInventoryId(this.getInventoryId());
         ret.setEquipOnlyId(this.getEquipOnlyId());
+        ret.setDaKongFuMo(this.getDaKongFuMo());
+        ret.setPotentials(this.getPotentials());
         return ret;
     }
     
@@ -236,7 +247,23 @@ public class Equip extends Item implements IEquip, Serializable
     public short getJump() {
         return this.jump;
     }
-    
+
+    public int getHpRR() {
+        return this.hpRR;
+    }
+
+    public void setHpRR(int hp) {
+        this.hpRR = hp;
+    }
+
+    public int getMpRR() {
+        return this.mpRR;
+    }
+
+    public void setMpRR(int mp) {
+        this.mpRR = mp;
+    }
+
     public void setStr(short str) {
         if (str < 0) {
             str = 0;

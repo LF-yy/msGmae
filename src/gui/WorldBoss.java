@@ -6,7 +6,6 @@ import handling.world.World;
 import server.life.MapleLifeFactory;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
-import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 
 import java.awt.*;
@@ -70,12 +69,12 @@ public class WorldBoss {
             }
         }
     }
-
-    public static void main(String[] args) {
-        System.out.println(new Date().getMonth());
-        System.out.println(new Date().getMinutes());
-        System.out.println(new Date().getDay());
-        System.out.println(new Date().getHours());
-        System.out.println(new Date().getSeconds());
-    }
+//
+//    public static void main(String[] args) {
+//        System.out.println(new Date().getMonth());
+//        System.out.println(new Date().getMinutes());
+//        System.out.println(new Date().getDay());
+//        System.out.println(new Date().getHours());
+//        System.out.println(new Date().getSeconds());
+//    }
 }

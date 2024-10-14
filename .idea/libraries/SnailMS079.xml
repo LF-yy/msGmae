@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="SnailMS079">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/SnailMS079.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

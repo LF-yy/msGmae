@@ -13,9 +13,9 @@ public class MapleGuildCharacter implements Serializable
     private final int id;
     private int jobid;
     private int guildid;
-    private final String name;
+    private  String name;
     private boolean online;
-    
+
     public MapleGuildCharacter(final MapleCharacter c) {
         this.channel = -1;
         this.name = c.getName();
@@ -95,7 +95,34 @@ public class MapleGuildCharacter implements Serializable
     public String getName() {
         return this.name;
     }
-    
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public byte getGuildrank() {
+        return guildrank;
+    }
+
+    public int getJobid() {
+        return jobid;
+    }
+
+    public int getGuildid() {
+        return guildid;
+    }
+
+    public void setGuildrank(byte guildrank) {
+        this.guildrank = guildrank;
+    }
+
+    public void setJobid(int jobid) {
+        this.jobid = jobid;
+    }
+
+    public void setGuildid(int guildid) {
+        this.guildid = guildid;
+    }
+
     public void setOnline(final boolean f) {
         this.online = f;
     }

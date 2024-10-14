@@ -307,8 +307,10 @@ public class 卡密制作工具 extends javax.swing.JFrame {
             FileoutputUtil.logToFile("充值卡后台库存/[" + CurrentReadable_Date() + "]" + 金额 + "点券充值卡.txt", "" + 充值卡 + "\r\n");
             刷新充值卡信息();
             输出 = "" + CurrentReadable_Date() + "/生成兑换卡成功，数额为 " + 金额 + " 点券，已经存放服务端根目录。";
+            ps.close();
+            con.close();
         } catch (SQLException ex) {
-            System.err.println(ex);
+            //System.err.println(ex);
             FileoutputUtil.outError("logs/资料库异常.txt", ex);
 
         }
@@ -340,9 +342,10 @@ public class 卡密制作工具 extends javax.swing.JFrame {
                     rs.getInt("item")
                 });
             }
-
+ps.close();
+            con.close();
         } catch (SQLException ex) {
-            System.err.println(ex);
+            //System.err.println(ex);
             FileoutputUtil.outError("logs/资料库异常.txt", ex);
         }
     }
@@ -365,8 +368,10 @@ public class 卡密制作工具 extends javax.swing.JFrame {
             FileoutputUtil.logToFile("充值卡后台库存/[" + CurrentReadable_Date() + "]" + 金额 + "充余额卡.txt", "" + 充值卡 + "\r\n");
             刷新充值卡信息();
             输出 = "" + CurrentReadable_Date() + "/生成兑换卡成功，数额为 " + 金额 + " 抵用券，已经存放服务端根目录。";
+            ps.close();
+            con.close();
         } catch (SQLException ex) {
-            System.err.println(ex);
+            //System.err.println(ex);
             FileoutputUtil.outError("logs/资料库异常.txt", ex);
 
         }

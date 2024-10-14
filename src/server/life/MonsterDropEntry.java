@@ -3,28 +3,35 @@ package server.life;
 public class MonsterDropEntry
 {
     public short questid;
-//    public int dropperid;
+    public int dropperid;
     public int itemId;
     public int chance;
     public int Minimum;
     public int Maximum;
     //final int dropperid,
     public MonsterDropEntry( final int itemId, final int chance, final int Minimum, final int Maximum, final short questid) {
-//        this.dropperid = dropperid;
+        //this.dropperid = dropperid;
         this.itemId = itemId;
         this.chance = chance;
         this.questid = questid;
         this.Minimum = Minimum;
         this.Maximum = Maximum;
     }
+    public MonsterDropEntry(short questid, int dropperid, int itemId, int chance, int minimum, int maximum) {
+        this.questid = questid;
+        this.dropperid = dropperid;
+        this.itemId = itemId;
+        this.chance = chance;
+        this.Minimum = minimum;
+        this.Maximum = maximum;
+    }
+  public int getDropperid() {
+      return dropperid;
+  }
 
-//    public int getDropperid() {
-//        return dropperid;
-//    }
-//
-//    public void setDropperid(int dropperid) {
-//        this.dropperid = dropperid;
-//    }
+  public void setDropperid(int dropperid) {
+      this.dropperid = dropperid;
+  }
 
     public short getQuestid() {
         return questid;

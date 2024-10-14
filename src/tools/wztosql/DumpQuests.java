@@ -75,6 +75,7 @@ public class DumpQuests
                     ps.close();
                 }
             }
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)ex);
@@ -86,6 +87,7 @@ public class DumpQuests
             final PreparedStatement ps = con.prepareStatement(sql);
             ps.executeUpdate();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)ex);
@@ -99,6 +101,7 @@ public class DumpQuests
             final boolean ret = rs.next();
             rs.close();
             ps.close();
+            con.close();
             return ret;
         }
         catch (SQLException ex) {

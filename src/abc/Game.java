@@ -18,6 +18,8 @@ public class Game
     public static String 官方网站;
     public static String 更新程序;
     public static int 版本;
+    public static boolean 自动封挂;
+
     public static String 窗口标题;
     public static short 检测客户端版本1 = 79;
     public static String 检测客户端版本2 = "1";
@@ -467,7 +469,7 @@ public class Game
     }
     
     public static void 说明() {
-        System.out.println("");
+       // System.out.println("");
     }
     
     private static String 获取网络时间(final String webUrl) {
@@ -506,9 +508,9 @@ public class Game
         Game.官方群号 = "750545564";
         Game.人数限制 = 999;
         Game.官方群链接 = "http://www.baidu.com";
-        Game.IP地址 = ServerProperties.getProperty("LtMS.ip.listen");//神昱岛:118.89.171.14  171.115.220.33   118.25.187.104   风行岛   111.229.164.192  127.0.0.1    测试 49.235.185.245    桃花岛: 61.147.96.66
-        //Game.IP地址 = "101.34.216.55";//神昱岛:118.89.171.14  171.115.220.33   118.25.187.104   风行岛   111.229.164.192  127.0.0.1    测试 49.235.185.245    桃花岛: 61.147.96.66
-        Game.过期时间 = "2090-01-30 00:00";     //可可岛  110.41.70.201
+        Game.IP地址 = ServerProperties.getProperty("LtMS.ip.listen");
+        自动封挂 = ServerProperties.getProperty("server.settings.ban", false);
+        Game.过期时间 = "2090-01-30 00:00";
         Game.获取网络时间 = "http://baidu.com";
         Game.当前时间 = "" + 获取网络时间(Game.获取网络时间) + "";
         Game.清理每日在线时间 = 1;

@@ -17,7 +17,7 @@ public class LoadPacket
             is.close();
         }
         catch (IOException ex) {
-            System.err.println("test.txt");
+           // System.err.println("test.txt");
         }
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.write(HexTool.getByteArrayFromHexString(packetProps.getProperty("packet")));

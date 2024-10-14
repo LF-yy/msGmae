@@ -94,6 +94,7 @@ public class DumpItems
                     ps.close();
                 }
             }
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)ex);

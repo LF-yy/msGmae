@@ -1,13 +1,20 @@
 package client;
 
+import abc.Game;
 import abc.离线人偶;
 import bean.UserAttraction;
 import bean.UserLhAttraction;
 import client.inventory.*;
 import gui.LtMS;
+import gui.服务端输出信息;
 import scripting.EventManager;
 import server.*;
 import server.Timer.EventTimer;
+import server.bean.EquipFieldEnhancement;
+import server.bean.PackageOfEquipments;
+import server.bean.Potential;
+import server.bean.SkillSkin;
+import server.lt.TimeLogCenter;
 import server.maps.MapleMapEffect;
 import handling.world.World.Find;
 import constants.MapConstants;
@@ -23,7 +30,7 @@ import handling.world.World;
 import handling.world.PlayerBuffStorage;
 import handling.world.MapleMessengerCharacter;
 import io.netty.channel.Channel;
-import tools.MockIOSession;
+import tools.*;
 import server.maps.MapleFoothold;
 
 import java.util.*;
@@ -45,13 +52,14 @@ import tools.packet.MobPacket;
 import handling.world.PartyOperation;
 import constants.ServerConstants;
 import handling.world.World.Family;
-import gui.CongMS;
 import server.maps.FieldLimitType;
 import tools.packet.MTSCSPacket;
 import handling.world.MaplePartyCharacter;
 import handling.world.PlayerBuffValueHolder;
 import tools.packet.PetPacket;
-import tools.HexTool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import server.FishingRewardFactory.FishingReward;
 import handling.world.World.Broadcast;
@@ -61,12 +69,9 @@ import server.Timer.EtcTimer;
 import server.Timer.MapTimer;
 import server.Timer.BuffTimer;
 
-import tools.MaplePacketCreator;
 import tools.data.MaplePacketLittleEndianWriter;
 import server.life.PlayerNPC;
 import database.DatabaseException;
-import tools.FilePrinter;
-import tools.Pair;
 
 import server.maps.MapleMapFactory;
 import constants.GameConstants;
@@ -79,10 +84,9 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import tools.FileoutputUtil;
+
 import database.DBConPool;
 import server.maps.SavedLocationType;
-import tools.ConcurrentEnumMap;
 import server.maps.Event_PyramidSubway;
 import java.util.concurrent.ScheduledFuture;
 
@@ -115,6 +119,7 @@ import server.maps.AbstractAnimatedMapleMapObject;
 public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Serializable
 {
     private static final long serialVersionUID = 845748950829L;
+    public SkillSkin skillSkin = new SkillSkin(this, 0);
     private String name;
     private String chalktext;
     private String BlessOfFairy_Origin;
@@ -167,6 +172,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int mapid;
     private int bookCover;
     private int dojo;
+    private Map<Integer, Pair<Long, Integer>> noCancelBuffMap = new HashMap();
     private int guildid;
     private int fallcounter;
     private int maplepoints;
@@ -211,7 +217,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private boolean gashponmega;
     private boolean hidden;
     private boolean hasSummon;
-    private long 经验池;
     private boolean 精灵商人购买开关;
     private boolean 玩家私聊开关;
     private boolean 玩家密语开关;
@@ -308,27 +313,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int dy;
     private int rmb;
     private int yb;
-    private int APQScore;
     private long lasttime;
     private long currenttime;
-    private long deadtime;
     private MapleCharacter chars;
-    private long nengl;
-    private long nengls;
-    private static String[] ariantroomleader;
-    private static int[] ariantroomslot;
     public int apprentice;
     public int master;
     public int ariantScore;
-    public long lastGainHM;
-    private int touzhuNum;
-    private int touzhuType;
-    private int touzhuNX;
     private long 防止复制时间;
     private boolean isbanned;
     public static int 记录当前血量;
     public static int 角色无敌指数;
     public static int 地图记录;
+    private static String[] ariantroomleader ;
+    private static int[] ariantroomslot ;
     /**
      * 吸怪怪值
      */
@@ -355,31 +352,35 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public long 吸怪检测;
     public long 愤怒之火掉血;
     public long 神圣之火回血;
-    private static int _tiredMinutes;
     public int 银行账号;
     public int 银行密码;
-    public long 最高伤害;
+    public  long 最高伤害;
+    public  long 追加伤害;
     public long 枫叶数量;
     public long 飞镖数量;
     public int 属性攻击累计伤害次数;
     public long 属性攻击累计伤害;
     public int 龙之献祭攻击次数;
-    public long 末日烈焰伤害记录;
-    public int 圣光无敌;
+    public long wlTime;
+    public Map<Integer,Integer> BOSS记录累计;
     public double 记录坐标X;
     public double 记录坐标Y;
-    public int 吸怪指数;
+    public Map<Integer,Integer> BOSS记录;
     public int 打怪地图;
-    public int 打怪数量;
-    public int 打Boss数量;
+    public  int 打怪数量;
+    public  int 打Boss数量;
     public int 被触碰次数;
     public long 累计掉血;
     public double X坐标误差;
     public double Y坐标误差;
     public int 误差次数;
     public int 过图;
-    public int 地图缓存1;
-    public int 地图缓存2;
+    public long saveTime;
+
+    //地图爆率设置
+    public  int 地图缓存1;
+    //地图爆率ID
+    public  int 地图缓存2;
     public int 地图缓存3;
     public int 地图缓存4;
     public int 地图缓存5;
@@ -405,7 +406,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public double 记录移动坐标X2;
     public double 记录移动坐标Y2;
     public Boolean isCheating;
-    private int _isCheatingPlayer;
+    private int points;
     private int playerPoints;
     private int playerEnergy;
     private int jf1;
@@ -419,13 +420,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int jf9;
     private int jf10;
     private int 等级上限;
-    private int corona;
+    private  int corona;
     private int coronaMap;
     public int saveData;
     public long buffTime;
+    private boolean saveingToDB = false;
     private Map<Integer, Integer> _equippedFuMoMap;
     private transient List<LifeMovementFragment> 吸怪RES;
-
+    private ArrayList<IItem> 临时防滑鞋子 = new ArrayList();
     public boolean 套装1是否共存 = false, 套装2是否共存 = false, 套装3是否共存 = false, 套装4是否共存 = false, 套装5是否共存 = false, 套装6是否共存 = false;
     public int TZ1 = 0;
     public int TZ2 = 0;
@@ -435,7 +437,154 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int TZ6 = 0;
     private double 套装伤害加成;
     private int clonedamgerate;
+    private boolean 是否开店 = false;
+    private boolean 是否储备经验 = false;
+    private boolean 是否防滑 = false;
+    private long power = 0L;
+    private final Map<Integer, Integer> potentialMap;
 
+
+   // public SkillSkin skillSkin = new SkillSkin(this, 0);
+    private long lastSkillSkinTime = 0L;
+    private ArrayList<Integer> mountList = new ArrayList();
+    private int mountId = 1932003;
+    private int tamingMobId = 0;
+    private int tamingMobItemId = 0;
+    private int petHpItemId;
+    private int petMpItemId;
+    private int lastTakeDamageValue;
+    private long lastPetHpTime;
+    private long lastPetVacTime;
+    private double petHpRecoveryPercent;
+    private double petMpRecoveryPercent;
+    public short package_str;
+    public short package_dex;
+    public short package_int;
+    public short package_luk;
+    public short package_all_ap;
+    public short package_watk;
+    public short package_matk;
+    public short package_wdef;
+    public short package_mdef;
+    public short package_acc;
+    public short package_avoid;
+    public short package_maxhp;
+    public short package_maxmp;
+    public short package_speed;
+    public short package_jump;
+    public short package_str_percent;
+    public short package_dex_percent;
+    public short package_int_percent;
+    public short package_luk_percent;
+    public short package_all_ap_percent;
+    public short package_watk_percent;
+    public short package_matk_percent;
+    public short package_wdef_percent;
+    public short package_mdef_percent;
+    public short package_acc_percent;
+    public short package_avoid_percent;
+    public short package_maxhp_percent;
+    public short package_maxmp_percent;
+    public short package_normal_damage_percent;
+    public short package_boss_damage_percent;
+    public short package_total_damage_percent;
+
+    private static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+
+    private static List<PackageOfEquipments.MyPackage> packageList = Collections.synchronizedList(new ArrayList());
+    private ScheduledFuture<?> 仙人模式线程;
+    private ScheduledFuture<?> 仙人模式BUFF线程;
+    private ScheduledFuture<?> 物理攻击力线程;
+    public int 修仙;
+    private ScheduledFuture<?> 魔法攻击力线程;
+    private ScheduledFuture<?> 硬化皮肤线程;
+    private ScheduledFuture<?> 修炼BUFF增益线程;
+    int a;
+    public int b;
+    int c;
+    public int d;
+    private int acash;
+    public long lastGainHM;
+
+    private ScheduledFuture<?> 保护线程;
+
+    private boolean backupInventory = false;
+    private ArrayList<Integer> dropItemFilterList = new ArrayList();
+    public int extra_damage_id = 10016;
+    public byte extra_damage_display = 10;
+    public byte extra_damage_tbyte = 17;
+    public byte extra_damage_animation = -128;
+    public byte extra_damage_speed = 2;
+    public byte extra_damage_unk = 0;
+    public long lastItemSortTime = 0L;
+    public long lastSuperTransformationTime = 0L;
+    public long lastPetLootTime = 0L;
+    public long loadDuration = 0L;
+    public long lastComboTime = 0L;
+    public int nextMapId = 0;
+
+    private long max_damage;
+    private long exp_reserve;
+    private byte imprison = 0;
+    private int guildPoints;
+    private int stage;
+    private int breakLevel;
+    private float expRateChr = 1.0F;
+    private float mesoRateChr = 1.0F;
+    private float dropRateChr = 1.0F;
+    public ArrayList<Integer> getMountList() {
+        if (this.mountList.isEmpty()) {
+            loadMountListFromDB();
+        }
+
+        return this.mountList;
+    }
+
+
+    public int getMountId() {
+        return this.mountId;
+    }
+
+    public void setMountId(int mountId) {
+        this.mountId = mountId;
+    }
+    public int getPetHpItemId() {
+        return this.petHpItemId;
+    }
+
+    public void setPetHpItemId(int petHpItemId) {
+        this.petHpItemId = petHpItemId;
+    }
+
+    public int getPetMpItemId() {
+        return this.petMpItemId;
+    }
+
+    public void setPetMpItemId(int petMpItemId) {
+        this.petMpItemId = petMpItemId;
+    }
+
+    public double getPetHpRecoveryPercent() {
+        return this.petHpRecoveryPercent;
+    }
+
+    public void setPetHpRecoveryPercent(double petHpRecoveryPercent) {
+        this.petHpRecoveryPercent = petHpRecoveryPercent;
+    }
+
+    public double getPetMpRecoveryPercent() {
+        return this.petMpRecoveryPercent;
+    }
+
+    public void setPetMpRecoveryPercent(double petMpRecoveryPercent) {
+        this.petMpRecoveryPercent = petMpRecoveryPercent;
+    }
+    public List<SnailCharacterValueHolder> getSnailValues() {
+        ArrayList<SnailCharacterValueHolder> values = new ArrayList();
+        SnailCharacterValueHolder value = new SnailCharacterValueHolder(this.是否开店, this.是否储备经验, this.是否防滑, this.临时防滑鞋子);
+        values.add(value);
+        return values;
+    }
     private MapleCharacter(final boolean ChannelServer) {
         this.clonedamgerate = 0;
         this.corona = 0;
@@ -452,6 +601,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.fallcounter = 0;
         this.rank = 1;
         this.rankMove = 0;
+        this.guildPoints = 0;
         this.jobRank = 1;
         this.jobRankMove = 0;
         this.marriageItemId = 0;
@@ -510,9 +660,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.movedMobs = new HashMap<Integer, Integer>();
         this.lasttime = 0L;
         this.currenttime = 0L;
-        this.deadtime = 1000L;
-        this.nengl = 0L;
-        this.nengls = 0L;
         this.apprentice = 0;
         this.master = 0;
         this.ariantScore = 0;
@@ -535,16 +682,29 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.银行账号 = 0;
         this.银行密码 = 0;
         this.最高伤害 = 0L;
+        this.追加伤害 = 0L;
         this.枫叶数量 = 0L;
         this.飞镖数量 = 0L;
         this.属性攻击累计伤害次数 = 0;
         this.属性攻击累计伤害 = 0L;
         this.龙之献祭攻击次数 = 0;
-        this.末日烈焰伤害记录 = 0L;
-        this.圣光无敌 = 0;
+        this.仙人模式线程 = null;
+        this.仙人模式BUFF线程 = null;
+        this.物理攻击力线程 = null;
+        this.修仙 = 0;
+        this.魔法攻击力线程 = null;
+        this.硬化皮肤线程 = null;
+        this.修炼BUFF增益线程 = null;
+        this.a = 0;
+        this.b = 0;
+        this.c = 0;
+        this.d = 0;
+        this.保护线程 = null;
+        this.wlTime = 0L;
+        this.BOSS记录 = new Hashtable<>();
+        this.BOSS记录累计 = new Hashtable<>();
         this.记录坐标X = 0.0;
         this.记录坐标Y = 0.0;
-        this.吸怪指数 = 0;
         this.打怪地图 = 0;
         this.打怪数量 = 0;
         this.被触碰次数 = 0;
@@ -553,6 +713,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.Y坐标误差 = 0.0;
         this.误差次数 = 0;
         this.过图 = 0;
+        this.saveTime = 0L;
         this.地图缓存1 = 0;
         this.地图缓存2 = 0;
         this.地图缓存3 = 0;
@@ -583,8 +744,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.被驱散时间 = System.currentTimeMillis();
         this.物理无效时间 = System.currentTimeMillis();
         this.魔法无效时间 = System.currentTimeMillis();
+        this.potentialMap = new HashMap();
         this.isCheating = Boolean.valueOf(false);
-        this._isCheatingPlayer = 0;
         this._equippedFuMoMap = new HashMap<Integer, Integer>();
         this.setStance(0);
         this.setPosition(new Point(0, 0));
@@ -640,6 +801,95 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.pets = new ArrayList<MaplePet>();
         }
     }
+    public long getPower() {
+        if (this.power <= 0L) {
+            this.power = this.获取角色战斗力();
+        }
+
+        return this.power;
+    }
+
+    public long 获取角色战斗力() {
+        MapleGuild.战斗力信息 player = new MapleGuild.战斗力信息();
+        Connection con = DBConPool.getConnection();
+
+        try {
+            con.setTransactionIsolation(1);
+            con.setAutoCommit(false);
+            PreparedStatement ps = con.prepareStatement("select * from characters WHERE `id` = ?");
+            ps.setInt(1, this.getId());
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                int chrid = rs.getInt("id");
+                PreparedStatement ps1 = con.prepareStatement("SELECT * FROM `inventoryitems` LEFT JOIN `inventoryequipment` USING(`inventoryitemid`) WHERE `characterid` = ? AND `position` < 0");
+                ps1.setInt(1, chrid);
+                ResultSet rs1 = ps1.executeQuery();
+                player.setPotentials("");
+
+                while(rs1.next()) {
+                    player.setE_str(player.getE_str() + rs1.getShort("str"));
+                    player.setE_dex(player.getE_dex() + rs1.getShort("dex"));
+                    player.setE_int(player.getE_int() + rs1.getShort("int"));
+                    player.setE_luk(player.getE_luk() + rs1.getShort("luk"));
+                    player.setE_hp(player.getE_hp() + rs1.getShort("hp"));
+                    player.setE_mp(player.getE_mp() + rs1.getShort("mp"));
+                    player.setE_watk(player.getE_watk() + rs1.getShort("watk"));
+                    player.setE_matk(player.getE_matk() + rs1.getShort("matk"));
+                    player.setPotentials(player.getPotentials() + rs1.getString("snail_potentials"));
+                }
+
+                player.setChrid(chrid);
+                player.setName(rs.getString("name"));
+                player.setLevel(rs.getInt("level"));
+                player.setJob(rs.getInt("job"));
+                player.setStr(rs.getInt("str"));
+                player.setDex(rs.getInt("dex"));
+                player.setInt(rs.getInt("int"));
+                player.setLuk(rs.getInt("luk"));
+                player.setMaxhp(rs.getInt("maxhp"));
+                player.setMaxmp(rs.getInt("maxmp"));
+                player.setMax_damage(rs.getLong("max_damage"));
+                player.solveForce();
+            }
+        } catch (SQLException var8) {
+            服务端输出信息.println_err("获取角色战斗力出错！,错误位置：MapleCharacter.获取角色战斗力，原因：" + var8);
+        }
+
+        return player.getForce();
+    }
+
+
+    public long getSaveTime() {
+        return saveTime;
+    }
+
+    public void setSaveTime(long saveTimes) {
+        this.saveTime = saveTimes;
+    }
+
+    public long getWlTime() {
+        return wlTime;
+    }
+
+    public void setWlTime(long wlTime) {
+        this.wlTime = wlTime;
+    }
+
+    public int get地图缓存1() {
+        return 地图缓存1;
+    }
+
+    public void set地图缓存1(int 地图缓存1) {
+        this.地图缓存1 = 地图缓存1;
+    }
+    public int get地图缓存2() {
+        return 地图缓存2;
+    }
+
+    public void set地图缓存2(int 地图缓存2) {
+        this.地图缓存2 = 地图缓存2;
+    }
 
     public long get被驱散时间() {
         return 被驱散时间;
@@ -647,6 +897,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void set被驱散时间(long 被驱散时间) {
         this.被驱散时间 = 被驱散时间;
+    }
+    public long get对话冷却() {
+        return 对话冷却;
+    }
+
+    public void set对话冷却(long 对话冷却) {
+        this.对话冷却 = 对话冷却;
     }
     public long get物理无效时间() {
         return 物理无效时间;
@@ -663,11 +920,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.魔法无效时间 = 魔法无效时间;
     }
 
-    public int getCorona() {
+    public synchronized int getCorona() {
         return corona;
     }
-
-    public void setCorona(int corona) {
+    public synchronized void setCoronaJan(int corona) {
+        this.corona -= corona;
+    }
+    public synchronized void setCoronaJa(int corona) {
+        this.corona += corona;
+    }
+    public synchronized void setCorona(int corona) {
         this.corona = corona;
     }
     public void set最高伤害(long corona) {
@@ -675,6 +937,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     public long get最高伤害() {
         return this.最高伤害;
+    }
+    public void set追加伤害(long corona) {
+        this.追加伤害 = corona;
+    }
+    public long get追加伤害() {
+        return this.追加伤害;
     }
     public int getCoronaMap() {
         return coronaMap;
@@ -713,6 +981,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.prefix = "";
         ret.PGSXDJ = 0;
         ret.gachexp = 0;
+        ret.max_damage = 199999L;
+
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT name, 2ndpassword, mPoints,  vpoints, VIP, loginkey, serverkey, clientkey FROM accounts WHERE id = ?");
             ps.setInt(1, ret.accountid);
@@ -729,6 +999,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
             ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("Error getting character default" + (Object)e);
@@ -749,7 +1020,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.auto吸怪 = ct.auto吸怪;
         ret.GM吸怪信息开关 = ct.GM吸怪信息开关;
         ret.Vip_Medal = ct.Vip_Medal;
-        ret.精灵商人购买开关 = ct.精灵商人购买开关;
+       ret.精灵商人购买开关 = ct.精灵商人购买开关;
         ret.玩家私聊开关 = ct.玩家私聊开关;
         ret.玩家密语开关 = ct.玩家密语开关;
         ret.好友聊天开关 = ct.好友聊天开关;
@@ -766,6 +1037,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.stats.str = ct.str;
         ret.stats.dex = ct.dex;
         ret.stats.int_ = ct.int_;
+        ret.power = ct.power;
         ret.stats.luk = ct.luk;
         ret.stats.maxhp = ct.maxhp;
         ret.stats.maxmp = ct.maxmp;
@@ -835,10 +1107,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (ret.guildid > 0) {
             ret.mgc = new MapleGuildCharacter(ret);
         }
+        ret.backupInventory = ct.backupInventory;
         ret.buddylist = new BuddyList(ct.buddysize);
         ret.subcategory = ct.subcategory;
         ret.prefix = ct.prefix;
         ret.PGSXDJ = ct.PGSXDJ;
+        ret.skillSkin = ct.skillSkin;
+        ret.dropItemFilterList = ct.dropItemFilterList;
         if (isChannel) {
             final MapleMapFactory mapFactory = ChannelServer.getInstance(client.getChannel()).getMapFactory();
             ret.map = mapFactory.getMap(ret.mapid);
@@ -1030,6 +1305,21 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret.prefix = rs.getString("prefix");
                 ret.gachexp = rs.getInt("gachexp");
                 ret.PGSXDJ = rs.getInt("PGSXDJ");
+
+
+                ret.max_damage = rs.getLong("max_damage");
+                if (ret.max_damage < 199999L) {
+                    ret.max_damage = 199999L;
+                }
+                ret.exp_reserve = rs.getLong("exp_reserve");
+                ret.imprison = rs.getByte("imprison");
+                ret.guildPoints = rs.getInt("guildpoints");
+                ret.stage = rs.getInt("stage");
+                ret.breakLevel = rs.getInt("break_level");
+                ret.expRateChr = rs.getFloat("exp_rate");
+                ret.mesoRateChr = rs.getFloat("meso_rate");
+                ret.dropRateChr = rs.getFloat("drop_rate");
+
                 if (channelserver) {
                     final MapleMapFactory mapFactory = ChannelServer.getInstance(client.getChannel()).getMapFactory();
                     ret.antiMacro = new MapleLieDetector(ret.id);
@@ -1309,6 +1599,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret.mount = new MapleMount(ret, (mount != null) ? mount.getItemId() : 0, (ret.job > 1000 && ret.job < 2000) ? 10001004 : ((ret.job >= 2000) ? ((ret.job == 2001 || ret.job >= 2200) ? 20011004 : ((ret.job >= 3000) ? 30001004 : 20001004)) : 1004), rs.getByte("Fatigue"), rs.getByte("Level"), rs.getInt("Exp"));
                     ps.close();
                     rs.close();
+                    ret.skillSkin.loadChrSkill();
+                    ret.loadMountListFromDB();
+                    EquipFieldEnhancement.getInstance().loadCharFromDB(charid, con);
+                   //ret.loadMonsterKillQuestFromDB(con);
+                   ret.loadDropItemFilterListFromDB(con);
+                   //ret.loadSellWhenPickUpItemListFromDB(con);
                     ret.stats.recalcLocalStats(true);
                 }
                 else {
@@ -1331,13 +1627,169 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
                 catch (SQLException ex) {}
             }
+            con.close();
         }
         catch (SQLException exxx) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)exxx);
         }
         return ret;
     }
-    
+    public void loadDropItemFilterListFromDB(Connection con) {
+        try {
+            if (con == null || con.isClosed()) {
+                con = DBConPool.getConnection();
+            }
+
+            ArrayList<Integer> ret = new ArrayList();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_drop_item_filter WHERE character_id = ?");
+            ps.setInt(1, this.id);
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                ret.add(rs.getInt("item_id"));
+            }
+
+            LinkedHashSet<Integer> set = new LinkedHashSet(ret);
+            ArrayList<Integer> ret0 = new ArrayList(set);
+            rs.close();
+            ps.close();
+            ret.clear();
+            set.clear();
+            this.dropItemFilterList.clear();
+            this.dropItemFilterList = ret0;
+        } catch (SQLException var7) {
+            服务端输出信息.println_err("【错误】loadDropItemFilterListFromDB错误，原因：" + var7);
+            var7.printStackTrace();
+        }
+
+    }
+    public ArrayList<Integer> getDropItemFilterList() {
+        return this.dropItemFilterList;
+    }
+
+    public void setDropItemFilterList(ArrayList<Integer> dropItemFilterList) {
+        this.dropItemFilterList = dropItemFilterList;
+    }
+
+    public void loadDropItemFilterListFromDB() {
+        this.loadDropItemFilterListFromDB((Connection)null);
+    }
+
+    public void saveDropItemFilterListToDB(Connection con) {
+        try {
+            if (con == null) {
+                con = DBConPool.getConnection();
+            }
+
+            ArrayList<Integer> ret = new ArrayList(this.dropItemFilterList);
+            PreparedStatement ps = con.prepareStatement("DELETE FROM snail_drop_item_filter WHERE character_id = ?");
+            ps.setInt(1, this.id);
+            ps.executeUpdate();
+            ps = con.prepareStatement("INSERT INTO snail_drop_item_filter (character_id, item_id) VALUES (?, ?)");
+            ps.setInt(1, this.id);
+            Iterator var4 = ret.iterator();
+
+            while(var4.hasNext()) {
+                int itemId = (Integer)var4.next();
+                ps.setInt(2, itemId);
+                ps.executeUpdate();
+            }
+
+            ps.close();
+            ret.clear();
+        } catch (SQLException var6) {
+            服务端输出信息.println_err("【错误】saveDropItemFilterListToDB 错误，原因：" + var6);
+            var6.printStackTrace();
+        }
+
+    }
+
+    public void deleteDropItemFilter(int itemId) {
+        if (this.dropItemFilterList.contains(itemId)) {
+            Iterator iter = this.dropItemFilterList.iterator();
+
+            while(iter.hasNext()) {
+                if (iter.next().equals(itemId)) {
+                    iter.remove();
+                }
+            }
+
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var4 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("DELETE FROM snail_drop_item_filter WHERE character_id = ? and item_id = ?");
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, itemId);
+                    ps.executeUpdate();
+                    ps.close();
+                } catch (Throwable var14) {
+                    var4 = var14;
+                    throw var14;
+                } finally {
+                    if (con != null) {
+                        if (var4 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var13) {
+                                var4.addSuppressed(var13);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var16) {
+                服务端输出信息.println_err("【错误】addDropItemFilter错误，原因：" + var16);
+                var16.printStackTrace();
+            }
+        }
+
+    }
+    public void addDropItemFilter(int itemId) {
+        if (!this.dropItemFilterList.contains(itemId)) {
+            this.dropItemFilterList.add(itemId);
+
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var3 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("INSERT INTO snail_drop_item_filter (character_id, item_id) VALUES (?, ?)");
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, itemId);
+                    ps.executeUpdate();
+                    ps.close();
+                } catch (Throwable var13) {
+                    var3 = var13;
+                    throw var13;
+                } finally {
+                    if (con != null) {
+                        if (var3 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var12) {
+                                var3.addSuppressed(var12);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var15) {
+                服务端输出信息.println_err("【错误】addDropItemFilter错误，原因：" + var15);
+                var15.printStackTrace();
+            }
+        }
+
+    }
+    public boolean isDropItemFilter(int itemId) {
+        return this.dropItemFilterList.contains(itemId);
+    }
+
     public static void saveNewCharToDB(MapleCharacter chr, final int type, final boolean db) {
         Connection con = null;
         PreparedStatement ps = null;
@@ -1477,7 +1929,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.execute();
             }
             ps.close();
-            con.commit();
         }
         catch (SQLException ex2) {}
         catch (DatabaseException e) {
@@ -1534,401 +1985,470 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
-    
-    public  int saveToDB(final boolean dc, final boolean fromcs) {
-        if (this.isClone() || saveData > 0) {
-            return -1;
-        }
-        this.saveData = 1;
+    public int saveToDB(boolean dc, boolean fromcs) {
+        return this.saveToDB(dc, fromcs, false);
+    }
+    public int saveToDB( boolean dc,  boolean fromcs, boolean newThread) {
+        if (newThread) {
+            cachedThreadPool.execute(new Runnable() {
+                public void run() {
+                    MapleCharacter.this.saveToDB(dc, fromcs, false);
+                }
+            });
+            return 1;
+        } else {
+            if (this.isClone() || saveData > 0) {
+                return -1;
+            }
+            if (!dc && this.isSaveingToDB()) {
+                return -2;
+            }
+            this.saveData = 1;
 
-        this.setBossLog1("打Boss数量",1,this.打Boss数量);
-        this.setBossLog1("打怪数量",1,this.打怪数量);
-        this.打怪数量 = 0;
-        this.打Boss数量 = 0;
-        int retValue = 1;
-        Connection con = null;
-        PreparedStatement ps = null;
-        PreparedStatement pse = null;
-        ResultSet rs = null;
-        try {
-            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
-            con.setTransactionIsolation(1);
-            con.setAutoCommit(false);
-            ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpApUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, monsterbookcover = ?, dojo_pts = ?, dojoRecord = ?, pets = ?, subcategory = ?, marriageId = ?, currentrep = ?, totalrep = ?, charmessage = ?, expression = ?, constellation = ?, blood = ?, month = ?, jf = ?, zdjf = ?, rwjf = ?, zs = ?, cz = ?, dy = ?, rmb = ?, yb =?,  playerPoints = ?, playerEnergy = ?, jf1 = ?, jf2 = ?, jf3 = ?, jf4 = ?, jf5 = ?, jf6 = ?, jf7 = ?, jf8 = ?, jf9 = ?, jf10 = ?, day = ?, beans = ?, prefix = ?, PGSXDJ = ?,gachexp = ?, name = ?, VipMedal = ?, saved_faces = ?, saved_hairs = ? WHERE id = ?");
-            ps.setInt(1, (int)this.level);
-            ps.setShort(2, this.fame);
-            ps.setShort(3, this.stats.getStr());
-            ps.setShort(4, this.stats.getDex());
-            ps.setShort(5, this.stats.getLuk());
-            ps.setShort(6, this.stats.getInt());
-            ps.setInt(7, this.exp);
-            ps.setShort(8, (short)((this.stats.getHp() < 1) ? 50 : this.stats.getHp() > this.stats.getMaxHp() ? this.stats.getMaxHp() : this.stats.getHp()));
-            ps.setShort(9, this.stats.getMp());
-            ps.setShort(10, this.stats.getMaxHp());
-            ps.setShort(11, this.stats.getMaxMp());
-            final StringBuilder sps = new StringBuilder();
-            for (int i = 0; i < this.remainingSp.length; ++i) {
-                sps.append(this.remainingSp[i]);
-                sps.append(",");
-            }
-            final String sp = sps.toString();
-            ps.setString(12, sp.substring(0, sp.length() - 1));
-            ps.setShort(13, this.remainingAp);
-            ps.setByte(14, this.gmLevel);
-            ps.setByte(15, this.skinColor);
-            ps.setByte(16, this.gender);
-            ps.setShort(17, this.job);
-            ps.setInt(18, this.hair);
-            ps.setInt(19, this.face);
-            if (!fromcs && this.map != null) {
-                if (this.map.getForcedReturnId() != 999999999) {
-                    if (this.map.getId() == 220080001) {
-                        ps.setInt(20, 910000000);
+            this.setBossLog1("打Boss数量", 1, this.打Boss数量);
+            this.setBossLog1("打怪数量", 1, this.打怪数量);
+//        this.setBossLog("打怪数量",1,this.打怪数量);
+//        this.setBossLog("打怪数量",1,this.打怪数量);
+//        this.setBossLog("打怪数量",1, (int) this.cunqianguan);
+//        BOSS记录累计.forEach((a,b)->{
+//            this.setBossLog(a+"",1,b);
+//        });
+//        BOSS记录.forEach((a,b)->{
+//            this.setBossLog(a+"",0,b);
+//        });
+//        BOSS记录累计.clear();
+//        BOSS记录.clear();
+            this.追加伤害 = (this.打Boss数量 > 0 ? (long) Math.floor(this.打Boss数量 / LtMS.ConfigValuesMap.get("打BOSS追加伤害")) : 0L) + (this.打怪数量 > 0 ? (long) Math.floor(this.打怪数量 / LtMS.ConfigValuesMap.get("打小怪追加")) : 0L);
+            this.打怪数量 = 0;
+            this.打Boss数量 = 0;
+            int retValue = 1;
+            Connection con = null;
+            PreparedStatement ps = null;
+            PreparedStatement pse = null;
+            ResultSet rs = null;
+            try {
+                con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+                con.setTransactionIsolation(1);
+                con.setAutoCommit(false);
+                ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpApUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, monsterbookcover = ?, dojo_pts = ?, dojoRecord = ?, pets = ?, subcategory = ?, marriageId = ?, currentrep = ?, totalrep = ?, charmessage = ?, expression = ?, constellation = ?, blood = ?, month = ?, jf = ?, zdjf = ?, rwjf = ?, zs = ?, cz = ?, dy = ?, rmb = ?, yb =?,  playerPoints = ?, playerEnergy = ?, jf1 = ?, jf2 = ?, jf3 = ?, jf4 = ?, jf5 = ?, jf6 = ?, jf7 = ?, jf8 = ?, jf9 = ?, jf10 = ?, day = ?, beans = ?, prefix = ?, PGSXDJ = ?,gachexp = ?, name = ?, VipMedal = ?, saved_faces = ?, saved_hairs = ? WHERE id = ?");
+                ps.setInt(1, (int) this.level);
+                ps.setShort(2, this.fame);
+                ps.setShort(3, this.stats.getStr());
+                ps.setShort(4, this.stats.getDex());
+                ps.setShort(5, this.stats.getLuk());
+                ps.setShort(6, this.stats.getInt());
+                ps.setInt(7, this.exp);
+                ps.setShort(8, (short) ((this.stats.getHp() < 1) ? 50 : this.stats.getHp() > this.stats.getMaxHp() ? this.stats.getMaxHp() : this.stats.getHp()));
+                ps.setShort(9, this.stats.getMp());
+                ps.setShort(10, this.stats.getMaxHp());
+                ps.setShort(11, this.stats.getMaxMp());
+                final StringBuilder sps = new StringBuilder();
+                for (int i = 0; i < this.remainingSp.length; ++i) {
+                    sps.append(this.remainingSp[i]);
+                    sps.append(",");
+                }
+                final String sp = sps.toString();
+                ps.setString(12, sp.substring(0, sp.length() - 1));
+                ps.setShort(13, this.remainingAp);
+                ps.setByte(14, this.gmLevel);
+                ps.setByte(15, this.skinColor);
+                ps.setByte(16, this.gender);
+                ps.setShort(17, this.job);
+                ps.setInt(18, this.hair);
+                ps.setInt(19, this.face);
+                if (!fromcs && this.map != null) {
+                    if (this.map.getForcedReturnId() != 999999999) {
+                        if (this.map.getId() == 220080001) {
+                            ps.setInt(20, 910000000);
+                        } else {
+                            ps.setInt(20, this.map.getForcedReturnId());
+                        }
+                    } else {
+                        ps.setInt(20, (this.stats.getHp() < 1) ? this.map.getReturnMapId() : this.map.getId());
                     }
-                    else {
-                        ps.setInt(20, this.map.getForcedReturnId());
+                } else {
+                    ps.setInt(20, this.mapid);
+                }
+                ps.setInt(21, this.meso);
+                ps.setShort(22, this.hpmpApUsed);
+                if (this.map == null) {
+                    ps.setByte(23, (byte) 0);
+                } else {
+                    final MaplePortal closest = this.map.findClosestSpawnpoint(this.getPosition());
+                    ps.setByte(23, (byte) ((closest != null) ? closest.getId() : 0));
+                }
+                ps.setInt(24, (this.party != null) ? this.party.getId() : -1);
+                ps.setShort(25, (short) this.buddylist.getCapacity());
+                ps.setInt(26, this.bookCover);
+                ps.setInt(27, this.dojo);
+                ps.setInt(28, (int) this.dojoRecord);
+                final StringBuilder petz = new StringBuilder();
+                int petLength = 0;
+                for (final MaplePet pet : this.pets) {
+                    pet.saveToDb();
+                    if (pet.getSummoned()) {
+                        petz.append((int) pet.getInventoryPosition());
+                        petz.append(",");
+                        ++petLength;
                     }
                 }
-                else {
-                    ps.setInt(20, (this.stats.getHp() < 1) ? this.map.getReturnMapId() : this.map.getId());
-                }
-            }
-            else {
-                ps.setInt(20, this.mapid);
-            }
-            ps.setInt(21, this.meso);
-            ps.setShort(22, this.hpmpApUsed);
-            if (this.map == null) {
-                ps.setByte(23, (byte)0);
-            }
-            else {
-                final MaplePortal closest = this.map.findClosestSpawnpoint(this.getPosition());
-                ps.setByte(23, (byte)((closest != null) ? closest.getId() : 0));
-            }
-            ps.setInt(24, (this.party != null) ? this.party.getId() : -1);
-            ps.setShort(25, (short)this.buddylist.getCapacity());
-            ps.setInt(26, this.bookCover);
-            ps.setInt(27, this.dojo);
-            ps.setInt(28, (int)this.dojoRecord);
-            final StringBuilder petz = new StringBuilder();
-            int petLength = 0;
-            for (final MaplePet pet : this.pets) {
-                pet.saveToDb();
-                if (pet.getSummoned()) {
-                    petz.append((int)pet.getInventoryPosition());
-                    petz.append(",");
+                while (petLength < 3) {
+                    petz.append("-1,");
                     ++petLength;
                 }
-            }
-            while (petLength < 3) {
-                petz.append("-1,");
-                ++petLength;
-            }
-            final String petstring = petz.toString();
-            ps.setString(29, petstring.substring(0, petstring.length() - 1));
-            ps.setByte(30, this.subcategory);
-            ps.setInt(31, this.marriageId);
-            ps.setInt(32, this.currentrep);
-            ps.setInt(33, this.totalrep);
-            ps.setString(34, this.charmessage);
-            ps.setInt(35, this.expression);
-            ps.setInt(36, this.constellation);
-            ps.setInt(37, this.blood);
-            ps.setInt(38, this.month);
-            ps.setInt(39, this.jf);
-            ps.setInt(40, this.zdjf);
-            ps.setInt(41, this.rwjf);
-            ps.setInt(42, this.zs);
-            ps.setInt(43, this.cz);
-            ps.setInt(44, this.dy);
-            ps.setInt(45, this.rmb);
-            ps.setInt(46, this.yb);
-            ps.setInt(47, this.playerPoints);
-            ps.setInt(48, this.playerEnergy);
-            ps.setInt(49, this.jf1);
-            ps.setInt(50, this.jf2);
-            ps.setInt(51, this.jf3);
-            ps.setInt(52, this.jf4);
-            ps.setInt(53, this.jf5);
-            ps.setInt(54, this.jf6);
-            ps.setInt(55, this.jf7);
-            ps.setInt(56, this.jf8);
-            ps.setInt(57, this.jf9);
-            ps.setInt(58, this.jf10);
-            ps.setInt(59, this.day);
-            ps.setInt(60, this.beans);
-            ps.setString(61, this.prefix);
-            ps.setInt(62, this.PGSXDJ);
-            ps.setInt(63, this.gachexp);
-            ps.setString(64, this.name);
-            ps.setInt(65, (int)(this.Vip_Medal ? 1 : 0));
-            final StringBuilder faces = new StringBuilder();
-            for (int j = 0; j < this.savedFaces.length; ++j) {
-                faces.append(this.savedFaces[j]);
-                faces.append(",");
-            }
-            final String saved_faces = faces.toString();
-            ps.setString(66, saved_faces.substring(0, saved_faces.length() - 1));
-            final StringBuilder hairs = new StringBuilder();
-            for (int k = 0; k < this.savedHairs.length; ++k) {
-                hairs.append(this.savedHairs[k]);
-                hairs.append(",");
-            }
-            final String saved_hairs = hairs.toString();
-            ps.setString(67, saved_hairs.substring(0, saved_hairs.length() - 1));
-            ps.setInt(68, this.id);
-            if (ps.executeUpdate() < 1) {
-                ps.close();
-                throw new DatabaseException("Character not in database (" + this.id + ")");
-            }
-            ps.close();
-            this.deleteWhereCharacterId(con, "DELETE FROM skillmacros WHERE characterid = ?");
-            //System.out.println("移除技能宏");
-            for (int l = 0; l < 5; ++l) {
-                //System.out.println("新增技能宏");
-                final SkillMacro macro = this.skillMacros[l];
-                if (macro != null) {
-                    ps = con.prepareStatement("INSERT INTO skillmacros (characterid, skill1, skill2, skill3, name, shout, position) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    ps.setInt(1, this.id);
-                    ps.setInt(2, macro.getSkill1());
-                    ps.setInt(3, macro.getSkill2());
-                    ps.setInt(4, macro.getSkill3());
-                    ps.setString(5, macro.getName());
-                    ps.setInt(6, macro.getShout());
-                    ps.setInt(7, l);
-                    ps.execute();
-                    ps.close();
+                final String petstring = petz.toString();
+                ps.setString(29, petstring.substring(0, petstring.length() - 1));
+                ps.setByte(30, this.subcategory);
+                ps.setInt(31, this.marriageId);
+                ps.setInt(32, this.currentrep);
+                ps.setInt(33, this.totalrep);
+                ps.setString(34, this.charmessage);
+                ps.setInt(35, this.expression);
+                ps.setInt(36, this.constellation);
+                ps.setInt(37, this.blood);
+                ps.setInt(38, this.month);
+                ps.setInt(39, this.jf);
+                ps.setInt(40, this.zdjf);
+                ps.setInt(41, this.rwjf);
+                ps.setInt(42, this.zs);
+                ps.setInt(43, this.cz);
+                ps.setInt(44, this.dy);
+                ps.setInt(45, this.rmb);
+                ps.setInt(46, this.yb);
+                ps.setInt(47, this.playerPoints);
+                ps.setInt(48, this.playerEnergy);
+                ps.setInt(49, this.jf1);
+                ps.setInt(50, this.jf2);
+                ps.setInt(51, this.jf3);
+                ps.setInt(52, this.jf4);
+                ps.setInt(53, this.jf5);
+                ps.setInt(54, this.jf6);
+                ps.setInt(55, this.jf7);
+                ps.setInt(56, this.jf8);
+                ps.setInt(57, this.jf9);
+                ps.setInt(58, this.jf10);
+                ps.setInt(59, this.day);
+                ps.setInt(60, this.beans);
+                ps.setString(61, this.prefix);
+                ps.setInt(62, this.PGSXDJ);
+                ps.setInt(63, this.gachexp);
+                ps.setString(64, this.name);
+                ps.setInt(65, (int) (this.Vip_Medal ? 1 : 0));
+                final StringBuilder faces = new StringBuilder();
+                for (int j = 0; j < this.savedFaces.length; ++j) {
+                    faces.append(this.savedFaces[j]);
+                    faces.append(",");
                 }
-            }
-            this.deleteWhereCharacterId(con, "DELETE FROM inventoryslot WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setInt(1, this.id);
-            ps.setByte(2, this.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
-            ps.setByte(3, this.getInventory(MapleInventoryType.USE).getSlotLimit());
-            ps.setByte(4, this.getInventory(MapleInventoryType.SETUP).getSlotLimit());
-            ps.setByte(5, this.getInventory(MapleInventoryType.ETC).getSlotLimit());
-            ps.setByte(6, this.getInventory(MapleInventoryType.CASH).getSlotLimit());
-            ps.execute();
-            ps.close();
-            //保存装备数据
-            this.saveInventory(con);
-            this.deleteWhereCharacterId(con, "DELETE FROM questinfo WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO questinfo (`characterid`, `quest`, `customData`) VALUES (?, ?, ?)");
-            ps.setInt(1, this.id);
-            for (final Entry<Integer, String> q : this.questinfo.entrySet()) {
-                ps.setInt(2, (int)Integer.valueOf(q.getKey()));
-                ps.setString(3, (String)q.getValue());
-                ps.execute();
-            }
-            ps.close();
-            this.deleteWhereCharacterId(con, "DELETE FROM queststatus WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `forfeited`, `customData`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", 1);
-            pse = con.prepareStatement("INSERT INTO queststatusmobs VALUES (DEFAULT, ?, ?, ?)", 1);
-            ps.setInt(1, this.id);
-            for (final MapleQuestStatus q2 : this.quests.values()) {
-                ps.setInt(2, q2.getQuest().getId());
-                ps.setInt(3, (int)q2.getStatus());
-                ps.setInt(4, (int)(q2.getCompletionTime() / 1000L));
-                ps.setInt(5, q2.getForfeited());
-                ps.setString(6, q2.getCustomData());
-                ps.executeUpdate();
-                rs = ps.getGeneratedKeys();
-                rs.next();
-                if (q2.hasMobKills()) {
-                    final Iterator<Integer> iterator4 = q2.getMobKills().keySet().iterator();
-                    while (iterator4.hasNext()) {
-                        final int mob = (int)Integer.valueOf(iterator4.next());
-                        pse.setLong(1, rs.getLong(1));
-                        pse.setInt(2, mob);
-                        pse.setInt(3, q2.getMobKills(mob));
-                        pse.executeUpdate();
+                final String saved_faces = faces.toString();
+                ps.setString(66, saved_faces.substring(0, saved_faces.length() - 1));
+                final StringBuilder hairs = new StringBuilder();
+                for (int k = 0; k < this.savedHairs.length; ++k) {
+                    hairs.append(this.savedHairs[k]);
+                    hairs.append(",");
+                }
+                final String saved_hairs = hairs.toString();
+                ps.setString(67, saved_hairs.substring(0, saved_hairs.length() - 1));
+                ps.setInt(68, this.id);
+                if (ps.executeUpdate() < 1) {
+                    ps.close();
+                    throw new DatabaseException("Character not in database (" + this.id + ")");
+                }
+                ps.close();
+                this.deleteWhereCharacterId(con, "DELETE FROM skillmacros WHERE characterid = ?");
+                //System.out.println("移除技能宏");
+                for (int l = 0; l < 5; ++l) {
+                    //System.out.println("新增技能宏");
+                    final SkillMacro macro = this.skillMacros[l];
+                    if (macro != null) {
+                        ps = con.prepareStatement("INSERT INTO skillmacros (characterid, skill1, skill2, skill3, name, shout, position) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                        ps.setInt(1, this.id);
+                        ps.setInt(2, macro.getSkill1());
+                        ps.setInt(3, macro.getSkill2());
+                        ps.setInt(4, macro.getSkill3());
+                        ps.setString(5, macro.getName());
+                        ps.setInt(6, macro.getShout());
+                        ps.setInt(7, l);
+                        ps.execute();
+                        ps.close();
                     }
                 }
-                rs.close();
-            }
-            ps.close();
-            pse.close();
-            this.deleteWhereCharacterId(con, "DELETE FROM skills WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO skills (characterid, skillid, skilllevel, masterlevel, expiration) VALUES (?, ?, ?, ?, ?)");
-            ps.setInt(1, this.id);
-            for (final Entry<ISkill, SkillEntry> skill : this.skills.entrySet()) {
-                if (GameConstants.isApplicableSkill(((ISkill)skill.getKey()).getId())) {
-                    ps.setInt(2, ((ISkill)skill.getKey()).getId());
-                    ps.setByte(3, ((SkillEntry)skill.getValue()).skillevel);
-                    ps.setByte(4, ((SkillEntry)skill.getValue()).masterlevel);
-                    ps.setLong(5, ((SkillEntry)skill.getValue()).expiration);
-                    ps.execute();
-                }
-            }
-            ps.close();
-            //技能冷却
-            final List<MapleCoolDownValueHolder> cd = this.getCooldowns();
-            if (dc && cd.size() > 0) {
-                ps = con.prepareStatement("INSERT INTO skills_cooldowns (charid, SkillID, StartTime, length) VALUES (?, ?, ?, ?)");
-                ps.setInt(1, this.getId());
-                for (final MapleCoolDownValueHolder cooling : cd) {
-                    ps.setInt(2, cooling.skillId);
-                    ps.setLong(3, cooling.startTime);
-                    ps.setLong(4, cooling.length);
-                    ps.execute();
-                }
-                ps.close();
-            }
-            this.deleteWhereCharacterId(con, "DELETE FROM savedlocations WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO savedlocations (characterid, `locationtype`, `map`) VALUES (?, ?, ?)");
-            ps.setInt(1, this.id);
-            for (final SavedLocationType savedLocationType : SavedLocationType.values()) {
-                if (this.savedLocations[savedLocationType.getValue()] != -1) {
-                    ps.setInt(2, savedLocationType.getValue());
-                    ps.setInt(3, this.savedLocations[savedLocationType.getValue()]);
-                    ps.execute();
-                }
-            }
-            ps.close();
-            ps = con.prepareStatement("DELETE FROM achievements WHERE accountid = ?");
-            ps.setInt(1, this.accountid);
-            ps.executeUpdate();
-            ps.close();
-            ps = con.prepareStatement("INSERT INTO achievements(charid, achievementid, accountid) VALUES(?, ?, ?)");
-            for (final Integer achid : this.finishedAchievements) {
+                this.deleteWhereCharacterId(con, "DELETE FROM inventoryslot WHERE characterid = ?");
+                ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
                 ps.setInt(1, this.id);
-                ps.setInt(2, (int)achid);
-                ps.setInt(3, this.accountid);
-                ps.executeUpdate();
-            }
-            ps.close();
-            this.deleteWhereCharacterId(con, "DELETE FROM buddies WHERE characterid = ?");
-            ps = con.prepareStatement("INSERT INTO buddies (characterid, `buddyid`, `pending`) VALUES (?, ?, ?)");
-            ps.setInt(1, this.id);
-            for (final BuddyEntry entry : this.buddylist.getBuddies()) {
-                if (entry != null) {
-                    ps.setInt(2, entry.getCharacterId());
-                    ps.setInt(3, (int)(entry.isVisible() ? 0 : 1));
-                    ps.execute();
-                }
-            }
-            ps.close();
-            ps = con.prepareStatement("UPDATE accounts SET `mPoints` = ?, `vpoints` = ?, `VIP` = ? WHERE id = ?");
-            ps.setInt(1, this.maplepoints);
-            ps.setInt(2, this.vpoints);
-            ps.setInt(3, this.vip);
-            ps.setInt(4, this.client.getAccID());
-            ps.execute();
-            ps.close();
-            if (this.storage != null) {
-                this.storage.saveToDB(con);
-            }
-            if (this.cs != null) {
-                this.cs.save(con);
-            }
-            PlayerNPC.updateByCharId(this, con);
-            this.keylayout.saveKeys(this.id, con);
-            this.mount.saveMount(this.id, con);
-            this.monsterbook.saveCards(this.id, con);
-            this.deleteWhereCharacterId(con, "DELETE FROM wishlist WHERE characterid = ?");
-            for (int m = 0; m < this.getWishlistSize(); ++m) {
-                ps = con.prepareStatement("INSERT INTO wishlist(characterid, sn) VALUES(?, ?) ");
-                ps.setInt(1, this.getId());
-                ps.setInt(2, this.wishlist[m]);
+                ps.setByte(2, this.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
+                ps.setByte(3, this.getInventory(MapleInventoryType.USE).getSlotLimit());
+                ps.setByte(4, this.getInventory(MapleInventoryType.SETUP).getSlotLimit());
+                ps.setByte(5, this.getInventory(MapleInventoryType.ETC).getSlotLimit());
+                ps.setByte(6, this.getInventory(MapleInventoryType.CASH).getSlotLimit());
                 ps.execute();
                 ps.close();
-            }
-            this.deleteWhereCharacterId(con, "DELETE FROM trocklocations WHERE characterid = ?");
-            for (int m = 0; m < this.rocks.length; ++m) {
-                if (this.rocks[m] != 999999999) {
-                    ps = con.prepareStatement("INSERT INTO trocklocations(characterid, mapid) VALUES(?, ?) ");
+                //保存装备数据
+                this.saveInventory(con);
+                this.deleteWhereCharacterId(con, "DELETE FROM questinfo WHERE characterid = ?");
+                ps = con.prepareStatement("INSERT INTO questinfo (`characterid`, `quest`, `customData`) VALUES (?, ?, ?)");
+                ps.setInt(1, this.id);
+                for (final Entry<Integer, String> q : this.questinfo.entrySet()) {
+                    ps.setInt(2, (int) Integer.valueOf(q.getKey()));
+                    ps.setString(3, (String) q.getValue());
+                    ps.execute();
+                }
+                ps.close();
+                this.deleteWhereCharacterId(con, "DELETE FROM queststatus WHERE characterid = ?");
+                ps = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `forfeited`, `customData`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", 1);
+                pse = con.prepareStatement("INSERT INTO queststatusmobs VALUES (DEFAULT, ?, ?, ?)", 1);
+                ps.setInt(1, this.id);
+                for (final MapleQuestStatus q2 : this.quests.values()) {
+                    ps.setInt(2, q2.getQuest().getId());
+                    ps.setInt(3, (int) q2.getStatus());
+                    ps.setInt(4, (int) (q2.getCompletionTime() / 1000L));
+                    ps.setInt(5, q2.getForfeited());
+                    ps.setString(6, q2.getCustomData());
+                    ps.executeUpdate();
+                    rs = ps.getGeneratedKeys();
+                    rs.next();
+                    if (q2.hasMobKills()) {
+                        final Iterator<Integer> iterator4 = q2.getMobKills().keySet().iterator();
+                        while (iterator4.hasNext()) {
+                            final int mob = (int) Integer.valueOf(iterator4.next());
+                            pse.setLong(1, rs.getLong(1));
+                            pse.setInt(2, mob);
+                            pse.setInt(3, q2.getMobKills(mob));
+                            pse.executeUpdate();
+                        }
+                    }
+                    rs.close();
+                }
+                ps.close();
+                pse.close();
+                this.deleteWhereCharacterId(con, "DELETE FROM skills WHERE characterid = ?");
+                ps = con.prepareStatement("INSERT INTO skills (characterid, skillid, skilllevel, masterlevel, expiration) VALUES (?, ?, ?, ?, ?)");
+                ps.setInt(1, this.id);
+                for (final Entry<ISkill, SkillEntry> skill : this.skills.entrySet()) {
+                    if (GameConstants.isApplicableSkill(((ISkill) skill.getKey()).getId())) {
+                        ps.setInt(2, ((ISkill) skill.getKey()).getId());
+                        ps.setByte(3, ((SkillEntry) skill.getValue()).skillevel);
+                        ps.setByte(4, ((SkillEntry) skill.getValue()).masterlevel);
+                        ps.setLong(5, ((SkillEntry) skill.getValue()).expiration);
+                        ps.execute();
+                    }
+                }
+                ps.close();
+                //技能冷却
+                final List<MapleCoolDownValueHolder> cd = this.getCooldowns();
+                if (dc && cd.size() > 0) {
+                    ps = con.prepareStatement("INSERT INTO skills_cooldowns (charid, SkillID, StartTime, length) VALUES (?, ?, ?, ?)");
                     ps.setInt(1, this.getId());
-                    ps.setInt(2, this.rocks[m]);
+                    for (final MapleCoolDownValueHolder cooling : cd) {
+                        ps.setInt(2, cooling.skillId);
+                        ps.setLong(3, cooling.startTime);
+                        ps.setLong(4, cooling.length);
+                        ps.execute();
+                    }
+                    ps.close();
+                }
+                this.deleteWhereCharacterId(con, "DELETE FROM savedlocations WHERE characterid = ?");
+                ps = con.prepareStatement("INSERT INTO savedlocations (characterid, `locationtype`, `map`) VALUES (?, ?, ?)");
+                ps.setInt(1, this.id);
+                for (final SavedLocationType savedLocationType : SavedLocationType.values()) {
+                    if (this.savedLocations[savedLocationType.getValue()] != -1) {
+                        ps.setInt(2, savedLocationType.getValue());
+                        ps.setInt(3, this.savedLocations[savedLocationType.getValue()]);
+                        ps.execute();
+                    }
+                }
+                ps.close();
+                ps = con.prepareStatement("DELETE FROM achievements WHERE accountid = ?");
+                ps.setInt(1, this.accountid);
+                ps.executeUpdate();
+                ps.close();
+                ps = con.prepareStatement("INSERT INTO achievements(charid, achievementid, accountid) VALUES(?, ?, ?)");
+                for (final Integer achid : this.finishedAchievements) {
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, (int) achid);
+                    ps.setInt(3, this.accountid);
+                    ps.executeUpdate();
+                }
+                ps.close();
+                this.deleteWhereCharacterId(con, "DELETE FROM buddies WHERE characterid = ?");
+                ps = con.prepareStatement("INSERT INTO buddies (characterid, `buddyid`, `pending`) VALUES (?, ?, ?)");
+                ps.setInt(1, this.id);
+                for (final BuddyEntry entry : this.buddylist.getBuddies()) {
+                    if (entry != null) {
+                        ps.setInt(2, entry.getCharacterId());
+                        ps.setInt(3, (int) (entry.isVisible() ? 0 : 1));
+                        ps.execute();
+                    }
+                }
+                ps.close();
+                ps = con.prepareStatement("UPDATE accounts SET `mPoints` = ?, `vpoints` = ?, `VIP` = ? WHERE id = ?");
+                ps.setInt(1, this.maplepoints);
+                ps.setInt(2, this.vpoints);
+                ps.setInt(3, this.vip);
+                ps.setInt(4, this.client.getAccID());
+                ps.execute();
+                ps.close();
+                if (this.storage != null) {
+                    this.storage.saveToDB(con);
+                }
+                if (this.cs != null) {
+                    this.cs.save(con);
+                }
+                PlayerNPC.updateByCharId(this, con);
+                this.keylayout.saveKeys(this.id, con);
+                this.mount.saveMount(this.id, con);
+                this.monsterbook.saveCards(this.id, con);
+                this.deleteWhereCharacterId(con, "DELETE FROM wishlist WHERE characterid = ?");
+                for (int m = 0; m < this.getWishlistSize(); ++m) {
+                    ps = con.prepareStatement("INSERT INTO wishlist(characterid, sn) VALUES(?, ?) ");
+                    ps.setInt(1, this.getId());
+                    ps.setInt(2, this.wishlist[m]);
                     ps.execute();
                     ps.close();
                 }
-            }
-            this.deleteWhereCharacterId(con, "DELETE FROM regrocklocations WHERE characterid = ?");
-            for (int m = 0; m < this.regrocks.length; ++m) {
-                if (this.regrocks[m] != 999999999) {
-                    ps = con.prepareStatement("INSERT INTO regrocklocations(characterid, mapid) VALUES(?, ?) ");
-                    ps.setInt(1, this.getId());
-                    ps.setInt(2, this.regrocks[m]);
-                    ps.execute();
-                    ps.close();
+                this.deleteWhereCharacterId(con, "DELETE FROM trocklocations WHERE characterid = ?");
+                for (int m = 0; m < this.rocks.length; ++m) {
+                    if (this.rocks[m] != 999999999) {
+                        ps = con.prepareStatement("INSERT INTO trocklocations(characterid, mapid) VALUES(?, ?) ");
+                        ps.setInt(1, this.getId());
+                        ps.setInt(2, this.rocks[m]);
+                        ps.execute();
+                        ps.close();
+                    }
                 }
-            }
+                this.deleteWhereCharacterId(con, "DELETE FROM regrocklocations WHERE characterid = ?");
+                for (int m = 0; m < this.regrocks.length; ++m) {
+                    if (this.regrocks[m] != 999999999) {
+                        ps = con.prepareStatement("INSERT INTO regrocklocations(characterid, mapid) VALUES(?, ?) ");
+                        ps.setInt(1, this.getId());
+                        ps.setInt(2, this.regrocks[m]);
+                        ps.execute();
+                        ps.close();
+                    }
+                }
+                EquipFieldEnhancement.getInstance().saveChrToDB(this.id, (Connection) null);
+                this.skillSkin.saveChrSkill();
+                this.saveMountListToDB(con);
+                //this.saveMonsterKillQuestToDB(con);
 
-            con.commit();
-        }
-
-
-
-        catch (UnsupportedOperationException ex2) {}
-        catch (SQLException ex3) {}
-        catch (DatabaseException e) {
-            retValue = 0;
-            FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
-            FilePrinter.printError("MapleCharacter.txt", (Throwable)e, "[角色存檔]儲存角色失敗");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable)e);
-            try {
-                con.rollback();
-            }
-            catch (SQLException ex) {
-                FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
-                FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable)ex);
-                FilePrinter.printError("MapleCharacter.txt", (Throwable)e, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
-            }
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-                if (pse != null) {
-                    pse.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-                con.setAutoCommit(true);
-                con.setTransactionIsolation(4);
-                if (con != null) {
-                    con.close();
-                }
-            }
-            catch (SQLException es) {
+                con.commit();
+            } catch (UnsupportedOperationException ex2) {
+            } catch (SQLException ex3) {
+            } catch (DatabaseException e) {
                 retValue = 0;
                 FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
-                FilePrinter.printError("MapleCharacter.txt", (Throwable)es, "[角色存檔] 錯誤自動返回儲存功能");
-                FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable)es);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)es);
+                FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔]儲存角色失敗");
+                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) e);
+                FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) e);
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
+                    FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) ex);
+                    FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存資料庫");
+                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) ex);
+                }
+                try {
+                    if (ps != null) {
+                        ps.close();
+                    }
+                    if (pse != null) {
+                        pse.close();
+                    }
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    con.setAutoCommit(true);
+                    con.setTransactionIsolation(4);
+                    if (con != null) {
+                        con.close();
+                    }
+                } catch (SQLException es) {
+                    retValue = 0;
+                    FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
+                    FilePrinter.printError("MapleCharacter.txt", (Throwable) es, "[角色存檔] 錯誤自動返回儲存功能");
+                    FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) es);
+                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) es);
+                }
+            } finally {
+                try {
+                    if (ps != null) {
+                        ps.close();
+                    }
+                    if (pse != null) {
+                        pse.close();
+                    }
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    con.setAutoCommit(true);
+                    con.setTransactionIsolation(4);
+                    if (con != null) {
+                        con.close();
+                    }
+                } catch (SQLException es2) {
+                    retValue = 0;
+                    FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
+                    FilePrinter.printError("MapleCharacter.txt", (Throwable) es2, "[角色存檔] 錯誤自動返回儲存功能");
+                    FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) es2);
+                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) es2);
+                }
+                this.saveData = 0;
             }
+            return retValue;
         }
-        finally {
-            try {
-                if (ps != null) {
-                    ps.close();
-                }
-                if (pse != null) {
-                    pse.close();
-                }
-                if (rs != null) {
-                    rs.close();
-                }
-                con.setAutoCommit(true);
-                con.setTransactionIsolation(4);
-                if (con != null) {
-                    con.close();
-                }
-            }
-            catch (SQLException es2) {
-                retValue = 0;
-                FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
-                FilePrinter.printError("MapleCharacter.txt", (Throwable)es2, "[角色存檔] 錯誤自動返回儲存功能");
-                FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable)es2);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)es2);
-            }
-            this.saveData = 0;
-        }
-        return retValue;
     }
-    
+    public SkillSkin getSkillSkin() {
+        return this.skillSkin;
+    }
+
+    public boolean sendSkillSkin(int skillId) {
+        long nowTime = System.currentTimeMillis();
+        if (nowTime - this.lastSkillSkinTime < 200L) {
+            return false;
+        } else {
+            this.lastSkillSkinTime = nowTime;
+            if (this.skillSkin.getChrSkillType(skillId) > 0) {
+                Pair<Integer, Integer> effSkill = this.skillSkin.getChrSkillEff(skillId);
+                if (effSkill != null) {
+                    this.sendSkillEffect((Integer)effSkill.left, (Integer)effSkill.right);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (skillId == 1211002) {
+                Iterator var4 = this.getAllBuffs().iterator();
+
+                while(var4.hasNext()) {
+                    PlayerBuffValueHolder buff = (PlayerBuffValueHolder)var4.next();
+                    switch (buff.effect.getSourceId()) {
+                        case 1211004:
+                        case 1211006:
+                        case 1211008:
+                        case 1221004:
+                            Pair<Integer, Integer> effSkill = this.skillSkin.getChrSkillEffS(buff.effect.getSourceId());
+                            if (effSkill != null) {
+                                this.sendSkillEffect((Integer)effSkill.left, (Integer)effSkill.right);
+                                return true;
+                            }
+
+                            return false;
+                    }
+                }
+
+                return false;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public void setSkillSkinAll(int skillType) {
+        this.skillSkin.setChrSkillTypeAll(skillType);
+    }
+
+    public boolean setSkillSkin(int skillId, int skillType) {
+        return this.skillSkin.setChrSkillType(skillId, skillType);
+    }
     private void deleteWhereCharacterId(Connection con, final String sql) throws SQLException {
         deleteWhereCharacterId(con, sql, this.id);
     }
@@ -2081,9 +2601,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public boolean isBuffedValue(final int skillid) {
         final LinkedList<MapleBuffStatValueHolder> allBuffs = new LinkedList<MapleBuffStatValueHolder>((Collection<? extends MapleBuffStatValueHolder>)this.effects.values());
         for (final MapleBuffStatValueHolder mbsvh : allBuffs) {
-            if (mbsvh.effect.getSourceId() == skillid) {
-                return true;
+            try {
+                if (mbsvh.effect.getSourceId() == skillid) {
+                    return true;
+                }
             }
+            catch (Exception e) {}
         }
         return false;
     }
@@ -2144,7 +2667,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         return possesed;
     }
-    
+    public int itemQuantity(final int itemid) {
+        return this.inventory[GameConstants.getInventoryType(itemid).ordinal()].countById(itemid);
+    }
+    public int itemQuantityF(final int itemid) {
+        int possesed = this.inventory[GameConstants.getInventoryType(itemid).ordinal()].countById(itemid);
+        possesed += this.inventory[MapleInventoryType.EQUIPPED.ordinal()].countById(itemid);
+        return possesed;
+    }
     public void setBuffedValue(final MapleBuffStat effect, final int value) {
         final MapleBuffStatValueHolder mbsvh = (MapleBuffStatValueHolder)this.effects.get((Object)effect);
         if (mbsvh == null) {
@@ -2443,13 +2973,24 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return clonez;
     }
     
-    public void cancelEffect(final MapleStatEffect effect, final boolean overwrite, final long startTime) {
+    public void cancelEffect( MapleStatEffect effect,  boolean overwrite,  long startTime) {
         if (this != null && effect != null) {
             this.cancelEffect(effect, overwrite, startTime, effect.getStatups());
         }
     }
     
-    public void cancelEffect(final MapleStatEffect effect, final boolean overwrite, final long startTime, final List<Pair<MapleBuffStat, Integer>> statups) {
+    //取消buff
+    public void cancelEffect( MapleStatEffect effect,  boolean overwrite,  long startTime,  List<Pair<MapleBuffStat, Integer>> statups) {
+        if (this.noCancelBuffMap.containsKey(effect.getSourceId())) {
+            Pair<Long, Integer> timePair = (Pair)this.noCancelBuffMap.get(effect.getSourceId());
+            long nowTime = Calendar.getInstance().getTimeInMillis();
+            if (nowTime < (Long)timePair.left + (long)(Integer)timePair.right) {
+                this.dropMessage(5, "该BUFF不能取消！");
+                return;
+            }
+
+            this.noCancelBuffMap.remove(effect.getSourceId());
+        }
         List<MapleBuffStat> buffstats;
         if (!overwrite) {
             buffstats = this.getBuffStats(effect, startTime);
@@ -2508,6 +3049,53 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.getDebugMessage()) {
             this.dropMessage("取消技能 - " + effect.getName() + "(" + effect.getSourceId() + ")");
         }
+
+        if (effect.getSourceId() == 3020032) {
+            boolean find = false;
+            Iterator var23 = ChannelServer.getAllInstances().iterator();
+
+            while(var23.hasNext()) {
+                ChannelServer cs = (ChannelServer)var23.next();
+                Iterator var25 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+
+                while(var25.hasNext()) {
+                    MapleMap map = (MapleMap)var25.next();
+                    if (map != null) {
+                        Iterator var14 = map.getAllMonstersThreadsafe().iterator();
+
+                        label112:
+                        while(true) {
+                            MapleMonster monster;
+                            do {
+                                do {
+                                    if (!var14.hasNext()) {
+                                        break label112;
+                                    }
+
+                                    monster = (MapleMonster)var14.next();
+                                } while(monster == null);
+                            } while(monster.getId() != 9900000 && monster.getId() != 9900001 && monster.getId() != 9900002);
+
+                            if (monster.getOwner() == this.getId()) {
+                                map.killMonster(monster, true);
+                                map.setStoneLevel(0);
+                                map.setHaveStone(false);
+                                find = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (find) {
+                        break;
+                    }
+                }
+
+                if (find) {
+                    break;
+                }
+            }
+        }
     }
     
     public void cancelBuffStats(final MapleBuffStat... stat) {
@@ -2521,8 +3109,56 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.cancelEffect(((MapleBuffStatValueHolder)this.effects.get((Object)stat)).effect, false, -1L);
         }
     }
-    
-    private void cancelPlayerBuffs(final List<MapleBuffStat> buffstats) {
+    private void recoverPotentialBuff(int itemId, int duration, boolean isCanCancel, List<MapleBuffStat> buffstats) {
+        List<Pair<MapleBuffStat, Integer>> statups = new ArrayList();
+        Iterator var6 = buffstats.iterator();
+
+        while(var6.hasNext()) {
+            MapleBuffStat stat = (MapleBuffStat)var6.next();
+            if (stat != null) {
+                Pair statup;
+                if (stat.name().equals("WATK")) {
+                    statup = new Pair(stat, this.getStat().pWatk);
+                    statups.add(statup);
+                } else if (stat.name().equals("MATK")) {
+                    statup = new Pair(stat, this.getStat().pMatk);
+                    statups.add(statup);
+                } else if (stat.name().equals("WDEF")) {
+                    statup = new Pair(stat, this.getStat().pWdef);
+                    statups.add(statup);
+                } else if (stat.name().equals("MDEF")) {
+                    statup = new Pair(stat, this.getStat().pMdef);
+                    statups.add(statup);
+                } else if (stat.name().equals("ACC")) {
+                    statup = new Pair(stat, this.getStat().pAcc);
+                    statups.add(statup);
+                } else if (stat.name().equals("AVOID")) {
+                    statup = new Pair(stat, this.getStat().pAvoid);
+                    statups.add(statup);
+                } else if (stat.name().equals("SPEED")) {
+                    statup = new Pair(stat, this.getStat().pSpeed);
+                    statups.add(statup);
+                } else if (stat.name().equals("JUMP")) {
+                    statup = new Pair(stat, this.getStat().pJump);
+                    statups.add(statup);
+                } else if (stat.name().equals("MAXHP")) {
+                    statup = new Pair(stat, this.getStat().pMaxHpPercent);
+                    statups.add(statup);
+                } else if (stat.name().equals("MAXMP")) {
+                    statup = new Pair(stat, this.getStat().pMaxMpPercent);
+                    statups.add(statup);
+                }
+            }
+        }
+
+        MapleStatEffect effect = MapleItemInformationProvider.getInstance().getItemEffect_s(itemId, false);
+        if (effect != null) {
+            this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, duration, statups, effect));
+        }
+
+    }
+
+    private void cancelPlayerBuffs( List<MapleBuffStat> buffstats) {
         final MapleBuffStatValueHolder mbsvh = (MapleBuffStatValueHolder)this.effects.remove((Object)buffstats);
         final boolean write = this.client.getChannelServer().getPlayerStorage().getCharacterById(this.getId()) != null;
         if (buffstats.contains((Object)MapleBuffStat.HOMING_BEACON)) {
@@ -2536,6 +3172,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             this.client.sendPacket(MaplePacketCreator.cancelBuff(buffstats));
             this.map.broadcastMessage(this, MaplePacketCreator.cancelForeignBuff(this.getId(), buffstats), false);
+            if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+                this.recoverPotentialBuff(Potential.buffItemId, Potential.duration, true, buffstats);
+            }
         }
     }
     
@@ -2614,7 +3253,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
-    
+    public boolean is超人变身() {
+        final LinkedList<MapleBuffStatValueHolder> allBuffs = new LinkedList<MapleBuffStatValueHolder>((Collection<? extends MapleBuffStatValueHolder>)this.effects.values());
+        for (final MapleBuffStatValueHolder mbsvh : allBuffs) {
+            switch (mbsvh.effect.getSourceId()) {
+                case 5111005:
+                case 5121003:
+                case 13111005:
+                case 15111002: {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     public int getMorphState() {
         final LinkedList<MapleBuffStatValueHolder> allBuffs = new LinkedList<MapleBuffStatValueHolder>((Collection<? extends MapleBuffStatValueHolder>)this.effects.values());
         for (final MapleBuffStatValueHolder mbsvh : allBuffs) {
@@ -3074,7 +3726,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void changeMapPortal(final MapleMap to, final MaplePortal pto) {
         this.changeMapInternal(to, pto.getPosition(), MaplePacketCreator.getWarpToMap(to, pto.getId(), this), pto);
     }
-    
+
+
+    //切换地图
     private void changeMapInternal(final MapleMap to, final Point pos, final byte[] warpPacket, final MaplePortal pto) {
         if (to == null) {
             return;
@@ -3303,6 +3957,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.baseSkills();
         }
         catch (Exception e) {
+            e.printStackTrace();
             FilePrinter.printError("MapleCharacter.txt", (Throwable)e);
         }
     }
@@ -4701,7 +5356,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
-    
+    public EquipFieldEnhancement.EquipField getEquipField(int position) {
+        return EquipFieldEnhancement.getInstance().getChrEquipField(this.id, position);
+    }
+    public Map<Integer, EquipFieldEnhancement.EquipField> getEquipFieldMap() {
+        return EquipFieldEnhancement.getInstance().getChrEquipFieldMap(this.id);
+    }
     public void equipChanged() {
         if (this.map == null) {
             return;
@@ -5326,6 +5986,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         (this.mobVac = new MobVac(this,userAttraction)).start();
         this.mobVacs = true;
     }
+    public void stopMobVac() {
+        if (this.mobVacs) {
+            this.mobVac.interrupt();
+            this.mobVacs = false;
+        }
+    }
     public void startMobLhVac(UserLhAttraction userAttraction) {
         (this.mobLhVac = new MobLhVac(this,userAttraction)).start();
         this.mobLhVacs = true;
@@ -5343,12 +6009,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.itemVacs = false;
         }
     }
-    public void stopMobVac() {
-        if (this.mobVacs) {
-            this.mobVac.interrupt();
-            this.mobVacs = false;
-        }
-    }
+
     public void stopMobLhVac() {
         if (this.mobLhVacs) {
             this.mobLhVac.interrupt();
@@ -5531,8 +6192,26 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             if (disease != MapleDisease.SEDUCE && disease != MapleDisease.STUN && this.isActiveBuffedValue(2321005)) {
                 return;
             }
-            this.diseases.put(disease, new MapleDiseaseValueHolder(disease, System.currentTimeMillis(), duration));
-            this.client.sendPacket(MaplePacketCreator.giveDebuff(debuff, skillid, level, (int)duration));
+            if (this.F().get(FumoSkill.FM("异常抗性")) != null) {
+                double r1 = Math.ceil(Math.random() * 500.0);
+                int 免疫 = (Integer)this.F().get(FumoSkill.FM("异常抗性"));
+                if (r1 <= (double)免疫) {
+                    this.diseases.put(disease, new MapleDiseaseValueHolder(disease, System.currentTimeMillis(), duration / 100L));
+                    this.dropMessage(5, "异常免疫");
+                    return;
+                }
+            }
+
+            if (this.F().get(FumoSkill.FM("异常抗性")) != null) {
+                int 抗性 = (Integer)this.F().get(FumoSkill.FM("异常抗性"));
+                if (抗性 > 65) {
+                    抗性 = 65;
+                }
+
+                this.diseases.put(disease, new MapleDiseaseValueHolder(disease, System.currentTimeMillis(), duration / 100L * (long)抗性));
+            } else {
+                this.diseases.put(disease, new MapleDiseaseValueHolder(disease, System.currentTimeMillis(), duration));
+            }            this.client.sendPacket(MaplePacketCreator.giveDebuff(debuff, skillid, level, (int)duration));
             this.map.broadcastMessage(this, MaplePacketCreator.giveForeignDebuff(this.id, debuff, skillid, level), false);
         }
     }
@@ -5544,7 +6223,413 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
-    
+    public final void giveSnailValues(List<SnailCharacterValueHolder> ld) {
+        if (ld != null) {
+            Iterator var2 = ld.iterator();
+
+            while(var2.hasNext()) {
+                SnailCharacterValueHolder value = (SnailCharacterValueHolder)var2.next();
+                this.是否储备经验 = value.是否储备经验;
+                this.是否开店 = value.是否开店;
+                this.是否防滑 = value.是否防滑;
+                this.临时防滑鞋子 = new ArrayList(value.临时防滑鞋子);
+                MapleInventory inventory = this.getInventory(MapleInventoryType.EQUIPPED);
+                Collection<IItem> items = inventory.list();
+                Iterator var6 = items.iterator();
+
+                while(var6.hasNext()) {
+                    IItem item = (IItem)var6.next();
+                    int 位置 = this.包含ID位置(this.临时防滑鞋子, item.getItemId());
+                    if (位置 >= 0) {
+                        item = ((IItem)this.临时防滑鞋子.get(位置)).copy();
+                    }
+                }
+            }
+        }
+
+    }
+    public void givePotentialBuff(int itemId, short watk, short matk, short wdef, short mdef, short acc, short avoid, short speed, short jump, short maxHpPercent, short maxMpPercent, int duration, boolean isCanCancel) {
+        MapleStatEffect effect = MapleItemInformationProvider.getInstance().getItemEffect_s(itemId, false);
+        if (effect != null) {
+            if (watk > 0) {
+                effect.setWatk(watk);
+            }
+
+            if (matk > 0) {
+                effect.setMatk(matk);
+            }
+
+            if (wdef > 0) {
+                effect.setWdef(wdef);
+            }
+
+            if (mdef > 0) {
+                effect.setMdef(mdef);
+            }
+
+            if (acc > 0) {
+                effect.setAcc(acc);
+            }
+
+            if (avoid > 0) {
+                effect.setAvoid(avoid);
+            }
+
+            if (speed > 0) {
+                effect.setSpeed(speed);
+            }
+
+            if (jump > 0) {
+                effect.setJump(jump);
+            }
+
+            if (duration < 0) {
+                duration = 0;
+            }
+
+            effect.setDuration(duration);
+            if (!isCanCancel) {
+                long nowTime = Calendar.getInstance().getTimeInMillis();
+                this.noCancelBuffMap.put(effect.getSourceId(), new Pair(nowTime, effect.getDuration()));
+            }
+
+            List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, effect.getMorph(this)));
+            ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList();
+            Selfstat.add(new Pair(MapleBuffStat.WATK, Integer.valueOf(effect.getWatk())));
+            Selfstat.add(new Pair(MapleBuffStat.MATK, Integer.valueOf(effect.getMatk())));
+            Selfstat.add(new Pair(MapleBuffStat.WDEF, Integer.valueOf(effect.getWdef())));
+            Selfstat.add(new Pair(MapleBuffStat.MDEF, Integer.valueOf(effect.getMdef())));
+            Selfstat.add(new Pair(MapleBuffStat.ACC, Integer.valueOf(effect.getAcc())));
+            Selfstat.add(new Pair(MapleBuffStat.AVOID, Integer.valueOf(effect.getAvoid())));
+            Selfstat.add(new Pair(MapleBuffStat.SPEED, Integer.valueOf(effect.getSpeed())));
+            Selfstat.add(new Pair(MapleBuffStat.JUMP, Integer.valueOf(effect.getJump())));
+            Selfstat.add(new Pair(MapleBuffStat.MAXHP, Integer.valueOf(maxHpPercent)));
+            Selfstat.add(new Pair(MapleBuffStat.MAXMP, Integer.valueOf(maxMpPercent)));
+            this.cancelEffect(effect, true, -1L, Selfstat);
+            this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, duration, Selfstat, effect));
+            this.updateSingleStat(MapleStat.HP, this.getHp());
+            this.updateSingleStat(MapleStat.MP, this.getMp());
+            long starttime = System.currentTimeMillis();
+            MapleStatEffect.CancelEffectAction cancelAction = new MapleStatEffect.CancelEffectAction(this, effect, starttime);
+
+            try {
+                ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, starttime + (long)duration - System.currentTimeMillis());
+                this.registerEffect(effect, starttime, schedule, Selfstat, false, duration, this.getId());
+            } catch (Exception var21) {
+                服务端输出信息.println_err("MapleCharacter.givePotentialBuff 发生错误，错误原因：" + var21);
+            }
+
+        }
+    }
+    public void givePotentialBuff(int itemId, int duration, boolean isCanCancel) {
+        if (this.getStat().pWatk <= 0 && this.getStat().pMatk <= 0 && this.getStat().pWdef <= 0 && this.getStat().pMdef <= 0 && this.getStat().pAcc <= 0 && this.getStat().pAvoid <= 0 && this.getStat().pSpeed <= 0 && this.getStat().pJump <= 0 && this.getStat().pMaxHpPercent <= 0 && this.getStat().pMaxMpPercent <= 0) {
+            this.givePotentialBuff(itemId, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 1000, true);
+        } else {
+            this.givePotentialBuff(itemId, (short)this.getStat().pWatk, (short)this.getStat().pMatk, (short)this.getStat().pWdef, (short)this.getStat().pMdef, (short)this.getStat().pAcc, (short)this.getStat().pAvoid, (short)this.getStat().pSpeed, (short)this.getStat().pJump, (short)this.getStat().pMaxHpPercent, (short)this.getStat().pMaxMpPercent, duration, isCanCancel);
+        }
+
+    }
+
+    public void giveBuff(int itemId, short hp, short mp, short watk, short matk, short wdef, short mdef, short acc, short avoid, short speed, short jump, int duration, boolean isCanCancel) {
+        MapleStatEffect effect = MapleItemInformationProvider.getInstance().getItemEffect_s(itemId, false);
+        if (effect != null) {
+            effect.setHp(hp);
+            effect.setMp(mp);
+            effect.setWatk(watk);
+            effect.setMatk(matk);
+            effect.setWdef(wdef);
+            effect.setMdef(mdef);
+            effect.setAcc(acc);
+            effect.setAvoid(avoid);
+            effect.setSpeed(speed);
+            effect.setJump(jump);
+            if (duration > 0) {
+                effect.setDuration(duration);
+            }
+
+            if (!isCanCancel) {
+                long nowTime = Calendar.getInstance().getTimeInMillis();
+                this.noCancelBuffMap.put(effect.getSourceId(), new Pair(nowTime, effect.getDuration()));
+            }
+
+            List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, effect.getMorph(this)));
+            ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList();
+            Selfstat.add(new Pair(MapleBuffStat.WATK, Integer.valueOf(effect.getWatk()) + this.getStat().pWatk));
+            Selfstat.add(new Pair(MapleBuffStat.MATK, Integer.valueOf(effect.getMatk()) + this.getStat().pMatk));
+            Selfstat.add(new Pair(MapleBuffStat.WDEF, Integer.valueOf(effect.getWdef()) + this.getStat().pWdef));
+            Selfstat.add(new Pair(MapleBuffStat.MDEF, Integer.valueOf(effect.getMdef()) + this.getStat().pMdef));
+            Selfstat.add(new Pair(MapleBuffStat.ACC, Integer.valueOf(effect.getAcc()) + this.getStat().pAcc));
+            Selfstat.add(new Pair(MapleBuffStat.AVOID, Integer.valueOf(effect.getAvoid()) + this.getStat().pAvoid));
+            Selfstat.add(new Pair(MapleBuffStat.SPEED, Integer.valueOf(effect.getSpeed()) + this.getStat().pSpeed));
+            Selfstat.add(new Pair(MapleBuffStat.JUMP, Integer.valueOf(effect.getJump()) + this.getStat().pJump));
+            this.cancelEffect(effect, true, -1L, Selfstat);
+            this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, duration, Selfstat, effect));
+            this.setHp(this.getHp() + hp);
+            this.setMp(this.getMp() + mp);
+            this.updateSingleStat(MapleStat.HP, this.getHp());
+            this.updateSingleStat(MapleStat.MP, this.getMp());
+            long starttime = System.currentTimeMillis();
+            MapleStatEffect.CancelEffectAction cancelAction = new MapleStatEffect.CancelEffectAction(this, effect, starttime);
+
+            try {
+                ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, starttime + (long)duration - System.currentTimeMillis());
+                this.registerEffect(effect, starttime, schedule, Selfstat, false, duration, this.getId());
+            } catch (Exception var21) {
+                服务端输出信息.println_err("MapleCharacter.giveBuff 发生错误，错误原因：" + var21);
+            }
+
+        }
+    }
+
+    public void 刷新防滑状态() {
+        MapleInventory inventory = this.getInventory(MapleInventoryType.EQUIPPED);
+        Collection<IItem> items = inventory.list();
+        Iterator var3 = items.iterator();
+
+        IItem item;
+        Iterator var5;
+        IItem item1;
+        while(var3.hasNext()) {
+            item = (IItem)var3.next();
+            if (ItemFlag.SPIKES.check(item.getFlag()) && item.getPosition() < 0 && !this.临时防滑鞋子.contains(item)) {
+                this.是否防滑 = true;
+                var5 = items.iterator();
+
+                do {
+                    if (!var5.hasNext()) {
+                        return;
+                    }
+
+                    item1 = (IItem)var5.next();
+                } while(item1.getPosition() != -7);
+
+                byte flag = (byte)ItemFlag.SPIKES.getValue();
+                if (!ItemFlag.SPIKES.check(item1.getFlag())) {
+                    item1.setFlag(flag);
+                    List<ModifyInventory> mods = new ArrayList();
+                    mods.add(new ModifyInventory(3, item1));
+                    mods.add(new ModifyInventory(0, item1));
+                    this.client.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
+                    this.临时防滑鞋子.add(item1);
+                }
+
+                return;
+            }
+        }
+
+        this.是否防滑 = false;
+        if (!this.临时防滑鞋子.isEmpty()) {
+            var3 = this.临时防滑鞋子.iterator();
+
+            while(var3.hasNext()) {
+                item = (IItem)var3.next();
+                item.setFlag((byte)0);
+                inventory = this.getInventory(MapleInventoryType.EQUIPPED);
+                items = inventory.list();
+                var5 = items.iterator();
+
+                while(var5.hasNext()) {
+                    item1 = (IItem)var5.next();
+                    if (item1.getPosition() == -7 && item.getItemId() == item1.getItemId()) {
+                        item1 = item.copy();
+                        List<ModifyInventory> mods = new ArrayList();
+                        mods.add(new ModifyInventory(3, item1));
+                        mods.add(new ModifyInventory(0, item1));
+                        this.client.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
+                    }
+                }
+            }
+
+            this.临时防滑鞋子.clear();
+        }
+
+    }
+    public void setPower(long power) {
+        this.power = power;
+    }
+
+    public int 包含ID位置(ArrayList<IItem> items, int itemid) {
+        for(int i = 0; i < items.size(); ++i) {
+            if (((IItem)items.get(i)).getItemId() == itemid) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public void 脱装备防滑检测(IItem source) {
+        if (source != null) {
+            int 位置 = this.包含ID位置(this.临时防滑鞋子, source.getItemId());
+            if (位置 >= 0) {
+                source.setFlag((byte)0);
+                List<ModifyInventory> mods = new ArrayList();
+                mods.add(new ModifyInventory(3, source));
+                mods.add(new ModifyInventory(0, source));
+                this.client.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
+                this.临时防滑鞋子.remove(位置);
+            }
+
+        }
+    }
+    public boolean isSaveingToDB() {
+        return this.saveingToDB;
+    }
+
+    public void setSaveingToDB(boolean saveingToDB) {
+        this.saveingToDB = saveingToDB;
+    }
+
+    public void 道具存档() {
+        if (!this.isClone()) {
+            if (!this.isSaveingToDB()) {
+                cachedThreadPool.execute(new Runnable() {
+                    public void run() {
+                        PreparedStatement ps = null;
+                        PreparedStatement pse = null;
+                        ResultSet rs = null;
+                        Connection con = null;
+
+                        try {
+                            MapleCharacter.this.setSaveingToDB(true);
+                            con = DBConPool.getConnection();
+                            con.setTransactionIsolation(1);
+                            con.setAutoCommit(false);
+                            MapleCharacter.this.deleteWhereCharacterId(con, "DELETE FROM inventoryslot WHERE characterid = ?");
+                            ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
+                            ps.setInt(1, MapleCharacter.this.id);
+                            ps.setByte(2, MapleCharacter.this.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
+                            ps.setByte(3, MapleCharacter.this.getInventory(MapleInventoryType.USE).getSlotLimit());
+                            ps.setByte(4, MapleCharacter.this.getInventory(MapleInventoryType.SETUP).getSlotLimit());
+                            ps.setByte(5, MapleCharacter.this.getInventory(MapleInventoryType.ETC).getSlotLimit());
+                            ps.setByte(6, MapleCharacter.this.getInventory(MapleInventoryType.CASH).getSlotLimit());
+                            ps.execute();
+                            ps.close();
+                            MapleCharacter.this.saveInventory(con);
+                            MapleCharacter.this.saveMoneyToDB(con);
+                        } catch (DatabaseException | UnsupportedOperationException | SQLException var17) {
+                            FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", var17);
+
+                            try {
+                                if (con != null) {
+                                    con.rollback();
+                                }
+                            } catch (SQLException var16) {
+                                FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", var16);
+                            }
+                        } finally {
+                            try {
+                                if (ps != null) {
+                                    ps.close();
+                                }
+
+                                if (pse != null) {
+                                    ((PreparedStatement)pse).close();
+                                }
+
+                                if (rs != null) {
+                                    ((ResultSet)rs).close();
+                                }
+
+                                con.setAutoCommit(true);
+                                con.setTransactionIsolation(4);
+                                MapleCharacter.this.setSaveingToDB(false);
+                            } catch (SQLException var15) {
+                                MapleCharacter.this.setSaveingToDB(false);
+                                FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", var15);
+                            }
+
+                        }
+
+                    }
+                });
+            }
+        }
+    }
+
+    public void 道具存档2() {
+        if (!this.isClone()) {
+            if (!this.isSaveingToDB()) {
+                PreparedStatement ps = null;
+                PreparedStatement pse = null;
+                ResultSet rs = null;
+                Connection con = null;
+
+                try {
+                    this.setSaveingToDB(true);
+                    con = DBConPool.getConnection();
+                    con.setTransactionIsolation(1);
+                    con.setAutoCommit(false);
+                    this.deleteWhereCharacterId(con, "DELETE FROM inventoryslot WHERE characterid = ?");
+                    ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
+                    ps.setInt(1, this.id);
+                    ps.setByte(2, this.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
+                    ps.setByte(3, this.getInventory(MapleInventoryType.USE).getSlotLimit());
+                    ps.setByte(4, this.getInventory(MapleInventoryType.SETUP).getSlotLimit());
+                    ps.setByte(5, this.getInventory(MapleInventoryType.ETC).getSlotLimit());
+                    ps.setByte(6, this.getInventory(MapleInventoryType.CASH).getSlotLimit());
+                    ps.execute();
+                    ps.close();
+                    this.saveInventory(con);
+                    this.saveMoneyToDB(con);
+                } catch (DatabaseException | UnsupportedOperationException | SQLException var17) {
+                    FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", var17);
+
+                    try {
+                        if (con != null) {
+                            con.rollback();
+                        }
+                    } catch (SQLException var16) {
+                        FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", var16);
+                    }
+                } finally {
+                    try {
+                        if (ps != null) {
+                            ps.close();
+                        }
+
+                        if (pse != null) {
+                            ((PreparedStatement)pse).close();
+                        }
+
+                        if (rs != null) {
+                            ((ResultSet)rs).close();
+                        }
+
+                        con.setAutoCommit(true);
+                        con.setTransactionIsolation(4);
+                        this.setSaveingToDB(false);
+                    } catch (SQLException var15) {
+                        this.setSaveingToDB(false);
+                        FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", var15);
+                    }
+
+                }
+
+            }
+        }
+    }
+
+    public void saveMoneyToDB(Connection con) {
+        try {
+            boolean newCon = false;
+            if (con == null || con.isClosed()) {
+                newCon = true;
+                con = DBConPool.getConnection();
+            }
+
+            PreparedStatement ps = con.prepareStatement("UPDATE characters SET meso = " + this.getMeso() + " WHERE id = " + this.getId());
+            ps.executeUpdate();
+            ps.close();
+            if (newCon) {
+                con.close();
+            }
+        } catch (Exception var4) {
+            服务端输出信息.println_err("【错误】saveMoneyToDB错误，原因：" + var4);
+            var4.printStackTrace();
+        }
+
+    }
     public void dispelDebuff(final MapleDisease debuff) {
         if (this.hasDisease(debuff)) {
             final long mask = debuff.getValue();
@@ -5906,7 +6991,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
-    
+    public int getOneTimeLoga(String log) {
+        return TimeLogCenter.getInstance().getOneTimeLoga(this.getAccountID(), log);
+    }
+
+    public int getBossLogDa(String bossid) {
+        return TimeLogCenter.getInstance().getBossLoga(this.getAccountID(), bossid);
+    }
     public void 添加破功(final int pg) {
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -6140,11 +7231,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void resetBossLog(final String boss, final int type) {
         try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-            ps.setInt(1, 0);
-            ps.setInt(2, type);
-            ps.setInt(3, this.id);
-            ps.setString(4, boss);
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("delete from  bosslog  WHERE type = ? and characterid = ? AND bossid = ?");
+            ps.setInt(1, type);
+            ps.setInt(2, this.id);
+            ps.setString(3, boss);
             ps.executeUpdate();
             ps.close();
         }
@@ -6158,11 +7248,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void resetBossLog1(final String boss, final int type) {
         try {
-            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?, type = ?, time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ?");
-            ps.setInt(1, 0);
-            ps.setInt(2, type);
-            ps.setInt(3, this.id);
-            ps.setString(4, boss);
+            final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("delete from  bosslog2  WHERE type = ? and characterid = ? AND bossid = ?");
+
+            ps.setInt(1, type);
+            ps.setInt(2, this.id);
+            ps.setString(3, boss);
             ps.executeUpdate();
             ps.close();
         }
@@ -6300,7 +7390,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
-    
+    public void reFreshItem(IItem item) {
+        List<ModifyInventory> mods = new ArrayList();
+        mods.add(new ModifyInventory(3, item));
+        mods.add(new ModifyInventory(0, item));
+        this.getClient().sendPacket(MaplePacketCreator.modifyInventory(true, mods));
+    }
+
+    public void setOneTimeLog(String log, int count) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setOneTimeLog(this.getId(), log, count);
+        }
+    }
     public void setOneTimeLog(final String log) {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into OneTimelog (characterid, log) values (?,?)");
@@ -6313,7 +7414,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
         }
     }
-    
+
     public void deleteOneTimeLog(final String log) {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("DELETE FROM onetimelog WHERE characterid = ? and log = ?");
@@ -6798,6 +7899,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.fairyExp += 30;
         }
     }
+    public void 经验戒指加成(final boolean exp) {
+        if (exp) {
+            this.fairyExp += 10;
+        }
+    }
     
     public byte getFairyExp() {
         return this.fairyExp;
@@ -6821,6 +7927,23 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void spawnPet(final byte slot, final boolean lead) {
         this.spawnPet(slot, lead, true);
+        final String[] 特殊宠物代码 = ServerProperties.getProperty("LtMS.petSpecial").split(",");
+        boolean 特殊宠物开关 = false;
+        if (LtMS.ConfigValuesMap.get("宠物buff开关") != null && LtMS.ConfigValuesMap.get("宠物buff开关")>0) {
+            for (int i = 0; i < 特殊宠物代码.length; ++i) {
+                if (this.getInventory(MapleInventoryType.CASH).getItem((short) slot).getItemId() == Integer.parseInt(特殊宠物代码[i])) {
+                    特殊宠物开关 = true;
+                }
+            }
+            if (LtMS.ConfigValuesMap.get("宠物特殊buff开关") != null && LtMS.ConfigValuesMap.get("宠物特殊buff开关")>0) {
+                if (特殊宠物开关) {
+                    MapleItemInformationProvider.getInstance().getItemEffect(LtMS.ConfigValuesMap.get("宠物特殊buff编码")).applyTo(this.client.getPlayer());
+                }
+            } else if (LtMS.ConfigValuesMap.get("宠物基础buff开关") != null && LtMS.ConfigValuesMap.get("宠物基础buff开关")>0) {
+                MapleItemInformationProvider.getInstance().getItemEffect(LtMS.ConfigValuesMap.get("宠物普通buff编码")).applyTo(this.client.getPlayer());
+            }
+        }
+
     }
     
     public void spawnPet(final byte slot, final boolean lead, final boolean broadcast) {
@@ -7026,7 +8149,101 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.client.setPlayer(ret);
         return ret;
     }
-    
+    public void sendSkillEffect(int skillId, int effectType) {
+        this.client.sendPacket(MaplePacketCreator.showOwnBuffEffect(skillId, effectType));
+        this.map.broadcastMessageSkill(this, MaplePacketCreator.showBuffeffect(this.getId(), skillId, effectType), false);
+    }
+    public MapleCharacter cloneLooks(int cloneDamagePercentage) {
+        MapleClient cloneClient = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
+        int minus = this.getId() + 10000000;
+        MapleCharacter ret = new MapleCharacter(true);
+        ret.id = minus;
+        ret.client = cloneClient;
+        ret.exp = 0;
+        ret.meso = 0;
+        ret.beans = this.beans;
+        ret.max_damage = this.max_damage;
+        ret.blood = this.blood;
+        ret.month = this.month;
+        ret.day = this.day;
+        ret.charmessage = this.charmessage;
+        ret.expression = this.expression;
+        ret.constellation = this.constellation;
+        ret.remainingAp = 0;
+        ret.fame = 0;
+        ret.accountid = this.client.getAccID();
+        ret.name = this.name;
+        ret.level = this.level;
+        ret.fame = this.fame;
+        ret.job = this.job;
+        ret.hair = this.hair;
+        ret.face = this.face;
+        ret.skinColor = this.skinColor;
+        ret.bookCover = this.bookCover;
+        ret.monsterbook = this.monsterbook;
+        ret.mount = this.mount;
+        ret.CRand = new PlayerRandomStream();
+        ret.gmLevel = this.gmLevel;
+        ret.gender = this.gender;
+        ret.mapid = this.map.getId();
+        ret.map = this.map;
+        ret.setStance(this.getStance());
+        ret.chair = this.chair;
+        ret.itemEffect = this.itemEffect;
+        ret.guildid = this.guildid;
+        ret.currentrep = this.currentrep;
+        ret.totalrep = this.totalrep;
+        ret.stats = this.stats;
+        ret.effects.putAll(this.effects);
+        if (ret.effects.get(MapleBuffStat.ILLUSION) != null) {
+            ret.effects.remove(MapleBuffStat.ILLUSION);
+        }
+
+        if (ret.effects.get(MapleBuffStat.SUMMON) != null) {
+            ret.effects.remove(MapleBuffStat.SUMMON);
+        }
+
+        if (ret.effects.get(MapleBuffStat.PUPPET) != null) {
+            ret.effects.remove(MapleBuffStat.PUPPET);
+        }
+
+        ret.guildrank = this.guildrank;
+        ret.allianceRank = this.allianceRank;
+        ret.hidden = this.hidden;
+        ret.setPosition(new Point(this.getPosition()));
+        Iterator var5 = this.getInventory(MapleInventoryType.EQUIPPED).iterator();
+
+        while(var5.hasNext()) {
+            IItem equip = (IItem)var5.next();
+            ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip);
+        }
+
+        ret.skillMacros = this.skillMacros;
+        ret.keylayout = this.keylayout;
+        ret.questinfo = this.questinfo;
+        ret.savedLocations = this.savedLocations;
+        ret.wishlist = this.wishlist;
+        ret.rocks = this.rocks;
+        ret.regrocks = this.regrocks;
+        ret.buddylist = this.buddylist;
+        ret.keydown_skill = 0L;
+        ret.lastmonthfameids = this.lastmonthfameids;
+        ret.lastfametime = this.lastfametime;
+        ret.storage = this.storage;
+        ret.cs = this.cs;
+        ret.client.setAccountName(this.client.getAccountName());
+        ret.maplepoints = this.maplepoints;
+        ret.clone = true;
+        ret.client.setChannel(this.client.getChannel());
+        ret.max_damage = this.max_damage;
+        ret.guildPoints = this.guildPoints;
+        while (this.map.getCharacterById(ret.id) != null || this.client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null) {
+            final MapleCharacter mapleCharacter = ret;
+            ++mapleCharacter.id;
+        }
+        ret.client.setPlayer(ret);
+        return ret;
+    }
     public void cloneLook() {
         if (this.clone) {
             return;
@@ -7043,7 +8260,24 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
+    private int[] cloneDamageRateList = new int[]{50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
 
+    public final void cloneLook(int damagePercentage) {
+        if (!this.clone) {
+            for(int i = 0; i < this.clones.length; ++i) {
+                if (this.clones[i].get() == null) {
+                    this.cloneDamageRateList[i] = damagePercentage;
+                    MapleCharacter newp = this.cloneLooks(damagePercentage);
+                    this.map.addPlayer(newp);
+                    this.map.broadcastMessage(MaplePacketCreator.updateCharLook(newp));
+                    this.map.movePlayer(newp, this.getPosition());
+                    this.clones[i] = new WeakReference(newp);
+                    return;
+                }
+            }
+
+        }
+    }
     //20240622修复
     public void disposeClones() {
         this.numClones = 0;
@@ -7111,10 +8345,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         total -= luk;
         this.stats.setLuk((short)luk);
         this.setRemainingAp((short)total);
-        statup.put(MapleStat.STR, Integer.valueOf(str));
-        statup.put(MapleStat.DEX, Integer.valueOf(dex));
-        statup.put(MapleStat.INT, Integer.valueOf(int_));
-        statup.put(MapleStat.LUK, Integer.valueOf(luk));
+        //测试改变属性
+        statup.put(MapleStat.STR, Integer.valueOf(str) + LtMS.ConfigValuesMap.get("力量"));
+        statup.put(MapleStat.DEX, Integer.valueOf(dex)+ LtMS.ConfigValuesMap.get("敏捷"));
+        statup.put(MapleStat.INT, Integer.valueOf(int_)+ LtMS.ConfigValuesMap.get("智力"));
+        statup.put(MapleStat.LUK, Integer.valueOf(luk)+ LtMS.ConfigValuesMap.get("运气"));
         statup.put(MapleStat.AVAILABLEAP, Integer.valueOf(total));
         this.client.sendPacket(MaplePacketCreator.updatePlayerStats(statup, false, this));
     }
@@ -7134,9 +8369,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.subcategory;
     }
     
-    public int itemQuantity(final int itemid) {
-        return this.getInventory(GameConstants.getInventoryType(itemid)).countById(itemid);
-    }
+//    public int itemQuantity(final int itemid) {
+//        return this.getInventory(GameConstants.getInventoryType(itemid)).countById(itemid);
+//    }
     
     public void setRPS(final RockPaperScissors rps) {
         this.rps = rps;
@@ -7185,7 +8420,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void ForcechangeChannel(final int channel) {
         final ChannelServer toch = ChannelServer.getInstance(channel);
         try {
-            this.saveToDB(false, false);
+            this.saveToDB(false, false,true);
         }
         catch (Exception ex) {
             FileoutputUtil.logToFile("logs/ForcechangeChannel保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
@@ -7216,7 +8451,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void changeChannel(final int channel) {
         final ChannelServer toch = ChannelServer.getInstance(channel);
         try {
-            this.saveToDB(false, false);
+            this.saveToDB(false, false,true);
         }
         catch (Exception ex) {
             FileoutputUtil.logToFile("logs/更換頻道保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
@@ -8010,9 +9245,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getLimitBreak() {
-        return (this.PGSXDJ * 10000 + 200000 )/10 ;
+        return (this.PGSXDJ * 10000 + 199999 ) ;
     }
-    
+    public int setLimitBreak( int limitBreak) {
+        if(limitBreak<10000){
+            limitBreak = 10000;
+        }
+        return PGSXDJ +=  Math.abs(limitBreak/10000) ;
+    }
     public void gainItem(final int code, final int amount) {
         MapleInventoryManipulator.addById(this.client, code, (short)amount, null);
     }
@@ -8159,7 +9399,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public final boolean CanStorage() {
-        if (this.lastStorageTime + 5000L > System.currentTimeMillis()) {
+        //仓库操作时间间隔
+        Integer time = LtMS.ConfigValuesMap.get("仓库操作时间间隔");
+        if (this.lastStorageTime + (Objects.nonNull(time) ? time : 5000L) > System.currentTimeMillis()) {
             return false;
         }
         this.lastStorageTime = System.currentTimeMillis();
@@ -9919,7 +11161,105 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
-    
+    public int getMoneyAll(int type) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var3 = null;
+
+            int var19;
+            try {
+                int money = 0;
+                PreparedStatement ps;
+                ResultSet rs;
+                if (type != 1) {
+                    ps = con.prepareStatement("SELECT moneyb FROM accounts WHERE id = ?");
+                    ps.setInt(1, this.getClient().getAccID());
+                    rs = ps.executeQuery();
+                    if (rs.next()) {
+                        money = rs.getInt(1);
+                    }
+
+                    rs.close();
+                    ps.close();
+                } else {
+                    ps = con.prepareStatement("SELECT amount FROM donate WHERE username = ?");
+                    ps.setString(1, this.getClient().getAccountName());
+
+                    for(rs = ps.executeQuery(); rs.next(); money += rs.getInt("amount")) {
+                    }
+
+                    rs.close();
+                    ps.close();
+                }
+
+                var19 = money;
+            } catch (Throwable var16) {
+                var3 = var16;
+                throw var16;
+            } finally {
+                if (con != null) {
+                    if (var3 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var15) {
+                            var3.addSuppressed(var15);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+
+            return var19;
+        } catch (SQLException var18) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var18);
+            return -1;
+        }
+    }
+
+
+
+    public void setMoneyAll(int amount, String reason) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("Update Accounts set moneyb = moneyb + ? Where id = ?");
+                ps.setInt(1, amount);
+                ps.setInt(2, this.getClient().getAccID());
+                ps.execute();
+                ps = con.prepareStatement("insert into donate (username, amount, paymentMethod, date) values (?,?,?,?)");
+                ps.setString(1, this.getClient().getAccountName());
+                ps.setString(2, String.valueOf(amount));
+                ps.setString(3, reason);
+                ps.setString(4, FileoutputUtil.NowTime());
+                ps.executeUpdate();
+                ps.close();
+            } catch (Throwable var14) {
+                var4 = var14;
+                throw var14;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var13) {
+                            var4.addSuppressed(var13);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var16) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var16);
+        }
+
+    }
+
     public void setBuLingZanZu(final int bossid) {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("insert into donate (username, amount, paymentMethod, date) values (?,?,?,?)");
@@ -10726,13 +12066,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.map.broadcastMessage(MaplePacketCreator.environmentChange("summerboating/timeout", 3));
     }
     
-    public Map<Integer, Integer> getEquippedFuMoMap() {
-        return this._equippedFuMoMap;
-    }
-    
-    public Map<Integer, Integer> F() {
-        return this._equippedFuMoMap;
-    }
+
     
     public int getTotalRMB() {
         int rmb = 0;
@@ -11579,7 +12913,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         MapleCharacter.记录技能 = 0;
         MapleCharacter.技能检测惩罚 = 0;
         MapleCharacter.登陆验证 = 0;
-        MapleCharacter._tiredMinutes = 0;
     }
     
     public enum FameStatus
@@ -12054,28 +13387,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         mods.add(new ModifyInventory(0, item));
         this.client.getSession().write(MaplePacketCreator.modifyInventory(updateTick, mods));
     }
-//    public int getAccountLog(String log1, int a) {
-//        if (a < 1) {
-//            return this.getAccountidBossLog(log1);
-//        }
-//        return this.getAccountidLog(log1);
-//    }
-//
-//    public void setAccountLog(String log1, int a) {
-//        if (a < 1) {
-//            this.setAccountidBossLog(log1, 1);
-//        } else {
-//            this.setAccountidLog(log1, 1);
-//        }
-//    }
-//
-//    public void setAccountLog(String log1, int a, int b) {
-//        if (a < 1) {
-//            this.setAccountidBossLog(log1, b);
-//        } else {
-//            this.setAccountidLog(log1, b);
-//        }
-//    }
+   public int getAccountLog(String log1) {
+       return this.getAccountidLog(log1);
+   }
+
+  public void setAccountLog(String log1) {
+          this.setAccountidLog(log1, 1);
+  }
+
+    public void setAccountBossLog(String log1, int b) {
+            this.setAccountidBossLog(log1, b);
+    }
+    public int getAccountBossLog(String log1) {
+        return this.getAccountidBossLog(log1);
+    }
     //回收装备
     public void recycleEquip(final MapleClient c, MapleCharacter chr) {
 
@@ -12106,11 +13431,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
             if (mesosGained>0){
-                c.getPlayer().gainMeso(mesosGained, true);
+                chr.gainMeso(mesosGained, true);
             }else{
                 return;
             }
-            c.getPlayer().dropMessage(6, "装备回收成功，共获得 " + mesosGained + " 冒险币！");
+            chr.dropMessage(6, "装备回收成功，共获得 " + mesosGained + " 冒险币！");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -12131,6 +13456,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             this.buffTime = l;
             //技能自动激活
+            c.useSkill(c.getPlayer(),3121002,c.getPlayer().getSkillLevel(3121002));
+            c.useSkill(c.getPlayer(),3221002,c.getPlayer().getSkillLevel(3221002));
             switch (c.getPlayer().getJob()){
                 case 100:
                     c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
@@ -12312,5 +13639,2127 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         double randomMesos = Math.floor(Math.random() * (1)) + m;//*(当前充值/1000+1)
         return (int)Math.floor(level * randomMesos); // 根据随机金币数量计算返还的金币数量
     }
+
+    public Map<Integer, Integer> getPotentialMap() {
+        return this.potentialMap;
+    }
+    public Map<Integer, Integer> getEquippedFuMoMap() {
+        return this._equippedFuMoMap;
+    }
+
+    public Map<Integer, Integer> F() {
+        return this._equippedFuMoMap;
+    }
+
+    public void 刷新身上装备镶嵌汇总数据() {
+        this._equippedFuMoMap.clear();
+
+        try {
+            Iterator var1 = this.getInventory(MapleInventoryType.EQUIPPED).list().iterator();
+
+            while(true) {
+                String mxmxdDaKongFuMo;
+                do {
+                    do {
+                        Equip equip;
+                        do {
+                            if (!var1.hasNext()) {
+                                return;
+                            }
+
+                            IItem item = (IItem)var1.next();
+                            equip = (Equip)item;
+                        } while(equip == null);
+
+                        mxmxdDaKongFuMo = equip.getDaKongFuMo();
+                    } while(mxmxdDaKongFuMo == null);
+                } while(mxmxdDaKongFuMo.length() <= 0);
+
+                String[] arr = mxmxdDaKongFuMo.split(",");
+                String[] var6 = arr;
+                int var7 = arr.length;
+
+                for(int var8 = 0; var8 < var7; ++var8) {
+                    String pair = var6[var8];
+                    if (pair.length() != 0) {
+                        String[] arr2 = pair.split(":");
+                        int fumoType = Integer.parseInt(arr2[0]);
+                        int fumoVal = Integer.parseInt(arr2[1]);
+                        if (this._equippedFuMoMap.containsKey(fumoType)) {
+                            this._equippedFuMoMap.put(fumoType, (Integer)this._equippedFuMoMap.get(fumoType) + fumoVal);
+                        } else {
+                            this._equippedFuMoMap.put(fumoType, fumoVal);
+                        }
+                    }
+                }
+            }
+        } catch (Exception var13) {
+            服务端输出信息.println_err("刷新身上装备镶嵌汇总数据出错：" + var13.getMessage());
+            var13.printStackTrace();
+        }
+    }
+
+    public void 刷新身上装备镶嵌汇总数据_数据库() {
+        this._equippedFuMoMap.clear();
+        String sqlQuery1 = "select b.mxmxd_dakong_fumo from inventoryitems a, inventoryequipment b where a.inventoryitemid = b.inventoryitemid and a.characterid = ? and a.inventorytype = -1 and b.mxmxd_dakong_fumo != '' and b.mxmxd_dakong_fumo is not NULL";
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement(sqlQuery1);
+            ps.setInt(1, this.id);
+            ResultSet rs = ps.executeQuery();
+            Throwable var5 = null;
+
+            try {
+                label135:
+                while(true) {
+                    String mxmxdDaKongFuMo;
+                    do {
+                        do {
+                            if (!rs.next()) {
+                                break label135;
+                            }
+
+                            mxmxdDaKongFuMo = rs.getString("mxmxd_dakong_fumo");
+                        } while(mxmxdDaKongFuMo == null);
+                    } while(mxmxdDaKongFuMo.length() <= 0);
+
+                    String[] arr = mxmxdDaKongFuMo.split(",");
+                    String[] var8 = arr;
+                    int var9 = arr.length;
+
+                    for(int var10 = 0; var10 < var9; ++var10) {
+                        String pair = var8[var10];
+                        if (pair.length() != 0) {
+                            String[] arr2 = pair.split(":");
+                            int fumoType = Integer.parseInt(arr2[0]);
+                            int fumoVal = Integer.parseInt(arr2[1]);
+                            if (this._equippedFuMoMap.containsKey(fumoType)) {
+                                this._equippedFuMoMap.put(fumoType, (Integer)this._equippedFuMoMap.get(fumoType) + fumoVal);
+                            } else {
+                                this._equippedFuMoMap.put(fumoType, fumoVal);
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable var23) {
+                var5 = var23;
+                throw var23;
+            } finally {
+                if (rs != null) {
+                    if (var5 != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var22) {
+                            var5.addSuppressed(var22);
+                        }
+                    } else {
+                        rs.close();
+                    }
+                }
+
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var25) {
+            服务端输出信息.println_err("刷新身上装备镶嵌汇总数据_数据库 出错：" + var25.getMessage());
+            var25.printStackTrace();
+        }
+
+    }
+
+    public int 获取镶嵌汇总值(int fumoType) {
+        return this._equippedFuMoMap.containsKey(fumoType) ? (Integer)this._equippedFuMoMap.get(fumoType) : 0;
+    }
+    public void reloadPotentialMap() {
+        this.potentialMap.clear();
+
+        try {
+            Iterator var1 = this.getInventory(MapleInventoryType.EQUIPPED).list().iterator();
+
+            while(true) {
+                String potentials;
+                do {
+                    do {
+                        Equip equip;
+                        do {
+                            if (!var1.hasNext()) {
+                                return;
+                            }
+
+                            IItem item = (IItem)var1.next();
+                            equip = (Equip)item;
+                        } while(equip == null);
+
+                        potentials = equip.getPotentials();
+                    } while(potentials == null);
+                } while(potentials.length() <= 0);
+
+                String[] arr = potentials.split(",");
+                String[] var6 = arr;
+                int var7 = arr.length;
+
+                for(int var8 = 0; var8 < var7; ++var8) {
+                    String pair = var6[var8];
+                    if (pair.length() > 0) {
+                        String[] arr2 = pair.split(":");
+                        int potentialType = Integer.parseInt(arr2[0]);
+                        int potentialVal = Integer.parseInt(arr2[1]);
+                        if (this.potentialMap.containsKey(potentialType)) {
+                            this.potentialMap.put(potentialType, (Integer)this.potentialMap.get(potentialType) + potentialVal);
+                        } else {
+                            this.potentialMap.put(potentialType, potentialVal);
+                        }
+                    }
+                }
+            }
+        } catch (Exception var13) {
+            服务端输出信息.println_err("reloadPotentialMap出错：" + var13);
+            var13.printStackTrace();
+        }
+    }
+
+    public void reloadPotentialMapFromDB() {
+        this.potentialMap.clear();
+        String sqlQuery1 = "select b.snail_potentials from inventoryitems a, inventoryequipment b where a.inventoryitemid = b.inventoryitemid and a.characterid = ? and a.inventorytype = -1 and b.snail_potentials != '' and b.snail_potentials is not NULL";
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement(sqlQuery1);
+            ps.setInt(1, this.id);
+            ResultSet rs = ps.executeQuery();
+            Throwable var5 = null;
+
+            try {
+                label135:
+                while(true) {
+                    String potentials;
+                    do {
+                        do {
+                            if (!rs.next()) {
+                                break label135;
+                            }
+
+                            potentials = rs.getString("snail_potentials");
+                        } while(potentials == null);
+                    } while(potentials.length() <= 0);
+
+                    String[] arr = potentials.split(",");
+                    String[] var8 = arr;
+                    int var9 = arr.length;
+
+                    for(int var10 = 0; var10 < var9; ++var10) {
+                        String pair = var8[var10];
+                        if (pair.length() != 0) {
+                            String[] arr2 = pair.split(":");
+                            int potentialType = Integer.parseInt(arr2[0]);
+                            int potentialVal = Integer.parseInt(arr2[1]);
+                            if (this.potentialMap.containsKey(potentialType)) {
+                                this.potentialMap.put(potentialType, (Integer)this.potentialMap.get(potentialType) + potentialVal);
+                            } else {
+                                this.potentialMap.put(potentialType, potentialVal);
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable var23) {
+                var5 = var23;
+                throw var23;
+            } finally {
+                if (rs != null) {
+                    if (var5 != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var22) {
+                            var5.addSuppressed(var22);
+                        }
+                    } else {
+                        rs.close();
+                    }
+                }
+
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var25) {
+            服务端输出信息.println_err("reloadPotentialMapFromDB 出错：" + var25.getMessage());
+            var25.printStackTrace();
+        }
+
+    }
+
+    public int getPotential(int potentialType) {
+        return this.potentialMap.containsKey(potentialType) ? (Integer)this.potentialMap.get(potentialType) : 0;
+    }
+    public void setMoney(int x) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var3 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("Update Accounts set money = ? Where id = ?");
+                ps.setInt(1, x);
+                ps.setInt(2, this.getClient().getAccID());
+                ps.execute();
+                ps.close();
+            } catch (Throwable var14) {
+                var3 = var14;
+                throw var14;
+            } finally {
+                if (con != null) {
+                    if (var3 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var13) {
+                            var3.addSuppressed(var13);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var16) {
+            服务端输出信息.println_err("[Money]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", var16);
+        } catch (Exception var17) {
+            服务端输出信息.println_err("[setMoney]" + var17);
+            FileoutputUtil.outError("logs/资料库异常.txt", var17);
+        }
+
+    }
+
+    public int getGuildPoints() {
+        return this.guildPoints;
+    }
+
+    public void setGuildPoints(int guildPoints) {
+        this.guildPoints = guildPoints;
+    }
+    public void setMoneyAll(int amount) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var3 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("Update Accounts set moneyb = moneyb + ? Where id = ?");
+                ps.setInt(1, amount);
+                ps.setInt(2, this.getClient().getAccID());
+                ps.execute();
+                ps = con.prepareStatement("insert into donate (username, amount, paymentMethod, date) values (?,?,?,?)");
+                ps.setString(1, this.getClient().getAccountName());
+                ps.setString(2, String.valueOf(amount));
+                ps.setString(3, "累计赞助");
+                ps.setString(4, FileoutputUtil.NowTime());
+                ps.executeUpdate();
+                ps.close();
+            } catch (Throwable var13) {
+                var3 = var13;
+                throw var13;
+            } finally {
+                if (con != null) {
+                    if (var3 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var12) {
+                            var3.addSuppressed(var12);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var15) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var15);
+        }
+
+    }
+
+
+    public boolean 增加里程_数据库(int mount) {
+        if (mount <= 0) {
+            return false;
+        } else {
+            Connection con = DBConPool.getConnection();
+
+            try {
+                PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
+                ps.setInt(1, this.getAccountID());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    int points = rs.getInt("points");
+                    ps = con.prepareStatement("UPDATE snail_boss_points SET points = ? WHERE accountid = ?");
+                    ps.setInt(1, points + mount);
+                    ps.setInt(2, this.getAccountID());
+                    ps.executeUpdate();
+                } else {
+                    ps = con.prepareStatement("INSERT INTO snail_boss_points (accountid, points) VALUES (?, ?)");
+                    ps.setInt(1, this.getAccountID());
+                    ps.setInt(2, mount);
+                    ps.executeUpdate();
+                }
+
+                ps.close();
+                rs.close();
+                this.dropMessage(5, "里程数增加 " + mount);
+                return true;
+            } catch (SQLException var6) {
+                服务端输出信息.println_err("增加里程，读取数据库错误，错误原因：" + var6);
+                var6.printStackTrace();
+                return false;
+            }
+        }
+    }
+
+    public boolean 减少里程_数据库(int mount) {
+        if (mount <= 0) {
+            return false;
+        } else {
+            Connection con = DBConPool.getConnection();
+
+            try {
+                PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
+                ps.setInt(1, this.getAccountID());
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) {
+                    return false;
+                }
+
+                points = rs.getInt("points");
+                if (points < mount) {
+                    return false;
+                }
+
+                ps = con.prepareStatement("UPDATE snail_boss_points SET points = ? WHERE accountid = ?");
+                ps.setInt(1, points - mount);
+                ps.setInt(2, this.getAccountID());
+                ps.executeUpdate();
+                ps.close();
+                rs.close();
+                this.dropMessage(5, "里程数减少 " + mount);
+            } catch (SQLException var6) {
+                服务端输出信息.println_err("减少里程，读取数据库错误，错误原因：" + var6);
+                var6.printStackTrace();
+            }
+
+            return true;
+        }
+    }
+
+    public int 获得里程_数据库() {
+        Connection con = DBConPool.getConnection();
+        int point = 0;
+
+        try {
+            PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
+            ps.setInt(1, this.getAccountID());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                point = rs.getInt("points");
+            }
+
+            ps.close();
+            rs.close();
+        } catch (SQLException var5) {
+            服务端输出信息.println_err("获得里程_数据库错误，错误原因：" + var5);
+            var5.printStackTrace();
+        }
+
+        return point;
+    }
+    public int getCloneLookQuantity() {
+        int count = 0;
+
+        for(int i = 0; i < this.clones.length; ++i) {
+            if (this.clones[i].get() != null) {
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
+    public final void decreaseClone(int quantity) {
+        try {
+            int totalQuantity = this.getCloneLookQuantity();
+            if (quantity > totalQuantity) {
+                quantity = totalQuantity;
+            }
+
+            this.numClones = 0;
+
+            for(int i = 0; i < this.clones.length; ++i) {
+                if (this.clones[i].get() != null) {
+                    this.map.removePlayer((MapleCharacter)this.clones[i].get());
+                    ((MapleCharacter)this.clones[i].get()).getClient().disconnect(false, false);
+                    this.clones[i] = new WeakReference((Object)null);
+                    ++this.numClones;
+                    if (this.numClones >= quantity) {
+                        break;
+                    }
+                }
+            }
+        } catch (Exception var4) {
+            服务端输出信息.println_err("【错误】：decreaseClone错误，错误原因：" + var4);
+            var4.printStackTrace();
+        }
+
+    }
+    private boolean showSkill = true;
+    public boolean isShowSkill() {
+        return this.showSkill;
+    }
+    public void setShowSkill(boolean showSkill) {
+        this.showSkill = showSkill;
+    }
+    private boolean dropOnMyFoot = false;
+    private boolean dropOnMyBag = false;
+    public boolean isDropOnMyFoot() {
+        return GameConstants.isBanChannel(this.getClient().getChannel()) && !this.isGM() ? false : this.dropOnMyFoot;
+    }
+
+    public void setDropOnMyFoot(boolean dropOnMyFoot) {
+        this.dropOnMyFoot = dropOnMyFoot;
+    }
+
+    public boolean isDropOnMyBag() {
+        return GameConstants.isBanChannel(this.getClient().getChannel()) && !this.isGM() ? false : this.dropOnMyBag;
+    }
+    public void loadPackageList() {
+        packageList = PackageOfEquipments.getInstance().getPackage(this);
+    }
+    public List<PackageOfEquipments.MyPackage> getPackageList() {
+        return packageList;
+    }
+    public void setDropOnMyBag(boolean dropOnMyBag) {
+        this.dropOnMyBag = dropOnMyBag;
+    }
+    public void solvePackageStats() {
+        if (packageList != null) {
+            this.package_str = 0;
+            this.package_dex = 0;
+            this.package_int = 0;
+            this.package_luk = 0;
+            this.package_all_ap = 0;
+            this.package_watk = 0;
+            this.package_matk = 0;
+            this.package_wdef = 0;
+            this.package_mdef = 0;
+            this.package_acc = 0;
+            this.package_avoid = 0;
+            this.package_maxhp = 0;
+            this.package_maxmp = 0;
+            this.package_speed = 0;
+            this.package_jump = 0;
+            this.package_str_percent = 0;
+            this.package_dex_percent = 0;
+            this.package_int_percent = 0;
+            this.package_luk_percent = 0;
+            this.package_all_ap_percent = 0;
+            this.package_watk_percent = 0;
+            this.package_matk_percent = 0;
+            this.package_wdef_percent = 0;
+            this.package_mdef_percent = 0;
+            this.package_acc_percent = 0;
+            this.package_avoid_percent = 0;
+            this.package_maxhp_percent = 0;
+            this.package_maxmp_percent = 0;
+            this.package_normal_damage_percent = 0;
+            this.package_boss_damage_percent = 0;
+            this.package_total_damage_percent = 0;
+            Iterator var1 = packageList.iterator();
+
+            while(var1.hasNext()) {
+                PackageOfEquipments.MyPackage ret = (PackageOfEquipments.MyPackage)var1.next();
+                if (ret != null) {
+                    this.package_str += ret.getStr();
+                    this.package_dex += ret.getDex();
+                    this.package_int += ret.get_int();
+                    this.package_luk += ret.getLuk();
+                    this.package_all_ap += ret.getAll_ap();
+                    this.package_watk += ret.getWatk();
+                    this.package_matk += ret.getMatk();
+                    this.package_wdef += ret.getWdef();
+                    this.package_mdef += ret.getMdef();
+                    this.package_acc += ret.getAcc();
+                    this.package_avoid += ret.getAvoid();
+                    this.package_maxhp += ret.getMaxhp();
+                    this.package_maxmp += ret.getMaxmp();
+                    this.package_speed += ret.getSpeed();
+                    this.package_jump += ret.getJump();
+                    this.package_str_percent += ret.getStr_percent();
+                    this.package_dex_percent += ret.getDex_percent();
+                    this.package_int_percent += ret.get_int_percent();
+                    this.package_luk_percent += ret.getLuk_percent();
+                    this.package_all_ap_percent += ret.getAll_ap_percent();
+                    this.package_watk_percent += ret.getWatk_percent();
+                    this.package_matk_percent += ret.getMatk_percent();
+                    this.package_wdef_percent += ret.getWdef_percent();
+                    this.package_mdef_percent += ret.getMdef_percent();
+                    this.package_acc_percent += ret.getAcc_percent();
+                    this.package_avoid_percent += ret.getAvoid_percent();
+                    this.package_maxhp_percent += ret.getMaxhp_percent();
+                    this.package_maxmp_percent += ret.getMaxmp_percent();
+                    this.package_normal_damage_percent += ret.getNormal_damage_percent();
+                    this.package_boss_damage_percent += ret.getBoss_damage_percent();
+                    this.package_total_damage_percent += ret.getTotal_damage_percent();
+                }
+            }
+
+        }
+    }
+
+    public int getOneTimeLogi(String log) {
+        try {
+            Connection con = DBConPool.getConnection();
+            int ret_count = -1;
+            try {
+                PreparedStatement ps = con.prepareStatement("select count(*) from onetimelogi where ip = ? and log = ?");
+                ps.setString(1, this.getClient().getSessionIPAddress());
+                ps.setString(2, log);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    ret_count = rs.getInt(1);
+                }
+
+                rs.close();
+                ps.close();
+
+            } catch (Exception ex) {
+            } finally {
+                if (con != null) {
+                    try {
+                        con.close();
+                    } catch (Throwable var16) {
+
+                    }
+                }
+
+            }
+            return ret_count;
+        } catch (Exception var19) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var19);
+            return -1;
+        }
+    }
+
+    public void setOneTimeLogi(String log) {
+        if (!this.isClone()) {
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var3 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("insert into onetimelogi (ip, log) values (?,?)");
+                    ps.setString(1, this.getClient().getSessionIPAddress());
+                    ps.setString(2, log);
+                    ps.executeUpdate();
+                    ps.close();
+                } catch (Throwable var13) {
+                    var3 = var13;
+                    throw var13;
+                } finally {
+                    if (con != null) {
+                        if (var3 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var12) {
+                                var3.addSuppressed(var12);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (Exception var15) {
+                FileoutputUtil.outError("logs/资料库异常.txt", var15);
+            }
+
+        }
+    }
+
+
+    public final void cloneLook1() {
+        if (!this.clone) {
+            for(int i = 0; i < this.clones.length; ++i) {
+                if (this.clones[i].get() == null) {
+                    MapleCharacter newp1 = this.cloneLooks1();
+                    this.map.addPlayer(newp1);
+                    this.map.broadcastMessage(MaplePacketCreator.updateCharLook(newp1));
+                    this.map.movePlayer(newp1, this.getPosition());
+                    this.clones[i] = new WeakReference(newp1);
+                    return;
+                }
+            }
+
+        }
+    }
+
+    public MapleCharacter cloneLooks1() {
+        MapleClient cs = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
+        int minus = this.getId() + Randomizer.nextInt(this.getId());
+        MapleCharacter ret = new MapleCharacter(true);
+        ret.id = minus;
+        ret.client = cs;
+        ret.exp = 0;
+        ret.meso = 0;
+        ret.beans = 0;
+        ret.blood = this.blood;
+        ret.month = this.month;
+        ret.day = this.day;
+        ret.charmessage = this.charmessage;
+        ret.expression = this.expression;
+        ret.constellation = this.constellation;
+        ret.remainingAp = 0;
+        ret.fame = 0;
+        ret.accountid = this.client.getAccID();
+        ret.name = this.name + "①";
+        if (this.Getrobot("" + this.id + "", 11) <= 0) {
+            ret.hair = this.hair;
+        } else {
+            ret.hair = (short)this.Getrobot("" + this.id + "", 11);
+        }
+
+        if (this.Getrobot("" + this.id + "", 12) <= 0) {
+            ret.face = this.face;
+        } else {
+            ret.face = (short)this.Getrobot("" + this.id + "", 12);
+        }
+
+        if (this.Getrobot("" + this.id + "", 13) <= 0) {
+            ret.skinColor = this.skinColor;
+        } else {
+            ret.skinColor = (byte)((short)this.Getrobot("" + this.id + "", 13));
+        }
+
+        if (this.Getrobot("" + this.id + "", 14) <= 0) {
+            ret.level = 1;
+        } else {
+            ret.level = (short)this.Getrobot("" + this.id + "", 14);
+        }
+
+        ret.fame = 0;
+        ret.job = this.job;
+        ret.bookCover = this.bookCover;
+        ret.monsterbook = this.monsterbook;
+        ret.mount = this.mount;
+        ret.CRand = new PlayerRandomStream();
+        ret.gmLevel = 0;
+        ret.gender = 0;
+        ret.mapid = this.map.getId();
+        ret.map = this.map;
+        ret.setStance(this.getStance());
+        ret.chair = this.chair;
+        ret.itemEffect = this.itemEffect;
+        ret.guildid = this.guildid;
+        ret.currentrep = this.currentrep;
+        ret.totalrep = this.totalrep;
+        ret.stats = this.stats;
+        ret.effects.putAll(this.effects);
+        if (ret.effects.get(MapleBuffStat.ILLUSION) != null) {
+            ret.effects.remove(MapleBuffStat.ILLUSION);
+        }
+
+        if (ret.effects.get(MapleBuffStat.SUMMON) != null) {
+            ret.effects.remove(MapleBuffStat.SUMMON);
+        }
+
+        if (ret.effects.get(MapleBuffStat.REAPER) != null) {
+            ret.effects.remove(MapleBuffStat.REAPER);
+        }
+
+        if (ret.effects.get(MapleBuffStat.PUPPET) != null) {
+            ret.effects.remove(MapleBuffStat.PUPPET);
+        }
+        ret.max_damage = this.max_damage;
+        ret.guildrank = this.guildrank;
+        ret.allianceRank = this.allianceRank;
+        ret.hidden = this.hidden;
+        ret.setPosition(new Point(this.getPosition()));
+        Iterator var4 = this.getInventory(MapleInventoryType.EQUIPPED).iterator();
+
+        while(var4.hasNext()) {
+            IItem equip = (IItem)var4.next();
+            ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip);
+        }
+
+        ret.skillMacros = this.skillMacros;
+        ret.keylayout = this.keylayout;
+        ret.questinfo = this.questinfo;
+        ret.savedLocations = this.savedLocations;
+        ret.wishlist = this.wishlist;
+        ret.rocks = this.rocks;
+        ret.regrocks = this.regrocks;
+        ret.buddylist = this.buddylist;
+        ret.keydown_skill = 0L;
+        ret.lastmonthfameids = this.lastmonthfameids;
+        ret.lastfametime = this.lastfametime;
+        ret.storage = this.storage;
+        ret.cs = this.cs;
+        ret.client.setAccountName(this.client.getAccountName());
+        ret.acash = this.acash;
+        ret.lastGainHM = this.lastGainHM;
+        ret.maplepoints = this.maplepoints;
+        ret.clone = true;
+        ret.client.setChannel(this.client.getChannel());
+
+        while(this.map.getCharacterById(ret.id) != null || this.client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null) {
+            ++ret.id;
+        }
+
+        ret.client.setPlayer(ret);
+        return ret;
+    }
+
+    public final void cloneLook2() {
+        if (!this.clone) {
+            for(int i = 0; i < this.clones.length; ++i) {
+                if (this.clones[i].get() == null) {
+                    MapleCharacter newp = this.cloneLooks2();
+                    this.map.addPlayer(newp);
+                    this.map.broadcastMessage(MaplePacketCreator.updateCharLook(newp));
+                    this.map.movePlayer(newp, this.getPosition());
+                    this.clones[i] = new WeakReference(newp);
+                    return;
+                }
+            }
+
+        }
+    }
+
+    public MapleCharacter cloneLooks2() {
+        MapleClient cs = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
+        int minus = this.getId() + Randomizer.nextInt(this.getId());
+        MapleCharacter ret = new MapleCharacter(true);
+        ret.id = minus;
+        ret.client = cs;
+        ret.exp = 0;
+        ret.meso = 0;
+        ret.beans = 0;
+        ret.blood = this.blood;
+        ret.month = this.month;
+        ret.day = this.day;
+        ret.charmessage = this.charmessage;
+        ret.expression = this.expression;
+        ret.constellation = this.constellation;
+        ret.remainingAp = 0;
+        ret.fame = 0;
+        ret.accountid = this.client.getAccID();
+        ret.name = "[" + this.name + "][分身②]";
+        if (this.Getrobot("" + this.id + "", 21) <= 0) {
+            ret.hair = this.hair;
+        } else {
+            ret.hair = (short)this.Getrobot("" + this.id + "", 21);
+        }
+
+        if (this.Getrobot("" + this.id + "", 22) <= 0) {
+            ret.face = this.face;
+        } else {
+            ret.face = (short)this.Getrobot("" + this.id + "", 22);
+        }
+
+        if (this.Getrobot("" + this.id + "", 23) <= 0) {
+            ret.skinColor = this.skinColor;
+        } else {
+            ret.skinColor = (byte)((short)this.Getrobot("" + this.id + "", 23));
+        }
+
+        if (this.Getrobot("" + this.id + "", 24) <= 0) {
+            ret.level = 1;
+        } else {
+            ret.level = (short)this.Getrobot("" + this.id + "", 24);
+        }
+        ret.max_damage = this.max_damage;
+        ret.fame = this.fame;
+        ret.job = this.job;
+        ret.bookCover = this.bookCover;
+        ret.monsterbook = this.monsterbook;
+        ret.mount = this.mount;
+        ret.CRand = new PlayerRandomStream();
+        ret.gmLevel = 0;
+        ret.gender = 0;
+        ret.mapid = this.map.getId();
+        ret.map = this.map;
+        ret.setStance(this.getStance());
+        ret.chair = this.chair;
+        ret.itemEffect = this.itemEffect;
+        ret.guildid = this.guildid;
+        ret.currentrep = this.currentrep;
+        ret.totalrep = this.totalrep;
+        ret.stats = this.stats;
+        ret.effects.putAll(this.effects);
+        if (ret.effects.get(MapleBuffStat.ILLUSION) != null) {
+            ret.effects.remove(MapleBuffStat.ILLUSION);
+        }
+
+        if (ret.effects.get(MapleBuffStat.SUMMON) != null) {
+            ret.effects.remove(MapleBuffStat.SUMMON);
+        }
+
+        if (ret.effects.get(MapleBuffStat.REAPER) != null) {
+            ret.effects.remove(MapleBuffStat.REAPER);
+        }
+
+        if (ret.effects.get(MapleBuffStat.PUPPET) != null) {
+            ret.effects.remove(MapleBuffStat.PUPPET);
+        }
+
+        ret.guildrank = this.guildrank;
+        ret.allianceRank = this.allianceRank;
+        ret.hidden = this.hidden;
+        ret.setPosition(new Point(this.getPosition()));
+        Iterator var4 = this.getInventory(MapleInventoryType.EQUIPPED).iterator();
+
+        while(var4.hasNext()) {
+            IItem equip = (IItem)var4.next();
+            ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip);
+        }
+
+        ret.skillMacros = this.skillMacros;
+        ret.keylayout = this.keylayout;
+        ret.questinfo = this.questinfo;
+        ret.savedLocations = this.savedLocations;
+        ret.wishlist = this.wishlist;
+        ret.rocks = this.rocks;
+        ret.regrocks = this.regrocks;
+        ret.buddylist = this.buddylist;
+        ret.keydown_skill = 0L;
+        ret.lastmonthfameids = this.lastmonthfameids;
+        ret.lastfametime = this.lastfametime;
+        ret.storage = this.storage;
+        ret.cs = this.cs;
+        ret.client.setAccountName(this.client.getAccountName());
+        ret.acash = this.acash;
+        ret.lastGainHM = this.lastGainHM;
+        ret.maplepoints = this.maplepoints;
+        ret.clone = true;
+        ret.client.setChannel(this.client.getChannel());
+
+        while(this.map.getCharacterById(ret.id) != null || this.client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null) {
+            ++ret.id;
+        }
+
+        ret.client.setPlayer(ret);
+        return ret;
+    }
+
+    public void deleteOneTimeLoga(String log) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().deleteOneTimeLogaAll(this.getAccountID(), log);
+        }
+    }
+
+    public void setOneTimeLoga(String log) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setOneTimeLoga(this.getAccountID(), log);
+        }
+    }
+
+    public void setOneTimeLoga(String log, int count) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setOneTimeLoga(this.getAccountID(), log, count);
+        }
+    }
+
+
+    public void 增加伤害上限值(long inc_damage) {
+        long now_damage = this.max_damage;
+        if (now_damage <= 199999L) {
+            now_damage = 199999L;
+        }
+
+        if (inc_damage > 0L) {
+            now_damage += inc_damage;
+            this.max_damage = now_damage;
+        }
+
+    }
+
+    public void 减少伤害上限值(long inc_damage) {
+        long now_damage = this.max_damage;
+        if (now_damage <= 199999L) {
+            now_damage = 199999L;
+        }
+
+        if (inc_damage > 0L) {
+            now_damage -= inc_damage;
+            if (now_damage <= 199999L) {
+                now_damage = 199999L;
+            }
+
+            this.max_damage = now_damage;
+        }
+
+    }
+
+    public long 读取伤害上限值() {
+        return this.max_damage;
+    }
+
+//    public void 增加经验储备(long inc_exp) {
+//        long now_exp = this.exp_reserve;
+//        if (now_exp <= 0L) {
+//            now_exp = 0L;
+//        }
+//
+//        if (inc_exp > 0L) {
+//            now_exp += inc_exp;
+//            this.exp_reserve = now_exp;
+//        }
+//
+//    }
+//
+//    public void 扣除经验储备(long inc_exp) {
+//        long now_exp = this.exp_reserve;
+//        if (now_exp <= 199999L) {
+//            now_exp = 199999L;
+//        }
+//
+//        if (inc_exp > 0L) {
+//            now_exp -= inc_exp;
+//            if (now_exp <= 0L) {
+//                now_exp = 0L;
+//            }
+//
+//            this.exp_reserve = now_exp;
+//        }
+//
+//    }
+
+//    public long 读取经验储备() {
+//        return this.exp_reserve;
+//    }
+
+    public int Getcharacterz(String Name, int Channale) {
+        int ret = -1;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM characterz WHERE channel = ? and Name = ?");
+            ps.setInt(1, Channale);
+            ps.setString(2, Name);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            ret = rs.getInt("Point");
+            rs.close();
+            DBConPool.close(ps);
+        } catch (SQLException var7) {
+        }
+
+        return ret;
+    }
+
+    public void 关闭仙人模式() {
+        this.dropMessage(5, "仙人模式 - 关闭");
+        this.关闭仙人模式信息();
+        if (this.仙人模式线程 != null) {
+            this.仙人模式线程.cancel(false);
+            this.仙人模式线程 = null;
+        }
+
+        if (this.仙人模式BUFF线程 != null) {
+            this.仙人模式BUFF线程.cancel(false);
+            this.仙人模式BUFF线程 = null;
+        }
+
+        this.保护线程();
+    }
+
+    public void 开启仙人模式信息() {
+        PreparedStatement ps1 = null;
+        ResultSet rs = null;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            ps1 = con.prepareStatement("SELECT * FROM jiezoudashi ");
+            rs = ps1.executeQuery();
+            if (rs.next()) {
+                String sqlString2 = null;
+                sqlString2 = "update jiezoudashi set Val= 0 where Name = '仙人模式" + this.id + "'";
+                PreparedStatement dropperid = con.prepareStatement(sqlString2);
+                dropperid.executeUpdate(sqlString2);
+                Start.读取技个人信息设置();
+            }
+
+            DBConPool.close(ps1);
+        } catch (SQLException var6) {
+        }
+
+    }
+
+    public void 关闭仙人模式信息() {
+        PreparedStatement ps1 = null;
+        ResultSet rs = null;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            ps1 = con.prepareStatement("SELECT * FROM jiezoudashi ");
+            rs = ps1.executeQuery();
+            if (rs.next()) {
+                String sqlString2 = null;
+                sqlString2 = "update jiezoudashi set Val= 1 where Name = '仙人模式" + this.id + "'";
+                PreparedStatement dropperid = con.prepareStatement(sqlString2);
+                dropperid.executeUpdate(sqlString2);
+                Start.读取技个人信息设置();
+            }
+        } catch (SQLException var6) {
+        }
+
+    }
+
+    public void 仙人模式() {
+        this.保护线程();
+        if (this.仙人模式线程 == null) {
+            this.开启仙人模式信息();
+            this.仙人模式BUFF();
+            this.dropMessage(5, "仙人模式 - 开启");
+            int 契合 = (Integer)Start.个人信息设置.get("BUFF增益" + this.id + "");
+            if (契合 > 50 && 契合 <= 100) {
+                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
+                    public void run() {
+                        if (MapleCharacter.this.getMp() > 0) {
+                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.15));
+                        } else {
+                            MapleCharacter.this.关闭仙人模式();
+                        }
+
+                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.15));
+                    }
+                }, 5000L);
+            } else if (契合 > 100 && 契合 <= 150) {
+                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
+                    public void run() {
+                        if (MapleCharacter.this.getMp() > 0) {
+                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.15));
+                        } else {
+                            MapleCharacter.this.关闭仙人模式();
+                        }
+
+                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.15));
+                    }
+                }, 4000L);
+            } else if (契合 > 150) {
+                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
+                    public void run() {
+                        if (MapleCharacter.this.getMp() > 0) {
+                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.2));
+                        } else {
+                            MapleCharacter.this.关闭仙人模式();
+                        }
+
+                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.2));
+                    }
+                }, 4000L);
+            } else {
+                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
+                    public void run() {
+                        if (MapleCharacter.this.getMp() > 0) {
+                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.1));
+                        } else {
+                            MapleCharacter.this.关闭仙人模式();
+                        }
+
+                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.1));
+                    }
+                }, 5000L);
+            }
+        } else {
+            this.仙人模式线程.cancel(false);
+            this.仙人模式线程 = null;
+        }
+
+    }
+
+    public void 仙人模式BUFF() {
+        if (this.仙人模式BUFF线程 == null) {
+            int 间隔 = (int)((double)((Integer)Start.个人信息设置.get("聪明睿智" + this.id + "") * (Integer)Start.个人信息设置.get("BUFF增益" + this.id + "")) * 1.0E-4);
+            if (间隔 > 10000) {
+                间隔 = 10000;
+            }
+
+            this.仙人模式BUFF线程 = BuffTimer.getInstance().register(new Runnable() {
+                public void run() {
+                    int 值 = (Integer)Start.个人信息设置.get("BUFF增益" + MapleCharacter.this.id + "");
+                    int buff = 2022359;
+                    double a;
+                    if (值 < 90) {
+                        a = Math.ceil(Math.random() * 8.0);
+                        buff = (int)((double)buff + a);
+                    } else if (值 >= 90 && 值 < 180) {
+                        a = Math.ceil(Math.random() * 17.0);
+                        buff = (int)((double)buff + a);
+                    } else if (值 >= 180 && 值 < 270) {
+                        a = Math.ceil(Math.random() * 26.0);
+                        buff = (int)((double)buff + a);
+                    } else if (值 >= 270 && 值 < 360) {
+                        a = Math.ceil(Math.random() * 35.0);
+                        buff = (int)((double)buff + a);
+                    } else if (值 >= 360 && 值 < 450) {
+                        a = Math.ceil(Math.random() * 44.0);
+                        buff = (int)((double)buff + a);
+                    } else if (值 >= 450 && 值 < 540) {
+                        a = Math.ceil(Math.random() * 53.0);
+                        buff = (int)((double)buff + a);
+                    } else if (值 >= 540) {
+                        a = Math.ceil(Math.random() * 62.0);
+                        buff = (int)((double)buff + a);
+                    }
+
+                    MapleItemInformationProvider.getInstance().getItemEffect(buff).applyTo(MapleCharacter.this.client.getPlayer());
+                }
+            }, (long)(20000 - 间隔));
+        } else {
+            this.仙人模式BUFF线程.cancel(false);
+            this.仙人模式BUFF线程 = null;
+        }
+
+    }
+
+    public void 修炼物理攻击力() {
+        this.保护线程();
+        if (this.getExp() < this.level * 10000) {
+            this.dropMessage(1, "经验不足够修炼");
+        } else if (this.魔法攻击力线程 != null) {
+            this.dropMessage(1, "无法同时修炼");
+        } else {
+            if (Game.主城(this.getMapId())) {
+                if (this.物理攻击力线程 == null) {
+                    this.dropMessage(1, "修炼物理攻击力开启");
+                    this.物理攻击力线程 = BuffTimer.getInstance().register(new Runnable() {
+                        public void run() {
+                            if (MapleCharacter.this.修仙 > 0) {
+                                if (Game.主城(MapleCharacter.this.getMapId())) {
+                                    if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 10000) {
+                                        MapleCharacter.this.gainExp(-MapleCharacter.this.level * 10000, true, true, false);
+                                        MapleCharacter.this.增加修炼("物理攻击力" + MapleCharacter.this.id);
+                                        MapleCharacter.this.dropMessage(5, "物理攻击力 + 1");
+                                    } else {
+                                        MapleCharacter.this.物理攻击力线程.cancel(false);
+                                        MapleCharacter.this.物理攻击力线程 = null;
+                                        MapleCharacter.this.修仙 = 0;
+                                        MapleCharacter.this.dropMessage(1, "修炼物理攻击力关闭,经验不足");
+                                    }
+                                } else {
+                                    MapleCharacter.this.物理攻击力线程.cancel(false);
+                                    MapleCharacter.this.物理攻击力线程 = null;
+                                    MapleCharacter.this.修仙 = 0;
+                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
+                                }
+                            } else {
+                                ++MapleCharacter.this.修仙;
+                            }
+
+                        }
+                    }, 30000L);
+                } else {
+                    this.物理攻击力线程.cancel(false);
+                    this.物理攻击力线程 = null;
+                    this.修仙 = 0;
+                    this.dropMessage(1, "修炼物理攻击力关闭");
+                }
+            } else {
+                this.物理攻击力线程.cancel(false);
+                this.物理攻击力线程 = null;
+                this.修仙 = 0;
+                this.dropMessage(1, "安全区内才可以修炼。");
+            }
+
+        }
+    }
+
+    public void 修炼魔法攻击力() {
+        this.保护线程();
+        if (this.getExp() < this.level * 10000) {
+            this.dropMessage(1, "经验不足够修炼");
+        } else if (this.物理攻击力线程 != null) {
+            this.dropMessage(1, "无法同时修炼");
+        } else {
+            if (Game.主城(this.getMapId())) {
+                if (this.魔法攻击力线程 == null) {
+                    this.dropMessage(1, "修炼魔法攻击力开启");
+                    this.魔法攻击力线程 = BuffTimer.getInstance().register(new Runnable() {
+                        public void run() {
+                            if (MapleCharacter.this.修仙 > 0) {
+                                if (Game.主城(MapleCharacter.this.getMapId())) {
+                                    if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 10000) {
+                                        MapleCharacter.this.gainExp(-MapleCharacter.this.level * 10000, true, true, false);
+                                        MapleCharacter.this.增加修炼("魔法攻击力" + MapleCharacter.this.id);
+                                        MapleCharacter.this.dropMessage(5, "魔法攻击力 + 1");
+                                    } else {
+                                        MapleCharacter.this.物理攻击力线程.cancel(false);
+                                        MapleCharacter.this.物理攻击力线程 = null;
+                                        MapleCharacter.this.修仙 = 0;
+                                        MapleCharacter.this.dropMessage(1, "修炼魔法攻击力关闭,经验不足");
+                                    }
+                                } else {
+                                    MapleCharacter.this.物理攻击力线程.cancel(false);
+                                    MapleCharacter.this.物理攻击力线程 = null;
+                                    MapleCharacter.this.修仙 = 0;
+                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
+                                }
+                            } else {
+                                ++MapleCharacter.this.修仙;
+                            }
+
+                        }
+                    }, 30000L);
+                } else {
+                    this.魔法攻击力线程.cancel(false);
+                    this.魔法攻击力线程 = null;
+                    this.修仙 = 0;
+                    this.dropMessage(1, "修炼魔法攻击力关闭");
+                }
+            } else {
+                this.物理攻击力线程.cancel(false);
+                this.物理攻击力线程 = null;
+                this.修仙 = 0;
+                this.dropMessage(1, "安全区内才可以修炼。");
+            }
+
+        }
+    }
+
+    public void 修炼硬化皮肤() {
+        this.保护线程();
+        if (this.getExp() < this.level * 10000) {
+            this.dropMessage(1, "经验不足够修炼");
+        } else if (this.物理攻击力线程 != null) {
+            this.dropMessage(1, "无法同时修炼");
+        } else if (this.魔法攻击力线程 != null) {
+            this.dropMessage(1, "无法同时修炼");
+        } else {
+            if (Game.主城(this.getMapId())) {
+                if (this.硬化皮肤线程 == null) {
+                    this.dropMessage(1, "修炼硬化皮肤开启");
+                    this.硬化皮肤线程 = BuffTimer.getInstance().register(new Runnable() {
+                        public void run() {
+                            if (MapleCharacter.this.修仙 > 0) {
+                                if (Game.主城(MapleCharacter.this.getMapId())) {
+                                    if ((double)MapleCharacter.this.getHp() > (double)MapleCharacter.this.stats.getMaxHp() * 0.3) {
+                                        if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 30000) {
+                                            MapleCharacter.this.gainExp(-MapleCharacter.this.level * 30000, true, true, false);
+                                            MapleCharacter.this.增加修炼("硬化皮肤" + MapleCharacter.this.id);
+                                            MapleCharacter.this.dropMessage(5, "硬化皮肤 + 1");
+                                            MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.3));
+                                        } else {
+                                            MapleCharacter.this.硬化皮肤线程.cancel(false);
+                                            MapleCharacter.this.硬化皮肤线程 = null;
+                                            MapleCharacter.this.修仙 = 0;
+                                            MapleCharacter.this.dropMessage(1, "修炼硬化皮肤关闭,经验不足");
+                                        }
+                                    } else {
+                                        MapleCharacter.this.硬化皮肤线程.cancel(false);
+                                        MapleCharacter.this.硬化皮肤线程 = null;
+                                        MapleCharacter.this.修仙 = 0;
+                                        MapleCharacter.this.dropMessage(1, "状态不健康。");
+                                    }
+                                } else {
+                                    MapleCharacter.this.硬化皮肤线程.cancel(false);
+                                    MapleCharacter.this.硬化皮肤线程 = null;
+                                    MapleCharacter.this.修仙 = 0;
+                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
+                                }
+                            } else {
+                                ++MapleCharacter.this.修仙;
+                            }
+
+                        }
+                    }, 60000L);
+                } else {
+                    this.硬化皮肤线程.cancel(false);
+                    this.硬化皮肤线程 = null;
+                    this.修仙 = 0;
+                    this.dropMessage(1, "修炼硬化皮肤关闭");
+                }
+            } else {
+                this.硬化皮肤线程.cancel(false);
+                this.硬化皮肤线程 = null;
+                this.修仙 = 0;
+                this.dropMessage(1, "安全区内才可以修炼。");
+            }
+
+        }
+    }
+
+    public void 修炼BUFF增益() {
+        this.保护线程();
+        if (this.getExp() < this.level * 15000) {
+            this.dropMessage(1, "经验不足够修炼");
+        } else if (this.魔法攻击力线程 != null) {
+            this.dropMessage(1, "无法同时修炼");
+        } else if (this.物理攻击力线程 != null) {
+            this.dropMessage(1, "无法同时修炼");
+        } else {
+            if (Game.主城(this.getMapId())) {
+                if (this.修炼BUFF增益线程 == null) {
+                    this.dropMessage(1, "修炼契合力开启");
+                    this.修炼BUFF增益线程 = BuffTimer.getInstance().register(new Runnable() {
+                        public void run() {
+                            if (MapleCharacter.this.修仙 > 0) {
+                                if (Game.主城(MapleCharacter.this.getMapId())) {
+                                    if ((double)MapleCharacter.this.getMp() > (double)MapleCharacter.this.stats.getMaxMp() * 0.05 && (double)MapleCharacter.this.getHp() > (double)MapleCharacter.this.stats.getMaxHp() * 0.05) {
+                                        int 程度 = MapleCharacter.this.判断修炼("BUFF增益" + MapleCharacter.this.id);
+                                        int 经验xx;
+                                        byte 成功;
+                                        double 概率;
+                                        if (程度 <= 50) {
+                                            经验xx = 15000;
+                                            成功 = 50;
+                                            if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验xx) {
+                                                概率 = Math.ceil(Math.random() * 100.0);
+                                                MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.05));
+                                                MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.05));
+                                                MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验xx, true, true, false);
+                                                if (概率 <= (double)成功) {
+                                                    MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
+                                                    MapleCharacter.this.dropMessage(5, "契合力 + 1");
+                                                } else {
+                                                    MapleCharacter.this.dropMessage(5, "契合力提升失败");
+                                                }
+                                            } else {
+                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                MapleCharacter.this.修仙 = 0;
+                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
+                                            }
+                                        } else if (程度 > 50 && 程度 <= 100) {
+                                            int 经验x = 30000;
+                                            成功 = 40;
+                                            if (MapleCharacter.this.haveItem(4031216, 200)) {
+                                                if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验x) {
+                                                    概率 = Math.ceil(Math.random() * 100.0);
+                                                    MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.05));
+                                                    MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.05));
+                                                    MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验x, true, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4031216), 4031216,  200, true, false);
+                                                    if (概率 <= (double)成功) {
+                                                        MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
+                                                        MapleCharacter.this.dropMessage(5, "契合力 + 1");
+                                                    } else {
+                                                        MapleCharacter.this.dropMessage(5, "契合力提升失败");
+                                                    }
+                                                } else {
+                                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                    MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                    MapleCharacter.this.修仙 = 0;
+                                                    MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
+                                                }
+                                            } else {
+                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                MapleCharacter.this.修仙 = 0;
+                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭\r\n需要；\r\n蝙蝠怪的灵魂石*200");
+                                            }
+                                        } else if (程度 > 101 && 程度 <= 150) {
+                                            int 经验 = '\uea60';
+                                            成功 = 30;
+                                            if (MapleCharacter.this.haveItem(4031216, 200) && MapleCharacter.this.haveItem(4005004, 1)) {
+                                                if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验) {
+                                                    概率 = Math.ceil(Math.random() * 100.0);
+                                                    MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.1));
+                                                    MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.1));
+                                                    MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验, true, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4031216), 4031216, 200, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005004), 4005004, 1, true, false);
+                                                    if (概率 <= (double)成功) {
+                                                        MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
+                                                        MapleCharacter.this.dropMessage(5, "契合力 + 1");
+                                                    } else {
+                                                        MapleCharacter.this.dropMessage(5, "契合力提升失败");
+                                                    }
+                                                } else {
+                                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                    MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                    MapleCharacter.this.修仙 = 0;
+                                                    MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
+                                                }
+                                            } else {
+                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                MapleCharacter.this.修仙 = 0;
+                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭\r\n需要；\r\n蝙蝠怪的灵魂石*200\r\n黑暗水晶*1");
+                                            }
+                                        } else if (程度 > 151 && 程度 <= 200) {
+                                            经验xx = 100000;
+                                            成功 = 30;
+                                            if (MapleCharacter.this.haveItem(4005004, 1) && MapleCharacter.this.haveItem(4005000, 5) && MapleCharacter.this.haveItem(4005001, 5) && MapleCharacter.this.haveItem(4005002, 5) && MapleCharacter.this.haveItem(4005003, 5)) {
+                                                if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验xx) {
+                                                    概率 = Math.ceil(Math.random() * 100.0);
+                                                    MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.1));
+                                                    MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.1));
+                                                    MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验xx, true, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005000), 4005000, 5, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005001), 4005001, 5, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005002), 4005002, 5, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005003), 4005003, 5, true, false);
+                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005004), 4005004, 1, true, false);
+                                                    if (概率 <= (double)成功) {
+                                                        MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
+                                                        MapleCharacter.this.dropMessage(5, "契合力 + 1");
+                                                    } else {
+                                                        MapleCharacter.this.dropMessage(5, "契合力提升失败");
+                                                    }
+                                                } else {
+                                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                    MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                    MapleCharacter.this.修仙 = 0;
+                                                    MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
+                                                }
+                                            } else {
+                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                                MapleCharacter.this.修炼BUFF增益线程 = null;
+                                                MapleCharacter.this.修仙 = 0;
+                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭\r\n需要；\r\n黑暗水晶*1\r\n力量水晶*5\r\n敏捷水晶*5\r\n智慧水晶*5\r\n幸运水晶*5");
+                                            }
+                                        } else {
+                                            MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                            MapleCharacter.this.修炼BUFF增益线程 = null;
+                                            MapleCharacter.this.修仙 = 0;
+                                            MapleCharacter.this.dropMessage(1, "暂未开通更高契合修为");
+                                        }
+                                    } else {
+                                        MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                        MapleCharacter.this.修炼BUFF增益线程 = null;
+                                        MapleCharacter.this.修仙 = 0;
+                                        MapleCharacter.this.dropMessage(1, "修炼契合力关闭,状态不健康");
+                                    }
+                                } else {
+                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
+                                    MapleCharacter.this.修炼BUFF增益线程 = null;
+                                    MapleCharacter.this.修仙 = 0;
+                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
+                                }
+                            } else {
+                                ++MapleCharacter.this.修仙;
+                            }
+
+                        }
+                    }, 120000L);
+                } else {
+                    this.修炼BUFF增益线程.cancel(false);
+                    this.修炼BUFF增益线程 = null;
+                    this.修仙 = 0;
+                    this.dropMessage(1, "修炼契合力关闭");
+                }
+            } else {
+                this.物理攻击力线程.cancel(false);
+                this.物理攻击力线程 = null;
+                this.修仙 = 0;
+                this.dropMessage(1, "安全区内才可以修炼。");
+            }
+
+        }
+    }
+
+    public final void 召唤假人(int a) {
+        if (!this.clone) {
+            for(int i = 0; i < this.clones.length; ++i) {
+                if (this.clones[i].get() == null) {
+                    MapleCharacter newp1 = this.假人系统(a);
+                    this.map.addPlayer(newp1);
+                    this.map.broadcastMessage(MaplePacketCreator.updateCharLook(newp1));
+                    this.map.movePlayer(newp1, this.getPosition());
+                    this.clones[i] = new WeakReference(newp1);
+                    return;
+                }
+            }
+
+        }
+    }
+
+    public MapleCharacter 假人系统(int a) {
+        MapleClient cs = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
+        int minus = this.getId() + Randomizer.nextInt(this.getId());
+        MapleCharacter ret = new MapleCharacter(true);
+        ret.id = minus;
+        ret.client = cs;
+        ret.exp = 0;
+        ret.meso = 0;
+        ret.beans = this.beans;
+        ret.blood = this.blood;
+        ret.month = this.month;
+        ret.day = this.day;
+        ret.charmessage = this.charmessage;
+        ret.expression = this.expression;
+        ret.constellation = this.constellation;
+        ret.remainingAp = 0;
+        ret.fame = 0;
+        ret.accountid = this.client.getAccID();
+        ret.name = 取假人属性(a, "name");
+        ret.level = (short)Integer.parseInt(取假人属性(a, "level"));
+        ret.fame = (short)Integer.parseInt(取假人属性(a, "fame"));
+        ret.job = (short)Integer.parseInt(取假人属性(a, "job"));
+        ret.hair = (short)Integer.parseInt(取假人属性(a, "hair"));
+        ret.face = (short)Integer.parseInt(取假人属性(a, "face"));
+        ret.skinColor = this.skinColor;
+        ret.bookCover = this.bookCover;
+        ret.monsterbook = this.monsterbook;
+        ret.mount = this.mount;
+        ret.CRand = new PlayerRandomStream();
+        ret.gmLevel = this.gmLevel;
+        ret.gender = this.gender;
+        ret.mapid = this.map.getId();
+        ret.map = this.map;
+        ret.setStance(this.getStance());
+        ret.chair = this.chair;
+        ret.itemEffect = this.itemEffect;
+        ret.guildid = (short)Integer.parseInt(取假人属性(a, "guildid"));
+        ret.currentrep = this.currentrep;
+        ret.totalrep = this.totalrep;
+        ret.stats = this.stats;
+        ret.effects.putAll(this.effects);
+        ret.guildrank = this.guildrank;
+        ret.allianceRank = this.allianceRank;
+        ret.hidden = this.hidden;
+        ret.setPosition(new Point(this.getPosition()));
+        Iterator var5 = this.getInventory(MapleInventoryType.EQUIPPED).iterator();
+
+        while(var5.hasNext()) {
+            IItem equip = (IItem)var5.next();
+            ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip);
+        }
+
+        ret.skillMacros = this.skillMacros;
+        ret.keylayout = this.keylayout;
+        ret.questinfo = this.questinfo;
+        ret.savedLocations = this.savedLocations;
+        ret.wishlist = this.wishlist;
+        ret.rocks = this.rocks;
+        ret.regrocks = this.regrocks;
+        ret.buddylist = this.buddylist;
+        ret.keydown_skill = 0L;
+        ret.lastmonthfameids = this.lastmonthfameids;
+        ret.lastfametime = this.lastfametime;
+        ret.storage = this.storage;
+        ret.cs = this.cs;
+        ret.client.setAccountName(this.client.getAccountName());
+        ret.acash = this.acash;
+        ret.lastGainHM = this.lastGainHM;
+        ret.maplepoints = this.maplepoints;
+        ret.clone = true;
+        ret.client.setChannel(this.client.getChannel());
+
+        while(this.map.getCharacterById(ret.id) != null || this.client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null) {
+            ++ret.id;
+        }
+
+        ret.client.setPlayer(ret);
+        return ret;
+    }
+
+    public static String 取假人属性(int a, String b) {
+        String data = "";
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT " + b + " FROM characters WHERE id = ?");
+            ps.setInt(1, a);
+            ResultSet rs = ps.executeQuery();
+            Throwable var6 = null;
+
+            try {
+                if (rs.next()) {
+                    data = rs.getString(b);
+                }
+            } catch (Throwable var16) {
+                var6 = var16;
+                throw var16;
+            } finally {
+                if (rs != null) {
+                    if (var6 != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var15) {
+                            var6.addSuppressed(var15);
+                        }
+                    } else {
+                        rs.close();
+                    }
+                }
+
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var18) {
+            服务端输出信息.println_err("取假人属性出错");
+        }
+
+        return data;
+    }
+    public int Getrobot(String Name, int Channale) {
+        int ret = -1;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM robot WHERE channel = ? and Name = ?");
+            ps.setInt(1, Channale);
+            ps.setString(2, Name);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            ret = rs.getInt("Point");
+            rs.close();
+            DBConPool.close(ps);
+        } catch (SQLException var7) {
+        }
+
+        return ret;
+    }
+
+    public void 保护线程() {
+        if (this.保护线程 == null) {
+            this.保护线程 = BuffTimer.getInstance().register(new Runnable() {
+                public void run() {
+                    if (Find.findChannel(MapleCharacter.this.name) == 2) {
+                        MapleCharacter.this.gainExp(1, false, false, false);
+                    } else {
+                        MapleCharacter.this.关闭保护线程();
+                    }
+
+                }
+            }, 60000L);
+        } else if (this.保护线程 != null) {
+            this.保护线程.cancel(false);
+            this.保护线程 = null;
+        }
+
+    }
+
+    public void 关闭保护线程() {
+        if (this.保护线程 != null) {
+            this.保护线程.cancel(false);
+            this.保护线程 = null;
+        }
+
+    }
+    public void 增加修炼(String a) {
+        PreparedStatement ps = null;
+        PreparedStatement ps1 = null;
+        ResultSet rs = null;
+        int ret = this.判断修炼(a);
+        ++ret;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            ps = con.prepareStatement("SELECT * FROM jiezoudashi ");
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                String sqlString1 = null;
+                sqlString1 = "update jiezoudashi set Val = '" + ret + "' where Name = '" + a + "';";
+                PreparedStatement Val = con.prepareStatement(sqlString1);
+                Val.executeUpdate(sqlString1);
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var9) {
+        }
+
+    }
+
+    public int 判断修炼(String a) {
+        int data = 0;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM jiezoudashi WHERE Name = '" + a + "'");
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                data = rs.getInt("Val");
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var6) {
+        }
+
+        return data;
+    }
+
+    public int 判断修炼2(String a) {
+        int ret = 0;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM jiezoudashi WHERE Name = `" + a + "`");
+            Throwable var5 = null;
+
+            try {
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    ret = rs.getInt("Val");
+                }
+
+                DBConPool.close(ps);
+            } catch (Throwable var15) {
+                var5 = var15;
+                throw var15;
+            } finally {
+                if (ps != null) {
+                    if (var5 != null) {
+                        try {
+                            ps.close();
+                        } catch (Throwable var14) {
+                            var5.addSuppressed(var14);
+                        }
+                    } else {
+                        ps.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var17) {
+        }
+
+        return ret;
+    }
+    public int getOfflineMoney(MapleCharacter victim) {
+        return this.getMoney(victim);
+    }
+
+    public int getMoney() {
+        return this.getMoney(this);
+    }
+
+    public int getMoney(MapleCharacter chr) {
+        int maxtimes = 10;
+        int nowtime = 0;
+        int delay = 500;
+        boolean error = false;
+        int x = 0;
+
+        do {
+            ++nowtime;
+
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var8 = null;
+
+                try {
+                    Statement stmt = con.createStatement();
+                    ResultSet rs = stmt.executeQuery("Select money from Accounts Where id = " + chr.getClient().getAccID());
+
+                    while(rs.next()) {
+                        int debug = -1;
+
+                        try {
+                            debug = rs.getInt("money");
+                        } catch (SQLException var25) {
+                        }
+
+                        if (debug != -1) {
+                            x = rs.getInt("money");
+                            error = false;
+                        } else {
+                            error = true;
+                        }
+                    }
+
+                    rs.close();
+                } catch (Throwable var26) {
+                    var8 = var26;
+                    throw var26;
+                } finally {
+                    if (con != null) {
+                        if (var8 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var24) {
+                                var8.addSuppressed(var24);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var28) {
+                服务端输出信息.println_err("[getMoney]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", var28);
+            } catch (Exception var29) {
+                服务端输出信息.println_err("[getMoney]" + var29);
+                FileoutputUtil.outError("logs/资料库异常.txt", var29);
+            }
+
+            if (error) {
+                try {
+                    Thread.sleep((long)delay);
+                } catch (Exception var23) {
+                    FileoutputUtil.outError("logs/资料库异常.txt", var23);
+                }
+            }
+        } while(error && nowtime < maxtimes);
+
+        return x;
+    }
+
+    public boolean resetBossLog() {
+        return this.isClone() ? false : TimeLogCenter.getInstance().deleteBossLogAll(this.id);
+    }
+
+    public boolean deleteBossLog(String name) {
+        return this.isClone() ? false : TimeLogCenter.getInstance().deleteBossLogAll(this.id, name);
+    }
+
+    public boolean deleteBossLog(String name, int count) {
+        if (this.isClone()) {
+            return false;
+        } else {
+            TimeLogCenter.getInstance().setBossLog(this.id, name, -count);
+            return true;
+        }
+    }
+    public boolean resetBossLogA() {
+        return this.isClone() ? false : TimeLogCenter.getInstance().deleteBossLogaAll(this.getAccountID());
+    }
+
+    public boolean deleteBossLoga(String name) {
+        return this.isClone() ? false : TimeLogCenter.getInstance().deleteBossLogaAll(this.getAccountID(), name);
+    }
+
+    public boolean deleteBossLoga(String name, int count) {
+        if (this.isClone()) {
+            return false;
+        } else {
+            TimeLogCenter.getInstance().setBossLoga(this.getAccountID(), name, -count);
+            return true;
+        }
+    }
+
+
+    public boolean getBackupInventory() {
+        return this.backupInventory;
+    }
+
+    public void setBackupInventory(boolean backupInventory) {
+        this.backupInventory = backupInventory;
+    }
+
+
+    public void addMount(int mountId) {
+        if (!this.mountList.contains(mountId)) {
+            this.mountList.add(mountId);
+        }
+
+    }
+
+    public void clearMountList() {
+        this.mountList.clear();
+    }
+
+    public boolean saveMountListToDB(Connection con) {
+        if (this.mountList.isEmpty()) {
+            return false;
+        } else {
+            try {
+                if (con == null || con.isClosed()) {
+                    con = DBConPool.getNewConnection();
+                }
+
+                PreparedStatement ps = con.prepareStatement("DELETE FROM snail_chr_mount_list WHERE chrid = ?");
+                ps.setInt(1, this.getId());
+                ps.executeUpdate();
+                ps = con.prepareStatement("INSERT INTO snail_chr_mount_list (chrid,mountid) VALUES ( ?, ?)");
+                Iterator var3 = this.mountList.iterator();
+
+                while(var3.hasNext()) {
+                    int mountId = (Integer)var3.next();
+                    ps.setInt(1, this.getId());
+                    ps.setInt(2, mountId);
+                    ps.executeUpdate();
+                }
+
+                ps.close();
+                return true;
+            } catch (SQLException var5) {
+                服务端输出信息.println_err("【错误】saveMountListToDB 错误，错误原因：" + var5);
+                var5.printStackTrace();
+                return false;
+            }
+        }
+    }
+    public void setBossLoga(String bossid) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setBossLoga(this.getAccountID(), bossid, 1);
+        }
+    }
+
+    public void setBossLoga(String bossid, int count) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setBossLoga(this.getAccountID(), bossid, count);
+        }
+    }
+    public boolean loadMountListFromDB() {
+        this.mountList.clear();
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var2 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_chr_mount_list WHERE chrid = ?");
+                ps.setInt(1, this.getId());
+                ResultSet rs = ps.executeQuery();
+
+                while(rs.next()) {
+                    this.mountList.add(rs.getInt("mountid"));
+                }
+
+                ps.close();
+                rs.close();
+                boolean var5 = true;
+                return var5;
+            } catch (Throwable var15) {
+                var2 = var15;
+                throw var15;
+            } finally {
+                if (con != null) {
+                    if (var2 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var14) {
+                            var2.addSuppressed(var14);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (Exception var17) {
+            服务端输出信息.println_err("【错误】loadMountListFromDB 错误，错误原因：" + var17);
+            var17.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean haveMount(int mountId) {
+        if (this.mountList.isEmpty()) {
+            this.loadMountListFromDB();
+        }
+
+        return this.mountList.contains(mountId);
+    }
+    public void Gaincharacterz(String Name, int Channale, int Piot) {
+        try {
+            int ret = this.Getcharacterz(Name, Channale);
+            if (ret == -1) {
+                ret = 0;
+                PreparedStatement ps = null;
+
+                try {
+                    ps = DBConPool.getConnection().prepareStatement("INSERT INTO characterz (channel, Name,Point) VALUES (?, ?, ?)");
+                    ps.setInt(1, Channale);
+                    ps.setString(2, Name);
+                    ps.setInt(3, ret);
+                    ps.execute();
+                } catch (SQLException var16) {
+                    服务端输出信息.println_out("xxxxxxxx:" + var16);
+                } finally {
+                    try {
+                        if (ps != null) {
+                            ps.close();
+                        }
+                    } catch (SQLException var15) {
+                        服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
+                    }
+
+                }
+            }
+
+            ret += Piot;
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("UPDATE characterz SET `Point` = ? WHERE Name = ? and channel = ?");
+            ps.setInt(1, ret);
+            ps.setString(2, Name);
+            ps.setInt(3, Channale);
+            ps.execute();
+            ps.close();
+        } catch (SQLException var18) {
+            服务端输出信息.println_err("Getcharacterz!!55" + var18);
+        }
+
+    }
+    public int getBossLogi(String bossid) {
+        try {
+            Connection con = DBConPool.getConnection();
+            int ret_count = -1;
+            try {
+                PreparedStatement ps = con.prepareStatement("select count(*) from bosslogi where ip = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
+                ps.setString(1, this.getClient().getSessionIPAddress());
+                ps.setString(2, bossid);
+                ResultSet rs = ps.executeQuery();
+
+                try {
+                    if (rs.next()) {
+                        ret_count = rs.getInt(1);
+                    }
+                } catch (Throwable var32) {
+
+                } finally {
+                    if (rs != null) {
+                            try {
+                                rs.close();
+                            } catch (Throwable var31) {
+                            }
+                    }
+                }
+                ps.close();
+                return ret_count;
+            } catch (Throwable var34) {
+            } finally {
+                if (con != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var30) {}
+                }
+            }
+        } catch (Exception var36) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var36);
+        }
+        return -1;
+    }
+
+    public void setBossLogi(String bossid) {
+        if (!this.isClone()) {
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var3 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("insert into bosslogi (ip, bossid) values (?,?)");
+                    ps.setString(1, this.getClient().getSessionIPAddress());
+                    ps.setString(2, bossid);
+                    ps.executeUpdate();
+                    ps.close();
+                } catch (Throwable var13) {
+                    var3 = var13;
+                    throw var13;
+                } finally {
+                    if (con != null) {
+                        if (var3 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var12) {
+                                var3.addSuppressed(var12);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (Exception var15) {
+                FileoutputUtil.outError("logs/资料库异常.txt", var15);
+            }
+
+        }
+    }
+
+    public int getBossLoga(String bossid) {
+        return TimeLogCenter.getInstance().getBossLoga(this.getAccountID(), bossid);
+    }
+
+
+
 
 }

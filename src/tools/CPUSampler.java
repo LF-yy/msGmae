@@ -1,8 +1,13 @@
 package tools;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.Thread.State;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -103,7 +108,14 @@ public class CPUSampler
             }
         }
     }
-    
+
+    public static double getProcessCpuLoad() {
+        OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        String osJson = JSON.toJSONString(operatingSystemMXBean);
+        JSONObject jsonObject = JSON.parseObject(osJson);
+        double processCpuLoad = jsonObject.getDouble("processCpuLoad") * 100.0;
+        return processCpuLoad;
+    }
     private int findRelevantElement(final StackTraceElement[] trace) {
         if (trace.length == 0) {
             return -1;

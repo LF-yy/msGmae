@@ -354,9 +354,12 @@ public class MapScriptMethods
                 break;
             }
             default: {
-                System.err.println("未處理的腳本 : " + scriptName + ", 型態 : onFirstUserEnter - 地图ID " + c.getPlayer().getMapId());
-                FilePrinter.printError("MapScriptMethods.txt", "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
-                break;
+                //System.err.println("未處理的腳本 : " + scriptName + ", 型態 : onFirstUserEnter - 地图ID " + c.getPlayer().getMapId());
+                //FilePrinter.printError("MapScriptMethods.txt", "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
+                if (c.getPlayer().isAdmin()) {
+                    c.getPlayer().dropMessage(5, "未找到地图脚本 : " + scriptName + ", 型态 : onFirstUserEnter - 地图ID " + c.getPlayer().getMapId() + "前往脚本map中寻找");
+                }
+                NPCScriptManager.getInstance().onFirstUserEnter(c, scriptName);
             }
         }
     }
@@ -784,8 +787,13 @@ public class MapScriptMethods
                 c.getSession().write(MaplePacketCreator.showEffect("temaD/enter/lionCastle"));
                 break;
             default: {
-                System.err.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
-                FilePrinter.printError("MapScriptMethods.txt", "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
+//                System.err.println("未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
+//                FilePrinter.printError("MapScriptMethods.txt", "未處理的腳本 : " + scriptName + ", 型態 : onUserEnter - 地图ID " + c.getPlayer().getMapId());
+//                break;
+                if (c.getPlayer().isAdmin()) {
+                    c.getPlayer().dropMessage(5, "未找到地图脚本 : " + scriptName + ", 型态 : onFirstUserEnter - 地图ID " + c.getPlayer().getMapId() + "前往脚本map中寻找");
+                }
+                NPCScriptManager.getInstance().onUserEnter(c, scriptName);
                 break;
             }
         }

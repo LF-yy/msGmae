@@ -102,6 +102,7 @@ public class MapleStorage implements Serializable
     public void saveToDB() {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.saveToDB(con);
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);

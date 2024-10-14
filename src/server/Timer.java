@@ -33,7 +33,7 @@ public abstract class Timer
         stpe.setKeepAliveTime(10L, TimeUnit.MINUTES);
         stpe.allowCoreThreadTimeOut(true);
         stpe.setCorePoolSize(7);
-        stpe.setMaximumPoolSize(14);
+        stpe.setMaximumPoolSize(100);
         stpe.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
         this.ses = stpe;
     }
@@ -43,6 +43,7 @@ public abstract class Timer
             this.ses.shutdownNow();
         }
         catch (Exception e) {
+            e.printStackTrace();
             FilePrinter.printError("Timer.txt", (Throwable)e);
         }
     }
@@ -270,7 +271,8 @@ public abstract class Timer
             try {
                 this.r.run();
             }
-            catch (Throwable t) {
+            catch (Exception t) {
+                t.printStackTrace();
                 FilePrinter.printError("Timer.txt", t);
             }
         }

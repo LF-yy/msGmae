@@ -102,7 +102,7 @@ public class MapleClient
     private String serverKey;
     private int loginKeya;
     private boolean closeseesion;
-    
+    private long lastPortalClick;
     public MapleClient(final MapleAESOFB send, final MapleAESOFB receive, final Channel session) {
         this.accountId = 1;
         this.world = 1;
@@ -206,6 +206,9 @@ public class MapleClient
                     chars.add(new CharNameAndId(rs.getString("name"), rs.getInt("id")));
                 }
             }
+            ps.close();
+                    con.close();
+
         }
         catch (SQLException e) {
             System.err.println("error loading characters internal" + (Object)e);
@@ -252,6 +255,9 @@ public class MapleClient
                     ret = true;
                 }
             }
+            ps.close();
+                    con.close();
+
         }
         catch (SQLException ex) {
             System.err.println("Error checking ip bans" + (Object)ex);
@@ -271,6 +277,8 @@ public class MapleClient
                     ret = true;
                 }
             }
+ps.close();
+        con.close();
         }
         catch (SQLException ex) {
             System.err.println("Error checking ip bans" + (Object)ex);
@@ -349,6 +357,7 @@ public class MapleClient
                     }
                 }
             }
+                    con.close();
         }
         catch (SQLException e) {
             System.err.println("ERROR" + (Object)e);
@@ -373,6 +382,8 @@ public class MapleClient
                 ps.close();
                 rs.close();
             }
+            ps.close();
+            con.close();
         }
         catch (SQLException e) {
             FilePrinter.printError("MapleClient.txt", (Throwable)e);
@@ -414,6 +425,9 @@ public class MapleClient
                 ps.setString(1, hash);
                 ps.setInt(2, this.accountId);
                 ps.executeUpdate();
+                ps.close();
+                con.close();
+
             }
             catch (SQLException ex) {
                 FilePrinter.printError("MapleClient.txt", (Throwable)ex);
@@ -431,6 +445,8 @@ public class MapleClient
              final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET banned = 0 and banreason = '' WHERE id = ?")) {
             ps.setInt(1, this.accountId);
             ps.executeUpdate();
+            ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
@@ -455,7 +471,9 @@ public class MapleClient
             ps.setInt(1, accid);
             ps.executeUpdate();
             ps.close();
+            con.close();
         }
+
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
@@ -481,6 +499,8 @@ public class MapleClient
                 ps.setString(2, SessionID);
                 ps.setInt(3, this.getAccID());
                 ps.executeUpdate();
+                ps.close();
+                con.close();
             }
             catch (SQLException e) {
                 System.err.println("更新登入状态錯誤" + (Object)e);
@@ -506,6 +526,8 @@ public class MapleClient
             ps.setInt(1, (int)this.gender);
             ps.setInt(2, this.accountId);
             ps.executeUpdate();
+            ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("更新性別錯誤" + (Object)e);
@@ -531,6 +553,7 @@ public class MapleClient
                 }
             }
             ps.close();
+            con.close();
             this.loggedIn = (state == 2);
             return state;
         }
@@ -754,6 +777,8 @@ public class MapleClient
                     sessionIP = rs.getString("SessionIP");
                 }
             }
+            ps.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("Failed in checking IP address for client.");
@@ -803,6 +828,7 @@ public class MapleClient
             }
             ps.close();
             rs.close();
+            con.close();
         }
         catch (Exception ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
@@ -833,6 +859,9 @@ public class MapleClient
                         }
                         Guild.deleteGuildCharacter(rs2.getInt("guildid"), cid);
                     }
+                    ps2.close();
+                    rs2.close();
+
                     if (rs2.getInt("familyid") > 0) {
                         Family.getFamily(rs2.getInt("familyid")).leaveFamily(cid);
                     }
@@ -859,6 +888,8 @@ public class MapleClient
             MapleCharacter.deleteWhereCharacterId(con2, "DELETE FROM trocklocations WHERE characterid = ?", cid);
             MapleCharacter.deleteWhereCharacterId(con2, "DELETE FROM queststatus WHERE characterid = ?", cid);
             MapleCharacter.deleteWhereCharacterId(con2, "DELETE FROM inventoryslot WHERE characterid = ?", cid);
+            con2.commit();
+            con2.close();
             return 0;
         }
         catch (Exception e) {
@@ -1096,9 +1127,9 @@ public class MapleClient
             return;
         }
         try {
-            SkillFactory.getSkill(skill).getEffect(level).applyTo(from);
+            Objects.requireNonNull(SkillFactory.getSkill(skill)).getEffect(level).applyTo(from);
         } catch (Exception e) {
-            System.out.println("Error using skill " + skill + " with level " + level + " on " + from.getName() + ": " + e);
+            //System.out.println("Error using skill " + skill + " with level " + level + " on " + from.getName() + ": " + e);
         }
 
     }
@@ -1914,4 +1945,19 @@ public class MapleClient
             this.id = id;
         }
     }
+
+    public boolean canClickPortal() {
+        return this.lastPortalClick + 1000L < System.currentTimeMillis();
+    }
+
+
+
+    public void setClickedPortal() {
+        this.lastPortalClick = System.currentTimeMillis();
+    }
+
+    public void removeClickedPortal() {
+        this.lastPortalClick = 0L;
+    }
+
 }

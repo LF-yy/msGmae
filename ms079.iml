@@ -12,7 +12,11 @@
     <orderEntry type="library" name="fastjson-1.2.83" level="project" />
     <orderEntry type="library" name="lombok-1.18.24" level="project" />
     <orderEntry type="library" name="rm_mhh0" level="project" />
-    <orderEntry type="library" name="AsMs079V2" level="project" />
     <orderEntry type="library" name="念旧最新" level="project" />
+    <orderEntry type="library" name="Server" level="project" />
+    <orderEntry type="library" name="SnailMS079" level="project" />
+    <orderEntry type="library" name="commons-lang-2.3" level="project" />
+    <orderEntry type="library" name="jl1.0.1" level="project" />
+    <orderEntry type="library" name="fastjson-1.2.7" level="project" />
   </component>
 </module>

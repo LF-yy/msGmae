@@ -1,7 +1,10 @@
 package server.life;
 
+import gui.LtMS;
 import server.MapleCarnivalFactory.MCSkill;
 import java.util.Iterator;
+
+import server.Start;
 import tools.MaplePacketCreator;
 import client.MapleCharacter;
 import server.MapleCarnivalFactory;
@@ -13,7 +16,7 @@ import java.awt.Point;
 public class SpawnPoint extends Spawns
 {
     private MapleMonster monster;
-    private final Point pos;
+    private  Point pos;
     private long nextPossibleSpawn;
     private final int mobTime;
     private int carnival;
@@ -33,11 +36,15 @@ public class SpawnPoint extends Spawns
         this.immobile = !monster.getStats().getMobile();
         this.nextPossibleSpawn = System.currentTimeMillis();
     }
-    
+    public void setPosition(Point pos) {
+        this.pos = pos;
+    }
     public void setCarnival(final int c) {
         this.carnival = c;
     }
-    
+    public final String getMessage() {
+        return this.msg;
+    }
     @Override
     public final Point getPosition() {
         return this.pos;
@@ -63,7 +70,11 @@ public class SpawnPoint extends Spawns
         if (this.mobTime < 0) {
             return false;
         }
-        if (((this.mobTime != 0 || this.immobile) && this.spawnedMonsters.get() > 0) || this.spawnedMonsters.get() > 1) {
+        if ((Integer) LtMS.ConfigValuesMap.get("怪物平均分配开关") <= 0) {
+            if ((this.mobTime != 0 || this.immobile) && this.spawnedMonsters.get() > 0 || this.spawnedMonsters.get() > 1) {
+                return false;
+            }
+        } else if ((this.mobTime != 0 || this.immobile) && this.spawnedMonsters.get() > 0 || this.spawnedMonsters.get() > 0) {
             return false;
         }
         final long time = System.currentTimeMillis();
@@ -108,7 +119,6 @@ public class SpawnPoint extends Spawns
         }
         return this.monster;
     }
-    
     @Override
     public final int getMobTime() {
         return this.mobTime;

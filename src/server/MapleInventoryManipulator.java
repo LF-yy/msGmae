@@ -1,7 +1,13 @@
 package server;
 
+import abc.Game;
+import client.*;
+import constants.ServerConfig;
 import constants.tzjc;
 import gui.LtMS;
+import gui.服务端输出信息;
+import server.bean.EquipFieldEnhancement;
+import server.bean.Potential;
 import server.maps.MapleMapObject;
 import java.awt.Point;
 import constants.WorldConstants;
@@ -9,7 +15,7 @@ import gui.CongMS;
 import java.util.Collections;
 import handling.world.World.Broadcast;
 import tools.FileoutputUtil;
-import client.MapleBuffStat;
+
 import java.util.ArrayList;
 import client.inventory.Equip;
 import client.inventory.ItemFlag;
@@ -21,13 +27,10 @@ import client.inventory.MapleInventoryIdentifier;
 import client.inventory.MaplePet;
 import client.inventory.MapleInventoryType;
 import client.inventory.ModifyInventory;
-import client.MapleEquipOnlyId;
 import tools.MaplePacketCreator;
 import constants.GameConstants;
-import client.MapleClient;
 import client.inventory.IItem;
 import tools.packet.MTSCSPacket;
-import client.MapleCharacter;
 
 public class MapleInventoryManipulator
 {
@@ -584,7 +587,8 @@ public class MapleInventoryManipulator
     public static boolean addFromDrop(final MapleClient c, final IItem item, final boolean show) {
         return addFromDrop(c, item, show, false, false);
     }
-    
+
+    //拾取到的物品
     public static boolean addFromDrop(final MapleClient c, IItem item, final boolean show, final boolean enhance, final boolean isPetPickup) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         if (ii.isPickupRestricted(item.getItemId()) && c.getPlayer().haveItem(item.getItemId(), 1, true, false)) {
@@ -753,7 +757,44 @@ public class MapleInventoryManipulator
     public static void removeFromSlot(final MapleClient c, final MapleInventoryType type, final short slot, final short quantity, final boolean fromDrop) {
         removeFromSlot(c, type, slot, quantity, fromDrop, false);
     }
-    
+    public static void removeFromSlot(MapleClient c, MapleInventoryType type, short slot, long quantity, boolean fromDrop) {
+        removeFromSlot(c, type, slot, quantity, fromDrop, false);
+    }
+    public static void removeFromSlot(MapleClient c, MapleInventoryType type, short slot, long quantity, boolean fromDrop, boolean consume) {
+        if (c.getPlayer() != null && c.getPlayer().getInventory(type) != null) {
+            IItem item = c.getPlayer().getInventory(type).getItem(slot);
+            if (item != null) {
+                boolean allowZero = consume && GameConstants.isRechargable(item.getItemId());
+                c.getPlayer().getInventory(type).removeItem(slot, quantity, allowZero);
+                if (item.getQuantity() == 0L && !allowZero) {
+                    c.sendPacket(MaplePacketCreator.modifyInventory(fromDrop, new ModifyInventory(3, item)));
+                } else {
+                    c.sendPacket(MaplePacketCreator.modifyInventory(fromDrop, new ModifyInventory(1, item)));
+                }
+            }
+
+        }
+    }
+    public static boolean removeFromSlot(MapleClient c, MapleInventoryType type, short slot, long quantity, boolean fromDrop, boolean consume, int a) {
+        if (c.getPlayer() != null && c.getPlayer().getInventory(type) != null) {
+            IItem item = c.getPlayer().getInventory(type).getItem(slot);
+            if (item == null) {
+                return false;
+            } else {
+                boolean allowZero = consume && GameConstants.isRechargable(item.getItemId());
+                c.getPlayer().getInventory(type).removeItem(slot, (short) quantity, allowZero);
+                if (item.getQuantity() == 0L && !allowZero) {
+                    c.sendPacket(MaplePacketCreator.modifyInventory(fromDrop, new ModifyInventory(3, item)));
+                } else {
+                    c.sendPacket(MaplePacketCreator.modifyInventory(fromDrop, new ModifyInventory(1, item)));
+                }
+
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
     public static void removeFromSlot(final MapleClient c, final MapleInventoryType type, final short slot, final short quantity, final boolean fromDrop, final boolean consume) {
         if (c.getPlayer() == null || c.getPlayer().getInventory(type) == null) {
             return;
@@ -825,111 +866,649 @@ public class MapleInventoryManipulator
         c.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
     }
     //更换装备刷新属性
-    public static void equip(final MapleClient c, final short src, final short dst) {
+    public static void equip( MapleClient c,  short src,  short dst) {
         Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(src);
         MapleCharacter chr = c.getPlayer();
         if (source == null) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        boolean itemChanged = false;
-        if (MapleItemInformationProvider.getInstance().isUntradeableOnEquip(source.getItemId())) {
-            if (!ItemFlag.UNTRADEABLE.check((int)source.getFlag())) {
-                source.setFlag((byte)(source.getFlag() + ItemFlag.UNTRADEABLE.getValue()));
-            }
-            itemChanged = true;
-        }
-        if (GameConstants.isGMEquip(source.getItemId()) && !c.getPlayer().isGM() && !c.getChannelServer().CanGMItem()) {
-            c.getPlayer().dropMessage(1, "只有管理員能装备這件道具。");
-            c.getPlayer().removeAll(source.getItemId(), true);
-            c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        if (c.getPlayer().getDebugMessage()) {
-            c.getPlayer().dropMessage("穿装备: src : " + (int)src + " dst : " + (int)dst + " 代码：" + source.getItemId());
-        }
-        if (dst == -6) {
-            final IItem top = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-5));
-            if (top != null && isOverall(top.getItemId())) {
-                if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
-                    c.sendPacket(MaplePacketCreator.getInventoryFull());
-                    c.sendPacket(MaplePacketCreator.getShowInventoryFull());
-                    return;
+        } else {
+            if (source.getItemId() / 10000 == 160) {
+                if (MapleItemInformationProvider.getInstance().isCash(source.getItemId())) {
+                    dst = -120;
+                } else {
+                    dst = -20;
                 }
-                unequip(c, (short)(-5), c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
             }
-        }
-        else if (dst == -5) {
-            final IItem bottom = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-6));
-            if (bottom != null && isOverall(source.getItemId())) {
-                if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
-                    c.sendPacket(MaplePacketCreator.getInventoryFull());
-                    c.sendPacket(MaplePacketCreator.getShowInventoryFull());
-                    return;
+
+            int checkOnlyId = GameConstants.checkMultiOnlyEquip(c.getPlayer(), source.getItemId());
+            if (checkOnlyId > 0) {
+                c.getPlayer().dropMessage(5, "检测到你身上已经穿戴了联结固有装备 [" + MapleItemInformationProvider.getInstance().getName(checkOnlyId) + "] ，无法继续穿戴这件装备！");
+                c.sendPacket(MaplePacketCreator.enableActions());
+            } else {
+                if (source.getItemId() == 1602008 || source.getItemId() == 1602009 || source.getItemId() == 1602010) {
+                    switch (source.getItemId()) {
+                        case 1602008:
+                            c.getPlayer().setOneTimeLog("轮回等级", -c.getPlayer().getOneTimeLog("轮回等级"));
+                            break;
+                        case 1602009:
+                            c.getPlayer().setOneTimeLog("轮回等级", -c.getPlayer().getOneTimeLog("轮回等级") + 1);
+                            break;
+                        case 1602010:
+                            c.getPlayer().setOneTimeLog("轮回等级", -c.getPlayer().getOneTimeLog("轮回等级") + 2);
+                    }
+
+                    if (ServerConfig.version == 85) {
+                        c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1025), (byte)1, (byte)1);
+                    } else {
+                        c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1013), (byte)1, (byte)1);
+                    }
+
+                    c.getPlayer().dropMessage(5, "你学会了 “轮回” 技能。");
                 }
-                unequip(c, (short)(-6), c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
-            }
-        }
-        else if (dst == -10) {
-            final Equip weapon = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-11));
-            if (weapon != null && MapleItemInformationProvider.getInstance().isTwoHanded(weapon.getItemId())) {
-                if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
-                    c.sendPacket(MaplePacketCreator.getInventoryFull());
-                    c.sendPacket(MaplePacketCreator.getShowInventoryFull());
-                    return;
+
+                int reqlv;
+                int dex;
+                int _int;
+                int luk;
+                int hp;
+                int mp;
+                int watk;
+                int matk;
+                int wdef;
+                int mdef;
+                int acc;
+                int avoid;
+                if ((Integer)LtMS.ConfigValuesMap.get("装备栏强化系统开关") > 0) {
+                    EquipFieldEnhancement.EquipField equipField = c.getPlayer().getEquipField(dst);
+                    if (equipField != null) {
+                        int str = source.getStr() + equipField.getStr();
+                        if (str > 32767) {
+                            str = 32767;
+                        }
+
+                        source.setStr((short)str);
+                         dex = source.getDex() + equipField.getDex();
+                        if (dex > 32767) {
+                            dex = 32767;
+                        }
+                        source.setDex((short)dex);
+
+                         reqlv = source.getInt() + equipField.getInt();
+                        if (reqlv > 32767) {
+                            reqlv = 32767;
+                        }
+                        source.setInt((short)reqlv);
+
+                         luk = source.getLuk() + equipField.getLuk();
+                        if (luk > 32767) {
+                            luk = 32767;
+                        }
+                        source.setLuk((short)luk);
+
+                         hp = source.getHp() + equipField.getHp();
+                        if (hp > 32767) {
+                            hp = 32767;
+                        }
+                        source.setHp((short)hp);
+
+                         mp = source.getMp() + equipField.getMp();
+                        if (mp > 32767) {
+                            mp = 32767;
+                        }
+                        source.setMp((short)mp);
+
+                         watk = source.getWatk() + equipField.getWatk();
+                        if (watk > 32767) {
+                            watk = 32767;
+                        }
+                        source.setWatk((short)watk);
+
+                         matk = source.getMatk() + equipField.getMatk();
+                        if (matk > 32767) {
+                            matk = 32767;
+                        }
+                        source.setMatk((short)matk);
+
+                         wdef = source.getWdef() + equipField.getWdef();
+                        if (wdef > 32767) {
+                            wdef = 32767;
+                        }
+                        source.setWdef((short)wdef);
+
+                         mdef = source.getMdef() + equipField.getMdef();
+                        if (mdef > 32767) {
+                            mdef = 32767;
+                        }
+                        source.setMdef((short)mdef);
+
+                         acc = source.getAcc() + equipField.getAcc();
+                        if (acc > 32767) {
+                            acc = 32767;
+                        }
+                        source.setAcc((short)acc);
+
+                         avoid = source.getAvoid() + equipField.getAvoid();
+                        if (avoid > 32767) {
+                            avoid = 32767;
+                        }
+                        source.setAvoid((short)avoid);
+
+                        int speed = source.getSpeed() + equipField.getSpeed();
+                        if (speed > 32767) {
+                            speed = 32767;
+                        }
+                        source.setSpeed((short)speed);
+
+                        int jump = source.getJump() + equipField.getJump();
+                        if (jump > 32767) {
+                            jump = 32767;
+                        }
+                        source.setJump((short)jump);
+
+                        if (equipField.getTotalDamage() > 0) {
+                            Potential.setPotential(source, (short)11, 29, equipField.getTotalDamage());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了总伤害+" + equipField.getTotalDamage() + "%");
+                        }
+
+                        if (equipField.getBossDamage() > 0) {
+                            Potential.setPotential(source, (short)12, 30, equipField.getBossDamage());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了BOSS伤害+" + equipField.getBossDamage() + "%");
+                        }
+
+                        if (equipField.getNormalDamage() > 0) {
+                            Potential.setPotential(source, (short)13, 31, equipField.getNormalDamage());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了小怪伤害+" + equipField.getNormalDamage() + "%");
+                        }
+
+                        if (equipField.getStr_p() > 0) {
+                            Potential.setPotential(source, (short)14, 5, equipField.getStr_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了力量+" + equipField.getStr_p() + "%");
+                        }
+
+                        if (equipField.getDex_p() > 0) {
+                            Potential.setPotential(source, (short)15, 6, equipField.getDex_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了敏捷+" + equipField.getDex_p() + "%");
+                        }
+
+                        if (equipField.getInt_p() > 0) {
+                            Potential.setPotential(source, (short)16, 7, equipField.getInt_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了智力+" + equipField.getInt_p() + "%");
+                        }
+
+                        if (equipField.getLuk_p() > 0) {
+                            Potential.setPotential(source, (short)17, 8, equipField.getLuk_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了运气+" + equipField.getLuk_p() + "%");
+                        }
+
+                        if (equipField.getHp_p() > 0) {
+                            Potential.setPotential(source, (short)18, 24, equipField.getHp_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了maxHp+" + equipField.getHp_p() + "%");
+                        }
+
+                        if (equipField.getMp_p() > 0) {
+                            Potential.setPotential(source, (short)19, 26, equipField.getMp_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了maxMp+" + equipField.getMp_p() + "%");
+                        }
+
+                        if (equipField.getWatk_p() > 0) {
+                            Potential.setPotential(source, (short)20, 13, equipField.getWatk_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了攻击力+" + equipField.getWatk_p() + "%");
+                        }
+
+                        if (equipField.getMatk_p() > 0) {
+                            Potential.setPotential(source, (short)21, 14, equipField.getWatk_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了魔法力+" + equipField.getWatk_p() + "%");
+                        }
+
+                        if (equipField.getWdef_p() > 0) {
+                            Potential.setPotential(source, (short)22, 16, equipField.getWdef_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了物理防御力+" + equipField.getWdef_p() + "%");
+                        }
+
+                        if (equipField.getMdef_p() > 0) {
+                            Potential.setPotential(source, (short)23, 18, equipField.getMdef_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了魔法防御力+" + equipField.getMdef_p() + "%");
+                        }
+
+                        if (equipField.getAcc_p() > 0) {
+                            Potential.setPotential(source, (short)24, 20, equipField.getAcc_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了命中率+" + equipField.getAcc_p() + "%");
+                        }
+
+                        if (equipField.getAvoid_p() > 0) {
+                            Potential.setPotential(source, (short)25, 22, equipField.getAvoid_p());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了回避率+" + equipField.getAvoid_p() + "%");
+                        }
+
+                        if (equipField.getMustKill() > 0) {
+                            Potential.setPotential(source, (short)26, 32, equipField.getMustKill());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了普通怪物必杀概率+" + equipField.getMustKill() + "%");
+                        }
+
+                        if (equipField.getInvincible() > 0) {
+                            Potential.setPotential(source, (short)27, 33, equipField.getInvincible());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了无敌概率+" + equipField.getInvincible() + "%");
+                        }
+
+                        if (equipField.getStrong() > 0) {
+                            Potential.setPotential(source, (short)28, 34, equipField.getStrong());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了坚韧+" + equipField.getStrong() + "%（受到的伤害减少）");
+                        }
+
+                        if (equipField.getSuckHp() > 0) {
+                            Potential.setPotential(source, (short)29, 35, equipField.getSuckHp());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了吸血+" + equipField.getSuckHp() + "%（攻击时恢复HP上限10%的概率）");
+                        }
+
+                        if (equipField.getSuckMp() > 0) {
+                            Potential.setPotential(source, (short)30, 36, equipField.getSuckMp());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了吸魔+" + equipField.getSuckMp() + "%（攻击时恢复MP上限10%的概率）");
+                        }
+
+                        if (equipField.getGrowableHp() > 0) {
+                            Potential.setPotential(source, (short)31, 37, equipField.getGrowableHp());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了茁壮生命+" + equipField.getGrowableHp() + "（升级时额外获得HP上限数量）");
+                        }
+
+                        if (equipField.getGrowableMp() > 0) {
+                            Potential.setPotential(source, (short)32, 38, equipField.getGrowableMp());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了茁壮魔力+" + equipField.getGrowableMp() + "（升级时额外获得MP上限数量）");
+                        }
+
+                        if (equipField.getMoreExp() > 0) {
+                            Potential.setPotential(source, (short)33, 39, equipField.getMoreExp());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了慧根+" + equipField.getMoreExp() + "%（狩猎经验倍率增加）");
+                        }
+
+                        if (equipField.getMoreMeso() > 0) {
+                            Potential.setPotential(source, (short)34, 40, equipField.getMoreMeso());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了财运+" + equipField.getMoreMeso() + "%（狩猎金币倍率增加）");
+                        }
+
+                        if (equipField.getMoreDrop() > 0) {
+                            Potential.setPotential(source, (short)35, 41, equipField.getMoreDrop());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了财运+" + equipField.getMoreDrop() + "%（狩猎掉落倍率增加）");
+                        }
+
+                        if (equipField.getRevive() > 0) {
+                            Potential.setPotential(source, (short)36, 42, equipField.getRevive());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了涅槃+" + equipField.getRevive() + "%（死亡时原地满血复活的概率）");
+                        }
+
+                        if (equipField.getSummonMob() > 0) {
+                            Potential.setPotential(source, (short)37, 43, equipField.getSummonMob());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了怨念+" + equipField.getSummonMob() + "%（击杀普通怪物时招来怪物伙伴的概率）");
+                        }
+
+                        if (equipField.getConsumeRecover() > 0) {
+                            Potential.setPotential(source, (short)38, 44, equipField.getConsumeRecover());
+                            c.getPlayer().dropMessage(5, "该装备栏位激活了药灵+" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
+                        }
+
+                        c.getPlayer().reFreshItem(source);
+                    }
                 }
-                unequip(c, (short)(-11), c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
-            }
-        }
-        else if (dst == -11) {
-            final IItem shield = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-10));
-            if (shield != null && MapleItemInformationProvider.getInstance().isTwoHanded(source.getItemId())) {
-                if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
-                    c.sendPacket(MaplePacketCreator.getInventoryFull());
-                    c.sendPacket(MaplePacketCreator.getShowInventoryFull());
-                    return;
+
+                boolean itemChanged = false;
+                if (MapleItemInformationProvider.getInstance().isUntradeableOnEquip(source.getItemId())) {
+                    if (!ItemFlag.UNTRADEABLE.check(source.getFlag())) {
+                        source.setFlag((byte)(source.getFlag() + ItemFlag.UNTRADEABLE.getValue()));
+                    }
+
+                    itemChanged = true;
                 }
-                unequip(c, (short)(-10), c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
+
+                if (GameConstants.isGMEquip(source.getItemId()) && !c.getPlayer().isGM() && !c.getChannelServer().CanGMItem()) {
+                    c.getPlayer().dropMessage(1, "只有管理员能装备这件道具。");
+                    c.getPlayer().removeAll(source.getItemId(), true);
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                } else {
+                    if (c.getPlayer().getDebugMessage()) {
+                        c.getPlayer().dropMessage("穿装备: src : " + src + " dst : " + dst + " 代码：" + source.getItemId());
+                    }
+
+                    IItem shield;
+                    Equip target;
+                    if (dst == -6) {
+                        shield = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-5);
+                        if (shield != null && isOverall(shield.getItemId())) {
+                            if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
+                                c.sendPacket(MaplePacketCreator.getInventoryFull());
+                                c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                                return;
+                            }
+
+                            unequip(c, (short)-5, c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
+                        }
+                    } else if (dst == -5) {
+                        shield = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-6);
+                        if (shield != null && isOverall(source.getItemId())) {
+                            if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
+                                c.sendPacket(MaplePacketCreator.getInventoryFull());
+                                c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                                return;
+                            }
+
+                            unequip(c, (short)-6, c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
+                        }
+                    } else if (dst == -10) {
+                        target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-11);
+                        if (target != null && MapleItemInformationProvider.getInstance().isTwoHanded(target.getItemId())) {
+                            if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
+                                c.sendPacket(MaplePacketCreator.getInventoryFull());
+                                c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                                return;
+                            }
+
+                            unequip(c, (short)-11, c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
+                        }
+                    } else if (dst == -11) {
+                        shield = c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-10);
+                        if (shield != null && MapleItemInformationProvider.getInstance().isTwoHanded(source.getItemId())) {
+                            if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).isFull()) {
+                                c.sendPacket(MaplePacketCreator.getInventoryFull());
+                                c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                                return;
+                            }
+
+                            unequip(c, (short)-10, c.getPlayer().getInventory(MapleInventoryType.EQUIP).getNextFreeSlot());
+                        }
+                    }
+
+                    if (dst == -18 && c.getPlayer().getMount() != null) {
+                        c.getPlayer().getMount().setItemId(source.getItemId());
+                    }
+
+                    if (source.getItemId() == 1122017 || source.getItemId() == 1122086 || source.getItemId() == 1122207 || source.getItemId() == 1122215) {
+                        c.getPlayer().startFairySchedule(true, true);
+                    }
+
+                    source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(src);
+                    target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(dst);
+                    c.getPlayer().脱装备防滑检测(target);
+                    c.getPlayer().getInventory(MapleInventoryType.EQUIP).removeSlot(src);
+                    if (target != null) {
+                        if ((Integer)LtMS.ConfigValuesMap.get("装备栏强化系统开关") > 0) {
+                            EquipFieldEnhancement.EquipField equipField = c.getPlayer().getEquipField(dst);
+                            if (equipField != null) {
+                                reqlv = target.getStr() - equipField.getStr();
+                                if (reqlv < 0) {
+                                    reqlv = 0;
+                                }
+
+                                target.setStr((short)reqlv);
+                                dex = target.getDex() - equipField.getDex();
+                                if (dex < 0) {
+                                    dex = 0;
+                                }
+
+                                target.setDex((short)dex);
+                                _int = target.getInt() - equipField.getInt();
+                                if (_int < 0) {
+                                    _int = 0;
+                                }
+
+                                target.setInt((short)_int);
+                                luk = target.getLuk() - equipField.getLuk();
+                                if (luk < 0) {
+                                    luk = 0;
+                                }
+
+                                target.setLuk((short)luk);
+                                hp = target.getHp() - equipField.getHp();
+                                if (hp < 0) {
+                                    hp = 0;
+                                }
+
+                                target.setHp((short)hp);
+                                mp = target.getMp() - equipField.getMp();
+                                if (mp < 0) {
+                                    mp = 0;
+                                }
+
+                                target.setMp((short)mp);
+                                watk = target.getWatk() - equipField.getWatk();
+                                if (watk < 0) {
+                                    watk = 0;
+                                }
+
+                                target.setWatk((short)watk);
+                                matk = target.getMatk() - equipField.getMatk();
+                                if (matk < 0) {
+                                    matk = 0;
+                                }
+
+                                target.setMatk((short)matk);
+                                wdef = target.getWdef() - equipField.getWdef();
+                                if (wdef < 0) {
+                                    wdef = 0;
+                                }
+
+                                target.setWdef((short)wdef);
+                                mdef = target.getMdef() - equipField.getMdef();
+                                if (mdef < 0) {
+                                    mdef = 0;
+                                }
+
+                                target.setMdef((short)mdef);
+                                acc = target.getAcc() - equipField.getAcc();
+                                if (acc < 0) {
+                                    acc = 0;
+                                }
+
+                                target.setAcc((short)acc);
+                                avoid = target.getAvoid() - equipField.getAvoid();
+                                if (avoid < 0) {
+                                    avoid = 0;
+                                }
+
+                                target.setAvoid((short)avoid);
+                                int speed = target.getSpeed() - equipField.getSpeed();
+                                if (speed < 0) {
+                                    speed = 0;
+                                }
+
+                                target.setSpeed((short)speed);
+                                int jump = target.getJump() - equipField.getJump();
+                                if (jump < 0) {
+                                    jump = 0;
+                                }
+
+                                target.setJump((short)jump);
+                                if (equipField.getTotalDamage() > 0) {
+                                    Potential.setPotential(target, (short)11, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，总伤害-" + equipField.getTotalDamage() + "%");
+                                }
+
+                                if (equipField.getBossDamage() > 0) {
+                                    Potential.setPotential(target, (short)12, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，BOSS伤害-" + equipField.getBossDamage() + "%");
+                                }
+
+                                if (equipField.getNormalDamage() > 0) {
+                                    Potential.setPotential(target, (short)13, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，小怪伤害-" + equipField.getNormalDamage() + "%");
+                                }
+
+                                if (equipField.getStr_p() > 0) {
+                                    Potential.setPotential(target, (short)14, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，力量-" + equipField.getStr_p() + "%");
+                                }
+
+                                if (equipField.getDex_p() > 0) {
+                                    Potential.setPotential(target, (short)15, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，敏捷-" + equipField.getDex_p() + "%");
+                                }
+
+                                if (equipField.getInt_p() > 0) {
+                                    Potential.setPotential(target, (short)16, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，智力-" + equipField.getInt_p() + "%");
+                                }
+
+                                if (equipField.getLuk_p() > 0) {
+                                    Potential.setPotential(target, (short)17, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，运气-" + equipField.getLuk_p() + "%");
+                                }
+
+                                if (equipField.getHp_p() > 0) {
+                                    Potential.setPotential(target, (short)18, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxHp-" + equipField.getHp_p() + "%");
+                                }
+
+                                if (equipField.getMp_p() > 0) {
+                                    Potential.setPotential(target, (short)19, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxMp-" + equipField.getMp_p() + "%");
+                                }
+
+                                if (equipField.getWatk_p() > 0) {
+                                    Potential.setPotential(target, (short)20, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，攻击力-" + equipField.getWatk_p() + "%");
+                                }
+
+                                if (equipField.getMatk_p() > 0) {
+                                    Potential.setPotential(target, (short)21, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法力-" + equipField.getWatk_p() + "%");
+                                }
+
+                                if (equipField.getWdef_p() > 0) {
+                                    Potential.setPotential(target, (short)22, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，物理防御力-" + equipField.getWdef_p() + "%");
+                                }
+
+                                if (equipField.getMdef_p() > 0) {
+                                    Potential.setPotential(target, (short)23, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法防御力-" + equipField.getMdef_p() + "%");
+                                }
+
+                                if (equipField.getAcc_p() > 0) {
+                                    Potential.setPotential(target, (short)24, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，命中率-" + equipField.getAcc_p() + "%");
+                                }
+
+                                if (equipField.getAvoid_p() > 0) {
+                                    Potential.setPotential(target, (short)25, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，回避率-" + equipField.getAvoid_p() + "%");
+                                }
+
+                                if (equipField.getMustKill() > 0) {
+                                    Potential.setPotential(target, (short)26, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，普通怪物必杀概率-" + equipField.getMustKill() + "%");
+                                }
+
+                                if (equipField.getInvincible() > 0) {
+                                    Potential.setPotential(target, (short)27, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，无敌概率-" + equipField.getInvincible() + "%");
+                                }
+
+                                if (equipField.getStrong() > 0) {
+                                    Potential.setPotential(target, (short)28, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，坚韧-" + equipField.getStrong() + "%（受到的伤害减少）");
+                                }
+
+                                if (equipField.getSuckHp() > 0) {
+                                    Potential.setPotential(target, (short)29, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，吸血-" + equipField.getSuckHp() + "%（攻击时恢复HP上限10%的概率）");
+                                }
+
+                                if (equipField.getSuckMp() > 0) {
+                                    Potential.setPotential(target, (short)30, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，吸魔-" + equipField.getSuckMp() + "%（攻击时恢复MP上限10%的概率）");
+                                }
+
+                                if (equipField.getGrowableHp() > 0) {
+                                    Potential.setPotential(target, (short)31, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，茁壮生命-" + equipField.getGrowableHp() + "（升级时额外获得HP上限数量）");
+                                }
+
+                                if (equipField.getGrowableMp() > 0) {
+                                    Potential.setPotential(target, (short)32, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，茁壮魔力-" + equipField.getGrowableMp() + "（升级时额外获得MP上限数量）");
+                                }
+
+                                if (equipField.getMoreExp() > 0) {
+                                    Potential.setPotential(target, (short)33, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，慧根-" + equipField.getMoreExp() + "%（狩猎经验倍率增加）");
+                                }
+
+                                if (equipField.getMoreMeso() > 0) {
+                                    Potential.setPotential(target, (short)34, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，财运-" + equipField.getMoreMeso() + "%（狩猎金币倍率增加）");
+                                }
+
+                                if (equipField.getMoreDrop() > 0) {
+                                    Potential.setPotential(target, (short)35, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，财运-" + equipField.getMoreDrop() + "%（狩猎掉落倍率增加）");
+                                }
+
+                                if (equipField.getRevive() > 0) {
+                                    Potential.setPotential(target, (short)36, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，涅槃-" + equipField.getRevive() + "%（死亡时原地满血复活的概率）");
+                                }
+
+                                if (equipField.getSummonMob() > 0) {
+                                    Potential.setPotential(target, (short)37, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，怨念-" + equipField.getSummonMob() + "%（击杀普通怪物时招来怪物伙伴的概率）");
+                                }
+
+                                if (equipField.getConsumeRecover() > 0) {
+                                    Potential.setPotential(target, (short)38, 0, 0);
+                                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，药灵-" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
+                                }
+
+                                c.getPlayer().reFreshItem(target);
+                            }
+                        }
+
+                        c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).removeSlot(dst);
+                    }
+
+                    List<ModifyInventory> mods = new ArrayList();
+                    if (itemChanged) {
+                        mods.add(new ModifyInventory(3, source));
+                        mods.add(new ModifyInventory(0, source.copy()));
+                    }
+
+                    source.setPosition(dst);
+                    c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).addFromDB(source);
+                    if (target != null) {
+                        target.setPosition(src);
+                        c.getPlayer().getInventory(MapleInventoryType.EQUIP).addFromDB(target);
+                    }
+
+                    if (c.getPlayer().getBuffedValue(MapleBuffStat.BOOSTER) != null && isWeapon(source.getItemId())) {
+                        c.getPlayer().cancelBuffStats(new MapleBuffStat[]{MapleBuffStat.BOOSTER});
+                    }
+                chr.set套装伤害加成(tzjc.check_tz(chr));
+                mods.add(new ModifyInventory(2, source, src));
+                c.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
+                reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
+                if (reqlv > c.getPlayer().getLevel() + c.getPlayer().getStat().levelBonus && !c.getPlayer().isGM()) {
+                    FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等级: " + c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，穿上装备时封锁。 该装备需求等级: " + reqlv);
+                    Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁系统] " + c.getPlayer().getName() + " 因为修改封包而被管理员永久停权。"));
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等级: " + c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，穿上装备时封锁。 该装备需求等级: " + reqlv));
+                    if (Game.自动封挂) {
+                        c.getPlayer().ban("修改封包", true, true, false);
+                    }
+                    c.getSession().close();
+                } else {
+                    c.getPlayer().equipChanged();
+                    if ((Integer) LtMS.ConfigValuesMap.get("潜能系统开关") > 0 && (Potential.isPotentialExist(source) || Potential.getPotentialQuantity(target) > 0)) {
+                        c.getPlayer().getStat().recalcLocalStats();
+                        c.getPlayer().givePotentialBuff(Potential.buffItemId, Potential.duration, true);
+                    }
+
+                    c.getPlayer().刷新防滑状态();
+                    if ((Integer) LtMS.ConfigValuesMap.get("穿脱装备存档开关") > 0) {
+                        c.getPlayer().道具存档();
+                        c.getPlayer().setPower(0L);
+                        c.getPlayer().getPower();
+                    }
+
+                }
             }
         }
-        if (dst == -18 && c.getPlayer().getMount() != null) {
-            c.getPlayer().getMount().setItemId(source.getItemId());
         }
-        if (source.getItemId() == 1122017 || source.getItemId() == 1122086 || source.getItemId() == 1122207 || source.getItemId() == 1122215) {
-            c.getPlayer().startFairySchedule(true, true);
-        }
-        source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(src);
-        final Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(dst);
-        c.getPlayer().getInventory(MapleInventoryType.EQUIP).removeSlot(src);
-        if (target != null) {
-            c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).removeSlot(dst);
-        }
-        final List<ModifyInventory> mods = new ArrayList<ModifyInventory>();
-        if (itemChanged) {
-            mods.add(new ModifyInventory(3, (IItem)source));
-            mods.add(new ModifyInventory(0, source.copy()));
-        }
-        source.setPosition(dst);
-        c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).addFromDB((IItem)source);
-        if (target != null) {
-            target.setPosition(src);
-            c.getPlayer().getInventory(MapleInventoryType.EQUIP).addFromDB((IItem)target);
-        }
-        if (c.getPlayer().getBuffedValue(MapleBuffStat.BOOSTER) != null && isWeapon(source.getItemId())) {
-            c.getPlayer().cancelBuffStats(MapleBuffStat.BOOSTER);
-        }
-        chr.set套装伤害加成(tzjc.check_tz(chr));
-        mods.add(new ModifyInventory(2, (IItem)source, src));
-        c.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
-        final int reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
-        if (reqlv > c.getPlayer().getLevel() + c.getPlayer().getStat().levelBonus && !c.getPlayer().isGM()) {
-            FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，穿上装备時封鎖。 該装备需求等級: " + reqlv);
-            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，穿上装备時封鎖。 該装备需求等級: " + reqlv));
-            //c.getPlayer().ban("修改封包", true, true, false);
-            //c.getSession().close();
-            return;
-        }
+
         c.getPlayer().equipChanged();
     }
     
@@ -940,64 +1519,322 @@ public class MapleInventoryManipulator
     private static boolean isWeapon(final int itemId) {
         return itemId >= 1302000 && itemId < 1492024;
     }
-    
+
     public static void unequip(final MapleClient c, final short src, final short dst) {
-        final Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(src);
-        //MapleCharacter chr = c.getPlayer();
-        final Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(dst);
-        if (dst < 0) {
-            return;
+        Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(src);
+        Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(dst);
+        c.getPlayer().脱装备防滑检测(source);
+        if (source.getItemId() == 1602008 || source.getItemId() == 1602009 || source.getItemId() == 1602010) {
+            if (ServerConfig.version == 85) {
+                c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1025), (byte)0, (byte)0);
+            } else {
+                c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1013), (byte)0, (byte)0);
+            }
+
+            c.getPlayer().deleteOneTimeLog("轮回等级");
+            c.getPlayer().dropMessage(5, "你遗忘了 “轮回” 技能。");
         }
-        if (source == null) {
-            return;
+
+        if (dst >= 0) {
+            if (source != null) {
+                if (target != null && src <= 0) {
+                    c.sendPacket(MaplePacketCreator.getInventoryFull());
+                } else {
+                    if (c.getPlayer().getDebugMessage()) {
+                        c.getPlayer().dropMessage("脱装备: src : " + src + " dst : " + dst + " 代码：" + source.getItemId());
+                    }
+
+                    if (source.getItemId() == 1122017 || source.getItemId() == 1122086 || source.getItemId() == 1122207 || source.getItemId() == 1122215) {
+                        c.getPlayer().cancelFairySchedule(true);
+                    }
+
+                    if ((Integer)LtMS.ConfigValuesMap.get("装备栏强化系统开关") > 0) {
+                        EquipFieldEnhancement.EquipField equipField = c.getPlayer().getEquipField(src);
+                        if (equipField != null) {
+                            int str = source.getStr() - equipField.getStr();
+                            if (str < 0) {
+                                str = 0;
+                            }
+
+                            source.setStr((short)str);
+                            int dex = source.getDex() - equipField.getDex();
+                            if (dex < 0) {
+                                dex = 0;
+                            }
+
+                            source.setDex((short)dex);
+                            int _int = source.getInt() - equipField.getInt();
+                            if (_int < 0) {
+                                _int = 0;
+                            }
+
+                            source.setInt((short)_int);
+                            int luk = source.getLuk() - equipField.getLuk();
+                            if (luk < 0) {
+                                luk = 0;
+                            }
+
+                            source.setLuk((short)luk);
+                            int hp = source.getHp() - equipField.getHp();
+                            if (hp < 0) {
+                                hp = 0;
+                            }
+
+                            source.setHp((short)hp);
+                            int mp = source.getMp() - equipField.getMp();
+                            if (mp < 0) {
+                                mp = 0;
+                            }
+
+                            source.setMp((short)mp);
+                            int watk = source.getWatk() - equipField.getWatk();
+                            if (watk < 0) {
+                                watk = 0;
+                            }
+
+                            source.setWatk((short)watk);
+                            int matk = source.getMatk() - equipField.getMatk();
+                            if (matk < 0) {
+                                matk = 0;
+                            }
+
+                            source.setMatk((short)matk);
+                            int wdef = source.getWdef() - equipField.getWdef();
+                            if (wdef < 0) {
+                                wdef = 0;
+                            }
+
+                            source.setWdef((short)wdef);
+                            int mdef = source.getMdef() - equipField.getMdef();
+                            if (mdef < 0) {
+                                mdef = 0;
+                            }
+
+                            source.setMdef((short)mdef);
+                            int acc = source.getAcc() - equipField.getAcc();
+                            if (acc < 0) {
+                                acc = 0;
+                            }
+
+                            source.setAcc((short)acc);
+                            int avoid = source.getAvoid() - equipField.getAvoid();
+                            if (avoid < 0) {
+                                avoid = 0;
+                            }
+
+                            source.setAvoid((short)avoid);
+                            int speed = source.getSpeed() - equipField.getSpeed();
+                            if (speed < 0) {
+                                speed = 0;
+                            }
+
+                            source.setSpeed((short)speed);
+                            int jump = source.getJump() - equipField.getJump();
+                            if (jump < 0) {
+                                jump = 0;
+                            }
+
+                            source.setJump((short)jump);
+                            if (equipField.getTotalDamage() > 0) {
+                                Potential.setPotential(source, (short)11, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，总伤害-" + equipField.getTotalDamage() + "%");
+                            }
+
+                            if (equipField.getBossDamage() > 0) {
+                                Potential.setPotential(source, (short)12, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，BOSS伤害-" + equipField.getBossDamage() + "%");
+                            }
+
+                            if (equipField.getNormalDamage() > 0) {
+                                Potential.setPotential(source, (short)13, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，小怪伤害-" + equipField.getNormalDamage() + "%");
+                            }
+
+                            if (equipField.getStr_p() > 0) {
+                                Potential.setPotential(source, (short)14, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，力量-" + equipField.getStr_p() + "%");
+                            }
+
+                            if (equipField.getDex_p() > 0) {
+                                Potential.setPotential(source, (short)15, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，敏捷-" + equipField.getDex_p() + "%");
+                            }
+
+                            if (equipField.getInt_p() > 0) {
+                                Potential.setPotential(source, (short)16, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，智力-" + equipField.getInt_p() + "%");
+                            }
+
+                            if (equipField.getLuk_p() > 0) {
+                                Potential.setPotential(source, (short)17, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，运气-" + equipField.getLuk_p() + "%");
+                            }
+
+                            if (equipField.getHp_p() > 0) {
+                                Potential.setPotential(source, (short)18, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxHp-" + equipField.getHp_p() + "%");
+                            }
+
+                            if (equipField.getMp_p() > 0) {
+                                Potential.setPotential(source, (short)19, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxMp-" + equipField.getMp_p() + "%");
+                            }
+
+                            if (equipField.getWatk_p() > 0) {
+                                Potential.setPotential(source, (short)20, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，攻击力-" + equipField.getWatk_p() + "%");
+                            }
+
+                            if (equipField.getMatk_p() > 0) {
+                                Potential.setPotential(source, (short)21, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法力-" + equipField.getWatk_p() + "%");
+                            }
+
+                            if (equipField.getWdef_p() > 0) {
+                                Potential.setPotential(source, (short)22, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，物理防御力-" + equipField.getWdef_p() + "%");
+                            }
+
+                            if (equipField.getMdef_p() > 0) {
+                                Potential.setPotential(source, (short)23, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法防御力-" + equipField.getMdef_p() + "%");
+                            }
+
+                            if (equipField.getAcc_p() > 0) {
+                                Potential.setPotential(source, (short)24, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，命中率-" + equipField.getAcc_p() + "%");
+                            }
+
+                            if (equipField.getAvoid_p() > 0) {
+                                Potential.setPotential(source, (short)25, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，回避率-" + equipField.getAvoid_p() + "%");
+                            }
+
+                            if (equipField.getMustKill() > 0) {
+                                Potential.setPotential(source, (short)26, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，普通怪物必杀概率-" + equipField.getMustKill() + "%");
+                            }
+
+                            if (equipField.getInvincible() > 0) {
+                                Potential.setPotential(source, (short)27, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，无敌概率-" + equipField.getInvincible() + "%");
+                            }
+
+                            if (equipField.getStrong() > 0) {
+                                Potential.setPotential(source, (short)28, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，坚韧-" + equipField.getStrong() + "%（受到的伤害减少）");
+                            }
+
+                            if (equipField.getSuckHp() > 0) {
+                                Potential.setPotential(source, (short)29, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，吸血-" + equipField.getSuckHp() + "%（攻击时恢复HP上限10%的概率）");
+                            }
+
+                            if (equipField.getSuckMp() > 0) {
+                                Potential.setPotential(source, (short)30, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，吸魔-" + equipField.getSuckMp() + "%（攻击时恢复MP上限10%的概率）");
+                            }
+
+                            if (equipField.getGrowableHp() > 0) {
+                                Potential.setPotential(source, (short)31, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，茁壮生命-" + equipField.getGrowableHp() + "（升级时额外获得HP上限数量）");
+                            }
+
+                            if (equipField.getGrowableMp() > 0) {
+                                Potential.setPotential(source, (short)32, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，茁壮魔力-" + equipField.getGrowableMp() + "（升级时额外获得MP上限数量）");
+                            }
+
+                            if (equipField.getMoreExp() > 0) {
+                                Potential.setPotential(source, (short)33, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，慧根-" + equipField.getMoreExp() + "%（狩猎经验倍率增加）");
+                            }
+
+                            if (equipField.getMoreMeso() > 0) {
+                                Potential.setPotential(source, (short)34, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，财运-" + equipField.getMoreMeso() + "%（狩猎金币倍率增加）");
+                            }
+
+                            if (equipField.getMoreDrop() > 0) {
+                                Potential.setPotential(source, (short)35, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，财运-" + equipField.getMoreDrop() + "%（狩猎掉落倍率增加）");
+                            }
+
+                            if (equipField.getRevive() > 0) {
+                                Potential.setPotential(source, (short)36, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，涅槃-" + equipField.getRevive() + "%（死亡时原地满血复活的概率）");
+                            }
+
+                            if (equipField.getSummonMob() > 0) {
+                                Potential.setPotential(source, (short)37, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，怨念-" + equipField.getSummonMob() + "%（击杀普通怪物时招来怪物伙伴的概率）");
+                            }
+
+                            if (equipField.getConsumeRecover() > 0) {
+                                Potential.setPotential(source, (short)38, 0, 0);
+                                c.getPlayer().dropMessage(5, "该装备栏位取消装备，药灵-" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
+                            }
+
+                            c.getPlayer().reFreshItem(source);
+                        }
+                    }
+
+                    c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).removeSlot(src);
+                    if (target != null) {
+                        c.getPlayer().getInventory(MapleInventoryType.EQUIP).removeSlot(dst);
+                    }
+
+                    source.setPosition(dst);
+                    c.getPlayer().getInventory(MapleInventoryType.EQUIP).addFromDB(source);
+                    if (target != null) {
+                        target.setPosition(src);
+                        c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).addFromDB(target);
+                    }
+
+                    c.sendPacket(MaplePacketCreator.modifyInventory(true, Collections.singletonList(new ModifyInventory(2, source, src))));
+                    int reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
+                    if (reqlv > c.getPlayer().getLevel() + c.getPlayer().getStat().levelBonus && !c.getPlayer().isGM()) {
+                        FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等级: " + c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，脱除装备时封锁。 该装备需求等级: " + reqlv);
+                        if (Game.自动封挂) {
+                            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁系统] " + c.getPlayer().getName() + " 因为修改封包而被管理员永久停权。"));
+                            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等级: " + c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，脱除装备时封锁。 该装备需求等级: " + reqlv));
+                            c.getPlayer().ban("修改封包", true, true, false);
+                            c.getSession().close();
+                            return;
+                        }
+                    }
+
+                    c.getPlayer().equipChanged();
+                    if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0 && Potential.isPotentialExist(source)) {
+                        c.getPlayer().getStat().recalcLocalStats();
+                        c.getPlayer().givePotentialBuff(Potential.buffItemId, Potential.duration, true);
+                    }
+
+                    c.getPlayer().刷新防滑状态();
+                    if ((Integer)LtMS.ConfigValuesMap.get("穿脱装备存档开关") > 0) {
+                        c.getPlayer().道具存档();
+                        c.getPlayer().setPower(0L);
+                        c.getPlayer().getPower();
+                    }
+
+                }
+            }
         }
-        if (target != null && src <= 0) {
-            c.sendPacket(MaplePacketCreator.getInventoryFull());
-            return;
-        }
-        if (c.getPlayer().getDebugMessage()) {
-            c.getPlayer().dropMessage("脫装备: src : " + (int)src + " dst : " + (int)dst + " 代码：" + source.getItemId());
-        }
-        if (source.getItemId() == 1122017 || source.getItemId() == 1122086 || source.getItemId() == 1122207 || source.getItemId() == 1122215) {
-            c.getPlayer().cancelFairySchedule(true);
-        }
-        c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).removeSlot(src);
-        if (target != null) {
-            c.getPlayer().getInventory(MapleInventoryType.EQUIP).removeSlot(dst);
-        }
-        source.setPosition(dst);
-        c.getPlayer().getInventory(MapleInventoryType.EQUIP).addFromDB((IItem)source);
-        if (target != null) {
-            target.setPosition(src);
-            c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).addFromDB((IItem)target);
-        }
-        //chr.set套装伤害加成(tzjc.check_tz(chr));
-        c.sendPacket(MaplePacketCreator.modifyInventory(true, Collections.singletonList(new ModifyInventory(2, (IItem)source, src))));
-        final int reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
-        if (reqlv > c.getPlayer().getLevel() + c.getPlayer().getStat().levelBonus && !c.getPlayer().isGM()) {
-            FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，脫除装备時封鎖。 該装备需求等級: " + reqlv);
-            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") <等級: " + (int)c.getPlayer().getLevel() + " > 修改装备(" + source.getItemId() + ")封包，脫除装备時封鎖。 該装备需求等級: " + reqlv));
-            //c.getPlayer().ban("修改封包", true, true, false);
-            //c.getSession().close();
-            return;
-        }
-        c.getPlayer().equipChanged();
     }
     
     public static boolean dropCs(final MapleClient c, final MapleInventoryType type, final short src, final short quantity) {
         return drop(c, type, src, quantity, false, true);
     }
     
-    public static boolean drop(final MapleClient c, final MapleInventoryType type, final short src, final short quantity) {
+    public static boolean drop( MapleClient c,  MapleInventoryType type,  short src,  short quantity) {
         return drop(c, type, src, quantity, false);
     }
     
-    public static boolean drop(final MapleClient c, final MapleInventoryType type, final short src, final short quantity, final boolean npcInduced) {
+    public static boolean drop( MapleClient c,  MapleInventoryType type,  short src,  short quantity,  boolean npcInduced) {
         return drop(c, type, src, quantity, npcInduced, false);
     }
     
-    public static boolean drop(final MapleClient c, MapleInventoryType type, final short src, final short quantity, final boolean npcInduced, final boolean cs) {
+    public static boolean drop( MapleClient c, MapleInventoryType type,  short src,  short quantity,  boolean npcInduced,  boolean cs) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         if (quantity < 0) {
                 c.sendPacket(MaplePacketCreator.enableActions());
@@ -1009,6 +1846,16 @@ public class MapleInventoryManipulator
             c.sendPacket(MaplePacketCreator.enableActions());
             return false;
         }
+        IItem source = c.getPlayer().getInventory(type).getItem(src);
+
+        try {
+            if (src == -7) {
+                c.getPlayer().脱装备防滑检测(source);
+            }
+        } catch (Exception e) {
+            服务端输出信息.println_err("【错误】丢出道具异常，原因：" + e);
+
+        }
 
         try {
             if (src < 0) {
@@ -1017,7 +1864,6 @@ public class MapleInventoryManipulator
             if (c.getPlayer() == null) {
                 return false;
             }
-            final IItem source = c.getPlayer().getInventory(type).getItem(src);
             if (!cs && ii.isCash(source.getItemId())) {
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
@@ -1041,6 +1887,16 @@ public class MapleInventoryManipulator
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險貴重物品 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity));
                 }
                 FileoutputUtil.logToFile("logs/Data/丟棄貴重物品.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity);
+            }
+
+            if (quantity < 0L || source == null || !npcInduced && GameConstants.isPet(source.getItemId()) || quantity == 0L && !GameConstants.isRechargable(source.getItemId())) {
+                c.sendPacket(MaplePacketCreator.enableActions());
+                if (quantity < 0L && Game.自动封挂 && !c.getPlayer().isGM()) {
+                    c.getPlayer().ban(c.getPlayer().getName() + "复制物品", true, true, false);
+                    c.getPlayer().getClient().getSession().close();
+                }
+
+                return false;
             }
             if (source == null || (!npcInduced && GameConstants.isPet(source.getItemId()))) {
                 c.sendPacket(MaplePacketCreator.enableActions());
@@ -1085,8 +1941,245 @@ public class MapleInventoryManipulator
                 else {
                     c.getPlayer().getMap().spawnItemDrop((MapleMapObject)c.getPlayer(), c.getPlayer(), target, dropPos, true, true);
                 }
-            }
-            else {
+            } else {
+
+                if (type.getType() == MapleInventoryType.EQUIPPED.getType() && (Integer)LtMS.ConfigValuesMap.get("装备栏强化系统开关") > 0) {
+                    Equip equip = (Equip)source;
+                    EquipFieldEnhancement.EquipField equipField = c.getPlayer().getEquipField(src);
+                    if (equipField != null) {
+                        int str = equip.getStr() - equipField.getStr();
+                        if (str < 0) {
+                            str = 0;
+                        }
+
+                        equip.setStr((short)str);
+                        int dex = equip.getDex() - equipField.getDex();
+                        if (dex < 0) {
+                            dex = 0;
+                        }
+
+                        equip.setDex((short)dex);
+                        int _int = equip.getInt() - equipField.getInt();
+                        if (_int < 0) {
+                            _int = 0;
+                        }
+
+                        equip.setInt((short)_int);
+                        int luk = equip.getLuk() - equipField.getLuk();
+                        if (luk < 0) {
+                            luk = 0;
+                        }
+
+                        equip.setLuk((short)luk);
+                        int hp = equip.getHp() - equipField.getHp();
+                        if (hp < 0) {
+                            hp = 0;
+                        }
+
+                        equip.setHp((short)hp);
+                        int mp = equip.getMp() - equipField.getMp();
+                        if (mp < 0) {
+                            mp = 0;
+                        }
+
+                        equip.setMp((short)mp);
+                        int watk = equip.getWatk() - equipField.getWatk();
+                        if (watk < 0) {
+                            watk = 0;
+                        }
+
+                        equip.setWatk((short)watk);
+                        int matk = equip.getMatk() - equipField.getMatk();
+                        if (matk < 0) {
+                            matk = 0;
+                        }
+
+                        equip.setMatk((short)matk);
+                        int wdef = equip.getWdef() - equipField.getWdef();
+                        if (wdef < 0) {
+                            wdef = 0;
+                        }
+
+                        equip.setWdef((short)wdef);
+                        int mdef = equip.getMdef() - equipField.getMdef();
+                        if (mdef < 0) {
+                            mdef = 0;
+                        }
+
+                        equip.setMdef((short)mdef);
+                        int acc = equip.getAcc() - equipField.getAcc();
+                        if (acc < 0) {
+                            acc = 0;
+                        }
+
+                        equip.setAcc((short)acc);
+                        int avoid = equip.getAvoid() - equipField.getAvoid();
+                        if (avoid < 0) {
+                            avoid = 0;
+                        }
+
+                        equip.setAvoid((short)avoid);
+                        int speed = equip.getSpeed() - equipField.getSpeed();
+                        if (speed < 0) {
+                            speed = 0;
+                        }
+
+                        equip.setSpeed((short)speed);
+                        int jump = equip.getJump() - equipField.getJump();
+                        if (jump < 0) {
+                            jump = 0;
+                        }
+
+                        equip.setJump((short)jump);
+                        if (equipField.getTotalDamage() > 0) {
+                            Potential.setPotential(equip, (short)11, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，总伤害-" + equipField.getTotalDamage() + "%");
+                        }
+
+                        if (equipField.getBossDamage() > 0) {
+                            Potential.setPotential(equip, (short)12, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，BOSS伤害-" + equipField.getBossDamage() + "%");
+                        }
+
+                        if (equipField.getNormalDamage() > 0) {
+                            Potential.setPotential(equip, (short)13, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，小怪伤害-" + equipField.getNormalDamage() + "%");
+                        }
+
+                        if (equipField.getStr_p() > 0) {
+                            Potential.setPotential(equip, (short)14, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，力量-" + equipField.getStr_p() + "%");
+                        }
+
+                        if (equipField.getDex_p() > 0) {
+                            Potential.setPotential(equip, (short)15, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，敏捷-" + equipField.getDex_p() + "%");
+                        }
+
+                        if (equipField.getInt_p() > 0) {
+                            Potential.setPotential(equip, (short)16, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，智力-" + equipField.getInt_p() + "%");
+                        }
+
+                        if (equipField.getLuk_p() > 0) {
+                            Potential.setPotential(equip, (short)17, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，运气-" + equipField.getLuk_p() + "%");
+                        }
+
+                        if (equipField.getHp_p() > 0) {
+                            Potential.setPotential(equip, (short)18, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxHp-" + equipField.getHp_p() + "%");
+                        }
+
+                        if (equipField.getMp_p() > 0) {
+                            Potential.setPotential(equip, (short)19, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxMp-" + equipField.getMp_p() + "%");
+                        }
+
+                        if (equipField.getWatk_p() > 0) {
+                            Potential.setPotential(equip, (short)20, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，攻击力-" + equipField.getWatk_p() + "%");
+                        }
+
+                        if (equipField.getMatk_p() > 0) {
+                            Potential.setPotential(equip, (short)21, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法力-" + equipField.getWatk_p() + "%");
+                        }
+
+                        if (equipField.getWdef_p() > 0) {
+                            Potential.setPotential(equip, (short)22, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，物理防御力-" + equipField.getWdef_p() + "%");
+                        }
+
+                        if (equipField.getMdef_p() > 0) {
+                            Potential.setPotential(equip, (short)23, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法防御力-" + equipField.getMdef_p() + "%");
+                        }
+
+                        if (equipField.getAcc_p() > 0) {
+                            Potential.setPotential(equip, (short)24, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，命中率-" + equipField.getAcc_p() + "%");
+                        }
+
+                        if (equipField.getAvoid_p() > 0) {
+                            Potential.setPotential(equip, (short)25, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，回避率-" + equipField.getAvoid_p() + "%");
+                        }
+
+                        if (equipField.getMustKill() > 0) {
+                            Potential.setPotential(source, (short)26, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，普通怪物必杀概率-" + equipField.getMustKill() + "%");
+                        }
+
+                        if (equipField.getInvincible() > 0) {
+                            Potential.setPotential(source, (short)27, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，无敌概率-" + equipField.getInvincible() + "%");
+                        }
+
+                        if (equipField.getStrong() > 0) {
+                            Potential.setPotential(source, (short)28, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，坚韧-" + equipField.getStrong() + "%（受到的伤害减少）");
+                        }
+
+                        if (equipField.getSuckHp() > 0) {
+                            Potential.setPotential(source, (short)29, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，吸血-" + equipField.getSuckHp() + "%（攻击时恢复HP上限10%的概率）");
+                        }
+
+                        if (equipField.getSuckMp() > 0) {
+                            Potential.setPotential(source, (short)30, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，吸魔-" + equipField.getSuckMp() + "%（攻击时恢复MP上限10%的概率）");
+                        }
+
+                        if (equipField.getGrowableHp() > 0) {
+                            Potential.setPotential(source, (short)31, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，茁壮生命-" + equipField.getGrowableHp() + "（升级时额外获得HP上限数量）");
+                        }
+
+                        if (equipField.getGrowableMp() > 0) {
+                            Potential.setPotential(source, (short)32, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，茁壮魔力-" + equipField.getGrowableMp() + "（升级时额外获得MP上限数量）");
+                        }
+
+                        if (equipField.getMoreExp() > 0) {
+                            Potential.setPotential(source, (short)33, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，慧根-" + equipField.getMoreExp() + "%（狩猎经验倍率增加）");
+                        }
+
+                        if (equipField.getMoreMeso() > 0) {
+                            Potential.setPotential(source, (short)34, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，财运-" + equipField.getMoreMeso() + "%（狩猎金币倍率增加）");
+                        }
+
+                        if (equipField.getMoreDrop() > 0) {
+                            Potential.setPotential(source, (short)35, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，财运-" + equipField.getMoreDrop() + "%（狩猎掉落倍率增加）");
+                        }
+
+                        if (equipField.getRevive() > 0) {
+                            Potential.setPotential(source, (short)36, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，涅槃-" + equipField.getRevive() + "%（死亡时原地满血复活的概率）");
+                        }
+
+                        if (equipField.getSummonMob() > 0) {
+                            Potential.setPotential(source, (short)37, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，怨念-" + equipField.getSummonMob() + "%（击杀普通怪物时招来怪物伙伴的概率）");
+                        }
+
+                        if (equipField.getConsumeRecover() > 0) {
+                            Potential.setPotential(source, (short)38, 0, 0);
+                            c.getPlayer().dropMessage(5, "该装备栏位取消装备，药灵-" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
+                        }
+
+                        c.getPlayer().reFreshItem(equip);
+                    }
+                }
+
+                if ((Integer)LtMS.ConfigValuesMap.get("丢道具存档开关") > 0) {
+                    c.getPlayer().道具存档();
+                    c.getPlayer().setPower(0L);
+                    c.getPlayer().getPower();
+                }
                 c.getPlayer().getInventory(type).removeSlot(src);
                 c.sendPacket(MaplePacketCreator.dropInventoryItem((src < 0) ? MapleInventoryType.EQUIP : type, src));
                 if (src < 0) {

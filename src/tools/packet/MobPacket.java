@@ -3,6 +3,7 @@ package tools.packet;
 import java.util.*;
 
 import bean.UserAttraction;
+import constants.ServerConfig;
 import scripting.NPCConversationManager;
 import tools.MaplePacketCreator;
 import client.status.MonsterStatus;
@@ -12,6 +13,7 @@ import server.movement.LifeMovementFragment;
 import java.awt.Point;
 import server.life.MapleMonster;
 import handling.SendPacketOpcode;
+import tools.Pair;
 import tools.data.MaplePacketLittleEndianWriter;
 
 public class MobPacket
@@ -73,7 +75,7 @@ public class MobPacket
         mplew.writeInt(-heal);
         return mplew.getPacket();
     }
-    
+    //显示怪物血量
     public static byte[] showMonsterHP(final int oid, final int remhppercentage) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SHOW_MONSTER_HP.getValue());
@@ -138,7 +140,60 @@ public class MobPacket
         serializeMovementList(mplew, moves);
         return mplew.getPacket();
     }
-    
+    public static byte[] moveMonster(boolean useskill, int skill, int skill1, int skill2, int skill3, int skill4, int oid, Point startPos, Point endPos, List<LifeMovementFragment> moves) {
+        if (ServerConfig.version == 85) {
+            return moveMonster(useskill, skill, 0, oid, startPos, endPos, moves, (List)null, (List)null);
+        } else {
+            MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+            mplew.writeShort(SendPacketOpcode.MOVE_MONSTER.getValue());
+            mplew.writeInt(oid);
+            mplew.write(0);
+            mplew.write(useskill ? 1 : 0);
+            mplew.write(skill);
+            mplew.write(skill1);
+            mplew.write(skill2);
+            mplew.write(skill3);
+            mplew.write(skill4);
+            mplew.writePos(startPos);
+            serializeMovementList(mplew, moves);
+            return mplew.getPacket();
+        }
+    }
+    public static byte[] moveMonster(boolean useskill, int skill, int unk, int oid, Point startPos, Point endPos, List<LifeMovementFragment> moves, List<Integer> unk2, List<Pair<Integer, Integer>> unk3) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(SendPacketOpcode.MOVE_MONSTER.getValue());
+        mplew.writeInt(oid);
+        mplew.write(0);
+        mplew.write(0);
+        mplew.write(useskill ? 1 : 0);
+        mplew.write(skill);
+        mplew.writeInt(unk);
+        mplew.writeInt(unk3 == null ? 0 : unk3.size());
+        Iterator var10;
+        if (unk3 != null) {
+            var10 = unk3.iterator();
+
+            while(var10.hasNext()) {
+                Pair<Integer, Integer> i = (Pair)var10.next();
+                mplew.writeInt((Integer)i.left);
+                mplew.writeInt((Integer)i.right);
+            }
+        }
+
+        mplew.writeInt(unk2 == null ? 0 : unk2.size());
+        if (unk2 != null) {
+            var10 = unk2.iterator();
+
+            while(var10.hasNext()) {
+                Integer i = (Integer)var10.next();
+                mplew.writeInt(i);
+            }
+        }
+
+        mplew.writePos(startPos);
+        PacketHelper.serializeMovementList(mplew, moves);
+        return mplew.getPacket();
+    }
     private static void serializeMovementList(final MaplePacketLittleEndianWriter lew, final List<LifeMovementFragment> moves) {
         lew.write(moves.size());
         for (final LifeMovementFragment move : moves) {

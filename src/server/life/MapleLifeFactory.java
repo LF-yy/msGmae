@@ -38,7 +38,12 @@ public class MapleLifeFactory
         System.err.println("Unknown Life type: " + type + "");
         return null;
     }
-    
+    public static void deleteStats(int mobId) {
+        if (monsterStats.containsKey(mobId)) {
+            monsterStats.remove(mobId);
+        }
+
+    }
     public static int getNPCLocation(final int npcid) {
         if (MapleLifeFactory.NPCLoc.containsKey((Object)Integer.valueOf(npcid))) {
             return (int)Integer.valueOf(MapleLifeFactory.NPCLoc.get((Object)Integer.valueOf(npcid)));
@@ -92,10 +97,10 @@ public class MapleLifeFactory
                 stats.setHp(mobInfos.getHp());
                 stats.setMp(mobInfos.getMp());
                 stats.setExp(mobInfos.getExp());
-                stats.setLevel((short)(Math.min(mobInfos.getLevel(), 250)));
-                stats.setEva((short)(Math.min(mobInfos.getEva(), 10000)));
-                stats.setPhysicalDefense((short)(Math.min(mobInfos.getDamage(),30000)));
-                stats.setMagicDefense((short)(Math.min(mobInfos.getDamage(), 30000)));
+                stats.setLevel((short)(Math.min(mobInfos.getLevel(), 260)));
+                stats.setEva((short)(Math.min(mobInfos.getEva(), 32767)));
+                stats.setPhysicalDefense((short)(Math.min(mobInfos.getDamage(),32767)));
+                stats.setMagicDefense((short)(Math.min(mobInfos.getDamage(), 32767)));
             }else{
                 stats.setHp((long)MapleDataTool.getIntConvert("maxHP", monsterInfoData));
                 stats.setMp(MapleDataTool.getIntConvert("maxMP", monsterInfoData, 0));
@@ -107,19 +112,17 @@ public class MapleLifeFactory
             }
 
             stats.setRemoveAfter(MapleDataTool.getIntConvert("removeAfter", monsterInfoData, 0));
-            stats.setrareItemDropLevel((byte)MapleDataTool.getIntConvert("rareItemDropLevel", monsterInfoData, 0));
-            stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));
+            stats.setrareItemDropLevel((byte)MapleDataTool.getIntConvert("rareItemDropLevel", monsterInfoData, 0));//稀有物品掉落级别
+            stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));//设置固定伤害
             stats.setOnlyNormalAttack(MapleDataTool.getIntConvert("onlyNormalAttack", monsterInfoData, 0) > 0);
             stats.setBoss(MapleDataTool.getIntConvert("boss", monsterInfoData, 0) > 0 || mid == 8810018 || mid == 9410066 || (mid >= 8810118 && mid <= 8810122));
-            stats.setExplosiveReward(MapleDataTool.getIntConvert("explosiveReward", monsterInfoData, 0) > 0);
+            stats.setExplosiveReward(MapleDataTool.getIntConvert("explosiveReward", monsterInfoData, 0) > 0);//是否爆炸性奖励(爆物飞出)
             stats.setFfaLoot(MapleDataTool.getIntConvert("publicReward", monsterInfoData, 0) > 0);
             stats.setUndead(MapleDataTool.getIntConvert("undead", monsterInfoData, 0) > 0 || mid == 9700004 || mid == 9700009 || mid == 9700010);
             stats.setName(MapleDataTool.getString(mid + "/name", MapleLifeFactory.mobStringData, "MISSINGNO"));
             stats.setBuffToGive(MapleDataTool.getIntConvert("buff", monsterInfoData, -1));
-            stats.setFriendly(MapleDataTool.getIntConvert("damagedByMob", monsterInfoData, 0) > 0);
-            stats.setExplosiveReward(MapleDataTool.getIntConvert("explosiveReward", monsterInfoData, 0) > 0);
+            stats.setFriendly(MapleDataTool.getIntConvert("damagedByMob", monsterInfoData, 0) > 0);//友军怪物
             stats.setNoDoom(MapleDataTool.getIntConvert("noDoom", monsterInfoData, 0) > 0);
-            stats.setFfaLoot(MapleDataTool.getIntConvert("publicReward", monsterInfoData, 0) > 0);
             stats.setCP((byte)MapleDataTool.getIntConvert("getCP", monsterInfoData, 0));
             stats.setPoint(MapleDataTool.getIntConvert("point", monsterInfoData, 0));
             stats.setDropItemPeriod(MapleDataTool.getIntConvert("dropItemPeriod", monsterInfoData, 0));

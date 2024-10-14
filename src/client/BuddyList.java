@@ -120,6 +120,7 @@ public class BuddyList implements Serializable
             ps.setInt(1, characterId);
             ps.executeUpdate();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
@@ -153,6 +154,9 @@ public class BuddyList implements Serializable
                 }
                 count = rs.getInt("buddyCount");
             }
+            ps.close();
+            con.close();
+
         }
         catch (SQLException ex) {
             ex.printStackTrace();
@@ -171,6 +175,8 @@ public class BuddyList implements Serializable
                     capacity = rs.getInt("buddyCapacity");
                 }
             }
+            ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             ex.printStackTrace();
@@ -190,6 +196,8 @@ public class BuddyList implements Serializable
                     pending = rs.getInt("pending");
                 }
             }
+            ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             ex.printStackTrace();
@@ -205,6 +213,8 @@ public class BuddyList implements Serializable
             ps.setInt(2, player.getId());
             ps.setString(3, buddy.getGroup());
             ps.executeUpdate();
+            ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             ex.printStackTrace();

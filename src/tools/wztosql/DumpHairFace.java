@@ -37,7 +37,9 @@ public class DumpHairFace
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             try (final PreparedStatement ps = con.prepareStatement("DELETE FROM `wz_" + type.toLowerCase() + "data`")) {
                 ps.execute();
+                ps.close();
             }
+
             for (final MapleData c : chrStringData) {
                 final int chrid = Integer.parseInt(c.getName());
                 final String n = StringUtil.getLeftPaddedStr(chrid + ".img", '0', 12);
@@ -63,6 +65,8 @@ public class DumpHairFace
                         ps2.setInt(1, key);
                         ps2.setString(2, (String)DumpHairFace.chrNames.get((Object)Integer.valueOf(key)));
                         ps2.execute();
+                        ps2.close();
+                        con.close();
                     }
                     System.out.println("鍵值: " + key + " 名稱: " + (String)DumpHairFace.chrNames.get((Object)Integer.valueOf(key)));
                 }

@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 
 import bean.SuperSkills;
+import client.inventory.Equip;
+import constants.ServerConfig;
 import database.DBConPool;
 import java.awt.geom.Point2D;
 
@@ -14,6 +16,8 @@ import handling.world.World;
 import scripting.NPCConversationManager;
 import server.*;
 import server.Timer;
+import server.bean.Potential;
+import server.life.*;
 import tools.packet.UIPacket;
 import constants.MapConstants;
 
@@ -34,14 +38,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import client.ISkill;
-import server.life.MobSkill;
-import server.life.MobAttackInfo;
 import client.PlayerStats;
-import server.life.MapleMonster;
 import client.SkillFactory;
 import tools.packet.MobPacket;
-import server.life.MobSkillFactory;
-import server.life.MobAttackInfoFactory;
 import io.netty.channel.Channel;
 import tools.MapleAESOFB;
 import tools.MockIOSession;
@@ -298,7 +297,8 @@ public class PlayerHandler
             c.sendPacket(MaplePacketCreator.charInfo(player, c.getPlayer().getId() == objectid));
         }
     }
-    
+
+    //复活?
     public static void TakeDamage(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (slea.available() < 5L) {
             return;
@@ -535,6 +535,11 @@ public class PlayerHandler
         final int skillid = slea.readInt();
         final int skillLevel = slea.readByte();
         final ISkill skill = SkillFactory.getSkill(skillid);
+        if ((skillid == 5111005 || skillid == 5121003) && !chr.isGM() && (chr.getJob() < 500 || chr.getJob() >= 520) && (Integer)LtMS.ConfigValuesMap.get("禁止其他职业使用变身技能") > 0) {
+            chr.dropMessage(5, "其他职业禁止使用变身技能！");
+            c.sendPacket(MaplePacketCreator.enableActions());
+            return;
+        }
         if (chr.getSkillLevel(skill) <= 0 || (chr.getSkillLevel(skill) != skillLevel && skillid != 12101000)) {
             if (!GameConstants.isMulungSkill(skillid) && !GameConstants.isPyramidSkill(skillid)) {
                 return;
@@ -549,18 +554,79 @@ public class PlayerHandler
                 return;
             }
         }
-        final MapleStatEffect effect = skill.getEffect(chr.getSkillLevel(GameConstants.getLinkedSkill(skillid)));
+         MapleStatEffect effect = skill.getEffect(chr.getSkillLevel(GameConstants.getLinkedSkill(skillid)));
+
+        int checkSkillId = 1013;
+        if (ServerConfig.version == 85) {
+            checkSkillId = 1025;
+        }
+        if (skillid == checkSkillId && chr.skillisCooling(skillid) && !chr.isGM()) {
+            chr.dropMessage(5, "技能冷却时间尚未结束，暂时无法使用。");
+            c.sendPacket(MaplePacketCreator.enableActions());
+            return;
+        }
+
         if (effect.getCooldown() > 0 && !chr.isGM()) {
             if (chr.skillisCooling(skillid)) {
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
-            if (skillid != 5221006) {
-                c.sendPacket(MaplePacketCreator.skillCooldown(skillid, effect.getCooldown()));
-                chr.addCooldown(skillid, System.currentTimeMillis(), (long)(effect.getCooldown() * 1000));
+            if (effect.getCooldown() > 0 && skillid != 5221006) {
+                int index;
+                boolean cancel = false;
+                if (Potential.isCoolSkill(skillid)) {
+                    index = chr.getPotential(skillid);
+                    if (index > 0) {
+                        Random rand = new Random();
+                        if (rand.nextFloat() * 100.0F <= (float)index) {
+                            cancel = true;
+                            chr.dropMessage(5, "潜能触发，取消技能冷却时间。");
+                            chr.sendSkillEffect(5121009, 2);
+                        }
+                    }
+                }
+                if (!cancel) {
+                    c.sendPacket(MaplePacketCreator.skillCooldown(skillid, effect.getCooldown()));
+                    chr.addCooldown(skillid, System.currentTimeMillis(), (long)(effect.getCooldown() * 1000));
+                }
             }
         }
+
         switch (skillid) {
+            case 1013:
+            case 1025:
+                Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-120);
+                if (target != null && (target.getItemId() == 1602008 || target.getItemId() == 1602009 || target.getItemId() == 1602010)) {
+                    chr.getMap().killMonsterAll2(9900000);
+                    chr.getMap().killMonsterAll2(9900001);
+                    chr.getMap().killMonsterAll2(9900002);
+                    chr.giveBuff(3020032, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 600000, true);
+                    MapleMonster mainb;
+                    if (chr.getOneTimeLog("轮回等级") == 1) {
+                        mainb = MapleLifeFactory.getMonster(9900001);
+                        chr.getMap().setStoneLevel(1);
+                    } else if (chr.getOneTimeLog("轮回等级") >= 2) {
+                        mainb = MapleLifeFactory.getMonster(9900002);
+                        chr.getMap().setStoneLevel(2);
+                    } else {
+                        mainb = MapleLifeFactory.getMonster(9900000);
+                        chr.getMap().setStoneLevel(0);
+                    }
+
+                    mainb.setPosition(new Point(chr.getPosition().x - 200, chr.getPosition().y));
+                    mainb.setFake(true);
+                    mainb.setOwner(chr.getId());
+                    int duration = (Integer)LtMS.ConfigValuesMap.get("轮回碑石冷却秒数") * 1000;
+                    mainb.setDuration(600000L);
+                    chr.getMap().spawnFakeMonster(mainb);
+                    chr.getMap().setHaveStone(true);
+                    chr.addCooldown(1013, System.currentTimeMillis(), (long)duration);
+                } else {
+                    chr.dropMessage(1, "你身上没有轮回碑石，无法使用技能！");
+                }
+
+                c.sendPacket(MaplePacketCreator.enableActions());
+                break;
             case 1121001:
             case 1221001:
             case 1321001:
@@ -790,7 +856,7 @@ public class PlayerHandler
                 final int attackCount2 = attackCount;
                 final double maxdamage2 = maxdamage;
                 final MapleStatEffect eff2 = effect;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, 1);//chr.isGM() ? 1 : 4
+                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.getItemQuantity(LtMS.ConfigValuesMap.get("分身伤害道具"),true)/100.0);//chr.isGM() ? 1 : 4
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -885,11 +951,12 @@ public class PlayerHandler
             else {
                 visProjectile = projectile;
             }
-            if (!chr.haveItem(LtMS.ConfigValuesMap.get("无限弓标卡"),1)){
-                if (chr.getBuffedValue(MapleBuffStat.SPIRIT_CLAW) == null) {
-                    int bulletConsume = bulletCount;
+
+            if (chr.getBuffedValue(MapleBuffStat.SPIRIT_CLAW) == null) {
+                int bulletConsume = bulletCount;
+                if (!chr.haveItem(LtMS.ConfigValuesMap.get("无限弓标卡")) && !chr.isClone()) {
                     if (effect != null && effect.getBulletConsume() != 0) {
-                        bulletConsume = effect.getBulletConsume() * ((ShadowPartner != null) ? 2 : 1);
+                        bulletConsume = effect.getBulletConsume() * (ShadowPartner != null ? 2 : 1);
                     }
                     if (!MapleInventoryManipulator.removeById(c, MapleInventoryType.USE, projectile, bulletConsume, false, true)) {
                         return;
@@ -1015,7 +1082,7 @@ public class PlayerHandler
                 final int bulletCount2 = bulletCount;
                 final int visProjectile2 = visProjectile;
                 final int skillLevel2 = skillLevel;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, 1);//chr.isGM() ? 1 : 4
+                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.getItemQuantity(LtMS.ConfigValuesMap.get("分身伤害道具"),true)/100.0);//chr.isGM() ? 1 : 4
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -1091,7 +1158,7 @@ public class PlayerHandler
                 final ISkill skil2 = skill;
                 final MapleStatEffect eff2 = effect;
                 final int skillLevel2 = skillLevel;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, 1);//chr.isGM() ? 1 : 4
+                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.getItemQuantity(LtMS.ConfigValuesMap.get("分身伤害道具"),true)/100.0);//chr.isGM() ? 1 : 4
                 CloneTimer.getInstance().schedule((Runnable)new Runnable() {
                     @Override
                     public void run() {
@@ -1218,7 +1285,7 @@ public class PlayerHandler
         }
         if (res != null && c.getPlayer().getMap() != null) {
             if (slea.available() != 8L) {
-                System.err.println("slea.available != 8 (movement parsing error)\n" + slea.toString(true));
+                //System.err.println("slea.available != 8 (movement parsing error)\n" + slea.toString(true));
                 return;
             }
             final List<LifeMovementFragment> res2 = new ArrayList<LifeMovementFragment>((Collection<? extends LifeMovementFragment>)res);
@@ -1310,6 +1377,10 @@ public class PlayerHandler
         if (chr == null) {
             return;
         }
+//        if(LtMS.ConfigValuesMap.get("过图存档开关")>0 && System.currentTimeMillis() - chr.getSaveTime() > LtMS.ConfigValuesMap.get("过图存档时间间隔")){
+//            chr.saveToDB(false, false);
+//            chr.setSaveTime(System.currentTimeMillis());
+//        }
         if (slea.available() != 0L) {
             slea.readByte();
             final int targetid = slea.readInt();
@@ -1343,6 +1414,10 @@ public class PlayerHandler
                     chr.getStat().setHp(50);
                     final MapleMap to = chr.getMap().getReturnMap();
                     chr.changeMap(to, to.getPortal(0));
+                    if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+                        c.getPlayer().getStat().recalcLocalStats();
+                        c.getPlayer().givePotentialBuff(Potential.buffItemId, Potential.duration, true);
+                    }
                     c.sendPacket(MaplePacketCreator.enableActions());
                 }
                 else {

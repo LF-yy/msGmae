@@ -27,12 +27,12 @@ class Encoding
     public static int ASCII;
     public static int OTHER;
     public static int TOTALTYPES;
-    public static int SIMP = 0;
-    public static int TRAD = 1;
+    public static final int SIMP = 0;
+    public static final int TRAD = 1;
     public static String[] javaname;
     public static String[] nicename;
     public static String[] htmlname;
-    
+
     public Encoding() {
         Encoding.javaname = new String[Encoding.TOTALTYPES];
         Encoding.nicename = new String[Encoding.TOTALTYPES];
@@ -110,7 +110,7 @@ class Encoding
         Encoding.nicename[Encoding.ASCII] = "ASCII";
         Encoding.nicename[Encoding.OTHER] = "OTHER";
     }
-    
+
     static {
         Encoding.GB2312 = 0;
         Encoding.GBK = 1;

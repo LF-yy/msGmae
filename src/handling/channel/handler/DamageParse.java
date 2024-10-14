@@ -1,14 +1,15 @@
 package handling.channel.handler;
 
-import bean.SuperSkills;
+import bean.BreakthroughMechanism;
 import constants.tzjc;
 import database.DBConPool;
-import gui.CongMS;
 import gui.LtMS;
 import handling.world.World;
 import server.Start;
+import server.bean.Potential;
 import tools.data.LittleEndianAccessor;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +29,6 @@ import server.maps.MaplePvp;
 import constants.ServerConfig;
 import java.util.Map.Entry;
 import client.inventory.MapleInventoryType;
-import server.life.MobSkill;
 import client.status.MonsterStatusEffect;
 import server.Randomizer;
 import client.SkillFactory;
@@ -49,9 +49,9 @@ import client.MapleCharacter;
 import client.ISkill;
 import tools.packet.MobPacket;
 import util.ListUtil;
+import util.NumberUtils;
 
-public class DamageParse
-{
+public class DamageParse {
     public static int 固定伤害;
     public static Map<Integer, Double> MobRedDam;
     public static void applyAttack(final AttackInfo attack, final ISkill theSkill, final MapleCharacter player, int attackCount, final double maxDamagePerMonster, final MapleStatEffect effect, final AttackType attack_type) {
@@ -114,6 +114,15 @@ public class DamageParse
             player.dropMessage(5, "An item has run out of durability but has no inventory room to go to.");
             return;
         }
+//        final int last = (effect.getAttackCount() > effect.getBulletCount()) ? effect.getAttackCount() : effect.getBulletCount();
+////        if (attack.hits > last && player.hasGmLevel(1)) {
+////            //player.dropMessage("攻击次数异常攻击次数 " + (int)attack.hits + " 服务端判断正常攻击次数 " + last + " 技能ID " + attack.skill);
+////            System.out.println(player.getName() + "攻击次数异常攻击次数 " + (int)attack.hits + " 服务端判断正常攻击次数 " + last + " 技能ID " + attack.skill);
+////            player.getClient().disconnect(true, false);
+////            player.getClient().getSession().close();
+////            return;
+////        }
+
         int totDamage = 0;
         final MapleMap map = player.getMap();
         if (attack.skill == 4211006) {
@@ -145,10 +154,8 @@ public class DamageParse
                 }
             }
         }
-        int totDamageToOneMonster = 0;
         int 附加伤害总和 = 0;
         long newtotDamageToOneMonster = 0L;
-        long hpMob = 0L;
         final PlayerStats stats = player.getStat();
         final int CriticalDamage = stats.passive_sharpeye_percent();
         byte ShdowPartnerAttackPercentage = 0;
@@ -170,14 +177,27 @@ public class DamageParse
             }
             attackCount /= 2;
         }
+
+        int pDamagePercent = player.getPotential(29);
+        int pDamagePercentBoss = player.getPotential(30);
+        int pDamagePercentNormal = player.getPotential(31);
+        int packageDamagePercent = player.package_total_damage_percent;
+        int packageDamagePercentBoss = player.package_boss_damage_percent;
+        int packageDamagePercentNormal = player.package_normal_damage_percent;
+        int pDamagePercentSkill = 0;
+        if (Potential.isDamageSkill(attack.skill)) {
+            pDamagePercentSkill = player.getPotential(attack.skill);
+        }
+
+
         double maxDamagePerHit = 0.0;
 //        System.out.println("当前段数:"+attack.allDamage.size());
         for (final AttackPair oned2 : attack.allDamage) {
             final MapleMonster monster = map.getMonsterByOid(oned2.objectid);
             if (monster != null) {
-                totDamageToOneMonster = 0;
+                //totDamageToOneMonster = 0;
                  newtotDamageToOneMonster = 0L;
-                hpMob = monster.getHp();
+               // hpMob = monster.getHp();
                 final MapleMonsterStats monsterstats = monster.getStats();
                 final int fixeddmg = monsterstats.getFixedDamage();
                // final boolean Tempest = monster.getStatusSourceID(MonsterStatus.FREEZE) == 21120006;
@@ -214,7 +234,7 @@ public class DamageParse
                     long pgsx = Math.min(((player.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
                     if (eachd > (pgsx * (LtMS.ConfigValuesMap.get("破功伤害检测倍数") /100.0 ))) {
                         FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
-                        if(LtMS.ConfigValuesMap.get("封停账号") >0) {
+                        if(LtMS.ConfigValuesMap.get("倍攻封停账号") >0) {
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
                             World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
@@ -222,23 +242,23 @@ public class DamageParse
                             return;
                         }
                         if (player.getClient()!=null && LtMS.ConfigValuesMap.get("伤害检测") == 1){
-                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
-                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
+                            //World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
+                           // World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] " + player.getName() + " 因为开超级倍攻被弹了N下小鸡鸡"));
                             player.getClient().disconnect(true, false);
                             player.getClient().getSession().close();
                             return;
                         }
                         eachd = Integer.parseInt(pgsx+"");
                     }
-                    totDamageToOneMonster += (int) eachd;
+                   // totDamageToOneMonster += (int) eachd;
                     newtotDamageToOneMonster += (long)eachd;
                     if (monster.getId() == 9300021 && player.getPyramidSubway() != null) {
                         player.getPyramidSubway().onMiss(player);
                     }
                 }
-                //释魂射击减少25%伤害
-                if(attack.skill == 13111002 && LtMS.ConfigValuesMap.get("释魂射击削弱")>0){
-                    newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * 0.75);
+                //职业伤害调整
+                if(Start.dropCoefficientMap.get((int)player.getJob()) != null){
+                    newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * (Start.dropCoefficientMap.get((int)player.getJob())/100.0));
                 }
                 int 套装1附加伤害 = 0, 套装2附加伤害 = 0, 套装3附加伤害 = 0, 套装4附加伤害 = 0, 套装5附加伤害 = 0, 套装6附加伤害 = 0;
                 int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
@@ -260,91 +280,7 @@ public class DamageParse
                 int 套装6装备增加百分比 = LtMS.ConfigValuesMap.get("套装6附加百分比伤害");//装备增加百分比
                 int 套装6一件附加 = LtMS.ConfigValuesMap.get("套装6多穿一件附加");//附加
 
-                if (LtMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
-                    if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
-                        if (player.TZ1 >= 套装1装备数量) {
-                            int a;
-                            for (a = 0; a < player.TZ1 - 套装1装备数量;) {
-                                a++;
-                            }
-                            套装1附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装1装备增加百分比 + 套装1一件附加 * a) / 100);
-                        }
-                        if (player.TZ2 >= 套装2装备数量) {
-                            int b;
-                            for (b = 0; b < player.TZ2 - 套装2装备数量;) {
-                                b++;
-                            }
-                            套装2附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装2装备增加百分比 + 套装2一件附加 * b) / 100);
-                        }
-                        if (player.TZ3 >= 套装3装备数量) {
-                            int c;
-                            for (c = 0; c < player.TZ3 - 套装3装备数量;) {
-                                c++;
-                            }
-                            套装3附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装3装备增加百分比 + 套装3一件附加 * c) / 100);
-                        }
-                        if (player.TZ4 >= 套装4装备数量) {
-                            int d;
-                            for (d = 0; d < player.TZ4 - 套装4装备数量;) {
-                                d++;
-                            }
-                            套装4附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装4装备增加百分比 + 套装4一件附加 * d) / 100);
-                        }
-                        if (player.TZ5 >= 套装5装备数量) {
-                            int e;
-                            for (e = 0; e < player.TZ5 - 套装5装备数量;) {
-                                e++;
-                            }
-                            套装5附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装5装备增加百分比 + 套装5一件附加 * e) / 100);
-                        }
-                        if (player.TZ6 >= 套装6装备数量) {
-                            int f;
-                            for (f = 0; f < player.TZ6 - 套装6装备数量;) {
-                                f++;
-                            }
-                            套装6附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装6装备增加百分比 + 套装6一件附加 * f) / 100);
-                        }
-                    } else {//否则关闭叠加
-                        if (player.TZ1 >= 套装1装备数量) {
-                            int a;
-                            for (a = 0; a < player.TZ1 - 套装1装备数量;) {
-                                a++;
-                            }
-                            套装1附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装1装备增加百分比 + 套装1一件附加 * a) / 100);
-                        } else if (player.TZ2 >= 套装2装备数量) {
-                            int b;
-                            for (b = 0; b < player.TZ2 - 套装2装备数量;) {
-                                b++;
-                            }
-                            套装2附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装2装备增加百分比 + 套装2一件附加 * b) / 100);
-                        } else if (player.TZ3 >= 套装3装备数量) {
-                            int c;
-                            for (c = 0; c < player.TZ3 - 套装3装备数量;) {
-                                c++;
-                            }
-                            套装3附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装3装备增加百分比 + 套装3一件附加 * c) / 100);
-                        } else if (player.TZ4 >= 套装4装备数量) {
-                            int d;
-                            for (d = 0; d < player.TZ4 - 套装4装备数量;) {
-                                d++;
-                            }
-                            套装4附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装4装备增加百分比 + 套装4一件附加 * d) / 100);
-                        } else if (player.TZ5 >= 套装5装备数量) {
-                            int e;
-                            for (e = 0; e < player.TZ5 - 套装5装备数量;) {
-                                e++;
-                            }
-                            套装5附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装5装备增加百分比 + 套装5一件附加 * e) / 100);
-                        } else if (player.TZ6 >= 套装6装备数量) {
-                            int f;
-                            for (f = 0; f < player.TZ6 - 套装6装备数量;) {
-                                f++;
-                            }
-                            套装6附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装6装备增加百分比 + 套装6一件附加 * f) / 100);
-                        }
-                    }
-                }
-                附加伤害总和 = 套装1附加伤害 + 套装2附加伤害 + 套装3附加伤害 + 套装4附加伤害 + 套装5附加伤害 + 套装6附加伤害;
+                附加伤害总和 = get附加伤害总和(player, 套装1装备数量, 套装1附加伤害, newtotDamageToOneMonster, 套装1装备增加百分比, 套装1一件附加, 套装2装备数量, 套装2附加伤害, 套装2装备增加百分比, 套装2一件附加, 套装3装备数量, 套装3附加伤害, 套装3装备增加百分比, 套装3一件附加, 套装4装备数量, 套装4附加伤害, 套装4装备增加百分比, 套装4一件附加, 套装5装备数量, 套装5附加伤害, 套装5装备增加百分比, 套装5一件附加, 套装6装备数量, 套装6附加伤害, 套装6装备增加百分比, 套装6一件附加, 附加伤害总和);
 
                 totDamage += newtotDamageToOneMonster;
                 player.checkMonsterAggro(monster);
@@ -387,21 +323,8 @@ public class DamageParse
 
 
                 if (player.getStatForBuff(MapleBuffStat.SHADOWPARTNER) != null) {
-                    if ((player.getJob() >= 410 && player.getJob() <= 413) || (player.getJob() >= 1410 && player.getJob() <= 1413)) {
-                        if (player.getItemQuantity(3994720, false) > 0) {//
-                            //设置影分身攻击伤害倍数
-                            newtotDamageToOneMonster *= 2;
-                            final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
-                            player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
-                        }
-                    }
-                    else {
                         newtotDamageToOneMonster *= 2;
-                        final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
-                        player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
-                    }
-                }
-                else if (attack.skill == 3221007) {
+                }else if (attack.skill == 3221007) {
                     if (LtMS.ConfigValuesMap.get("一击要害伤害限制")==1){
                         newtotDamageToOneMonster = DamageParse.固定伤害;
                     }
@@ -411,29 +334,56 @@ public class DamageParse
                 if (newtotDamageToOneMonster <= 0) {
                     continue;
                 }
-                if (附加伤害总和 > 0) {
-                    monster.damagefj(附加伤害总和);
+
+                //伤害加成计算
+                newtotDamageToOneMonster = getNewtotDamageToOneMonster(newtotDamageToOneMonster, pDamagePercent, pDamagePercentBoss, pDamagePercentNormal, packageDamagePercent, packageDamagePercentBoss, packageDamagePercentNormal, pDamagePercentSkill, monster);
+
+
+                List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(player.getId());
+                if (ListUtil.isNotEmpty(breakthroughMechanisms)) {
+                    newtotDamageToOneMonster +=breakthroughMechanisms.get(0).getHarm()*LtMS.ConfigValuesMap.get("境界伤害");
+                }
+                if (player.get追加伤害()>0) {
+                    newtotDamageToOneMonster += player.get追加伤害();
                 }
                 //套装伤害计算
                 tzjc t = new tzjc();
                 newtotDamageToOneMonster = 伤害减伤(monster, newtotDamageToOneMonster);
                 newtotDamageToOneMonster = t.star_damage(player, newtotDamageToOneMonster, monster);
+                newtotDamageToOneMonster = BigDecimal.valueOf((Start.jobDamageMap.get((int)player.getJob()) !=null ? Start.jobDamageMap.get((int)player.getJob()) : 100)/100.0).multiply(BigDecimal.valueOf(newtotDamageToOneMonster)).longValue();
+
                 if (attack.skill != 1221011) {
                    // monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
-//                    long newDamage = 0L;
-//                    newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
-//                    newtotDamageToOneMonster += newDamage;
-
-
-                    monster.damage(player, newtotDamageToOneMonster + 附加伤害总和, true, attack.skill);
+                    long newDamage = 0L;
+                     realHarm(player, newtotDamageToOneMonster, monster,attack.allDamage.size());
+                    newtotDamageToOneMonster += newDamage;
+                    newtotDamageToOneMonster += 附加伤害总和;
+                    if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害气泡显示")).intValue() > 0) {
+                        player.showInstruction("【真实伤害 → " + NumberUtils.amountConversion(new BigDecimal(newtotDamageToOneMonster)) + "#k】", 240, 10);
+                    }
+                    if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害黄字喇叭显示")).intValue() > 0) {
+                        player.dropMessage(-1, "【真实伤害 →" + NumberUtils.amountConversion(new BigDecimal(newtotDamageToOneMonster)) + "】");
+                    }
+                    if(LtMS.ConfigValuesMap.get("世界BOSS")== monster.getId()){
+                        newtotDamageToOneMonster = 999;
+                    }
+                    monster.damage(player, newtotDamageToOneMonster, true, attack.skill);
                 } else {
                     monster.damage(player, monster.getStats().isBoss() ? 500000L : (monster.getHp() - 1L), true, attack.skill);
                 }
 
 
-
+                //BOSS技能反伤
                 if (monster.isBuffed(MonsterStatus.WEAPON_DAMAGE_REFLECT)) {
-                    player.addHP(-(7000 + Randomizer.nextInt(8000)));
+                    if ((Integer)LtMS.ConfigValuesMap.get("VIP无效BOSS技能开关") > 0 && player.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无效BOSS技能道具ID"))) {
+                        player.dropMessage(5, "持有VIP道具，BOSS的伤害反射无法对你生效。");
+                    }
+
+                    if ((Integer)LtMS.ConfigValuesMap.get("VIP无敌开关") > 0 && player.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无敌道具ID"))) {
+                        player.dropMessage(5, "持有VIP道具，BOSS的伤害反射无法对你生效。");
+                    } else {
+                        player.addHP(-(7000 + Randomizer.nextInt(8000)));
+                    }
                 }
                 if (stats.hpRecoverProp > 0 && Randomizer.nextInt(100) <= stats.hpRecoverProp) {
                     player.healHP(stats.hpRecover);
@@ -647,6 +597,125 @@ public class DamageParse
         }
     }
 
+    private static int get附加伤害总和(MapleCharacter player, int 套装1装备数量, int 套装1附加伤害, long newtotDamageToOneMonster, int 套装1装备增加百分比, int 套装1一件附加, int 套装2装备数量, int 套装2附加伤害, int 套装2装备增加百分比, int 套装2一件附加, int 套装3装备数量, int 套装3附加伤害, int 套装3装备增加百分比, int 套装3一件附加, int 套装4装备数量, int 套装4附加伤害, int 套装4装备增加百分比, int 套装4一件附加, int 套装5装备数量, int 套装5附加伤害, int 套装5装备增加百分比, int 套装5一件附加, int 套装6装备数量, int 套装6附加伤害, int 套装6装备增加百分比, int 套装6一件附加, int 附加伤害总和) {
+        if (LtMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
+            if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
+                if (player.TZ1 >= 套装1装备数量) {
+                    int a;
+                    for (a = 0; a < player.TZ1 - 套装1装备数量;) {
+                        a++;
+                    }
+                    套装1附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装1装备增加百分比 + 套装1一件附加 * a) / 100);
+                }
+                if (player.TZ2 >= 套装2装备数量) {
+                    int b;
+                    for (b = 0; b < player.TZ2 - 套装2装备数量;) {
+                        b++;
+                    }
+                    套装2附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装2装备增加百分比 + 套装2一件附加 * b) / 100);
+                }
+                if (player.TZ3 >= 套装3装备数量) {
+                    int c;
+                    for (c = 0; c < player.TZ3 - 套装3装备数量;) {
+                        c++;
+                    }
+                    套装3附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装3装备增加百分比 + 套装3一件附加 * c) / 100);
+                }
+                if (player.TZ4 >= 套装4装备数量) {
+                    int d;
+                    for (d = 0; d < player.TZ4 - 套装4装备数量;) {
+                        d++;
+                    }
+                    套装4附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装4装备增加百分比 + 套装4一件附加 * d) / 100);
+                }
+                if (player.TZ5 >= 套装5装备数量) {
+                    int e;
+                    for (e = 0; e < player.TZ5 - 套装5装备数量;) {
+                        e++;
+                    }
+                    套装5附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装5装备增加百分比 + 套装5一件附加 * e) / 100);
+                }
+                if (player.TZ6 >= 套装6装备数量) {
+                    int f;
+                    for (f = 0; f < player.TZ6 - 套装6装备数量;) {
+                        f++;
+                    }
+                    套装6附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装6装备增加百分比 + 套装6一件附加 * f) / 100);
+                }
+            } else {//否则关闭叠加
+                if (player.TZ1 >= 套装1装备数量) {
+                    int a;
+                    for (a = 0; a < player.TZ1 - 套装1装备数量;) {
+                        a++;
+                    }
+                    套装1附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装1装备增加百分比 + 套装1一件附加 * a) / 100);
+                } else if (player.TZ2 >= 套装2装备数量) {
+                    int b;
+                    for (b = 0; b < player.TZ2 - 套装2装备数量;) {
+                        b++;
+                    }
+                    套装2附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装2装备增加百分比 + 套装2一件附加 * b) / 100);
+                } else if (player.TZ3 >= 套装3装备数量) {
+                    int c;
+                    for (c = 0; c < player.TZ3 - 套装3装备数量;) {
+                        c++;
+                    }
+                    套装3附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装3装备增加百分比 + 套装3一件附加 * c) / 100);
+                } else if (player.TZ4 >= 套装4装备数量) {
+                    int d;
+                    for (d = 0; d < player.TZ4 - 套装4装备数量;) {
+                        d++;
+                    }
+                    套装4附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装4装备增加百分比 + 套装4一件附加 * d) / 100);
+                } else if (player.TZ5 >= 套装5装备数量) {
+                    int e;
+                    for (e = 0; e < player.TZ5 - 套装5装备数量;) {
+                        e++;
+                    }
+                    套装5附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装5装备增加百分比 + 套装5一件附加 * e) / 100);
+                } else if (player.TZ6 >= 套装6装备数量) {
+                    int f;
+                    for (f = 0; f < player.TZ6 - 套装6装备数量;) {
+                        f++;
+                    }
+                    套装6附加伤害 = (int) (newtotDamageToOneMonster * (double) (套装6装备增加百分比 + 套装6一件附加 * f) / 100);
+                }
+            }
+        }
+        return 套装1附加伤害 + 套装2附加伤害 + 套装3附加伤害 + 套装4附加伤害 + 套装5附加伤害 + 套装6附加伤害;
+    }
+
+    private static long getNewtotDamageToOneMonster(long newtotDamageToOneMonster, int pDamagePercent, int pDamagePercentBoss, int pDamagePercentNormal, int packageDamagePercent, int packageDamagePercentBoss, int packageDamagePercentNormal, int pDamagePercentSkill, MapleMonster monster) {
+        if (pDamagePercent > 0) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) pDamagePercent / 100.0));
+        }
+
+        if (pDamagePercentBoss > 0  && monster.getStats().isBoss()) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) pDamagePercentBoss / 100.0));
+        }
+
+        if (pDamagePercentNormal > 0  && !monster.getStats().isBoss()) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) pDamagePercentNormal / 100.0));
+        }
+
+        if (pDamagePercentSkill > 0) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) pDamagePercentSkill / 100.0));
+        }
+
+        if (packageDamagePercent > 0) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) packageDamagePercent / 100.0));
+        }
+
+        if (packageDamagePercentBoss > 0  && monster.getStats().isBoss()) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) packageDamagePercentBoss / 100.0));
+        }
+
+        if (packageDamagePercentNormal > 0 && !monster.getStats().isBoss()) {
+            newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * ((double) packageDamagePercentNormal / 100.0));
+        }
+        return newtotDamageToOneMonster;
+    }
+
     public static void applyAttackMagic(final AttackInfo attack, final ISkill theSkill, final MapleCharacter player, final MapleStatEffect effect) {
         if (!player.isAlive()) {
             player.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
@@ -660,7 +729,11 @@ public class DamageParse
         }
         final int last = (effect.getAttackCount() > effect.getBulletCount()) ? effect.getAttackCount() : effect.getBulletCount();
         if (attack.hits > last && player.hasGmLevel(1)) {
-            player.dropMessage("攻击次数异常攻击次数 " + (int)attack.hits + " 服务端判断正常攻击次数 " + last + " 技能ID " + attack.skill);
+            //player.dropMessage("攻击次数异常攻击次数 " + (int)attack.hits + " 服务端判断正常攻击次数 " + last + " 技能ID " + attack.skill);
+            System.out.println(player.getName() + "攻击次数异常攻击次数 " + (int)attack.hits + " 服务端判断正常攻击次数 " + last + " 技能ID " + attack.skill);
+            player.getClient().disconnect(true, false);
+            player.getClient().getSession().close();
+            return;
         }
 //        final int CheckCount = effect.getMobCount();
         if (attack.hits > 0 && attack.targets > 0 && !player.getStat().checkEquipDurabilitys(player, -1)) {
@@ -695,13 +768,25 @@ public class DamageParse
         }
         maxDamagePerHit *= 1.04;
         final Element element = (player.getBuffedValue(MapleBuffStat.ELEMENT_RESET) != null) ? Element.NEUTRAL : theSkill.getElement();
-        double MaxDamagePerHit = 0.0;
         int totDamage = 0;
         final int CriticalDamage = stats.passive_sharpeye_percent();
         final ISkill eaterSkill = SkillFactory.getSkill(GameConstants.getMPEaterForJob((int)player.getJob()));
         final int eaterLevel = player.getSkillLevel(eaterSkill);
         final MapleMap map = player.getMap();
         int 附加伤害总和 = 0;
+        int pDamagePercent = player.getPotential(29);
+        int pDamagePercentBoss = player.getPotential(30);
+        int pDamagePercentNormal = player.getPotential(31);
+        int packageDamagePercent = player.package_total_damage_percent;
+        int packageDamagePercentBoss = player.package_boss_damage_percent;
+        int packageDamagePercentNormal = player.package_normal_damage_percent;
+        int pDamagePercentSkill = 0;
+        if (Potential.isDamageSkill(attack.skill)) {
+            pDamagePercentSkill = player.getPotential(attack.skill);
+        }
+
+
+
         for (final AttackPair oned : attack.allDamage) {
             final MapleMonster monster = map.getMonsterByOid(oned.objectid);
             if (monster != null) {
@@ -710,11 +795,11 @@ public class DamageParse
                 long newtotDamageToOneMonster = 0L;
                 final MapleMonsterStats monsterstats = monster.getStats();
                 final int fixeddmg = monsterstats.getFixedDamage();
-                MaxDamagePerHit = calculateMaxMagicDamagePerHit(player, theSkill, monster, monsterstats, stats, element, Integer.valueOf(CriticalDamage), maxDamagePerHit);
-                byte overallAttackCount = 0;
+               // MaxDamagePerHit = calculateMaxMagicDamagePerHit(player, theSkill, monster, monsterstats, stats, element, Integer.valueOf(CriticalDamage), maxDamagePerHit);
+               // byte overallAttackCount = 0;
                 for (final Pair<Integer, Boolean> eachde : oned.attack) {
                     Integer eachd = Integer.valueOf(eachde.left);
-                    ++overallAttackCount;
+                   // ++overallAttackCount;
                     if (!GameConstants.isElseSkill(attack.skill)) {
                         if (GameConstants.Novice_Skill(attack.skill)) {}
                         int atk = 500000;
@@ -752,7 +837,7 @@ public class DamageParse
                     long pgsx = Math.min(((player.getPGSXDJ() * 10000L) + 199999L), 2147483647L);
                     if (eachd > (pgsx * (LtMS.ConfigValuesMap.get("破功伤害检测倍数") /100.0 ))) {
                         FileoutputUtil.logToFile("logs/Hack/伤害異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家<" + (int)player.getLevel() + ">: " + player.getName() + " 技能代码: " + attack.skill + " 怪物: " + monster.getId() + " 本次伤害 :" + (Object)eachd + " 預計伤害: " + (int)maxDamagePerHit + "是否為BOSS: " + monster.getStats().isBoss());
-                           if(LtMS.ConfigValuesMap.get("封停账号") >0) {
+                        if(LtMS.ConfigValuesMap.get("倍攻封停账号") >0) {
                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + player.getName() + " 因为开倍攻而被管理員永久停封。"));
@@ -760,8 +845,8 @@ public class DamageParse
                                return;
                            }
                         if (player.getClient()!=null && LtMS.ConfigValuesMap.get("伤害检测") == 1){
-                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
-                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                           // World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
+                           // World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 有一位小可爱 因为开超级倍攻被弹了N下小鸡鸡"));
                             player.getClient().disconnect(true, false);
                             player.getClient().getSession().close();
                         }
@@ -773,7 +858,10 @@ public class DamageParse
                 //增加的段数伤害
                 //统计段数  技能增加段数  装备增加段数
 
-
+                //职业伤害调整
+                if(Start.dropCoefficientMap.get((int)player.getJob()) != null){
+                    newtotDamageToOneMonster = (long)(newtotDamageToOneMonster * (Start.dropCoefficientMap.get((int)player.getJob())/100.0));
+                }
                 int 套装1附加伤害 = 0, 套装2附加伤害 = 0, 套装3附加伤害 = 0, 套装4附加伤害 = 0, 套装5附加伤害 = 0, 套装6附加伤害 = 0;
                 int 套装1装备数量 = LtMS.ConfigValuesMap.get("套装1最少触发件数");//装备数量
                 int 套装1装备增加百分比 = LtMS.ConfigValuesMap.get("套装1附加百分比伤害");//装备增加百分比
@@ -793,91 +881,7 @@ public class DamageParse
                 int 套装6装备数量 = LtMS.ConfigValuesMap.get("套装6最少触发件数");//装备数量
                 int 套装6装备增加百分比 = LtMS.ConfigValuesMap.get("套装6附加百分比伤害");//装备增加百分比
                 int 套装6一件附加 = LtMS.ConfigValuesMap.get("套装6多穿一件附加");//附加
-                if (LtMS.ConfigValuesMap.get("套装系统开关") >=1) {//开启
-                    if (LtMS.ConfigValuesMap.get("套装叠加开关") >=1) {//开启
-                        if (player.TZ1 >= 套装1装备数量) {
-                            int a;
-                            for (a = 0; a < player.TZ1 - 套装1装备数量;) {
-                                a++;
-                            }
-                            套装1附加伤害 = (int) (totDamageToOneMonster * (double) (套装1装备增加百分比 + 套装1一件附加 * a) / 100);
-                        }
-                        if (player.TZ2 >= 套装2装备数量) {
-                            int b;
-                            for (b = 0; b < player.TZ2 - 套装2装备数量;) {
-                                b++;
-                            }
-                            套装2附加伤害 = (int) (totDamageToOneMonster * (double) (套装2装备增加百分比 + 套装2一件附加 * b) / 100);
-                        }
-                        if (player.TZ3 >= 套装3装备数量) {
-                            int c;
-                            for (c = 0; c < player.TZ3 - 套装3装备数量;) {
-                                c++;
-                            }
-                            套装3附加伤害 = (int) (totDamageToOneMonster * (double) (套装3装备增加百分比 + 套装3一件附加 * c) / 100);
-                        }
-                        if (player.TZ4 >= 套装4装备数量) {
-                            int d;
-                            for (d = 0; d < player.TZ4 - 套装4装备数量;) {
-                                d++;
-                            }
-                            套装4附加伤害 = (int) (totDamageToOneMonster * (double) (套装4装备增加百分比 + 套装4一件附加 * d) / 100);
-                        }
-                        if (player.TZ5 >= 套装5装备数量) {
-                            int e;
-                            for (e = 0; e < player.TZ5 - 套装5装备数量;) {
-                                e++;
-                            }
-                            套装5附加伤害 = (int) (totDamageToOneMonster * (double) (套装5装备增加百分比 + 套装5一件附加 * e) / 100);
-                        }
-                        if (player.TZ6 >= 套装6装备数量) {
-                            int f;
-                            for (f = 0; f < player.TZ6 - 套装6装备数量;) {
-                                f++;
-                            }
-                            套装6附加伤害 = (int) (totDamageToOneMonster * (double) (套装6装备增加百分比 + 套装6一件附加 * f) / 100);
-                        }
-                    } else {//否则关闭叠加
-                        if (player.TZ1 >= 套装1装备数量) {
-                            int a;
-                            for (a = 0; a < player.TZ1 - 套装1装备数量;) {
-                                a++;
-                            }
-                            套装1附加伤害 = (int) (totDamageToOneMonster * (double) (套装1装备增加百分比 + 套装1一件附加 * a) / 100);
-                        } else if (player.TZ2 >= 套装2装备数量) {
-                            int b;
-                            for (b = 0; b < player.TZ2 - 套装2装备数量;) {
-                                b++;
-                            }
-                            套装2附加伤害 = (int) (totDamageToOneMonster * (double) (套装2装备增加百分比 + 套装2一件附加 * b) / 100);
-                        } else if (player.TZ3 >= 套装3装备数量) {
-                            int c;
-                            for (c = 0; c < player.TZ3 - 套装3装备数量;) {
-                                c++;
-                            }
-                            套装3附加伤害 = (int) (totDamageToOneMonster * (double) (套装3装备增加百分比 + 套装3一件附加 * c) / 100);
-                        } else if (player.TZ4 >= 套装4装备数量) {
-                            int d;
-                            for (d = 0; d < player.TZ4 - 套装4装备数量;) {
-                                d++;
-                            }
-                            套装4附加伤害 = (int) (totDamageToOneMonster * (double) (套装4装备增加百分比 + 套装4一件附加 * d) / 100);
-                        } else if (player.TZ5 >= 套装5装备数量) {
-                            int e;
-                            for (e = 0; e < player.TZ5 - 套装5装备数量;) {
-                                e++;
-                            }
-                            套装5附加伤害 = (int) (totDamageToOneMonster * (double) (套装5装备增加百分比 + 套装5一件附加 * e) / 100);
-                        } else if (player.TZ6 >= 套装6装备数量) {
-                            int f;
-                            for (f = 0; f < player.TZ6 - 套装6装备数量;) {
-                                f++;
-                            }
-                            套装6附加伤害 = (int) (totDamageToOneMonster * (double) (套装6装备增加百分比 + 套装6一件附加 * f) / 100);
-                        }
-                    }
-                }
-                附加伤害总和 = 套装1附加伤害 + 套装2附加伤害 + 套装3附加伤害 + 套装4附加伤害 + 套装5附加伤害 + 套装6附加伤害;
+                附加伤害总和 = get附加伤害总和(player, 套装1装备数量, 套装1附加伤害, totDamageToOneMonster, 套装1装备增加百分比, 套装1一件附加, 套装2装备数量, 套装2附加伤害, 套装2装备增加百分比, 套装2一件附加, 套装3装备数量, 套装3附加伤害, 套装3装备增加百分比, 套装3一件附加, 套装4装备数量, 套装4附加伤害, 套装4装备增加百分比, 套装4一件附加, 套装5装备数量, 套装5附加伤害, 套装5装备增加百分比, 套装5一件附加, 套装6装备数量, 套装6附加伤害, 套装6装备增加百分比, 套装6一件附加, 附加伤害总和);
                 totDamage += totDamageToOneMonster;
                 player.checkMonsterAggro(monster);
                 final double range = player.getPosition().distanceSq((Point2D)monster.getPosition());
@@ -899,29 +903,47 @@ public class DamageParse
                         if (player.getItemQuantity(3994720, false) > 0) {
                             newtotDamageToOneMonster *= 2;
                             final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
-                            player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
+                            //player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
                         }
                     }
                     else {
                         newtotDamageToOneMonster *= 2;
                         final long 剩余血量 = monster.getHp() - (long)newtotDamageToOneMonster;
-                        player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
+                        //player.dropTopMsg("[影分身] 实际造成" + newtotDamageToOneMonster + "伤害 目标剩余HP " + 剩余血量 + "");
                     }
                 }
                 if (newtotDamageToOneMonster <= 0) {
                     continue;
                 }
-                if (附加伤害总和 > 0) {
-                    monster.damagefj(附加伤害总和); //魔法伤害的附加
+                //伤害加成计算
+                newtotDamageToOneMonster = getNewtotDamageToOneMonster(newtotDamageToOneMonster, pDamagePercent, pDamagePercentBoss, pDamagePercentNormal, packageDamagePercent, packageDamagePercentBoss, packageDamagePercentNormal, pDamagePercentSkill, monster);
+                List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(player.getId());
+                if (ListUtil.isNotEmpty(breakthroughMechanisms)) {
+                    newtotDamageToOneMonster +=breakthroughMechanisms.get(0).getHarm()*LtMS.ConfigValuesMap.get("境界伤害");
+                }
+                if (player.get追加伤害()>0) {
+                    newtotDamageToOneMonster += player.get追加伤害();
                 }
                 tzjc t = new tzjc();
-               long newDamage = 0L;
-               newDamage = 额外伤害(player, newtotDamageToOneMonster, monster);
-               newtotDamageToOneMonster += newDamage;
+                long newDamage = 0L;
+                realHarm(player, newtotDamageToOneMonster, monster,attack.allDamage.size());
+                newtotDamageToOneMonster += newDamage;
+                newtotDamageToOneMonster += 附加伤害总和;
+
                 newtotDamageToOneMonster = 伤害减伤(monster, newtotDamageToOneMonster);
                 newtotDamageToOneMonster = t.star_damage(player, newtotDamageToOneMonster, monster);
-                monster.damage(player, newtotDamageToOneMonster+附加伤害总和, true, attack.skill);
-                //monster.damage(player, (long)totDamageToOneMonster, true, attack.skill);
+                newtotDamageToOneMonster = BigDecimal.valueOf((Start.jobDamageMap.get((int)player.getJob()) !=null ? Start.jobDamageMap.get((int)player.getJob()) : 100 )/100.0).multiply(BigDecimal.valueOf(newtotDamageToOneMonster)).longValue();
+
+                if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害气泡显示")).intValue() > 0) {
+                    player.showInstruction("【真实伤害 → " + NumberUtils.amountConversion(new BigDecimal(newtotDamageToOneMonster)) + "#k】", 240, 10);
+                }
+                if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害黄字喇叭显示")).intValue() > 0) {
+                    player.dropMessage(-1, "【真实伤害 →" + NumberUtils.amountConversion(new BigDecimal(newtotDamageToOneMonster)) + "】");
+                }
+                if(LtMS.ConfigValuesMap.get("世界BOSS")== monster.getId()){
+                    newtotDamageToOneMonster = 999;
+                }
+                monster.damage(player, newtotDamageToOneMonster, true, attack.skill);
 
                 if (monster.isBuffed(MonsterStatus.MAGIC_DAMAGE_REFLECT)) {
                     player.addHP(-(7000 + Randomizer.nextInt(8000)));
@@ -958,7 +980,11 @@ public class DamageParse
             }
         }
     }
-    
+
+    public static void main(String[] args) {
+        long newtotDamageToOneMonster = BigDecimal.valueOf(120/100.0).multiply(BigDecimal.valueOf(100000L)).longValue();
+        System.out.println(newtotDamageToOneMonster);
+    }
     private static double calculateMaxMagicDamagePerHit(MapleCharacter chr, final ISkill skill, final MapleMonster monster, final MapleMonsterStats mobstats, final PlayerStats stats, final Element elem, final Integer sharpEye, final double maxDamagePerMonster) {
         final int dLevel = Math.max(mobstats.getLevel() - chr.getLevel(), 0);
         final int Accuracy = (int)(Math.floor((double)stats.getTotalInt() / 10.0) + Math.floor((double)stats.getTotalLuk() / 10.0));
@@ -1251,7 +1277,7 @@ public class DamageParse
         return elementalMaxDamagePerMonster;
     }
     
-    public static AttackInfo DivideAttack(final AttackInfo attack, final int rate) {
+    public static AttackInfo DivideAttack(final AttackInfo attack,  double rate) {
         attack.real = false;
         if (rate <= 1) {
             return attack;
@@ -1261,13 +1287,12 @@ public class DamageParse
             if (p.attack != null) {
                 for (final Pair<Integer, Boolean> pair : p.attack) {
 //                    final Pair<Integer, Boolean> eachd = pair;
-                    pair.left = Integer.valueOf((int)Integer.valueOf(pair.left) / rate);
+                    pair.left = (int)((Integer.valueOf(pair.left) * rate));
                 }
             }
         }
         return attack;
     }
-    
     public static AttackInfo Modify_AttackCrit(final AttackInfo attack, MapleCharacter chr, final int type) {
         final int criticalRate = chr.getStat().passive_sharpeye_rate();
         final boolean shadow = (type == 2 && chr.getBuffedValue(MapleBuffStat.SHADOWPARTNER) != null) || (type == 1 && chr.getBuffedValue(MapleBuffStat.MIRROR_IMAGE) != null);
@@ -1530,41 +1555,25 @@ public class DamageParse
         lea.skip(2);
         return ret;
     }
-    public static long 额外伤害(MapleCharacter play, long damage, MapleMonster monster) {
+    public static long realHarm(MapleCharacter play, long damage, MapleMonster monster, int NumberOfSegments) {
         long 数值 = 0L;
         try {
             if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成开关")).intValue() < 1) {
                 return 数值;
             }
-            if (damage >= (long) ((Integer) LtMS.ConfigValuesMap.get("伤害高于次数值")).intValue() ||
-                    (((Integer) LtMS.ConfigValuesMap.get("道具加成自定义伤害开关")).intValue() > 0 && play.getItemQuantity(((Integer) LtMS.ConfigValuesMap.get("自定义伤害加成道具代码")).intValue(), false) > 0)) {
-                数值 = (long) play.getComStr() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义力量加成比例")).intValue() +
-                        (long) play.getComDex() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义敏捷加成比例")).intValue() +
-                        (long) play.getComInt() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义智力加成比例")).intValue() +
-                        (long) play.getComLuk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义运气加成比例")).intValue() +
-                        (long) play.getComWatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物攻加成比例")).intValue() +
-                        (long) play.getComMatk() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔攻加成比例")).intValue() +
-                        (long) play.getComWdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义物防加成比例")).intValue() +
-                        (long) play.getComMdef() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔防加成比例")).intValue() +
-                        (long) play.getComHp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义血量加成比例")).intValue() +
-                        (long) play.getComMp() * (long) ((Integer) LtMS.ConfigValuesMap.get("自定义魔量加成比例")).intValue();
+            //平均段数大于2147483647时
+            if ((damage/NumberOfSegments) >= 2147483647L){
+                数值 = play.getStat().damage * NumberOfSegments - damage;
+                if (数值<=0){
+                    数值 = 0L;
+                }
             }
+
             if (((Integer) LtMS.ConfigValuesMap.get("扣除21E伤害")).intValue() > 0) {
                 数值 -= 2147483647L;
             }
-            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害气泡显示")).intValue() > 0) {
-                play.showInstruction("【#r额外伤害 → " + 数值 + "#k】", 240, 10);
-            }
-            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害黄字喇叭显示")).intValue() > 0) {
-                play.dropMessage(-1, "【额外伤害 →" + 数值 + "】");
-            }
-            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害段数显示")).intValue() > 0) {
-                while (数值 > 2147483647L) {
-                    play.getMap().broadcastMessage(MobPacket.damageMonster(monster.getObjectId(), 2147483647L));
-                    数值 -= 2147483647L;
-                }
-                play.getMap().broadcastMessage(MobPacket.damageMonster(monster.getObjectId(), (long) (int) 数值));
-            }
+            play.getMap().broadcastMessage(MobPacket.damageMonster(monster.getObjectId(),数值));
+
         } catch (Exception e) {
             FileoutputUtil.outError("logs/额外伤害异常.txt", (Throwable) e);
             return 数值;
