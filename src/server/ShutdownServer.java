@@ -18,7 +18,7 @@ import server.Timer.MapTimer;
 import server.Timer.MobTimer;
 import server.Timer.PingTimer;
 import server.Timer.WorldTimer;
-import server.bean.SkillSkin;
+import snail.SkillSkin;
 
 public class ShutdownServer implements Runnable, ShutdownServerMBean
 {

@@ -89,6 +89,7 @@ public enum MapleBuffStat implements Serializable
     MIRROR_IMAGE(85), 
     OWL_SPIRIT(86),  //伤害加成
     REAPER(2048),
+    SHADOWPARTNERX(83),
     召唤玩家1(77), 
     召唤玩家2(78), 
     召唤玩家3(79), 

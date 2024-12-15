@@ -85,7 +85,7 @@ public class BankItemManager1
             }
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             try {
                 if (rs != null) {
                     rs.close();
@@ -95,7 +95,7 @@ public class BankItemManager1
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         finally {
@@ -138,7 +138,7 @@ public class BankItemManager1
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             return ret;
         }
         finally {
@@ -148,7 +148,7 @@ public class BankItemManager1
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         return ret;
@@ -164,7 +164,7 @@ public class BankItemManager1
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             return ret;
         }
         finally {
@@ -174,7 +174,7 @@ public class BankItemManager1
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         return ret;
@@ -193,7 +193,7 @@ public class BankItemManager1
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             return ret;
         }
         finally {
@@ -203,7 +203,7 @@ public class BankItemManager1
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         return ret;

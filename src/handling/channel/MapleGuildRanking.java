@@ -1,5 +1,7 @@
 package handling.channel;
 
+import client.MapleClient;
+import gui.服务端输出信息;
 import server.Start;
 import tools.FileoutputUtil;
 import database.DBConPool;
@@ -9,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import database.DatabaseConnection;
+import tools.MaplePacketCreator;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +24,10 @@ public class MapleGuildRanking
     private final List<levelRankingInfo> ranks1;
     private final List<mesoRankingInfo> ranks2;
     private final Map<Integer, List<JobRankingInfo>> JobRanks;
-    private final List<levelRankingInfo> ranks剑客;
+    private final List<JzRankingInfo> ranks3 = new LinkedList<>();
+    private static List<levelRankingInfo> ranks_level = new LinkedList<>();
+    private static List<mesoRankingInfo> ranks_meso = new LinkedList<>();
+    private final List<levelRankingInfo> ranks剑客 ;
     private final List<levelRankingInfo> ranks勇士;
     private final List<levelRankingInfo> ranks英雄;
     private final List<levelRankingInfo> ranks枪战士;
@@ -1165,7 +1171,7 @@ public class MapleGuildRanking
                     MapleGuildRanking.this.showMesoRank();
                 }
                 catch (Exception ex) {
-                    ex.printStackTrace();
+                    //Ex.printStackTrace();
                     System.err.println("Could not update rankings");
                 }
             }
@@ -1558,6 +1564,269 @@ public class MapleGuildRanking
         public int getLogoBgColor() {
             return this.logobgcolor;
         }
+    }
+
+
+    public List<mesoRankingInfo> getMesoRank_s() {
+        if (ranks_meso.isEmpty()) {
+            showMesoRank_snail();
+        }
+
+        return ranks_meso;
+    }
+    public List<JzRankingInfo> getJzRank(int mapid) {
+        this.showJzRank(mapid);
+        return this.ranks3;
+    }
+    public static class JzRankingInfo {
+        private final int id;
+        private final long meso;
+
+        public JzRankingInfo(int id, long meso) {
+            this.id = id;
+            this.meso = meso;
+        }
+
+        public int getId() {
+            return this.id;
+        }
+
+        public long getMeso() {
+            return this.meso;
+        }
+    }
+    private void showJzRank(int mapid) {
+        this.ranks3.clear();
+
+        try {
+            Connection con = DBConPool.getInstance().getDataSource().getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM jzlog WHERE mapid = " + mapid + " ORDER BY `meso` DESC LIMIT 10");
+                Throwable var6 = null;
+
+                try {
+                    ResultSet rs = ps.executeQuery();
+
+                    while(rs.next()) {
+                        JzRankingInfo rank3 = new JzRankingInfo(rs.getInt("characterid"), rs.getLong("meso"));
+                        this.ranks3.add(rank3);
+                    }
+
+                    rs.close();
+                } catch (Throwable var31) {
+                    var6 = var31;
+                    throw var31;
+                } finally {
+                    if (ps != null) {
+                        if (var6 != null) {
+                            try {
+                                ps.close();
+                            } catch (Throwable var30) {
+                                var6.addSuppressed(var30);
+                            }
+                        } else {
+                            ps.close();
+                        }
+                    }
+
+                }
+            } catch (Throwable var33) {
+                var4 = var33;
+                throw var33;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var29) {
+                            var4.addSuppressed(var29);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var35) {
+            服务端输出信息.println_err("未能捐赠排行");
+            FileoutputUtil.outError("logs/资料库异常.txt", var35);
+        }
+
+    }
+
+    public static void showMesoRank_snail() {
+        ranks_meso.clear();
+        ArrayList<Integer> accIDList = new ArrayList();
+
+        try {
+            Connection con = DBConPool.getInstance().getDataSource().getConnection();
+            Throwable var3 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT *, ( chr.meso + s.meso ) as money FROM `characters` as chr , `storages` as s WHERE chr.gm < 1  AND s.accountid = chr.accountid ORDER BY money DESC LIMIT 41");
+                Throwable var5 = null;
+
+                try {
+                    ResultSet rs = ps.executeQuery();
+                    ArrayList<mesoRankingInfo> chrRankList = new ArrayList();
+
+                    while(rs.next()) {
+                        long money = 0L;
+                        if (accIDList.contains(rs.getInt("accountid"))) {
+                            money = rs.getLong("meso");
+                        } else {
+                            money = rs.getLong("money");
+                            accIDList.add(rs.getInt("accountid"));
+                        }
+
+                        mesoRankingInfo rank2 = new mesoRankingInfo(rs.getString("name"), money, rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                        chrRankList.add(rank2);
+                    }
+
+                    int n = chrRankList.size();
+                    if (n > 1) {
+                        int i;
+                        for(i = 0; i < n; ++i) {
+                            boolean flag = false;
+
+                            for(int j = 0; j < n - i - 1; ++j) {
+                                long meso1 = ((mesoRankingInfo)chrRankList.get(j)).getMeso();
+                                long meso2 = ((mesoRankingInfo)chrRankList.get(j + 1)).getMeso();
+                                if (meso1 < meso2) {
+                                    Collections.swap(chrRankList, j, j + 1);
+                                    flag = true;
+                                }
+                            }
+
+                            if (!flag) {
+                                break;
+                            }
+                        }
+
+                        for(i = 0; i < chrRankList.size() && i < 20; ++i) {
+                            ranks_meso.add(chrRankList.get(i));
+                        }
+
+                        rs.close();
+                        accIDList.clear();
+                        chrRankList.clear();
+                    }
+                } catch (Throwable var41) {
+                    var5 = var41;
+                    throw var41;
+                } finally {
+                    if (ps != null) {
+                        if (var5 != null) {
+                            try {
+                                ps.close();
+                            } catch (Throwable var40) {
+                                var5.addSuppressed(var40);
+                            }
+                        } else {
+                            ps.close();
+                        }
+                    }
+
+                }
+            } catch (Throwable var43) {
+                var3 = var43;
+                throw var43;
+            } finally {
+                if (con != null) {
+                    if (var3 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var39) {
+                            var3.addSuppressed(var39);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (Exception var45) {
+            服务端输出信息.println_err("未能显示财产排行," + var45);
+            FileoutputUtil.outError("logs/资料库异常.txt", var45);
+        }
+    }
+    public List<levelRankingInfo> getLevelRank_s() {
+        if (ranks_level.isEmpty()) {
+            showLevelRank_s();
+        }
+
+        return ranks_level;
+    }
+    public static void showLevelRank_s() {
+        ranks_level.clear();
+
+        try {
+            Connection con = DBConPool.getInstance().getDataSource().getConnection();
+            Throwable var1 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE gm < 1 ORDER BY `level` DESC LIMIT 100");
+                ResultSet rs = ps.executeQuery();
+
+                while(rs.next()) {
+                    levelRankingInfo rank1 = new levelRankingInfo(rs.getString("name"), rs.getInt("level"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                    ranks_level.add(rank1);
+                }
+
+                ps.close();
+                rs.close();
+            } catch (Throwable var13) {
+                var1 = var13;
+                throw var13;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var12) {
+                            var1.addSuppressed(var12);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var15) {
+            服务端输出信息.println_err("未能显示等级排行");
+            FileoutputUtil.outError("logs/资料库异常.txt", var15);
+        }
+
+    }
+
+    public static void MapleMSpvpdeaths(MapleClient c, int npcid) {
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT `name`, `pvpdeaths`, `str`, `dex`, `int`, `luk` FROM characters ORDER BY `pvpdeaths` DESC LIMIT 10");
+            ResultSet rs = ps.executeQuery();
+            c.sendPacket(MaplePacketCreator.MapleMSpvpdeaths(npcid, rs));
+            ps.close();
+            rs.close();
+        } catch (Exception var5) {
+            服务端输出信息.println_out("failed to display guild ranks." + var5);
+        }
+
+    }
+
+    public static void MapleMSpvpkills(MapleClient c, int npcid) {
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT `name`, `pvpkills`, `str`, `dex`, `int`, `luk` FROM characters ORDER BY `pvpkills` WHERE gm < 1  DESC LIMIT 10");
+            ResultSet rs = ps.executeQuery();
+            c.sendPacket(MaplePacketCreator.MapleMSpvpkills(npcid, rs));
+            ps.close();
+            rs.close();
+        } catch (Exception var5) {
+            服务端输出信息.println_out("failed to display guild ranks." + var5);
+        }
+
     }
 
 }

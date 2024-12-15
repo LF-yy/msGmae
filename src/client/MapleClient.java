@@ -1,8 +1,10 @@
 package client;
 
+import gui.LtMS;
 import io.netty.util.AttributeKey;
 import server.ServerProperties;
 import database.DatabaseConnection;
+import server.Start;
 import tools.MaplePacketCreator;
 
 import java.util.*;
@@ -103,6 +105,7 @@ public class MapleClient
     private int loginKeya;
     private boolean closeseesion;
     private long lastPortalClick;
+    private static boolean forceLogining;
     public MapleClient(final MapleAESOFB send, final MapleAESOFB receive, final Channel session) {
         this.accountId = 1;
         this.world = 1;
@@ -351,8 +354,34 @@ ps.close();
                             loginok = 4;
                         }
                         if (loginok == 0) {
-                            ChannelServer.forceRemovePlayerByAccId(this, this.accountId);
-                            this.updateLoginState(0, this.getSessionIPAddress());
+                            if ((Integer) LtMS.ConfigValuesMap.get("允许顶号开关") <= 0) {
+                                if (ChannelServer.isOnlineByAccId(this, this.accountId)) {
+                                    loginok = 6;
+                                } else {
+                                    ChannelServer.forceRemovePlayerByAccId(this, this.accountId);
+                                    this.updateLoginState(0, this.getSessionIPAddress());
+                                }
+                            } else {
+                                if (ChannelServer.isOnlineByAccId(this, this.accountId)) {
+                                    Random rand = null;
+                                    if (forceLogining) {
+                                        return rand.nextInt();
+                                    }
+
+                                    this.getSession().writeAndFlush(MaplePacketCreator.serverNotice(1, "检测到您的账号正在游戏中，正在顶号，请耐心等候！"));
+                                    forceLogining = true;
+                                    rand = new Random();
+                                    try {
+                                        Thread.sleep((long)((Integer)LtMS.ConfigValuesMap.get("顶号等待秒数") * 1000 + rand.nextInt(15000)));
+                                    } catch (InterruptedException e) {
+
+                                    }
+                                }
+
+                                ChannelServer.forceRemovePlayerByAccId(this, this.accountId);
+                                this.updateLoginState(0, this.getSessionIPAddress());
+                                forceLogining = false;
+                            }
                         }
                     }
                 }
@@ -620,9 +649,13 @@ ps.close();
                 }
             }
             this.player.setMessenger(null);
-            if (this.player.getAntiMacro().inProgress()) {
-                this.player.getAntiMacro().end();
-            }
+//            try {
+//                if (this.player.getAntiMacro().inProgress()) {
+//                    this.player.getAntiMacro().end();
+//                }
+//            } catch (Exception e) {
+//                System.out.println("测谎this.player.getAntiMacro().inProgress()"+e.getMessage());
+//            }
         }
         catch (Throwable e) {
             FilePrinter.printError("AccountStuck.txt", e);
@@ -1483,7 +1516,7 @@ ps.close();
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
                 FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
             }
         }
@@ -1928,11 +1961,14 @@ ps.close();
         }
         return ret;
     }
-    
+    public static void resetForceLogin() {
+        forceLogining = false;
+    }
     static {
         MapleClient.离线挂机 = Boolean.parseBoolean(ServerProperties.getProperty("LtMS.离线挂机"));
         CLIENT_KEY = AttributeKey.valueOf("Client");
         loginMutex = new ReentrantLock(true);
+        forceLogining = false;
     }
     
     protected static final class CharNameAndId

@@ -1,7 +1,6 @@
 package handling.channel.handler;
 
 import client.MapleCharacter;
-import java.util.Iterator;
 import handling.world.guild.MapleGuild;
 import handling.world.World.Alliance;
 import handling.world.World.Guild;

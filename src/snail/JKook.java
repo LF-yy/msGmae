@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package server.bean;
+package snail;
 
 import database.DBConPool;
 import gui.服务端输出信息;

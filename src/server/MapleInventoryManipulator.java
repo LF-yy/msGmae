@@ -6,12 +6,12 @@ import constants.ServerConfig;
 import constants.tzjc;
 import gui.LtMS;
 import gui.服务端输出信息;
-import server.bean.EquipFieldEnhancement;
-import server.bean.Potential;
+import snail.EquipFieldEnhancement;
+import snail.Potential;
 import server.maps.MapleMapObject;
 import java.awt.Point;
 import constants.WorldConstants;
-import gui.CongMS;
+
 import java.util.Collections;
 import handling.world.World.Broadcast;
 import tools.FileoutputUtil;
@@ -107,10 +107,10 @@ public class MapleInventoryManipulator
         return addById(c, itemId, quantity, owner, pet, 0L);
     }
     
-    public static boolean addById(final MapleClient c, final int itemId, final short quantity, final String owner, final MaplePet pet, final long period) {
+    public static boolean addById( MapleClient c,int itemId,short quantity,  String owner,  MaplePet pet,  long period) {
         return addId(c, itemId, quantity, owner, pet, period) >= 0;
     }
-    
+
     public static byte addId(final MapleClient c, final int itemId, short quantity, final String owner, final MaplePet pet, final long period) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         if (ii.isPickupRestricted(itemId) && c.getPlayer().haveItem(itemId, 1, true, false)) {
@@ -157,7 +157,7 @@ public class MapleInventoryManipulator
                         nItem.setOwner(owner);
                     }
                     if (period > 0L) {
-                        nItem.setExpiration(System.currentTimeMillis() + period * 60L * 60L * 1000L);
+                        nItem.setExpiration(System.currentTimeMillis() + period * 24L * 60L * 60L * 1000L);
                     }
                     if (pet != null) {
                         nItem.setPet(pet);
@@ -596,6 +596,12 @@ public class MapleInventoryManipulator
             c.sendPacket(MaplePacketCreator.showItemUnavailable());
             return false;
         }
+        //限时道具时间赋予
+        long expiration = MapleItemInformationProvider.getTimeLimit(item.getItemId());
+        if (expiration >= 0L) {
+            item.setExpiration(expiration);
+        }
+        //限时道具时间赋予
         final int before = c.getPlayer().itemQuantity(item.getItemId());
         short quantity = item.getQuantity();
         final MapleInventoryType type = GameConstants.getInventoryType(item.getItemId());
@@ -1478,7 +1484,7 @@ public class MapleInventoryManipulator
                     if (c.getPlayer().getBuffedValue(MapleBuffStat.BOOSTER) != null && isWeapon(source.getItemId())) {
                         c.getPlayer().cancelBuffStats(new MapleBuffStat[]{MapleBuffStat.BOOSTER});
                     }
-                chr.set套装伤害加成(tzjc.check_tz(chr));
+                ///chr.set套装伤害加成(tzjc.check_tz(chr));
                 mods.add(new ModifyInventory(2, source, src));
                 c.sendPacket(MaplePacketCreator.modifyInventory(true, mods));
                 reqlv = MapleItemInformationProvider.getInstance().getReqLevel(source.getItemId());
@@ -1505,6 +1511,7 @@ public class MapleInventoryManipulator
                     }
 
                 }
+                chr.set套装伤害加成(tzjc.check_tz(chr));
             }
         }
         }
@@ -1870,9 +1877,9 @@ public class MapleInventoryManipulator
             }
             //检测是否丢出超过数量的物品
             if(!c.getPlayer().haveItem(source.getItemId(),quantity)){
-                c.getPlayer().dropMessage(1, "你想干什么警告一次,再来就封了。");
+                c.getPlayer().dropMessage(1, "丢弃失败,请解卡或大退游戏再试");
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 强丢物品 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity));
-                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() +"丢弃物品异常 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity+"警告一次,再来就封了。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[全服公告] 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() +"丢弃物品异常 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity+"警告一次,再来就封了。"));
                 FileoutputUtil.logToFile("logs/Data/强丢物品.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + c.getPlayer().getName() + " 角色ID " + c.getPlayer().getId() + " 類型 " + (Object)type + " src " + (int)src + (int)quantity + " 物品 " + ii.getName(source.getItemId()) + " (" + source.getItemId() + ") x" + (int)quantity);
                 return false;
             }

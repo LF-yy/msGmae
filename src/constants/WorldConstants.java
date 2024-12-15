@@ -14,12 +14,13 @@ public class WorldConstants
     public static boolean LieDetector;
     public static boolean DropItem;
     public static int USER_LIMIT;
+    public static boolean importantItemsBroadcast;
     public static int MAX_CHAR_VIEW;
     public static boolean GMITEMS;
     public static boolean CS_ENABLE;
-    public static int EXP_RATE;
-    public static int MESO_RATE;
-    public static int DROP_RATE;
+    public static float EXP_RATE;
+    public static float MESO_RATE;
+    public static float DROP_RATE;
     public static byte FLAG;
     public static int CHANNEL_COUNT;
     public static String WORLD_TIP;
@@ -28,7 +29,7 @@ public class WorldConstants
     public static int gmserver = -1;
     public static byte recommended = -1;
     public static String recommendedmsg;
-    
+    public static int PET_VAC_RANGE;
     public static Option[] values() {
         return ServerConstants.TESPIA ? TespiaWorldOption.values() : WorldOption.values();
     }
@@ -59,19 +60,24 @@ public class WorldConstants
     }
     
     public static void loadSetting() {
-        WorldConstants.ADMIN_ONLY = ServerProperties.getProperty("LtMS.admin", WorldConstants.ADMIN_ONLY);
-        WorldConstants.FLAG = ServerProperties.getProperty("LtMS.flag", WorldConstants.FLAG);
-        WorldConstants.EXP_RATE = ServerProperties.getProperty("LtMS.expRate", WorldConstants.EXP_RATE);
-        WorldConstants.MESO_RATE = ServerProperties.getProperty("LtMS.mesoRate", WorldConstants.MESO_RATE);
-        WorldConstants.DROP_RATE = ServerProperties.getProperty("LtMS.dropRate", WorldConstants.DROP_RATE);
-        WorldConstants.WORLD_TIP = ServerProperties.getProperty("LtMS.eventMessage", WorldConstants.WORLD_TIP);
-        WorldConstants.SCROLL_MESSAGE = ServerProperties.getProperty("LtMS.serverMessage", WorldConstants.SCROLL_MESSAGE);
-        WorldConstants.CHANNEL_COUNT = ServerProperties.getProperty("LtMS.channel.count", WorldConstants.CHANNEL_COUNT);
-        //WorldConstants.USER_LIMIT = ServerProperties.getProperty("LtMS.userlimit", WorldConstants.USER_LIMIT);
-        WorldConstants.USER_LIMIT = Integer.valueOf(LtMS.ConfigValuesMap.get("服务端最大人数"));
-        WorldConstants.MAX_CHAR_VIEW = ServerProperties.getProperty("LtMS.maxCharView", WorldConstants.MAX_CHAR_VIEW);
-        WorldConstants.GMITEMS = ServerProperties.getProperty("LtMS.gmitems", WorldConstants.GMITEMS);
-        WorldConstants.CS_ENABLE = ServerProperties.getProperty("LtMS.cashshop.enable", WorldConstants.CS_ENABLE);
+        ADMIN_ONLY = ServerProperties.getProperty("LtMS.admin", WorldConstants.ADMIN_ONLY);
+        FLAG = ServerProperties.getProperty("LtMS.flag", WorldConstants.FLAG);
+        EXP_RATE = ServerProperties.getProperty("LtMS.expRate", WorldConstants.EXP_RATE);
+        MESO_RATE = ServerProperties.getProperty("LtMS.mesoRate", WorldConstants.MESO_RATE);
+        DROP_RATE = ServerProperties.getProperty("LtMS.dropRate", WorldConstants.DROP_RATE);
+        WORLD_TIP = ServerProperties.getProperty("LtMS.eventMessage", WorldConstants.WORLD_TIP);
+        SCROLL_MESSAGE = ServerProperties.getProperty("LtMS.serverMessage", WorldConstants.SCROLL_MESSAGE);
+        CHANNEL_COUNT = ServerProperties.getProperty("LtMS.channel.count", WorldConstants.CHANNEL_COUNT);
+        USER_LIMIT = Integer.valueOf(LtMS.ConfigValuesMap.get("服务端最大人数"));
+        MAX_CHAR_VIEW = ServerProperties.getProperty("LtMS.maxCharView", WorldConstants.MAX_CHAR_VIEW);
+        GMITEMS = ServerProperties.getProperty("LtMS.gmitems", WorldConstants.GMITEMS);
+        CS_ENABLE = ServerProperties.getProperty("LtMS.cashshop.enable", WorldConstants.CS_ENABLE);
+        PET_VAC_RANGE = ServerProperties.getProperty("server.settings.petVac.range", PET_VAC_RANGE);
+
+
+
+
+
     }
     
     static {
@@ -89,12 +95,14 @@ public class WorldConstants
         WorldConstants.MESO_RATE = 1;
         WorldConstants.DROP_RATE = 1;
         WorldConstants.FLAG = 3;
+        PET_VAC_RANGE = 350;
         WorldConstants.CHANNEL_COUNT = 2;
         WorldConstants.WORLD_TIP = "请享受冒险岛的冒险之旅吧!";//請享受冒險島的冒險之旅吧!
         WorldConstants.SCROLL_MESSAGE = "";
         WorldConstants.AVAILABLE = true;
         recommendedmsg = "";
         petLootCoolTime = 5;
+        importantItemsBroadcast = false;
         loadSetting();
     }
     

@@ -2,14 +2,14 @@ package server;
 
 import client.inventory.*;
 
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import constants.ItemConstants;
-import gui.CongMS;
 import gui.LtMS;
+import gui.服务端输出信息;
 import tools.FileoutputUtil;
 import database.DBConPool;
 import client.inventory.MaplePet.PetFlag;
@@ -89,6 +89,7 @@ public class MapleItemInformationProvider
     protected Map<Integer, MapleInventoryType> inventoryTypeCache;
     protected final Map<Integer, Integer> chairMountId;
     protected Map<Integer, Boolean> floatCashItem = new HashMap<>(); //拥有漂浮效果的道具
+    private static ArrayList<Pair<Integer, Date>> timeLimitList = new ArrayList();
 
     protected MapleItemInformationProvider() {
         this.etcData = MapleDataProviderFactory.getDataProvider("Etc.wz");
@@ -218,7 +219,7 @@ public class MapleItemInformationProvider
             itemPairs.add(new Pair<Integer, String>(Integer.valueOf(Integer.parseInt(itemFolder.getName())), MapleDataTool.getString("name", itemFolder, "NO-NAME")));
         }
         //20240218 LT 新增  装备潜能
-        final MapleData potsData = itemData.getData("ItemOption.img");
+         MapleData potsData = itemData.getData("ItemOption.img");
         StructPotentialItem item;
         List<StructPotentialItem> items;
         for (MapleData dat : potsData) {
@@ -276,24 +277,97 @@ public class MapleItemInformationProvider
                 item.incAllskill = (byte) MapleDataTool.getIntConvert("incAllskill", level, 0);
                 item.ignoreDAMr = (byte) MapleDataTool.getIntConvert("ignoreDAMr", level, 0);
                 item.RecoveryUP = (byte) MapleDataTool.getIntConvert("RecoveryUP", level, 0);
+                switch (item.potentialID) {
+                    case 31001:
+                    case 31002:
+                    case 31003:
+                    case 31004:
+                        item.skillID = (short)(item.potentialID - 23001);
+                        break;
+                    default:
+                        item.skillID = 0;
+                }
                 items.add(item);
             }
             potentialCache.put(Integer.parseInt(dat.getName()), items);
         }
+        loadTimeLimitListFromDB();
         return itemPairs;
     }
-    
+    public static boolean loadTimeLimitListFromDB() {
+        服务端输出信息.println_out("加载自定义限时道具列表...");
+        timeLimitList.clear();
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var1 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_time_limit_items");
+                ResultSet rs = ps.executeQuery();
+
+                while(rs.next()) {
+                    timeLimitList.add(new Pair(rs.getInt("itemid"), rs.getDate("expiration_date")));
+                }
+
+                ps.close();
+                rs.close();
+                服务端输出信息.println_out("加载成功");
+                boolean var4 = true;
+                return var4;
+            } catch (Throwable var14) {
+                var1 = var14;
+                throw var14;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var13) {
+                            var1.addSuppressed(var13);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var16) {
+            服务端输出信息.println_err("loadTimeLimitListFromDB错误，原因：" + var16);
+            var16.printStackTrace();
+            return false;
+        }
+    }
+
+    public static ArrayList<Pair<Integer, Date>> getTimeLimitList() {
+        return timeLimitList;
+    }
+
+    public static long getTimeLimit(int itemId) {
+        Iterator var1 = timeLimitList.iterator();
+
+        Pair pair;
+        do {
+            if (!var1.hasNext()) {
+                return -1L;
+            }
+
+            pair = (Pair)var1.next();
+        } while(pair == null || (Integer)pair.left != itemId || pair.right == null);
+
+        return ((Date)pair.right).getTime();
+    }
     public final boolean isTwoHanded(final int itemId) {
         switch (this.getWeaponType(itemId)) {
-            case 雙手斧:
-            case 雙手棍:
+            case 双手斧:
+            case 双手棍:
             case 弓:
             case 拳套:
             case 弩:
-            case 槍:
+            case 枪:
             case 矛:
-            case 雙手劍:
-            case 火槍:
+            case 双手剑:
+            case 火枪:
             case 指虎: {
                 return true;
             }
@@ -314,106 +388,90 @@ public class MapleItemInformationProvider
     
     public MapleWeaponType getWeaponType(final int itemId) {
         final int cat = itemId / 10000 % 100;
-        final MapleWeaponType[] type = { MapleWeaponType.單手劍, MapleWeaponType.單手斧, MapleWeaponType.單手棍, MapleWeaponType.短劍, MapleWeaponType.沒有武器, MapleWeaponType.沒有武器, MapleWeaponType.沒有武器, MapleWeaponType.長杖, MapleWeaponType.短杖, MapleWeaponType.沒有武器, MapleWeaponType.雙手劍, MapleWeaponType.雙手斧, MapleWeaponType.雙手棍, MapleWeaponType.矛, MapleWeaponType.槍, MapleWeaponType.弓, MapleWeaponType.弩, MapleWeaponType.拳套, MapleWeaponType.指虎, MapleWeaponType.火槍 };
+        final MapleWeaponType[] type = { MapleWeaponType.单手剑, MapleWeaponType.单手斧, MapleWeaponType.单手棍, MapleWeaponType.短剑, MapleWeaponType.没有武器, MapleWeaponType.没有武器, MapleWeaponType.没有武器, MapleWeaponType.长杖, MapleWeaponType.短杖, MapleWeaponType.没有武器, MapleWeaponType.双手剑, MapleWeaponType.双手斧, MapleWeaponType.双手棍, MapleWeaponType.矛, MapleWeaponType.枪, MapleWeaponType.弓, MapleWeaponType.弩, MapleWeaponType.拳套, MapleWeaponType.指虎, MapleWeaponType.火枪 };
         if (cat < 30 || cat > 49) {
-            return MapleWeaponType.沒有武器;
+            return MapleWeaponType.没有武器;
         }
         return type[cat - 30];
     }
-    
-    protected final MapleData getStringData(final int itemId) {
+
+    protected final MapleData getStringData(int itemId) {
         String cat = null;
+        String etc = null;
         MapleData data;
         if (itemId >= 5010000) {
             data = this.cashStringData;
-        }
-        else if (itemId >= 2000000 && itemId < 3000000) {
+        } else if (itemId >= 2000000 && itemId < 3000000) {
             data = this.consumeStringData;
-        }
-        else if ((itemId >= 1142000 && itemId < 1143200) || (itemId >= 1010000 && itemId < 1040000) || (itemId >= 1122000 && itemId < 1123000)) {
+        } else if (itemId >= 1142000 && itemId < 1143200 || itemId >= 1010000 && itemId < 1040000 || itemId >= 1122000 && itemId < 1123000) {
             data = this.eqpStringData;
             cat = "Accessory";
-        }
-        else if (itemId >= 1000000 && itemId < 1010000) {
+        } else if (itemId >= 1000000 && itemId < 1010000) {
             data = this.eqpStringData;
             cat = "Cap";
-        }
-        else if (itemId >= 1102000 && itemId < 1103000) {
+        } else if (itemId >= 1102000 && itemId < 1103000) {
             data = this.eqpStringData;
             cat = "Cape";
-        }
-        else if (itemId >= 1040000 && itemId < 1050000) {
+        } else if (itemId >= 1040000 && itemId < 1050000) {
             data = this.eqpStringData;
             cat = "Coat";
-        }
-        else if (itemId >= 20000 && itemId < 22000) {
+        } else if (itemId >= 20000 && itemId < 22000) {
             data = this.eqpStringData;
             cat = "Face";
-        }
-        else if (itemId >= 1080000 && itemId < 1090000) {
+        } else if (itemId >= 1080000 && itemId < 1090000) {
             data = this.eqpStringData;
             cat = "Glove";
-        }
-        else if (itemId >= 30000 && itemId < 32000) {
+        } else if (itemId >= 30000 && itemId < 32000) {
             data = this.eqpStringData;
             cat = "Hair";
-        }
-        else if (itemId >= 1050000 && itemId < 1060000) {
+        } else if (itemId >= 1050000 && itemId < 1060000) {
             data = this.eqpStringData;
             cat = "Longcoat";
-        }
-        else if (itemId >= 1060000 && itemId < 1070000) {
+        } else if (itemId >= 1060000 && itemId < 1070000) {
             data = this.eqpStringData;
             cat = "Pants";
-        }
-        else if (itemId >= 1610000 && itemId < 1660000) {
+        } else if (itemId >= 1610000 && itemId < 1660000) {
             data = this.eqpStringData;
             cat = "Mechanic";
-        }
-        else if (itemId >= 1802000 && itemId < 1810000) {
+        } else if (itemId >= 1802000 && itemId < 1810000) {
             data = this.eqpStringData;
             cat = "PetEquip";
-        }
-        else if (itemId >= 1920000 && itemId < 2000000) {
+        } else if (itemId >= 1920000 && itemId < 2000000) {
             data = this.eqpStringData;
             cat = "Dragon";
-        }
-        else if (itemId >= 1112000 && itemId < 1120000) {
+        } else if (itemId >= 1112000 && itemId < 1120000) {
             data = this.eqpStringData;
             cat = "Ring";
-        }
-        else if (itemId >= 1092000 && itemId < 1100000) {
+        } else if (itemId >= 1092000 && itemId < 1100000) {
             data = this.eqpStringData;
             cat = "Shield";
-        }
-        else if (itemId >= 1070000 && itemId < 1080000) {
+        } else if (itemId >= 1070000 && itemId < 1080000) {
             data = this.eqpStringData;
             cat = "Shoes";
-        }
-        else if (itemId >= 1900000 && itemId < 1920000) {
+        } else if (itemId >= 1900000 && itemId < 1920000) {
             data = this.eqpStringData;
             cat = "Taming";
-        }
-        else if (itemId >= 1300000 && itemId < 1800000) {
+        } else if (itemId >= 1300000 && itemId < 1800000) {
             data = this.eqpStringData;
             cat = "Weapon";
-        }
-        else if (itemId >= 4000000 && itemId < 5000000) {
+        } else if (itemId >= 4000000 && itemId < 5000000) {
             data = this.etcStringData;
-        }
-        else if (itemId >= 3000000 && itemId < 4000000) {
+            etc = "Etc";
+        } else if (itemId >= 3000000 && itemId < 4000000) {
             data = this.insStringData;
-        }
-        else {
+        } else {
             if (itemId < 5000000 || itemId >= 5010000) {
                 return null;
             }
+
             data = this.petStringData;
         }
+
         if (cat == null) {
-            return data.getChildByPath(String.valueOf(itemId));
+            return etc == null ? data.getChildByPath(String.valueOf(itemId)) : data.getChildByPath(etc + "/" + itemId);
+        } else {
+            return data.getChildByPath("Eqp/" + cat + "/" + itemId);
         }
-        return data.getChildByPath("Eqp/" + cat + "/" + itemId);
     }
     
     protected final MapleData getItemData(final int itemId) {
@@ -1707,16 +1765,16 @@ public class MapleItemInformationProvider
         return scrollid / 100 % 100 == itemid / 10000 % 100;
     }
     
-    public final String getName(final int itemId) {
-        if (this.nameCache.containsKey((Object)Integer.valueOf(itemId))) {
-            return (String)this.nameCache.get((Object)Integer.valueOf(itemId));
+    public final String getName( int itemId) {
+        if (this.nameCache.containsKey(itemId)){
+            return (String)this.nameCache.get(itemId);
         }
-        final MapleData strings = this.getStringData(itemId);
+         MapleData strings = this.getStringData(itemId);
         if (strings == null) {
             return null;
         }
         final String ret = MapleDataTool.getString("name", strings, "(null)");
-        this.nameCache.put(Integer.valueOf(itemId), ret);
+        this.nameCache.put(itemId, ret);
         return ret;
     }
     
@@ -2304,6 +2362,32 @@ public class MapleItemInformationProvider
                     nEquip.renewPotential();
                 }
         return nEquip;
+    }
+
+    public final int getIncLEV(int itemId) {
+        MapleData item = this.getItemData(itemId);
+        if (item == null) {
+            return -1;
+        } else {
+            MapleData pData = item.getChildByPath("info/incLEV");
+            int pEntry;
+            if (pData != null) {
+                try {
+                    pEntry = MapleDataTool.getInt(pData);
+                } catch (Exception var6) {
+                    pEntry = MapleDataTool.getIntConvert(pData);
+                }
+            } else {
+                pData = item.getChildByPath("info/incLEV");
+                if (pData == null) {
+                    return -1;
+                }
+
+                pEntry = MapleDataTool.getIntConvert(pData);
+            }
+
+            return pEntry;
+        }
     }
 
 //    public Item scrollEnhance(Item equip, Item scroll, MapleCharacter chr) {

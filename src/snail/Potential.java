@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package server.bean;
+package snail;
 
 import client.MapleCharacter;
 import client.inventory.IEquip;

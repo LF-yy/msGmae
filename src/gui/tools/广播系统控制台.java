@@ -258,7 +258,7 @@ public class 广播系统控制台 extends javax.swing.JFrame {
             ps1.close();
             ps.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
         }
     }//GEN-LAST:event_修改广播ActionPerformed
     private void 刷新公告广播() {

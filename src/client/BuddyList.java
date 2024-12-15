@@ -159,7 +159,7 @@ public class BuddyList implements Serializable
 
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
         return count;
@@ -179,7 +179,7 @@ public class BuddyList implements Serializable
             con.close();
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
         return capacity;
@@ -200,7 +200,7 @@ public class BuddyList implements Serializable
             con.close();
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
         return pending;
@@ -217,7 +217,7 @@ public class BuddyList implements Serializable
             con.close();
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
     }

@@ -37,7 +37,7 @@ public class SystemLog {
             filewriter.flush();
             filewriter.close();
         } catch (Exception e) {
-           e.printStackTrace();
+           //e.printStackTrace();
         }
     }
 

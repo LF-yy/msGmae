@@ -148,9 +148,9 @@ public class MapleShop
                                     c.getPlayer().gainrwjf(1);
                                     if (c.getPlayer().getrwjf() >= 3) {
                                         //封号
-                                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理員永久停封。"));
-                                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理員永久停封。"));
-                                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理員永久停封。"));
+                                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理员永久停封。"));
+                                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理员永久停封。"));
+                                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + c.getPlayer().getName() + " 使用改数值外挂而被管理员永久停封。"));
                                         c.getPlayer().ban("使用数值外挂", true, true, true);
                                         return;
                                     }

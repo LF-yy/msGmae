@@ -96,7 +96,7 @@ public class ItemVac extends Thread
             }
         }
         catch (InterruptedException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             System.err.println("[ItemVac]未知錯誤" + (Object)e);
         }
     }

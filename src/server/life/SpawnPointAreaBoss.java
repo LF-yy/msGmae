@@ -1,6 +1,9 @@
 package server.life;
 
 import gui.LtMS;
+import handling.world.World;
+import scripting.AbstractPlayerInteraction;
+import scripting.NPCConversationManager;
 import server.Start;
 import tools.MaplePacketCreator;
 import server.maps.MapleMap;
@@ -91,6 +94,8 @@ public class SpawnPointAreaBoss extends Spawns
         map.spawnMonster(this.monster, -2);
         if (this.msg != null) {
             map.broadcastMessage(MaplePacketCreator.serverNotice(6, this.msg));
+            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, this.msg));
+            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, this.msg));
         }
         return this.monster;
     }

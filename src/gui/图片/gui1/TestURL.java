@@ -52,7 +52,7 @@ public class TestURL {
     }
 
     public static void test3() throws IOException {
-        URL url = new URL("http://www.hrtsea./down/soft/45.htm");
+        URL url = new URL("");
         URLConnection uc = url.openConnection();
         InputStream in = uc.getInputStream();
 
@@ -65,7 +65,7 @@ public class TestURL {
     }
 
     public static void test2() throws IOException {
-        URL url = new URL("http://www..cn/chanpin");
+        URL url = new URL("");
         Reader reader = new InputStreamReader(new BufferedInputStream(url.openStream()));
 
         int c;
@@ -77,7 +77,7 @@ public class TestURL {
     }
 
     public static void test() throws IOException {
-        URL url = new URL("http://www.zevmsmxd.cn/chanpin");
+        URL url = new URL("");
         InputStream in = url.openStream();
 
         int c;

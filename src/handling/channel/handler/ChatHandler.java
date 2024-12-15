@@ -67,22 +67,22 @@ public class ChatHandler
                 }
                 else if (chr.gmLevel() == 4 && !chr.isHidden()) {
                     chr.getCheatTracker().checkMsg();
-                    map.broadcastMessage(MaplePacketCreator.yellowChat("<領導者>" + chr.getName() + ": " + text));
+                    map.broadcastMessage(MaplePacketCreator.yellowChat("<领导者>" + chr.getName() + ": " + text));
                     map.broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), text, false, 1));
                 }
                 else if (chr.gmLevel() == 3 && !chr.isHidden()) {
                     chr.getCheatTracker().checkMsg();
-                    map.broadcastMessage(MaplePacketCreator.yellowChat("<管理員>" + chr.getName() + ": " + text));
+                    map.broadcastMessage(MaplePacketCreator.yellowChat("<管理员>" + chr.getName() + ": " + text));
                     map.broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), text, false, 1));
                 }
                 else if (chr.gmLevel() == 2 && !chr.isHidden()) {
                     chr.getCheatTracker().checkMsg();
-                    map.broadcastMessage(MaplePacketCreator.yellowChat("<巡察員>" + chr.getName() + ": " + text));
+                    map.broadcastMessage(MaplePacketCreator.yellowChat("<巡查员>" + chr.getName() + ": " + text));
                     map.broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), text, false, 1));
                 }
                 else if (chr.gmLevel() == 1 && !chr.isHidden()) {
                     chr.getCheatTracker().checkMsg();
-                    map.broadcastMessage(MaplePacketCreator.yellowChat("<新實習生>" + chr.getName() + ": " + text));
+                    map.broadcastMessage(MaplePacketCreator.yellowChat("<实习生>" + chr.getName() + ": " + text));
                     map.broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), text, false, 1));
                 }
                 else if ((chr.gmLevel() == 0 && !chr.isHidden()) || chr.isGod() || chr.gmLevel() == 6) {
@@ -113,7 +113,7 @@ public class ChatHandler
                 }
             }
             else {
-                c.sendPacket(MaplePacketCreator.serverNotice(6, "在這個地方不能說話。"));
+                c.sendPacket(MaplePacketCreator.serverNotice(6, "在这个地方不能说话。"));
             }
         }
     }
@@ -138,7 +138,7 @@ public class ChatHandler
             return;
         }*/
         if (chr == null || !chr.getCanTalk()) {
-            c.sendPacket(MaplePacketCreator.serverNotice(6, "在這個地方不能說話。"));
+            c.sendPacket(MaplePacketCreator.serverNotice(6, "在这个地方不能说话。"));
             return;
         }
         if (CommandProcessor.processCommand(c, chattext, CommandType.NORMAL)) {
@@ -363,7 +363,7 @@ public class ChatHandler
     public static void WhisperFind(final LittleEndianAccessor slea, final MapleClient c) {
         final byte mode = slea.readByte();
         if (!c.getPlayer().getCanTalk()) {
-            c.sendPacket(MaplePacketCreator.serverNotice(6, "在這個地方不能說話。"));
+            c.sendPacket(MaplePacketCreator.serverNotice(6, "在这个地方不能说话。"));
             return;
         }
         switch (mode) {
@@ -408,7 +408,7 @@ public class ChatHandler
             }
             case 6: {
                 if (!c.getPlayer().getCanTalk()) {
-                    c.sendPacket(MaplePacketCreator.serverNotice(6, "在這個地方不能說話。"));
+                    c.sendPacket(MaplePacketCreator.serverNotice(6, "在这个地方不能说话。"));
                     return;
                 }
                 c.getPlayer().getCheatTracker().checkMsg();

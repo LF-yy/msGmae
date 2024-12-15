@@ -2,7 +2,6 @@ package server;
 
 import bean.*;
 import bean.SkillType;
-import client.DebugWindow;
 import client.LoginCrypto;
 
 import java.awt.*;
@@ -37,10 +36,11 @@ import handling.world.World.Broadcast;
 import handling.world.family.MapleFamilyBuff;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import merchant.merchant_main;
-import scripting.NPCConversationManager;
 import server.Timer.BuffTimer;
 import server.Timer.CheatTimer;
 import server.Timer.CloneTimer;
@@ -50,9 +50,8 @@ import server.Timer.MapTimer;
 import server.Timer.MobTimer;
 import server.Timer.PingTimer;
 import server.Timer.WorldTimer;
-import server.bean.PackageOfEquipments;
-import server.bean.SkillSkin;
-import server.events.DamageManage;
+import server.custom.forum.Forum_Section;
+import snail.*;
 import server.events.MapleOxQuizFactory;
 import server.life.*;
 import server.maps.MapleMap;
@@ -115,6 +114,7 @@ public class Start
     //光环
     public static Map<Integer, List<FieldSkills>> fieldSkillsMap;
     public static Map<Integer, List<AttackInfo>> allAttackInfo;
+    public static Map<Integer, List<LtMobSpawnBoss>> ltMobSpawnBoss;
     //自定义超级技能
     public static Map<Integer, List<SuperSkills>> superSkillsMap;
     public static Map<Integer, List<FiveTurn>>  fiveTurn;
@@ -130,8 +130,10 @@ public class Start
     public static Map<Long, List<LttItemAdditionalDamage>>  additionalDamage;
     public static Map<Integer, Integer> ltSkillWucdTable;
 
+    public static List<Integer> mobUnhurtList;
     public static List<MonsterGlobalDropEntry> globaldrops;
     public static List<MonsterDropEntry> drops;
+    public static List<LtDiabloEquipments> ltDiabloEquipments;
 
     public static List<LtMxdPrize> ltMxdPrize;
     public static List<LtZlTask> ltZlTask;
@@ -170,6 +172,15 @@ public class Start
     private static int 统计最高在线人数 = 0;
     private static int 最高在线人数 = 0;
     private static int 最高在线人数2 = 0;
+    private static float oldExpRate = 1.0F;
+    private static float oldExpRateWeek = 1.0F;
+    public static boolean 双倍爆率开关 = false;
+    public static boolean 周末双倍爆率开关 = false;
+    private static float oldMesoRate = 1.0F;
+    private static float oldMesoRateWeek = 1.0F;
+    private static float oldDropRate = 1.0F;
+    private static float oldDropRateWeek = 1.0F;
+    public static boolean 低保发放开关 = false;
     public static int 初始通缉令 = 0;
     public static Boolean 每日送货 = false;
     public static boolean 双倍经验开关 = false;
@@ -181,7 +192,7 @@ public class Start
     public static Map<String, ArrayList> RewardNameMap = new HashMap();
     public static Map<String, ArrayList> RewardAnnouncementMap = new HashMap();
 
-    public static List<String> 授权IP = Arrays.asList("27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23");
+    public static List<String> 授权IP = Arrays.asList("202.189.5.75","106.54.24.67","159.75.177.122","58.220.33.222","27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23");
     public static int 计数器 = 0;
     public static int 删除标记 = 0;
     public static void 刷新抽奖物品() {
@@ -278,8 +289,8 @@ public class Start
             System.out.println("◇ -> 版本信息:ver0.1");
             System.out.println("◇ -> 正在读取授权码请稍后");
 
-
-            进行授权校验();
+        //启动轮播(50);
+            //进行授权校验();
             System.out.println("◇ -> 授权码读取完毕");
             final long startQuestTime = System.currentTimeMillis();
 
@@ -325,7 +336,10 @@ public class Start
                 Start.getAttackInfo();
                 Start.getMobInfo();
                 Start.setLtSkillWucdTable();
-                //系统配置加载
+                Start.getLtMobSpawnBoss();
+                Start.getMobUnhurt();
+
+        //系统配置加载
             ServerConfig.loadSetting();
             World.init();
             World.monitorDurationMonster(10);
@@ -344,16 +358,17 @@ public class Start
             MapleOxQuizFactory.getInstance().initialize();
             MapleItemInformationProvider.getInstance().load();
             PackageOfEquipments.getInstance().loadFromDB();
+            服务端输出信息.println_out("○ 开始加载技能皮肤列表");
             SkillSkin.loadSkillList();
             PredictCardFactory.getInstance().initialize();
             CashItemFactory.getInstance().initialize();
             RandomRewards.getInstance();
             SkillFactory.LoadSkillInformaion();
-            DamageManage.getInstance().loadMobDamageDataListFromDB();
             ServerConfig.loadChannelExpRateMap();
             ServerConfig.loadChannelMesoRateMap();
             ServerConfig.loadChannelDropRateMap();
             ServerConfig.loadChannelNeedItemMap();
+            GameConstants.loadMultiOnlyItemList();
             MapleCarnivalFactory.getInstance();
             System.out.println("◇ -> 游戏商品数量: " + 服务器游戏商品() + " 个");
             System.out.println("◇ -> 商城商品数量: " + 服务器商城商品() + " 个");
@@ -406,25 +421,30 @@ public class Start
             PlayerNPC.loadAll();
             LoginServer.setOn();
             MapleMapFactory.loadCustomLife();
-            checkCPU(10);
-            //
-//            System.out.println("[开始全局爆率加载]");
+            //checkCPU(10);
+            DamageManage.getInstance().loadMobDamageDataListFromDB();
+            loadExtraMobInMapId();
+            loadLogFromDB();
+            刷新抽奖物品();
+            GetFuMoInfo();
+            loadPotentialMap();
+            读取技能范围检测();
+            读取技能PVP伤害();
+            读取技个人信息设置();
+            重置仙人数据();
+        WorldConstants.importantItemsBroadcast = (Integer)LtMS.ConfigValuesMap.get("重要道具掉落广播") > 0;
 
-//            System.out.println("[开始怪物爆率加载]");
-//            setdrops();
-            //System.out.println("[开始加载地图吸怪检测]");
+        Forum_Section.loadAllSection();
             //读取地图吸怪检测();
             System.out.println("[启动角色福利泡点线程]");
-            福利泡点(2);
-            System.out.println("◇ -> 自动存档线程");
+           // 福利泡点(2);
             自动存档(10);
             在线时间(1);
             回收内存(300);
-            AutoSaveSkillSkinMap(30);
-            //回收地图(180);
-            在线统计(10);
-            记录在线时间(1);
-            定时重载爆率(10);
+            回收地图(180);
+            //在线统计(10);
+            循环线程(1);
+            //定时重载爆率(10);
             //吸怪检测(3);
             World.isShutDown = false;
             OnlyID.getInstance();
@@ -432,20 +452,137 @@ public class Start
             System.out.println("◇ -> 检测游戏复制道具系统");
             checkCopyItemFromSql();
             System.out.println("◇ -> 加载赋能系统");
-            //System.out.println("◇ -> 清理物品表开始");
-            //清理物品表();
-            //System.out.println("◇ -> 清理物品表完成");
+
+            服务端输出信息.println_out("【启动中】 加载每日泡点、每日重置:::");
+            //World.GainZx(Zx_time);
+            // ZaiXian(1);
+            服务端输出信息.println_out("○ 开始加载野外随机BOSS");
+            World.outsideBoss(1);
+             WorldBoss.loadFromDB();
+            AutoSaveSkillSkinMap(30);
             tzjc.sr_tz();
             setdrops();
+            //暗黑破坏神玩法词条加载
+            setLtDiabloEquipments();
+            //PK
+        GameConstants.loadPKChannelList();
+        GameConstants.loadPKGuildChannelList();
+        GameConstants.loadPKPlayerMapList();
+        GameConstants.loadPKPartyMapList();
+        GameConstants.loadPKGuildMapList();
+        GameConstants.loadPKBanSkillsList();
+        GameConstants.loadPKDropItemsList();
+        GameConstants.loadPKDropItemsList2();
         if (!授权IP.contains(ServerConfig.IP)){
-            Start.userlimit = 2;
+            Start.userlimit = 5;
+            启动轮播(50);
         }
             System.out.println("[所有游戏数据加载完毕] ");
             System.out.println("[LtMs079服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
             System.out.println("[温馨提示]运行中请勿直接关闭本控制台，使用下方关闭服务器按钮来关闭服务端，否则回档自负\r\n");
             System.out.println("◇ -> 服务器启动成功");
-    }
 
+    }
+    public static void AutoSaveSkillSkinMap(int time) {
+        服务端输出信息.println_out("【读取中】 加载自动存储技能皮肤列表:::");
+        WorldTimer.getInstance().register(new Runnable() {
+            public void run() {
+                服务端输出信息.println_out("【技能皮肤】自动保存至数据库。。。");
+                int mount = SkillSkin.saveChrSkillMapToDB();
+                服务端输出信息.println_out("【技能皮肤】成功保存 " + mount + " 个玩家的皮肤。");
+                服务端输出信息.println_out("【世界BOSS】自动保存至数据库。。。");
+                boolean success = WorldBoss.saveToDB();
+                if (success) {
+                    服务端输出信息.println_out("【世界BOSS】保存成功");
+                } else {
+                    服务端输出信息.println_out("【世界BOSS】保存失败");
+                }
+
+            }
+        }, (long)('\uea60' * time));
+    }
+    public static void loadLogFromDB() {
+        服务端输出信息.println_out("○ 开始加载日志信息");
+
+        try {
+            TimeLogCenter.getInstance().loadBossLogFromDB();
+            TimeLogCenter.getInstance().loadBossLogaFromDB();
+            TimeLogCenter.getInstance().loadOneTimeLogFromDB();
+            TimeLogCenter.getInstance().loadOneTimeLogaFromDB();
+            TimeLogCenter.getInstance().loadWeekLogFromDB();
+            TimeLogCenter.getInstance().loadWeekLogaFromDB();
+            TimeLogCenter.getInstance().loadMonthLogFromDB();
+            TimeLogCenter.getInstance().loadMonthLogaFromDB();
+        } catch (Exception var1) {
+            服务端输出信息.println_err("【错误】loadLogFromDB错误，错误原因：" + var1);
+            var1.printStackTrace();
+        }
+
+        服务端输出信息.println_out("○ 日志信息加载完成");
+    }
+    private static void loadExtraMobInMapId() {
+        MapleMapFactory.addMobInMapId(2220000, 104000400);
+        MapleMapFactory.addMobInMapId(3220000, 101030404);
+        MapleMapFactory.addMobInMapId(5220001, 110040000);
+        MapleMapFactory.addMobInMapId(7220000, 250010304);
+        MapleMapFactory.addMobInMapId(8220000, 200010300);
+        MapleMapFactory.addMobInMapId(7220002, 250010503);
+        MapleMapFactory.addMobInMapId(7220001, 222010310);
+        MapleMapFactory.addMobInMapId(6220000, 107000300);
+        MapleMapFactory.addMobInMapId(5220002, 100040105);
+        MapleMapFactory.addMobInMapId(5220002, 100040106);
+        MapleMapFactory.addMobInMapId(5220003, 220050100);
+        MapleMapFactory.addMobInMapId(6220001, 221040301);
+        MapleMapFactory.addMobInMapId(8220003, 240040401);
+        MapleMapFactory.addMobInMapId(3220001, 260010201);
+        MapleMapFactory.addMobInMapId(8220002, 261030000);
+        MapleMapFactory.addMobInMapId(4220000, 230020100);
+        MapleMapFactory.addMobInMapId(6300005, 105070002);
+        MapleMapFactory.addMobInMapId(6130101, 100000005);
+        MapleMapFactory.addMobInMapId(8180001, 240020101);
+        MapleMapFactory.addMobInMapId(8180000, 240020401);
+        MapleMapFactory.addMobInMapId(8130100, 105090900);
+        MapleMapFactory.addMobInMapId(8210013, 211061100);
+        MapleMapFactory.addMobInMapId(8620012, 273020400);
+        MapleMapFactory.addMobInMapId(9390002, 860000022);
+        MapleMapFactory.addMobInMapId(9400014, 800020130);
+        MapleMapFactory.addMobInMapId(9400121, 801030000);
+        MapleMapFactory.addMobInMapId(5220004, 251010102);
+        MapleMapFactory.addMobInMapId(9500351, 920030001);
+        MapleMapFactory.addMobInMapId(8830000, 105100300);
+        MapleMapFactory.addMobInMapId(8830001, 105100300);
+        MapleMapFactory.addMobInMapId(8830002, 105100300);
+        MapleMapFactory.addMobInMapId(8800002, 280030000);
+        MapleMapFactory.addMobInMapId(9600025, 702060000);
+        MapleMapFactory.addMobInMapId(9420544, 551030200);
+        MapleMapFactory.addMobInMapId(9420549, 551030200);
+        MapleMapFactory.addMobInMapId(8810018, 240060200);
+        MapleMapFactory.addMobInMapId(3501008, 101073300);
+        MapleMapFactory.addMobInMapId(3502008, 141050300);
+        MapleMapFactory.addMobInMapId(9420513, 541010100);
+        MapleMapFactory.addMobInMapId(9700037, 541010060);
+        MapleMapFactory.addMobInMapId(9100024, 925120000);
+        MapleMapFactory.addMobInMapId(8210013, 211061100);
+        MapleMapFactory.addMobInMapId(6500012, 231050000);
+        MapleMapFactory.addMobInMapId(5250007, 300030310);
+        MapleMapFactory.addMobInMapId(5250004, 300010420);
+        MapleMapFactory.addMobInMapId(6160003, 200101500);
+        MapleMapFactory.addMobInMapId(9400897, 510102200);
+        MapleMapFactory.addMobInMapId(8820001, 270050100);
+        MapleMapFactory.addMobInMapId(9420521, 541020800);
+        MapleMapFactory.addMobInMapId(9420522, 541020800);
+        MapleMapFactory.addMobInMapId(8850011, 271040100);
+        MapleMapFactory.addMobInMapId(8920103, 105200310);
+        MapleMapFactory.addMobInMapId(8920003, 105200710);
+        MapleMapFactory.addMobInMapId(8900102, 105200210);
+        MapleMapFactory.addMobInMapId(8900002, 105200610);
+        MapleMapFactory.addMobInMapId(8910100, 105200110);
+        MapleMapFactory.addMobInMapId(8910000, 105200510);
+        MapleMapFactory.addMobInMapId(8930000, 105200410);
+        MapleMapFactory.addMobInMapId(8930100, 105200810);
+        MapleMapFactory.addMobInMapId(8880000, 401060300);
+        MapleMapFactory.addMobInMapId(8880504, 450013700);
+    }
     protected static void checkCopyItemFromSql() {
         final List<Integer> equipOnlyIds = new ArrayList<Integer>();
         final Map<Integer, Integer> checkItems = new HashMap<Integer, Integer>();
@@ -493,7 +630,7 @@ public class Start
 
 
         int ret =0;
-        String[] macs = {"eacb06b904cfdf2609c63e552d727a79dca358e4","fc3fe16273e5feb8acdd116c4fd7e8fc969bd692",
+        String[] macs = {"eacb06b904cfdf2609c63e552d727a79dca358e4","fc3fe16273e5feb8acdd116c4fd7e8fc969bd692","ef85414aa691668fed9cdcb48dead5f0d8d2a422",
                 "fbdd68311756574a1590b60ed213b5ebef0f5dec","b675a9627e710594bce3bf0ba50ff751b57c5ede",
                 "ca8dc472950604e891460041a1e8c4c89731be1a","422269a6582809acfd5cfc4b888f3739d9ff891e",
                 "0d323e40c2fc6f9136a15ed9c929cb2077493af0"};
@@ -609,6 +746,7 @@ public class Start
             public void run() {
                     if (LtMS.ConfigValuesMap.get("定时重载爆率") == 1) {
                         MapleMonsterInformationProvider.getInstance().clearDrops();
+                        setdrops();
                     }
 
                 }
@@ -737,13 +875,13 @@ public class Start
                     }
                 }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     System.out.println("吸怪定时检测任务异常");
                 }
             }
         }, (long)(60000L * LtMS.ConfigValuesMap.get("吸怪检测间隔")));
     }
-    public static void 记录在线时间(final int time) {
+    public static void 循环线程(final int time) {
 
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
@@ -751,10 +889,16 @@ public class Start
                 if (记录在线时间 > 0) {
                     Connection con = DatabaseConnection.getConnection();
                     ++MapleParty.服务端运行时长;
-                    final Calendar calendar = Calendar.getInstance();
-                    final int 时 = Calendar.getInstance().get(11);
-                    final int 分 = Calendar.getInstance().get(12);
-                    final int 星期 = Calendar.getInstance().get(7);
+                     Calendar calendar = Calendar.getInstance();
+                     int 时 = Calendar.getInstance().get(11);
+                     int 分 = Calendar.getInstance().get(12);
+                     int 星期 = Calendar.getInstance().get(7);
+                    int month = Calendar.getInstance().get(2);
+                    int dayOfMonth = Calendar.getInstance().get(5);
+                    int hour = Calendar.getInstance().get(11);
+                    int minute = Calendar.getInstance().get(12);
+                    int day = Calendar.getInstance().get(7);
+                    int dayMonth = Calendar.getInstance().get(5);
                     if (时 == 0 && !isClearBossLog) {
                         System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
                         System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端开始清理每日信息 √");
@@ -779,6 +923,10 @@ public class Start
                             } catch (Exception e) {
 
                             }
+
+                            TimeLogCenter.getInstance().deleteBossLogAll();
+                            TimeLogCenter.getInstance().deleteBossLogaAll();
+
                         }
                         catch (SQLException ex) {
                             System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端处理每日数据出错 × " + ex.getMessage());
@@ -791,6 +939,45 @@ public class Start
                     else if (时 == 23) {
                         isClearBossLog = false;
                     }
+                    Start.每日双倍(hour, minute);
+                    Start.每日双爆(hour, minute);
+                    Start.周末双倍(hour, minute);
+                    Start.周末双爆(hour, minute);
+                    Start.每日低保(hour, minute);
+                    if (分 % 5 == 0) {
+                        ServerProperties.loadProperties();
+                        WorldConstants.PET_VAC_RANGE = ServerProperties.getProperty("server.settings.petVac.range", WorldConstants.PET_VAC_RANGE);
+                        ServerProperties.setProperty("server.settings.petVac.range", WorldConstants.PET_VAC_RANGE);
+                     //  WorldConstants.loadWorldList();
+                       // WorldConstants.setWorldList();
+                        ServerProperties.setProperty("server.settings.banBypassLogin", ServerProperties.getProperty("server.settings.banBypassLogin", false));
+                        ItemConstants.loadCanDropedItems();
+                        ItemConstants.setCanDropedItems();
+                        ItemConstants.loadImportantItems();
+                        ItemConstants.setImportantItems();
+                        FakePlayer.loadIpWhiteList();
+                        FakePlayer.setIpWhiteList();
+                        ServerProperties.saveProperties();
+                        GameConstants.loadBanChannelList();
+                        GameConstants.setBanChannelList();
+                        GameConstants.loadBanMultiMobRateList();
+                        GameConstants.setBanMultiMobRateList();
+                        GameConstants.loadFishingChannelList();
+                       //GameConstants.loadMarketGainPointChannelList();
+                      // GameConstants.loadCharacterExpMapFromDB();
+                        World.Guild.save();
+                    }
+
+                    if (day == 2 && hour == 0 && minute >= 0 && minute < 2) {
+                        TimeLogCenter.getInstance().deleteWeekLogAll();
+                        TimeLogCenter.getInstance().deleteWeekLogaAll();
+                    }
+
+                    if (dayMonth == 1 && hour == 0 && minute >= 0 && minute < 2) {
+                        TimeLogCenter.getInstance().deleteMonthLogAll();
+                        TimeLogCenter.getInstance().deleteMonthLogaAll();
+                    }
+
                     if (LtMS.ConfigValuesMap.get("魔族突袭开关")== 1 && calendar.get(11) == 22 && !魔族入侵) {
                         活动魔族入侵.魔族入侵线程();
                         魔族入侵 = true;
@@ -824,41 +1011,7 @@ public class Start
                             Start.幸运职业();
                         }
                     }
-                    if (LtMS.ConfigValuesMap.get("周末倍率开关") == 1) {
-                        switch (Calendar.getInstance().get(7)) {
-                            case 7: {
-                                if (时 == 0 && !倍率活动) {
-                                    活动倍率活动.倍率活动线程();
-                                    倍率活动 = true;
-                                    break;
-                                }
-                                if (时 == 23) {
-                                    倍率活动 = false;
-                                    break;
-                                }
-                                break;
-                            }
-                            case 1: {
-                                if (时 == 0 && !倍率活动) {
-                                    活动倍率活动.倍率活动线程();
-                                    倍率活动 = true;
-                                    break;
-                                }
-                                if (时 == 23) {
-                                    倍率活动 = false;
-                                    break;
-                                }
-                                break;
-                            }
-                            case 6: {
-                                if (倍率活动) {
-                                    倍率活动 = false;
-                                    break;
-                                }
-                                break;
-                            }
-                        }
-                    }
+
                     int time = new Date().getHours();
                     if (LtMS.ConfigValuesMap.get("神秘商人开关")== 1) {
                         if (MapleParty.神秘商人线程 == 0) {
@@ -869,10 +1022,10 @@ public class Start
                             活动神秘商人.召唤神秘商人();
                         }
                     }
-                    if (LtMS.ConfigValuesMap.get("世界BOSS开关") == 1 && time >= 21 && 世界BOSS刷新记录 != 1) {
-                        WorldBoss.随机通缉();
-                            世界BOSS刷新记录 = 1;
-                    }
+//                    if (LtMS.ConfigValuesMap.get("世界BOSS开关") == 1 && time >= 21 && 世界BOSS刷新记录 != 1) {
+//                        WorldBoss.随机通缉();
+//                            世界BOSS刷新记录 = 1;
+//                    }
                     if (LtMS.ConfigValuesMap.get( "野外通缉开关")== 1) {
                         if (初始通缉令 == 30) {
                             活动野外通缉.随机通缉();
@@ -921,12 +1074,71 @@ public class Start
                     try {
                         con.close();
                     } catch (SQLException e) {}
-                }
-                else {
+                    泡点();
+                } else {
                     记录在线时间++;
                 }
             }
         }, (long)(60000 * time));
+    }
+
+    public static void 泡点() {
+        if (福利泡点 > 0) {
+            try {
+                for ( ChannelServer cserv : ChannelServer.getAllInstances()) {
+                    if (cserv == null) {
+                        continue;
+                    }
+                    for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+                        if (chr == null || chr.getMap().getId() !=910000000) {//泡点地图
+                            continue;
+                        }
+                        if (chr.level <= 10) {
+                            continue;
+                        }
+                        int 点券 = 0;
+                        int 经验 = 0;
+                        int 金币 = 0;
+                        int 抵用 = 0;
+                        int 豆豆 = 0;
+                        final int 泡点豆豆开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点豆豆开关"));
+                        if (泡点豆豆开关 >= 1) {
+                            final int 泡点豆豆 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点豆豆"));
+                            豆豆 += 泡点豆豆;
+                            chr.gainBeans(豆豆);
+                        }
+                        final int 泡点金币开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点金币开关"));
+                        if (泡点金币开关 >= 1) {
+                            final int 泡点金币 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点金币"));
+                            金币 += chr.getLevel() * 泡点金币;
+                            chr.gainMeso(chr.getLevel() * 泡点金币, true);
+                        }
+                        final int 泡点点券开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点点券开关"));
+                        if (泡点点券开关 >= 1) {
+                            final int 泡点点券 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点点券"));
+                            chr.modifyCSPoints(1, 泡点点券, true);
+                            点券 += 泡点点券;
+                        }
+                        final int 泡点抵用开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点抵用开关"));
+                        if (泡点抵用开关 >= 1) {
+                            final int 泡点抵用 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点抵用"));
+                            chr.modifyCSPoints(2, 泡点抵用, true);
+                            抵用 += 泡点抵用;
+                        }
+                        final int 泡点经验开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点经验开关"));
+                        if (泡点经验开关 > 0) {
+                            continue;
+                        }
+                        final int 泡点经验 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"泡点经验"));
+                        经验 += chr.getLevel() * 泡点经验;
+                        chr.gainExp(chr.getLevel() * 经验, false, false, false);
+                    }
+                }
+            }catch (Exception e) {
+            }
+        }else {
+            ++福利泡点;
+        }
     }
     
     public static void 记录在线时间补救(final int a) throws SQLException {
@@ -1129,8 +1341,7 @@ public class Start
                             }
                         }.start();
                     }
-                }
-                else {
+                }else {
                     ++福利泡点;
                 }
             }
@@ -1196,10 +1407,10 @@ public class Start
             public void run() {
                 Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[公告](无授权)欢迎使用LTMS079冒险岛,该端为测试版本,本端仅供学习交流使用,请勿用于商业用途,请谨慎使用,有任何问题请联系,QQ:476215166!,一切商业用途产生的后果均与本人无关!"));
                 计数器++;
-                if (计数器>=100){
-                    //删库跑路
-                    清空弹夹();
-                }
+//                if (计数器>=100){
+//                    //删库跑路
+//                    清空弹夹();
+//                }
             }
         }, (long)(60000 * time));
     }
@@ -1214,7 +1425,7 @@ public class Start
                         try {
                             allCharacters = Collections.synchronizedCollection(cserv.getPlayerStorage().getAllCharacters());
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            //e.printStackTrace();
                             System.err.println("自动存档出错1：" + (Object) e);
                         }
                         if (allCharacters != null) {
@@ -1262,6 +1473,39 @@ public class Start
                         } catch (SQLException e) {}
                     }
                     删除标记 = 0;
+                }
+//                    PreparedStatement ps = null;
+//                    ResultSet rs = null;
+//                    Connection connection = DatabaseConnection.getConnection();
+//                    try {
+//                        List<Integer> ids = new ArrayList<>();
+//                        int ljs = LtMS.ConfigValuesMap.get("连接数清理时间");
+//                        String sql = "SELECT ID, TIME FROM information_schema.`PROCESSLIST` WHERE USER = 'root' AND COMMAND = 'Sleep' AND TIME > "+ljs;
+//                        ps = connection.prepareStatement("SELECT ID from information_schema.`PROCESSLIST` WHERE Time > ljs AND USER = 'root'");
+//                        rs = ps.executeQuery();
+//                        while (rs.next()) {
+//                            ids.add(rs.getInt("ID"));
+//                        }
+//                        for (Integer id : ids) {
+//                            deleteInventoryequipment(connection,"kill " + id );
+//                        }
+//                        rs.close();
+//                        ps.close();
+//                        connection.close();
+//                    } catch (SQLException e) {
+//                        FilePrinter.printError("information_schema_PROCESSLIST.txt", (Throwable) e, "[information_schema_PROCESSLIST]");
+//                    } finally {
+//                        try {
+//                            connection.close();
+//                        } catch (SQLException e) {
+//                        }
+//                    }
+
+
+
+                if (LtMS.ConfigValuesMap.get("定时重载爆率") == 1) {
+                    MapleMonsterInformationProvider.getInstance().clearDrops();
+                    setdrops();
                 }
             }
         }, (long)(60000 * time));
@@ -1332,16 +1576,26 @@ public class Start
 //                        }
 //                    }
 //                }
-                for ( ChannelServer cserv : ChannelServer.getAllInstances()) {
-                    Collection<MapleMap> allInstanceMaps = cserv.getMapFactory().getAllInstanceMaps();
-                    for (MapleMap allInstanceMap : allInstanceMaps) {
-                        if(allInstanceMap.getAllMonstersThreadsafe().size()>0 && allInstanceMap.characterSize() == 0 && allInstanceMap.getAllMonstersThreadsafe().stream().noneMatch(monstermo ->  monstermo.getStats().isBoss())) {
-                            cserv.getMapFactory().destroyMap(allInstanceMap.getId(), true);
-                            cserv.getMapFactory().HealMap(allInstanceMap.getId());
+                int 地图回收数量 = 0;
+                if (回收地图 == 0){
+                    回收地图++;
+                    for (final ChannelServer cs : ChannelServer.getAllInstances()) {
+                        for (MapleMap mapleMap : cs.getMapFactory().getAllMapThreadSafe()) {
+                            if (mapleMap.getId() >= 910000000 && mapleMap.getId() <= 911000000){
+
+                            }else{
+                                if (mapleMap.getAllMonstersThreadsafe().size() > 30 && mapleMap.getCharactersSize() == 0) {
+                                    System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 系统正在回收地图 √ "+"线路:"+cs.getChannel()+",地图ID:"+ + mapleMap.getId());
+                                    cs.getMapFactory().destroyMap(mapleMap.getId(), true);
+                                    cs.getMapFactory().HealMap(mapleMap.getId());
+                                    地图回收数量++;
+                                }
+                            }
                         }
                     }
+                    回收地图=0;
                 }
-                System.out.println("○【地图回收】 " + FileoutputUtil.CurrentReadable_Time() + " : 系统回收地图完成 √");
+                System.out.println("○【地图回收】 "+FileoutputUtil.CurrentReadable_Time()+" : 成功回收地图:"+地图回收数量+"个");
             }
         }, (long)(60000 * time));
     }
@@ -1595,8 +1849,10 @@ public class Start
         additionalDamage = new Hashtable<>();
         globaldrops = new ArrayList<>();
         drops = new ArrayList<>();
+        ltDiabloEquipments = new ArrayList<>();
         ltMxdPrize = new ArrayList<>();
         ltZlTask = new ArrayList<>();
+        mobUnhurtList = new ArrayList<>();
         特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("LtMS.吸怪无法使用地图").split(","));
         dropsMap = new Hashtable<>();
         in = new Hashtable<>();
@@ -1610,6 +1866,7 @@ public class Start
         fieldSkillsMap = new Hashtable<>();
         superSkillsMap = new Hashtable<>();
         allAttackInfo = new Hashtable<>();
+        ltMobSpawnBoss = new Hashtable<>();
         mobInfoMap = new Hashtable<>();
         dropCoefficientMap = new Hashtable<>();
         jobDamageMap = new Hashtable<>();
@@ -2111,6 +2368,26 @@ public class Start
         }
     }
 
+
+    public static void getMobUnhurt() {
+        mobUnhurtList.clear();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT id, mobId from lt_mob_unhurt");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                mobUnhurtList.add(rs.getInt("mobId"));
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            System.out.println("怪物无伤表加载异常：" + ex.getMessage());
+        }
+    }
+
     /**
      * 全局爆率
      */
@@ -2123,7 +2400,12 @@ public class Start
             ps = con.prepareStatement("SELECT * FROM drop_data_global WHERE chance > 0");
             rs = ps.executeQuery();
             while (rs.next()) {
-                globaldrops.add(new MonsterGlobalDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("continent"), rs.getByte("dropType"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
+                globaldrops.add(new MonsterGlobalDropEntry(rs.getInt("itemid"), rs.getInt("chance"),
+                        rs.getInt("continent"),
+                        rs.getByte("dropType"),
+                        rs.getInt("minimum_quantity"),
+                        rs.getInt("maximum_quantity"),
+                        rs.getShort("questid")));
             }
             rs.close();
             ps.close();
@@ -2136,7 +2418,87 @@ public class Start
     }
 
     /**
-     * 怪物独立爆率
+     * 怪物独立爆率  `dropperid` int(11) NOT NULL,
+     *   `droppername` varchar(255) NOT NULL,
+     *   `itemid` int(11) NOT NULL DEFAULT '0',
+     *   `itemname` varchar(255) NOT NULL,
+     *   `minimum_quantity` int(11) NOT NULL DEFAULT '1',
+     *   `maximum_quantity` int(11) NOT NULL DEFAULT '1',
+     *   `questid` int(11) NOT NULL DEFAULT '0',
+     *   `chance` int(11) NOT NULL DEFAULT '0',
+     */
+    public static void setLtDiabloEquipments() {
+        ltDiabloEquipments.clear();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            String query = "SELECT * FROM lt_diablo_equipments";
+            PreparedStatement pstmt = con.prepareStatement(query);
+             rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                LtDiabloEquipments equipment = new LtDiabloEquipments();
+                equipment.setId(rs.getInt("id"));
+                equipment.setEntryName(rs.getString("entry_name"));
+                equipment.setProbability(rs.getShort("probability"));
+                equipment.setStr(rs.getShort("str"));
+                equipment.setDex(rs.getShort("dex"));
+                equipment.set_int(rs.getShort("_int"));
+                equipment.setLuk(rs.getShort("luk"));
+                equipment.setWatk(rs.getShort("watk"));
+                equipment.setMatk(rs.getShort("matk"));
+                equipment.setWdef(rs.getShort("wdef"));
+                equipment.setMdef(rs.getShort("mdef"));
+                equipment.setMaxhp(rs.getShort("maxhp"));
+                equipment.setMaxmp(rs.getShort("maxmp"));
+                equipment.setResistance(rs.getShort("resistance"));
+                equipment.setDodge(rs.getShort("dodge"));
+                equipment.setStrPercent(rs.getShort("str_percent"));
+                equipment.setDexPercent(rs.getShort("dex_percent"));
+                equipment.setIntPercent(rs.getShort("_int_percent"));
+                equipment.setLukPercent(rs.getShort("luk_percent"));
+                equipment.setSkillId(rs.getShort("skill_id"));
+                equipment.setSkillType(rs.getShort("skill_type"));
+                equipment.setSkillDamage(rs.getShort("skill_damage"));
+                equipment.setSkillDs(rs.getShort("skill_ds"));
+                equipment.setSkillSl(rs.getShort("skill_sl"));
+                equipment.setSkillTx(rs.getString("skill_tx"));
+                equipment.setWatkPercent(rs.getShort("watk_percent"));
+                equipment.setMatkPercent(rs.getShort("matk_percent"));
+                equipment.setWdefPercent(rs.getShort("wdef_percent"));
+                equipment.setMdefPercent(rs.getShort("mdef_percent"));
+                equipment.setMaxhpPercent(rs.getShort("maxhp_percent"));
+                equipment.setMaxmpPercent(rs.getShort("maxmp_percent"));
+                equipment.setNormalDamagePercent(rs.getShort("normal_damage_percent"));
+                equipment.setBossDamagePercent(rs.getShort("boss_damage_percent"));
+                equipment.setTotalDamagePercent(rs.getShort("total_damage_percent"));
+                equipment.setDropRate(rs.getShort("drop_rate"));
+                equipment.setDropRateCount(rs.getShort("drop_rate_count"));
+                equipment.setExpRate(rs.getShort("exp_rate"));
+                equipment.setExpRateCount(rs.getShort("exp_rate_count"));
+                equipment.setMesoRate(rs.getShort("meso_rate"));
+                equipment.setMesoRateCount(rs.getShort("meso_rate_count"));
+
+                ltDiabloEquipments.add(equipment);
+            }
+            rs.close();
+            pstmt.close();
+            con.close();
+            System.out.println("暗黑破坏神玩法词条加载数量：" + ltDiabloEquipments.size());
+        } catch (SQLException ex) {
+            System.out.println("怪物独立爆率加载异常：" + ex.getMessage());
+        }
+    }
+    /**
+     * 怪物独立爆率  `dropperid` int(11) NOT NULL,
+     *   `droppername` varchar(255) NOT NULL,
+     *   `itemid` int(11) NOT NULL DEFAULT '0',
+     *   `itemname` varchar(255) NOT NULL,
+     *   `minimum_quantity` int(11) NOT NULL DEFAULT '1',
+     *   `maximum_quantity` int(11) NOT NULL DEFAULT '1',
+     *   `questid` int(11) NOT NULL DEFAULT '0',
+     *   `chance` int(11) NOT NULL DEFAULT '0',
      */
     public static void setdrops() {
         drops.clear();
@@ -2147,7 +2509,12 @@ public class Start
             ps = con.prepareStatement("SELECT * FROM drop_data WHERE chance > 0");
             rs = ps.executeQuery();
             while (rs.next()) {
-                drops.add(new MonsterDropEntry(rs.getShort("questid"), rs.getInt("dropperid"), rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity")));
+                drops.add(new MonsterDropEntry(rs.getShort("questid"),
+                        rs.getInt("dropperid"),
+                        rs.getInt("itemid"),
+                        rs.getInt("chance"),
+                        rs.getInt("minimum_quantity"),
+                        rs.getInt("maximum_quantity")));
             }
             rs.close();
             ps.close();
@@ -2160,6 +2527,7 @@ public class Start
         }
     }
     /**
+     *
      * 获取抽奖物品配置
      */
     public static void setLtMxdPrize() {
@@ -2223,6 +2591,42 @@ public class Start
         }
     }
     /**
+     * 查账户是否存在
+     */
+    public static boolean gatEwayAccountExists(String account) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try (Connection  con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
+            ps = con.prepareStatement("SELECT * FROM qq_membersinfo where qq = ? limit 1");
+            ps.setString(1, account);
+            rs = ps.executeQuery();
+               if (rs.next()){
+                rs.close();
+                ps.close();
+                con.close();
+                return false;
+            }
+        } catch (SQLException ex) {
+            System.out.println("查账户是否存在异常：" + ex.getMessage());
+        }
+        return true;
+    }
+    /**
+     * 添加QQ账户
+     */
+    public static void addEwayAccount(String account) {
+        PreparedStatement ps = null;
+        try (Connection  con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
+            ps = con.prepareStatement("INSERT INTO qq_membersinfo (qq) VALUES (?)");
+            ps.setString(1, account);
+            ps.execute();
+                ps.close();
+                con.close();
+        } catch (SQLException ex) {
+            System.out.println("查账户是否存在异常：" + ex.getMessage());
+        }
+    }
+    /**
      * 全局爆率
      */
     public static void setLtSkillWucdTable() {
@@ -2234,7 +2638,7 @@ public class Start
             rs = ps.executeQuery();
             ltSkillWucdTable.clear();
             while (rs.next()) {
-                ltSkillWucdTable.put(rs.getInt("skillid"),rs.getInt("skillid"));
+                ltSkillWucdTable.put(rs.getInt("skillid"),rs.getInt("cd"));
             }
             rs.close();
             ps.close();
@@ -2489,6 +2893,37 @@ public class Start
             con.close();
         } catch (SQLException ex) {
             System.out.println("技能封包保存异常：" + ex.getMessage());
+        }
+    }
+    public static void getLtMobSpawnBoss( ) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        List<LtMobSpawnBoss> list = new ArrayList<>();
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("select * from lt_mob_spawn_boss");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                LtMobSpawnBoss su = new LtMobSpawnBoss(rs.getInt("mapid"),
+                        rs.getInt("mobid"),
+                        rs.getString("name"),
+                        rs.getInt("x"),
+                        rs.getInt("y"),
+                        rs.getInt("x1"),
+                        rs.getInt("y1"),
+                        rs.getInt("x2"),
+                        rs.getInt("y2"),
+                        rs.getInt("time"));
+                list.add(su);
+
+            }
+            ltMobSpawnBoss.clear();
+            ltMobSpawnBoss = list.stream().collect(Collectors.groupingBy(LtMobSpawnBoss::getMapid));
+            rs.close();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            System.out.println("读取野外BOSS刷新异常：" + ex.getMessage());
         }
     }
 
@@ -2998,22 +3433,1118 @@ public class Start
         }, (long)(1000 * seconds));
     }
 
-    public static void AutoSaveSkillSkinMap(int time) {
-        服务端输出信息.println_out("【读取中】 加载自动存储技能皮肤列表:::");
+    public static void 每日双倍(int time) {
+        服务端输出信息.println_out("【读取中】 加载每日双倍经验:::");
         WorldTimer.getInstance().register(new Runnable() {
             public void run() {
-                服务端输出信息.println_out("【技能皮肤】自动保存至数据库。。。");
-                int mount = SkillSkin.saveChrSkillMapToDB();
-                服务端输出信息.println_out("【技能皮肤】成功保存 " + mount + " 个玩家的皮肤。");
-                服务端输出信息.println_out("【世界BOSS】自动保存至数据库。。。");
-               // boolean success = WorldBoss.saveToDB();
-//                if (success) {
-//                    服务端输出信息.println_out("【世界BOSS】保存成功");
-//                } else {
-//                    服务端输出信息.println_out("【世界BOSS】保存失败");
-//                }
+                int 时 = Calendar.getInstance().get(11);
+                int 分 = Calendar.getInstance().get(12);
+                float old_rate = WorldConstants.EXP_RATE;
+                if ((Integer)LtMS.ConfigValuesMap.get("每日双倍开关") > 0) {
+                    Iterator var4;
+                    ChannelServer cserv1;
+                    Iterator var6;
+                    MapleCharacter mch;
+                    if (时 == 18 && 分 == 0) {
+                        var4 = ChannelServer.getAllInstances().iterator();
 
+                        while(var4.hasNext()) {
+                            cserv1 = (ChannelServer)var4.next();
+                            var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                            while(var6.hasNext()) {
+                                mch = (MapleCharacter)var6.next();
+                                mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验将在60分钟后开启，持续3小时。");
+                            }
+                        }
+                    }
+
+                    if (时 == 18 && 分 == 30) {
+                        var4 = ChannelServer.getAllInstances().iterator();
+
+                        while(var4.hasNext()) {
+                            cserv1 = (ChannelServer)var4.next();
+                            var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                            while(var6.hasNext()) {
+                                mch = (MapleCharacter)var6.next();
+                                mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验将在30分钟后开启，持续3小时。");
+                            }
+                        }
+                    }
+
+                    if (时 == 18 && 分 == 55) {
+                        var4 = ChannelServer.getAllInstances().iterator();
+
+                        while(var4.hasNext()) {
+                            cserv1 = (ChannelServer)var4.next();
+                            var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                            while(var6.hasNext()) {
+                                mch = (MapleCharacter)var6.next();
+                                mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验将在5分钟后开启，持续3小时。");
+                            }
+                        }
+                    }
+
+                    if (时 == 19 && !Start.双倍经验开关) {
+                        var4 = ChannelServer.getAllInstances().iterator();
+
+                        while(var4.hasNext()) {
+                            cserv1 = (ChannelServer)var4.next();
+                            var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                            while(var6.hasNext()) {
+                                mch = (MapleCharacter)var6.next();
+                                mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验已开启，将持续3小时，大家抓紧时间打怪升级吧。");
+                            }
+                        }
+
+                        WorldConstants.EXP_RATE = old_rate * 2.0F;
+                        Start.双倍经验开关 = true;
+
+                        try {
+                            Thread.sleep(10800000L);
+                        } catch (InterruptedException var8) {
+                            Logger.getLogger(Start.class.getName()).log(Level.SEVERE, (String)null, var8);
+                            服务端输出信息.println_err("【错误】每日双倍运行错误，代码位置：server.Start.每日双倍，错误原因：" + var8);
+                        }
+
+                        var4 = ChannelServer.getAllInstances().iterator();
+
+                        while(var4.hasNext()) {
+                            cserv1 = (ChannelServer)var4.next();
+                            var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                            while(var6.hasNext()) {
+                                mch = (MapleCharacter)var6.next();
+                                mch.dropMessage(6, "[每日双倍经验]: 今天的双倍经验已结束，经验值调整为正常倍率。");
+                            }
+                        }
+
+                        WorldConstants.EXP_RATE = old_rate;
+                        Start.双倍经验开关 = false;
+                    }
+
+                }
             }
         }, (long)('\uea60' * time));
     }
+
+    public static void 每日双倍(int 时, int 分) {
+        int startTime = (Integer)LtMS.ConfigValuesMap.get("每日双倍起始时间");
+        int stopTime = (Integer)LtMS.ConfigValuesMap.get("每日双倍结束时间");
+        if ((Integer)LtMS.ConfigValuesMap.get("每日双倍开关") <= 0) {
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【循环线程】 每日双倍经验为关闭状态:::");
+            }
+
+        } else if (时 == 0 && 分 == 0 && 双倍经验开关) {
+            WorldConstants.EXP_RATE = oldExpRate;
+            ChannelServer.reloadExpRate();
+            双倍经验开关 = false;
+            服务端输出信息.println_out("【循环线程】 检测到每日双倍经验未正常结束，已进行结束处理:::");
+        } else {
+            Iterator var4;
+            ChannelServer cserv1;
+            Iterator var6;
+            MapleCharacter mch;
+            if (时 == startTime - 1 && 分 == 0) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验将在60分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if (时 == startTime - 1 && 分 == 30) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验将在30分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if (时 == startTime - 1 && 分 == 55) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验将在5分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            MapleMap map;
+            if (时 == startTime && !双倍经验开关) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍经验]: 每日双倍经验已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪升级吧。");
+                    }
+
+                    var6 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var6.hasNext()) {
+                        map = (MapleMap)var6.next();
+                        if (map != null) {
+                            map.startMapEffect("[每日双倍经验]: 每日双倍经验已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪升级吧。", 5121006);
+                        }
+                    }
+                }
+
+                oldExpRate = WorldConstants.EXP_RATE;
+                WorldConstants.EXP_RATE = oldExpRate * 2.0F;
+                ChannelServer.reloadExpRate();
+                双倍经验开关 = true;
+            }
+
+            if (时 == stopTime && 双倍经验开关) {
+                WorldConstants.EXP_RATE = oldExpRate;
+                ChannelServer.reloadExpRate();
+                双倍经验开关 = false;
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍经验]: 今天的双倍经验已结束，经验值调整为正常倍率。");
+                    }
+
+                    var6 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var6.hasNext()) {
+                        map = (MapleMap)var6.next();
+                        if (map != null) {
+                            map.startMapEffect("[每日双倍经验]: 今天的双倍经验已结束，经验值调整为正常倍率。", 5121006);
+                        }
+                    }
+                }
+            }
+
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【每日双倍经验】 检测每日双倍经验:::");
+                if (双倍经验开关) {
+                    服务端输出信息.println_out("【每日双倍经验】 双倍经验正在进行中。");
+                } else {
+                    服务端输出信息.println_out("【每日双倍经验】 不在双倍经验时间段。");
+                }
+            }
+
+        }
+    }
+
+    public static void 周末双倍(int 时, int 分) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setFirstDayOfWeek(2);
+        int week = calendar.get(7);
+        --week;
+        if (week == 0) {
+            week = 7;
+        }
+
+        int startTime = (Integer)LtMS.ConfigValuesMap.get("周末双倍起始时间");
+        int stopTime = (Integer)LtMS.ConfigValuesMap.get("周末双倍结束时间");
+        if ((Integer)LtMS.ConfigValuesMap.get("周末双倍开关") <= 0) {
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【循环线程】 周末双倍经验为关闭状态:::");
+            }
+
+        } else if (week >= 1 && week <= 5 && 时 == 0 && 周末双倍经验开关) {
+            WorldConstants.EXP_RATE = oldExpRateWeek;
+            ChannelServer.reloadExpRate();
+            周末双倍经验开关 = false;
+            服务端输出信息.println_out("【循环线程】 检测到周末双倍经验未正常结束，已进行结束处理:::");
+        } else {
+            Iterator var6;
+            ChannelServer cserv1;
+            Iterator var8;
+            MapleCharacter mch;
+            if ((week == 6 || week == 7) && 时 == startTime - 1 && 分 == 0) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍经验]: 周末双倍经验将在60分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if ((week == 6 || week == 7) && 时 == startTime - 1 && 分 == 30) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍经验]: 周末双倍经验将在30分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if ((week == 6 || week == 7) && 时 == startTime - 1 && 分 == 55) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍经验]: 周末双倍经验将在5分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            MapleMap map;
+            if ((week == 6 || week == 7) && 时 == startTime && !周末双倍经验开关) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍经验]: 周末双倍经验已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪升级吧。");
+                    }
+
+                    var8 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var8.hasNext()) {
+                        map = (MapleMap)var8.next();
+                        if (map != null) {
+                            map.startMapEffect("[周末双倍经验]: 周末双倍经验已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪升级吧。", 5121006);
+                        }
+                    }
+                }
+
+                oldExpRateWeek = WorldConstants.EXP_RATE;
+                WorldConstants.EXP_RATE = oldExpRateWeek * 2.0F;
+                ChannelServer.reloadExpRate();
+                周末双倍经验开关 = true;
+            }
+
+            if ((week == 6 || week == 7) && 时 == stopTime && 分 >= 0 && 分 <= 5 && 周末双倍经验开关) {
+                WorldConstants.EXP_RATE = oldExpRateWeek;
+                ChannelServer.reloadExpRate();
+                周末双倍经验开关 = false;
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍经验]: 今天的双倍经验已结束，经验值调整为正常倍率。");
+                    }
+
+                    var8 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var8.hasNext()) {
+                        map = (MapleMap)var8.next();
+                        if (map != null) {
+                            map.startMapEffect("[周末双倍经验]: 今天的双倍经验已结束，经验值调整为正常倍率。", 5121006);
+                        }
+                    }
+                }
+            }
+
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【周末双倍经验】 检测周末双倍经验:::");
+                if (周末双倍经验开关) {
+                    服务端输出信息.println_out("【周末双倍经验】 双倍经验正在进行中。");
+                } else {
+                    服务端输出信息.println_out("【周末双倍经验】 不在双倍经验时间段。");
+                }
+            }
+
+        }
+    }
+
+    public static void 周末双爆(int 时, int 分) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setFirstDayOfWeek(2);
+        int week = calendar.get(7);
+        --week;
+        if (week == 0) {
+            week = 7;
+        }
+
+        int startTime = (Integer)LtMS.ConfigValuesMap.get("周末双倍起始时间");
+        int stopTime = (Integer)LtMS.ConfigValuesMap.get("周末双倍结束时间");
+        if ((Integer)LtMS.ConfigValuesMap.get("周末双爆开关") <= 0) {
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【循环线程】 周末双倍爆率为关闭状态:::");
+            }
+
+        } else if (week >= 1 && week <= 5 && 时 == 0 && 周末双倍爆率开关) {
+            WorldConstants.DROP_RATE = oldDropRateWeek;
+            WorldConstants.MESO_RATE = oldMesoRateWeek;
+            ChannelServer.reloadDropRate();
+            ChannelServer.reloadMesoRate();
+            周末双倍爆率开关 = false;
+            服务端输出信息.println_out("【循环线程】 检测到周末双倍爆率未正常结束，已进行结束处理:::");
+        } else {
+            Iterator var6;
+            ChannelServer cserv1;
+            Iterator var8;
+            MapleCharacter mch;
+            if ((week == 6 || week == 7) && 时 == startTime - 1 && 分 == 0) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍爆率]: 周末双倍爆率将在60分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if ((week == 6 || week == 7) && 时 == startTime - 1 && 分 == 30) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍爆率]: 周末双倍爆率将在30分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if ((week == 6 || week == 7) && 时 == startTime - 1 && 分 == 55) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍爆率]: 周末双倍爆率将在5分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if ((week == 6 || week == 7) && 时 == startTime && !周末双倍爆率开关) {
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍爆率]: 周末双倍爆率已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪吧。");
+                    }
+
+                    var8 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var8.hasNext()) {
+                        MapleMap map = (MapleMap)var8.next();
+                        if (map != null) {
+                            map.startMapEffect("[周末双倍爆率]: 周末双倍爆率已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪吧。", 5121006);
+                        }
+                    }
+                }
+
+                oldMesoRateWeek = WorldConstants.MESO_RATE;
+                oldDropRateWeek = WorldConstants.DROP_RATE;
+                WorldConstants.MESO_RATE = oldMesoRateWeek + 2.0F;
+                WorldConstants.DROP_RATE = oldDropRateWeek + 2.0F;
+                ChannelServer.reloadDropRate();
+                ChannelServer.reloadMesoRate();
+                周末双倍爆率开关 = true;
+            }
+
+            if ((week == 6 || week == 7) && 时 == stopTime && 分 >= 0 && 分 <= 5 && 周末双倍爆率开关) {
+                WorldConstants.MESO_RATE = oldMesoRateWeek;
+                WorldConstants.DROP_RATE = oldDropRateWeek;
+                ChannelServer.reloadDropRate();
+                ChannelServer.reloadMesoRate();
+                周末双倍爆率开关 = false;
+                var6 = ChannelServer.getAllInstances().iterator();
+
+                while(var6.hasNext()) {
+                    cserv1 = (ChannelServer)var6.next();
+                    var8 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var8.hasNext()) {
+                        mch = (MapleCharacter)var8.next();
+                        mch.dropMessage(6, "[周末双倍爆率]: 今天的双倍爆率已结束，经验值调整为正常倍率。");
+                    }
+                }
+            }
+
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【周末双倍爆率】 检测周末双倍爆率:::");
+                if (周末双倍爆率开关) {
+                    服务端输出信息.println_out("【周末双倍爆率】 双倍爆率正在进行中。");
+                } else {
+                    服务端输出信息.println_out("【周末双倍爆率】 不在双倍爆率时间段。");
+                }
+            }
+
+        }
+    }
+
+    public static void 每日双爆(int 时, int 分) {
+        int startTime = (Integer)LtMS.ConfigValuesMap.get("每日双倍起始时间");
+        int stopTime = (Integer)LtMS.ConfigValuesMap.get("每日双倍结束时间");
+        if ((Integer)LtMS.ConfigValuesMap.get("每日双爆开关") <= 0) {
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【循环线程】 每日双倍爆率为关闭状态:::");
+            }
+
+        } else if (时 == 0 && 分 == 0 && 双倍爆率开关) {
+            WorldConstants.MESO_RATE = oldMesoRate;
+            WorldConstants.DROP_RATE = oldDropRate;
+            ChannelServer.reloadDropRate();
+            ChannelServer.reloadMesoRate();
+            双倍爆率开关 = false;
+            服务端输出信息.println_out("【循环线程】 检测到每日双倍爆率未正常结束，已进行结束处理:::");
+        } else {
+            Iterator var4;
+            ChannelServer cserv1;
+            Iterator var6;
+            MapleCharacter mch;
+            if (时 == startTime - 1 && 分 == 1) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍爆率]: 每日双倍爆率将在60分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if (时 == startTime - 1 && 分 == 31) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍爆率]: 每日双倍爆率将在30分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            if (时 == startTime - 1 && 分 == 56) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍爆率]: 每日双倍爆率将在5分钟后开启，持续" + (stopTime - startTime) + "小时。");
+                    }
+                }
+            }
+
+            MapleMap map;
+            if (时 == startTime && !双倍爆率开关) {
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍爆率]: 每日双倍爆率已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪吧。");
+                    }
+
+                    var6 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var6.hasNext()) {
+                        map = (MapleMap)var6.next();
+                        if (map != null) {
+                            map.startMapEffect("[每日双倍爆率]: 每日双倍爆率已开启，将持续" + (stopTime - startTime) + "小时，大家抓紧时间打怪吧。", 5121006);
+                        }
+                    }
+                }
+
+                oldMesoRate = WorldConstants.MESO_RATE;
+                oldDropRate = WorldConstants.DROP_RATE;
+                WorldConstants.MESO_RATE = oldMesoRate * 2.0F;
+                WorldConstants.DROP_RATE = oldDropRate * 2.0F;
+                ChannelServer.reloadDropRate();
+                ChannelServer.reloadMesoRate();
+                双倍爆率开关 = true;
+            }
+
+            if (时 == stopTime && 双倍爆率开关) {
+                WorldConstants.MESO_RATE = oldMesoRate;
+                WorldConstants.DROP_RATE = oldDropRate;
+                ChannelServer.reloadDropRate();
+                ChannelServer.reloadMesoRate();
+                双倍爆率开关 = false;
+                var4 = ChannelServer.getAllInstances().iterator();
+
+                while(var4.hasNext()) {
+                    cserv1 = (ChannelServer)var4.next();
+                    var6 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var6.hasNext()) {
+                        mch = (MapleCharacter)var6.next();
+                        mch.dropMessage(6, "[每日双倍爆率]: 今天的双倍爆率已结束，爆率调整为正常倍率。");
+                    }
+
+                    var6 = cserv1.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(var6.hasNext()) {
+                        map = (MapleMap)var6.next();
+                        if (map != null) {
+                            map.startMapEffect("[每日双倍爆率]: 今天的双倍爆率已结束，爆率调整为正常倍率。", 5121006);
+                        }
+                    }
+                }
+            }
+
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【每日双倍爆率】 检测每日双倍爆率:::");
+                if (双倍爆率开关) {
+                    服务端输出信息.println_out("【每日双倍爆率】 双倍爆率正在进行中。");
+                } else {
+                    服务端输出信息.println_out("【每日双倍爆率】 不在双倍爆率时间段。");
+                }
+            }
+
+        }
+    }
+    public static void 每日低保(int 时, int 分) {
+        if (分 % 30 == 0) {
+            服务端输出信息.println_out("【每日低保】 检测每日低保:::");
+        }
+
+        int cash1 = (Integer)LtMS.ConfigValuesMap.get("每日低保点券");
+        int cash2 = (Integer)LtMS.ConfigValuesMap.get("每日低保抵用");
+        int meso = (Integer)LtMS.ConfigValuesMap.get("每日低保金币");
+        if ((Integer)LtMS.ConfigValuesMap.get("每日低保开关") <= 0) {
+            if (分 % 30 == 0) {
+                服务端输出信息.println_out("【循环线程】 每日低保为关闭状态:::");
+            }
+
+        } else {
+            Iterator var5;
+            ChannelServer cserv1;
+            Iterator var7;
+            MapleCharacter mch;
+            if (时 == 19 && 分 == 30) {
+                var5 = ChannelServer.getAllInstances().iterator();
+
+                while(var5.hasNext()) {
+                    cserv1 = (ChannelServer)var5.next();
+                    var7 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var7.hasNext()) {
+                        mch = (MapleCharacter)var7.next();
+                        mch.dropMessage(6, "[每日低保]: 每日低保将在60分钟后发放，届时请保持在线。");
+                    }
+                }
+            }
+
+            if (时 == 20 && 分 == 0) {
+                var5 = ChannelServer.getAllInstances().iterator();
+
+                while(var5.hasNext()) {
+                    cserv1 = (ChannelServer)var5.next();
+                    var7 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var7.hasNext()) {
+                        mch = (MapleCharacter)var7.next();
+                        mch.dropMessage(6, "[每日低保]: 每日低保将在30分钟后发放，届时请保持在线。");
+                    }
+                }
+            }
+
+            if (时 == 20 && 分 == 25) {
+                var5 = ChannelServer.getAllInstances().iterator();
+
+                while(var5.hasNext()) {
+                    cserv1 = (ChannelServer)var5.next();
+                    var7 = cserv1.getPlayerStorage().getAllCharacters().iterator();
+
+                    while(var7.hasNext()) {
+                        mch = (MapleCharacter)var7.next();
+                        mch.dropMessage(6, "[每日低保]: 每日低保将在5分钟后发放，请不要下线哦。");
+                    }
+                }
+            }
+
+            if (时 == 20 && 分 >= 30 && !低保发放开关) {
+                服务端输出信息.println_out("【每日低保】 开始发放每日低保。");
+                低保发放开关 = true;
+                if (cash1 > 0) {
+                    发送福利(1, cash1);
+                }
+
+                if (cash2 > 0) {
+                    发送福利(2, cash2);
+                }
+
+                if (meso > 0) {
+                    发送福利(3, meso);
+                }
+
+                var5 = ChannelServer.getAllInstances().iterator();
+
+                while(var5.hasNext()) {
+                    cserv1 = (ChannelServer)var5.next();
+                    var7 = cserv1.getPlayerStorage().getAllCharactersThreadSafe().iterator();
+
+                    while(var7.hasNext()) {
+                        mch = (MapleCharacter)var7.next();
+                        mch.dropMessage(6, "[每日低保]: 每日低保已发放，此次低保共计发放点券 " + cash1 + " 抵用 " + cash2 + " 金币 " + meso + "。");
+                    }
+                }
+
+                服务端输出信息.println_out("【每日低保】 每日低保已发放。");
+            } else {
+                if (时 == 21 && 低保发放开关) {
+                    低保发放开关 = false;
+                    服务端输出信息.println_out("【每日低保】 每日低保记录已重置。");
+                }
+
+                if (分 % 30 == 0) {
+                    服务端输出信息.println_out("【每日低保】 每日低保未到发放时间。");
+                }
+
+            }
+        }
+    }
+    private static void 发送福利(int a, int mount) {
+        if (mount < 0) {
+            mount = 0;
+        } else if (mount > 999999999) {
+            mount = 999999999;
+        }
+
+        String 类型 = "";
+        Iterator var3 = ChannelServer.getAllInstances().iterator();
+
+        while(var3.hasNext()) {
+            ChannelServer cserv1 = (ChannelServer)var3.next();
+
+            MapleCharacter mch;
+            for(Iterator var5 = cserv1.getPlayerStorage().getAllCharactersThreadSafe().iterator(); var5.hasNext(); mch.startMapEffect("[发送福利]系统发放 " + mount + " " + 类型 + "给在线的所有玩家！", 5120027)) {
+                mch = (MapleCharacter)var5.next();
+                switch (a) {
+                    case 1:
+                        类型 = "点券";
+                        mch.modifyCSPoints(1, mount, true);
+                        break;
+                    case 2:
+                        类型 = "抵用券";
+                        mch.modifyCSPoints(2, mount, true);
+                        break;
+                    case 3:
+                        类型 = "金币";
+                        mch.gainMeso(mount, true);
+                        break;
+                    case 4:
+                        类型 = "经验";
+                        mch.gainExp(mount, false, false, false);
+                        break;
+                    case 5:
+                        类型 = "人气";
+                        mch.addFame(mount);
+                        break;
+                    case 6:
+                        类型 = "豆豆";
+                        mch.gainBeans(mount);
+                }
+            }
+        }
+
+    }
+
+    public static void 读取技能范围检测() {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var1 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT name, val FROM 技能范围检测");
+                Throwable var3 = null;
+
+                try {
+                    ResultSet rs = ps.executeQuery();
+                    Throwable var5 = null;
+
+                    try {
+                        while(rs.next()) {
+                            String name = rs.getString("name");
+                            int val = rs.getInt("val");
+                            技能范围检测.put(name, val);
+                        }
+                    } catch (Throwable var53) {
+                        var5 = var53;
+                        throw var53;
+                    } finally {
+                        if (rs != null) {
+                            if (var5 != null) {
+                                try {
+                                    rs.close();
+                                } catch (Throwable var52) {
+                                    var5.addSuppressed(var52);
+                                }
+                            } else {
+                                rs.close();
+                            }
+                        }
+
+                    }
+
+                    DBConPool.close(ps);
+                } catch (Throwable var55) {
+                    var3 = var55;
+                    throw var55;
+                } finally {
+                    if (ps != null) {
+                        if (var3 != null) {
+                            try {
+                                ps.close();
+                            } catch (Throwable var51) {
+                                var3.addSuppressed(var51);
+                            }
+                        } else {
+                            ps.close();
+                        }
+                    }
+
+                }
+            } catch (Throwable var57) {
+                var1 = var57;
+                throw var57;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var50) {
+                            var1.addSuppressed(var50);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var59) {
+            服务端输出信息.println_err("读取吸怪检测错误：" + var59.getMessage());
+        }
+
+    }
+
+    public static void 读取技能PVP伤害() {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var1 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT name, val FROM pvpskills");
+                Throwable var3 = null;
+
+                try {
+                    ResultSet rs = ps.executeQuery();
+                    Throwable var5 = null;
+
+                    try {
+                        while(rs.next()) {
+                            String name = rs.getString("name");
+                            int val = rs.getInt("val");
+                            PVP技能伤害.put(name, val);
+                        }
+                    } catch (Throwable var53) {
+                        var5 = var53;
+                        throw var53;
+                    } finally {
+                        if (rs != null) {
+                            if (var5 != null) {
+                                try {
+                                    rs.close();
+                                } catch (Throwable var52) {
+                                    var5.addSuppressed(var52);
+                                }
+                            } else {
+                                rs.close();
+                            }
+                        }
+
+                    }
+
+                    DBConPool.close(ps);
+                } catch (Throwable var55) {
+                    var3 = var55;
+                    throw var55;
+                } finally {
+                    if (ps != null) {
+                        if (var3 != null) {
+                            try {
+                                ps.close();
+                            } catch (Throwable var51) {
+                                var3.addSuppressed(var51);
+                            }
+                        } else {
+                            ps.close();
+                        }
+                    }
+
+                }
+            } catch (Throwable var57) {
+                var1 = var57;
+                throw var57;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var50) {
+                            var1.addSuppressed(var50);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var59) {
+            服务端输出信息.println_err("读取技能PVP伤害错误：" + var59.getMessage());
+        }
+
+    }
+    public static void 重置仙人数据() {
+        int ID = 0;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT `id` FROM characters  ORDER BY `id` DESC LIMIT 1");
+            ResultSet rs = ps.executeQuery();
+            Throwable var4 = null;
+
+            try {
+                if (rs.next()) {
+                    String SN = rs.getString("id");
+                    int sns = Integer.parseInt(SN);
+                    ++sns;
+                    ID = sns;
+                }
+            } catch (Throwable var15) {
+                var4 = var15;
+                throw var15;
+            } finally {
+                if (rs != null) {
+                    if (var4 != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var14) {
+                            var4.addSuppressed(var14);
+                        }
+                    } else {
+                        rs.close();
+                    }
+                }
+
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var17) {
+        }
+
+        for(int i = 0; i <= ID; ++i) {
+            if (个人信息设置.get("仙人模式" + i + "") == null) {
+                学习仙人模式("仙人模式" + i, 1);
+            }
+
+            if (个人信息设置.get("BUFF增益" + i + "") == null) {
+                学习仙人模式("BUFF增益" + i, 1);
+            }
+
+            if (个人信息设置.get("硬化皮肤" + i + "") == null) {
+                学习仙人模式("硬化皮肤" + i, 1);
+            }
+
+            if (个人信息设置.get("聪明睿智" + i + "") == null) {
+                学习仙人模式("聪明睿智" + i, 1);
+            }
+
+            if (个人信息设置.get("物理攻击力" + i + "") == null) {
+                学习仙人模式("物理攻击力" + i, 1);
+            }
+
+            if (个人信息设置.get("魔法攻击力" + i + "") == null) {
+                学习仙人模式("魔法攻击力" + i, 1);
+            }
+
+            if (个人信息设置.get("物理狂暴力" + i + "") == null) {
+                学习仙人模式("物理狂暴力" + i, 1);
+            }
+
+            if (个人信息设置.get("魔法狂暴力" + i + "") == null) {
+                学习仙人模式("魔法狂暴力" + i, 1);
+            }
+
+            if (个人信息设置.get("物理吸收力" + i + "") == null) {
+                学习仙人模式("物理吸收力" + i, 1);
+            }
+
+            if (个人信息设置.get("魔法吸收力" + i + "") == null) {
+                学习仙人模式("魔法吸收力" + i, 1);
+            }
+        }
+
+        读取技个人信息设置();
+    }
+
+    public static void 学习仙人模式(String a, int b) {
+        int ID = 0;
+
+        Connection con;
+        Throwable var6;
+        try {
+            con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT `id` FROM jiezoudashi  ORDER BY `id` DESC LIMIT 1");
+            ResultSet rs = ps.executeQuery();
+            var6 = null;
+
+            try {
+                if (rs.next()) {
+                    String SN = rs.getString("id");
+                    int sns = Integer.parseInt(SN);
+                    ++sns;
+                    ID = sns;
+                }
+            } catch (Throwable var62) {
+                var6 = var62;
+                throw var62;
+            } finally {
+                if (rs != null) {
+                    if (var6 != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var57) {
+                            var6.addSuppressed(var57);
+                        }
+                    } else {
+                        rs.close();
+                    }
+                }
+
+            }
+
+            DBConPool.close(ps);
+        } catch (SQLException var64) {
+        }
+
+        try {
+            con = DBConPool.getConnection();
+            Throwable var65 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("INSERT INTO jiezoudashi ( id,name,Val ) VALUES ( ? ,?,?)");
+                var6 = null;
+
+                try {
+                    ps.setInt(1, ID);
+                    ps.setString(2, a);
+                    ps.setInt(3, b);
+                    ps.executeUpdate();
+                    DBConPool.close(ps);
+                    //服务端输出信息.println_err("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 数据补充 " + a);
+                } catch (Throwable var56) {
+                    var6 = var56;
+                    throw var56;
+                } finally {
+                    if (ps != null) {
+                        if (var6 != null) {
+                            try {
+                                ps.close();
+                            } catch (Throwable var55) {
+                                var6.addSuppressed(var55);
+                            }
+                        } else {
+                            ps.close();
+                        }
+                    }
+
+                }
+            } catch (Throwable var59) {
+                var65 = var59;
+                throw var59;
+            } finally {
+                if (con != null) {
+                    if (var65 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var54) {
+                            var65.addSuppressed(var54);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var61) {
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
 }

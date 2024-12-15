@@ -11,7 +11,6 @@ import gui.LtMS;
 import gui.服务端输出信息;
 import handling.channel.handler.*;
 import merchant.merchant_main;
-import gui.CongMS;
 
 import java.awt.*;
 import java.io.*;
@@ -28,14 +27,12 @@ import server.*;
 import constants.ServerConfig;
 import database.DatabaseConnection;
 import server.Timer;
-import server.bean.JKook;
-import server.bean.Potential;
-import server.bean.SkillSkin;
+import server.maps.*;
+import snail.*;
 import server.custom.capture.capture_yongfa;
 import server.gashapon.GashaponFactory;
 import server.gashapon.Gashapon;
 import server.life.*;
-import server.lt.TimeLogCenter;
 import server.movement.LifeMovementFragment;
 import server.shops.HiredMerchant;
 import handling.channel.MapleGuildRanking.JobRankingInfo;
@@ -48,21 +45,13 @@ import handling.world.guild.MapleGuild;
 import handling.world.MapleParty;
 import handling.world.World.Alliance;
 
-import server.maps.SpeedRunType;
-
-import server.maps.AramiaFireWorks;
-import server.maps.Event_PyramidSubway;
-import server.maps.Event_DojoAgent;
 import tools.packet.MobPacket;
 import tools.packet.PacketHelper;
 import tools.packet.PlayerShopPacket;
 
 import database.DBConPool;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
 import handling.channel.MapleGuildRanking;
 import handling.world.World.Guild;
-import server.maps.MapleMap;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 
@@ -129,6 +118,36 @@ public class NPCConversationManager extends AbstractPlayerInteraction
 
 
     /**
+     * 屏蔽特效
+     */
+    public List<MyPackageX> anyList(Integer id) {
+        Collection<IItem> hasEquipped = c.getPlayer().getHasEquipped();
+        if (hasEquipped==null || hasEquipped.size()==0){
+            return null;
+        }
+        List<MyPackageX> list = new ArrayList<>();
+        List<PackageOfEquipments.MyPackage> packageList = PackageOfEquipments.getInstance().getPackageList();
+        for (PackageOfEquipments.MyPackage myPackage : packageList) {
+            MyPackageX myPackageX = new MyPackageX(myPackage);
+            for (Integer integer : myPackage.getItemIdList()) {
+                if (hasEquipped.stream().noneMatch(item ->  item.getItemId() == integer)){
+                    myPackageX.setComplete(1);
+                }
+            }
+            list.add(myPackageX);
+        }
+        return list;
+    }
+
+    /**
+     * 屏蔽特效
+     */
+    public void hideEffect() {
+        c.getPlayer().屏蔽特效 = true;
+    }
+
+
+    /**
      * 检查商城
      */
     public void dropItemShop (int type ) {
@@ -157,7 +176,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 System.out.println("商城物品检查异常");
             }
         }else{
@@ -186,12 +205,29 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 System.out.println("商城物品检查异常");
             }
         }
 
     }
+
+    public void 鱼转积分(List<Map<String, Integer>> itemIds){
+        int 积分 = 0;
+        for (Map<String, Integer> itemId : itemIds) {
+            积分 += c.getPlayer().itemQuantity(itemId.get("itemId")) * itemId.get("itemNum") ;
+        }
+        c.getPlayer().setBossLog1("鱼积分" , 1,积分);
+    }
+
+    public void 装备转强化点(List<Map<String, Integer>> itemIds){
+        int 强化点 = 0;
+        for (Map<String, Integer> itemId : itemIds) {
+            强化点 += c.getPlayer().itemQuantity(itemId.get("itemId")) * itemId.get("itemNum") ;
+        }
+        c.getPlayer().setBossLog1("强化点" , 1,强化点);
+    }
+
 
     public List<CashShopModifiedItems> getShopItem(){
         List<CashShopModifiedItems> list = new ArrayList<>();
@@ -1013,12 +1049,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 c.getPlayer().dropMessage(1, "该地图已经有人在吸怪了.");
             } else {
                 //先清除地图所有怪物
-                c.getPlayer().setLastRes(null);
+                //c.getPlayer().setLastRes(null);
                 c.getPlayer().getMap().killAllMonsters(true);
                 UserAttraction userAttraction = new UserAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
                 Start.吸怪集合.put(player.getId(), userAttraction);
                 c.getPlayer().startMobVac(userAttraction);
-                开启吸怪();
+                //开启吸怪();
             }
         }
 
@@ -1061,6 +1097,8 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 Start.轮回集合.put(player.getId(), userAttraction);
                 c.getPlayer().startMobLhVac(userAttraction);
+                c.getPlayer().setLastResOld(c.getPlayer().getLastRes());
+
                 //开启吸怪();
             }
         }
@@ -1420,7 +1458,17 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         this.c.sendPacket(MaplePacketCreator.getNPCTalkStyle(this.npc, text, styles));
         this.lastMsg = 7;
     }
-    
+    public void sendStyle(String text, int a, int[] styles) {
+        if (this.lastMsg <= -1) {
+            this.c.sendPacket(MaplePacketCreator.getNPCTalkStyle(this.npc, text, a, styles));
+            if (ServerConfig.version == 79) {
+                this.lastMsg = 7;
+            } else if (ServerConfig.version == 85) {
+                this.lastMsg = 8;
+            }
+
+        }
+    }
     public void sendGetNumber(final String text, final int def, final int min, final int max) {
         if (this.lastMsg > -1) {
             return;
@@ -1433,9 +1481,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
 
         if (def<0){
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理员永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理员永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为非法利用漏洞而被管理员永久停封。"));
             this.getPlayer().ban("非法利用漏洞", true, true, false);
         }
 
@@ -1458,6 +1506,17 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         this.c.sendPacket(MaplePacketCreator.getNPCTalkText(this.npc, text));
         this.lastMsg = 2;
+    }
+
+    public void sendGetText(String text, String def) {
+        if (this.lastMsg <= -1) {
+            if (text.contains("#L")) {
+                this.sendSimple(text);
+            } else {
+                this.c.sendPacket(MaplePacketCreator.getNPCTalkText(this.npc, text, def));
+                this.lastMsg = 2;
+            }
+        }
     }
 
     public void setGetText(final String text) {
@@ -1531,7 +1590,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void sendStorage() {
         if (this.getPlayer().hasBlockedInventory2(true)) {
-            this.c.getPlayer().dropMessage(1, "系統錯誤，請联繫管理員。");
+            this.c.getPlayer().dropMessage(1, "系統錯誤，請联繫管理员。");
             this.c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -2765,43 +2824,205 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
 
     //获取怪物爆率信息
-    public String checkDrop(final int mobId) {
-        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
-//        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.retrieveDrops(mobId);
-        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        System.out.println("ranks查询爆率 = " + ranks.size());
+//    public String checkDrop(final int mobId) {
+//        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+////        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.retrieveDrops(mobId);
+//        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+//        System.out.println("ranks查询爆率 = " + ranks.size());
+//        if (ranks != null && ranks.size() > 0) {
+//            int num = 0;
+//            int itemId = 0;
+//            int ch = 0;
+//            final StringBuilder name = new StringBuilder();
+//            for (int i = 0; i < ranks.size(); ++i) {
+//                final MonsterDropEntry de = ranks.get(i);
+////                System.out.println("ranks查询爆率 = " + de.dropperid + " " + de.itemId + " " + de.chance + " " + de.questid + " " + de.Minimum + " " + de.Maximum);
+//
+//                if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0))) {
+//                    itemId = de.itemId;
+//                    if (num == 0) {
+//                        name.append("當前怪物 #o" + mobId + "# 的爆率為:\r\n");
+//                        name.append("--------------------------------------\r\n");
+//                    }
+//                    if (ii.itemExists(itemId)) {
+//                        String namez = "#z" + itemId + "#";
+//                        if (itemId == 0) {
+//                            itemId = 4031041;
+//                            namez = de.Minimum * this.getClient().getChannelServer().getMesoRate() + " 到 " + de.Maximum * this.getClient().getChannelServer().getMesoRate() + " 金币";
+//                        }
+//                        ch = de.chance * this.getClient().getChannelServer().getDropRate();
+//                        name.append(num + 1 + ") #v" + itemId + "#" + namez + ("#d  掉落機率：" + (double)Integer.valueOf((ch >= 999999) ? 1000000 : ch) / 10000.0 + "%\r\n") + ((de.questid > 0 && MapleQuest.getInstance((int) de.questid).getName().length() > 0) ? ("需要接受任務 " + MapleQuest.getInstance((int) de.questid).getName() + "") : "") + "\r\n");
+//                        ++num;
+//                    }
+//                }
+//            }
+//            if (name.length() > 0) {
+//                return name.toString();
+//            }
+//        }
+//        return "沒有當前怪物的爆率数据。";
+//    }
+    public String checkDrop(int mobId) {
+        List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
         if (ranks != null && ranks.size() > 0) {
             int num = 0;
-            int itemId = 0;
-            int ch = 0;
-            final StringBuilder name = new StringBuilder();
-            for (int i = 0; i < ranks.size(); ++i) {
-                final MonsterDropEntry de = ranks.get(i);
-//                System.out.println("ranks查询爆率 = " + de.dropperid + " " + de.itemId + " " + de.chance + " " + de.questid + " " + de.Minimum + " " + de.Maximum);
+            StringBuilder name = new StringBuilder();
+            MapleMonster onemob = MapleLifeFactory.getMonster(mobId);
+            name.append("#e#d冒险岛怪物详细信息预览：#n#k\r\n\r\n");
+            name.append("#d怪物名称 : #b#o" + mobId + "##k\r\n");
+            name.append("#d怪物等级 : #b" + onemob.getLevel() + "#k\r\n");
+            name.append("#d怪物类型 : #b" + (onemob.getStats().isBoss() ? "Boss怪物" : "普通怪物") + "#k\r\n");
+            name.append("#d物理防御 : #b" + onemob.getStats().getPhysicalDefense() + "#k\r\n");
+            name.append("#d魔法防御 : #b" + onemob.getStats().getMagicDefense() + "#k\r\n");
+            name.append("#d最大血量 : #b" + onemob.getMobMaxHp() + "#k\r\n");
+            String spawnMapName = "";
+            if (MapleMapFactory.getMobInMapIdList(onemob.getId()) != null) {
+                Iterator integerIterator = MapleMapFactory.getMobInMapIdList(onemob.getId()).iterator();
 
-                if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0))) {
-                    itemId = de.itemId;
-                    if (num == 0) {
-                        name.append("當前怪物 #o" + mobId + "# 的爆率為:\r\n");
-                        name.append("--------------------------------------\r\n");
+                while(integerIterator.hasNext()) {
+                    int id0 = (Integer)integerIterator.next();
+                    String fullName = MapleMapFactory.getMapFullName(id0);
+                    if (fullName != null && !fullName.isEmpty()) {
+                        spawnMapName = spawnMapName + MapleMapFactory.getMapFullName(id0) + "、";
                     }
-                    if (ii.itemExists(itemId)) {
+                }
+
+                if (spawnMapName.length() > 0) {
+                    spawnMapName = spawnMapName.substring(0, spawnMapName.length() - 1);
+                }
+            }
+
+            name.append("#d出生地区 : #b" + spawnMapName + "#k\r\n");
+            name.append("--------------------------------------\r\n\r\n");
+            name.append("#e#d怪物属性信息：#n#k\r\n\r\n");
+            name.append("#d光明 : #b" + (onemob.getStats().getEffectiveness(Element.HOLY) == ElementalEffectiveness.IMMUNE ? "免疫" : (onemob.getStats().getEffectiveness(Element.HOLY) == ElementalEffectiveness.STRONG ? "抗性" : (onemob.getStats().getEffectiveness(Element.HOLY) == ElementalEffectiveness.WEAK ? "弱点" : "正常"))) + "#k  ");
+            name.append("#d黑暗 : #b" + (onemob.getStats().getEffectiveness(Element.DARKNESS) == ElementalEffectiveness.IMMUNE ? "免疫" : (onemob.getStats().getEffectiveness(Element.DARKNESS) == ElementalEffectiveness.STRONG ? "抗性" : (onemob.getStats().getEffectiveness(Element.DARKNESS) == ElementalEffectiveness.WEAK ? "弱点" : "正常"))) + "#k  ");
+            name.append("#d雷电 : #b" + (onemob.getStats().getEffectiveness(Element.LIGHTING) == ElementalEffectiveness.IMMUNE ? "免疫" : (onemob.getStats().getEffectiveness(Element.LIGHTING) == ElementalEffectiveness.STRONG ? "抗性" : (onemob.getStats().getEffectiveness(Element.LIGHTING) == ElementalEffectiveness.WEAK ? "弱点" : "正常"))) + "#k\r\n");
+            name.append("#d冰冻 : #b" + (onemob.getStats().getEffectiveness(Element.ICE) == ElementalEffectiveness.IMMUNE ? "免疫" : (onemob.getStats().getEffectiveness(Element.ICE) == ElementalEffectiveness.STRONG ? "抗性" : (onemob.getStats().getEffectiveness(Element.ICE) == ElementalEffectiveness.WEAK ? "弱点" : "正常"))) + "#k  ");
+            name.append("#d毒素 : #b" + (onemob.getStats().getEffectiveness(Element.POISON) == ElementalEffectiveness.IMMUNE ? "免疫" : (onemob.getStats().getEffectiveness(Element.POISON) == ElementalEffectiveness.STRONG ? "抗性" : (onemob.getStats().getEffectiveness(Element.POISON) == ElementalEffectiveness.WEAK ? "弱点" : "正常"))) + "#k  ");
+            name.append("#d火焰 : #b" + (onemob.getStats().getEffectiveness(Element.FIRE) == ElementalEffectiveness.IMMUNE ? "免疫" : (onemob.getStats().getEffectiveness(Element.FIRE) == ElementalEffectiveness.STRONG ? "抗性" : (onemob.getStats().getEffectiveness(Element.FIRE) == ElementalEffectiveness.WEAK ? "弱点" : "正常"))) + "#k\r\n");
+            name.append("--------------------------------------\r\n\r\n");
+
+            for(int i = 0; i < ranks.size(); ++i) {
+                MonsterDropEntry de = (MonsterDropEntry)ranks.get(i);
+                if (de.chance > 0 && (de.questid <= 0 || de.questid > 0 && MapleQuest.getInstance(de.questid).getName().length() > 0)) {
+                    int itemId = de.itemId;
+                    if (this.getItemById(itemId) != null) {
+                        if (num == 0) {
+                            name.append("#e#d怪物爆物信息：#n#k\r\n\r\n");
+                        }
+
                         String namez = "#z" + itemId + "#";
                         if (itemId == 0) {
                             itemId = 4031041;
-                            namez = de.Minimum * this.getClient().getChannelServer().getMesoRate() + " 到 " + de.Maximum * this.getClient().getChannelServer().getMesoRate() + " 金币";
+                            namez = (float)de.Minimum * this.getClient().getChannelServer().getMesoRate() + " 到 " + (float)de.Maximum * this.getClient().getChannelServer().getMesoRate() + " 金币";
                         }
-                        ch = de.chance * this.getClient().getChannelServer().getDropRate();
-                        name.append(num + 1 + ") #v" + itemId + "#" + namez + ("#d  掉落機率：" + (double)Integer.valueOf((ch >= 999999) ? 1000000 : ch) / 10000.0 + "%\r\n") + ((de.questid > 0 && MapleQuest.getInstance((int) de.questid).getName().length() > 0) ? ("需要接受任務 " + MapleQuest.getInstance((int) de.questid).getName() + "") : "") + "\r\n");
+
+                        int ch = (int)((float)de.chance * this.getClient().getChannelServer().getDropRate());
+                        name.append(num + 1 + ") #v" + itemId + "#" + namez + (this.getPlayer().isGM() ? " - #r" + Integer.valueOf(ch >= 999999 ? 1000000 : ch).doubleValue() / 10000.0 + "% 爆率。 #k" : "") + (de.questid > 0 && MapleQuest.getInstance(de.questid).getName().length() > 0 ? "需要接受任务 " + MapleQuest.getInstance(de.questid).getName() + "" : "") + "\r\n");
                         ++num;
                     }
                 }
             }
+
             if (name.length() > 0) {
                 return name.toString();
             }
         }
-        return "沒有當前怪物的爆率数据。";
+
+        return "没有当前怪物的爆物信息。";
+    }
+
+    public ArrayList<Integer> findMobByDrop(int dropId) {
+        ArrayList<Integer> mobList = new ArrayList();
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT dropperid FROM drop_data WHERE itemid = ?");
+                ps.setInt(1, dropId);
+                ResultSet rs = ps.executeQuery();
+
+                int count;
+                while(rs.next()) {
+                    count = rs.getInt(1);
+                    if (!mobList.contains(count)) {
+                        mobList.add(count);
+                    }
+                }
+
+                ps = con.prepareStatement("SELECT count(*) FROM drop_data_global WHERE itemid = ?");
+                ps.setInt(1, dropId);
+                rs = ps.executeQuery();
+
+                while(rs.next()) {
+                    count = rs.getInt(1);
+                    if (count != 0 && !mobList.contains(0)) {
+                        mobList.add(0);
+                    }
+                }
+
+                ps.close();
+                rs.close();
+            } catch (Throwable var16) {
+                var4 = var16;
+                throw var16;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var15) {
+                            var4.addSuppressed(var15);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var18) {
+            服务端输出信息.println_err("【错误】findMobByDrop错误，错误原因： " + var18);
+            var18.printStackTrace();
+        }
+
+        return mobList;
+    }
+
+    public ArrayList<Integer> findItemIdByName(String name) {
+        ArrayList<Integer> itemList = new ArrayList();
+        new HashMap();
+        Map<Integer, String> data = SearchGenerator.getSearchData(1, name);
+        Iterator var4 = data.entrySet().iterator();
+
+        while(var4.hasNext()) {
+            Map.Entry<Integer, String> entry = (Map.Entry)var4.next();
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            if ((entry.getKey() + "").length() == 7 && ii.itemExists((Integer)entry.getKey()) && !itemList.contains(entry.getKey())) {
+                itemList.add(entry.getKey());
+            }
+        }
+
+        return itemList;
+    }
+
+    public Map<Integer, String> findItemInfoByName(String name) {
+        Map<Integer, String> itemList = new HashMap();
+        Map<Integer, String> data = SearchGenerator.getSearchData(1, name);
+        Iterator var4 = data.entrySet().iterator();
+
+        while(var4.hasNext()) {
+            Map.Entry<Integer, String> entry = (Map.Entry)var4.next();
+            MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            if ((entry.getKey() + "").length() == 7 && ii.itemExists((Integer)entry.getKey()) && !itemList.containsKey(entry.getKey())) {
+                itemList.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        data.clear();
+        return itemList;
     }
 
     public String dropList(final int mobId) {
@@ -2825,7 +3046,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                         itemId = 4031041;
                         namez = de.Minimum * this.getClient().getChannelServer().getMesoRate() + " 到 " + de.Maximum * this.getClient().getChannelServer().getMesoRate() + " 金币";
                     }
-                    ch = de.chance * this.getClient().getChannelServer().getDropRate();
+                    //ch = de.chance * this.getClient().getChannelServer().getDropRate();
                     name.append(num + 1 + ") #v" + itemId + "#" + namez + ((de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0) ? ("需要接受任務 " + MapleQuest.getInstance((int)de.questid).getName() + "") : "") + "\r\n");
                     ++num;
                 }
@@ -2841,11 +3062,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public String checkDrop(MapleCharacter chr, final int mobId, final boolean GM) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
+        DecimalFormat df = new DecimalFormat("#.00");
 //        final List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.retrieveDrops(mobId);
         if (ranks != null && ranks.size() > 0) {
             int num = 0;
             int itemId = 0;
-            int ch = 0;
+            double ch = 0;
             final StringBuilder name = new StringBuilder();
             final StringBuilder error = new StringBuilder();
             name.append("【#r#o" + mobId + "##k】掉寶物品查詢列表:#b\r\n");
@@ -2859,12 +3081,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                         namez = de.Minimum * this.getClient().getChannelServer().getMesoRate() + " to " + de.Maximum * this.getClient().getChannelServer().getMesoRate() + " #b金币#l#k";
                     }
                     else if (itemId != 0 && ii.itemExists(itemId)) {
-                        ch = de.chance * this.getClient().getChannelServer().getDropRate();
+                         ch = de.chance * this.getClient().getChannelServer().getDropRate();
                         if (!GM) {
-                            name.append("#k" + (num + 1) + ": #v" + itemId + "# " + namez + (chr.isGM() ? ("#d  掉落機率：" + (double)Integer.valueOf((ch >= 999999) ? 1000000 : ch) / 10000.0 + "%\r\n") : "\r\n") + "#b(掉落條件:" + ((de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0) ? ("需要接取任務#r " + MapleQuest.getInstance((int)de.questid).getName() + " #b)\r\n") : "#r無#b)") + "\r\n");
+                            name.append("#k" + (num + 1) + ": #v" + itemId + "# " + namez + (chr.isGM() ? ("#d  掉落機率：" + df.format((ch >= 999999 ? 1000000 : ch) / 10000.0) + "%\r\n") : "\r\n") + "#b(掉落條件:" + ((de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0) ? ("需要接取任務#r " + MapleQuest.getInstance((int)de.questid).getName() + " #b)\r\n") : "#r無#b)") + "\r\n");
                         }
                         else {
-                            name.append("#L" + itemId + "##k" + (num + 1) + ": #v" + itemId + "# " + namez + (chr.isGM() ? ("#d  掉落機率：" + (double)Integer.valueOf((ch >= 999999) ? 1000000 : ch) / 10000.0 + "%(點選更改)\r\n") : "\r\n") + "#b(掉落條件:" + ((de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0) ? ("需要接取任務#r " + MapleQuest.getInstance((int)de.questid).getName() + " #b)\r\n") : "#r無#b)") + "\r\n");
+                            name.append("#L" + itemId + "##k" + (num + 1) + ": #v" + itemId + "# " + namez + (chr.isGM() ? ("#d  掉落機率：" + df.format((ch >= 999999 ? 1000000 : ch) / 10000.0) + "%(點選更改)\r\n") : "\r\n") + "#b(掉落條件:" + ((de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0) ? ("需要接取任務#r " + MapleQuest.getInstance((int)de.questid).getName() + " #b)\r\n") : "#r無#b)") + "\r\n");
                         }
                         ++num;
                     }
@@ -2973,7 +3195,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if (mi.getDropQuest((int)Integer.valueOf(mobs.get(i))) > 0) {
                 quest = mi.getDropQuest((int)Integer.valueOf(mobs.get(i)));
             }
-            final int chance = mi.getDropChance((int)Integer.valueOf(mobs.get(i))) * this.getClient().getChannelServer().getDropRate();
+            // double chance = mi.getDropChance((int)Integer.valueOf(mobs.get(i))) * this.getClient().getChannelServer().getDropRate();
             text = text + "#r#o" + (Object)mobs.get(i) + "##k " + ((quest > 0 && MapleQuest.getInstance(quest).getName().length() > 0) ? ("#b需要進行 " + MapleQuest.getInstance(quest).getName() + " 任務來取得#k") : "") + "\r\n";
         }
         this.sendNext(text);
@@ -3217,17 +3439,25 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         this.c.sendPacket(MaplePacketCreator.getNPCTalk(this.npc, (byte)0, text, "00 00", (byte)0));
         this.lastMsg = 0;
     }
-    
-    public void 是否说明文字(final String text) {
-        if (this.lastMsg > -1) {
-            return;
+
+    public String 开服名称() {
+        return this.c.getChannelServer().getServerName();
+    }
+    public void 是否说明文字(String text) {
+        if (this.lastMsg <= -1) {
+            if (text.contains("#L")) {
+                this.sendSimple(text);
+            } else {
+                if (ServerConfig.version == 79) {
+                    this.c.sendPacket(MaplePacketCreator.getNPCTalk(this.npc, (byte)1, text, "", this.type));
+                    this.lastMsg = 1;
+                } else if (ServerConfig.version == 85) {
+                    this.c.sendPacket(MaplePacketCreator.getNPCTalk(this.npc, (byte)2, text, "", this.type));
+                    this.lastMsg = 2;
+                }
+
+            }
         }
-        if (text.contains((CharSequence)"#L")) {
-            this.sendSimple(text);
-            return;
-        }
-        this.c.sendPacket(MaplePacketCreator.getNPCTalk(this.npc, (byte)1, text, "", (byte)0));
-        this.lastMsg = 1;
     }
     
     public int 在线人数() {
@@ -3973,9 +4203,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     public void gainybZ(final int gain) {
         if (gain < 0){
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理员永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理员永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理员永久停封。"));
             this.getPlayer().ban("刷元宝", true, true, false);
         }else {
             this.getPlayer().gainyb(gain);
@@ -3983,9 +4213,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
     public void gainybF(final int gain) {
         if (gain > 0){
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
-            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理員永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理员永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理员永久停封。"));
+            Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + getPlayer().getName() + " 因为刷元宝而被管理员永久停封。"));
             this.getPlayer().ban("刷元宝", true, true, false);
         }else {
             this.getPlayer().gainyb(gain);
@@ -5123,19 +5353,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             this.c.getPlayer().dropMessage(5, "地图天气已启用。");
         }
     }
-    
-    public void 爆物开关() {
-        this.c.getPlayer().getMap().toggleDrops();
-    }
-    
-    public long 查看蓄力一击() {
-        return (System.currentTimeMillis() - this.c.getPlayer().蓄力一击) / 10L;
-    }
-    
-    public void 给人气(final int r) {
-        this.c.getPlayer().addFame(r);
-    }
-    
+
     public void 判断人气() {
         this.c.getPlayer().getFame();
     }
@@ -5836,7 +6054,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public int gainGachaponItem(final int id, final int quantity) {
         return this.gainGachaponItem(id, quantity, this.c.getPlayer().getMap().getStreetName() + " - " + this.c.getPlayer().getMap().getMapName());
     }
-    
+
     public int gainGachaponItem(final int id, final int quantity, final String msg) {
         try {
             if (!MapleItemInformationProvider.getInstance().itemExists(id)) {
@@ -5853,27 +6071,34 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             return item.getItemId();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return -1;
         }
     }
-    
-    public int gainGachaponItem(final int id, final int quantity, final String msg, final int 概率) {
+    public int getHyPay(int type) {
+        return this.getPlayer().getHyPay(type);
+    }
+    public int gainHyPay(int hypay) {
+        return this.getPlayer().gainHyPay(hypay);
+    }
+    public int gainGachaponItem(int id, int quantity, String msg, int 概率) {
         try {
             if (!MapleItemInformationProvider.getInstance().itemExists(id)) {
                 return -1;
+            } else {
+                IItem item = MapleInventoryManipulator.addbyId_Gachapon(this.c, id, (short)quantity);
+                if (item == null) {
+                    return -1;
+                } else {
+                    if (概率 > 0) {
+                        Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("[ " + msg + " ] : 已经被玩家 [ " + this.c.getPlayer().getName(), " ] 幸运抽中！", item, (byte)0, this.getPlayer().getClient().getChannel()));
+                    }
+
+                    return item.getItemId();
+                }
             }
-            final IItem item = MapleInventoryManipulator.addbyId_Gachapon(this.c, id, (short)quantity);
-            if (item == null) {
-                return -1;
-            }
-            if (概率 > 0) {
-                Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("[ " + msg + " ] : 已经被玩家 [ " + this.c.getPlayer().getName(), " ] 幸运抽中！", item, (byte)0, this.getPlayer().getClient().getChannel()));
-            }
-            return item.getItemId();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception var6) {
+            服务端输出信息.println_err(var6);
             return -1;
         }
     }
@@ -5896,7 +6121,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             return item.getItemId();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return -1;
         }
     }
@@ -5916,7 +6141,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             return item.getItemId();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return -1;
         }
     }
@@ -11062,7 +11287,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int money = this.c.getPlayer().getMoney();
         if (mount >= 0) {
             money += mount;
-            this.c.getPlayer().setMoney(money);
+                this.c.getPlayer().setMoney(money);
             if (record) {
                 this.c.getPlayer().setMoneyAll(mount, "脚本充值");
             }
@@ -11389,7 +11614,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
         return name;
     }
-
+    public void sendNone() {
+        if (this.lastMsg <= -1) {
+            this.lastMsg = -1;
+            NPCScriptManager.getInstance().action(this.c, (byte)1, (byte)0, -1);
+        }
+    }
     public ArrayList 读取奖品概率(String group) {
         ArrayList<Double> chances = new ArrayList((Collection)Start.RewardChanceMap.get(group));
         double sum = 0.0;
@@ -11459,6 +11689,56 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
         return valid;
     }
+
+    public void 爆物开关() {
+        this.c.getPlayer().getMap().toggleDrops();
+    }
+
+    public long 查看蓄力一击() {
+        return (System.currentTimeMillis() - this.c.getPlayer().蓄力一击) / 10L;
+    }
+
+    public void 给人气(int r) {
+        this.c.getPlayer().addFame(r);
+    }
+
+    public void 发言(String 内容) {
+        Iterator var2 = ChannelServer.getAllInstances().iterator();
+
+        while(var2.hasNext()) {
+            ChannelServer cserv = (ChannelServer)var2.next();
+            Iterator var4 = cserv.getPlayerStorage().getAllCharacters().iterator();
+
+            while(var4.hasNext()) {
+                MapleCharacter victim = (MapleCharacter)var4.next();
+                if (victim.getId() != this.c.getPlayer().getId()) {
+                    victim.getMap().broadcastMessage(MaplePacketCreator.getChatText(victim.getId(), StringUtil.joinStringFrom(new String[]{内容}, 1), victim.isGM(), 0));
+                }
+            }
+        }
+
+    }
+
+    public void 战斗力排行榜_snail() {
+        MapleGuild.战斗力排行_snail(this.getClient(), this.npc);
+    }
+
+    public void 力量排行榜_snail() {
+        MapleGuild.力量排行_snail(this.getClient(), this.npc);
+    }
+
+    public void 敏捷排行榜_snail() {
+        MapleGuild.敏捷排行_snail(this.getClient(), this.npc);
+    }
+
+    public void 智力排行榜_snail() {
+        MapleGuild.智力排行_snail(this.getClient(), this.npc);
+    }
+
+    public void 运气排行榜_snail() {
+        MapleGuild.运气排行_snail(this.getClient(), this.npc);
+    }
+
 
     public int MarrageChecking() {
         int result = 0;
@@ -12484,7 +12764,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                                 expRate = cs.getExpRate();
                                 mesoRate = cs.getMesoRate();
                                 dropRate = cs.getDropRate();
-                                int expRatio =  (Integer)LtMS.ConfigValuesMap.get("定点生怪经验倍率百分比");
+                                int expRatio = (Integer)LtMS.ConfigValuesMap.get("定点生怪经验倍率百分比");
                                 int mesoRatio = (Integer)LtMS.ConfigValuesMap.get("定点生怪金币倍率百分比");
                                 int dropRatio = (Integer)LtMS.ConfigValuesMap.get("定点生怪爆物倍率百分比");
                                 expRate *= (float)expRatio / 100.0F;
@@ -12500,9 +12780,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                             dropRate = this.c.getPlayer().getClient().getChannelServer().getDropRate();
                         }
 
-                        this.c.getPlayer().getClient().getChannelServer().setExpRate((int) expRate);
-                        this.c.getPlayer().getClient().getChannelServer().setMesoRate((int) mesoRate);
-                        this.c.getPlayer().getClient().getChannelServer().setDropRate((int) dropRate);
+                        this.c.getPlayer().getClient().getChannelServer().setExpRate(expRate);
+                        this.c.getPlayer().getClient().getChannelServer().setMesoRate(mesoRate);
+                        this.c.getPlayer().getClient().getChannelServer().setDropRate(dropRate);
                         map.setRespawnOnePoint(true);
                         map.setRespawnPoint(this.c.getPlayer().getPosition());
                         map.setRespawnOnePointMoves(this.c.getPlayer().getLastRes());
@@ -12796,6 +13076,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             return false;
         }
     }
+    public void 结束对话() {
+        NPCScriptManager.getInstance().dispose(this.c);
+    }
 
     public boolean sqlUpdate(String text) {
         return this.sqlUpdate(text, (Object[])null);
@@ -12914,4 +13197,279 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public Object[] sqlSelect(String text) {
         return this.sqlSelect(text, (Object[])null);
     }
+
+    public void showlvl_s() {
+        this.c.sendPacket(MaplePacketCreator.showlevelRanks(this.npc, MapleGuildRanking.getInstance().getLevelRank_s()));
+    }
+    public void MapleMSpvpdeaths() {
+        MapleGuildRanking.MapleMSpvpdeaths(this.c, this.npc);
+    }
+
+    public void showmeso_s() {
+        this.c.sendPacket(MaplePacketCreator.showmesoRanks(this.npc, MapleGuildRanking.getInstance().getMesoRank_s()));
+    }
+
+    public String showJzMeso(int mapid) {
+        String a = "目前排名：\r\n\r\n";
+        List<MapleGuildRanking.JzRankingInfo> all = MapleGuildRanking.getInstance().getJzRank(mapid);
+
+        StringBuilder var10000;
+        MapleGuildRanking.JzRankingInfo info;
+        for(Iterator var4 = all.iterator(); var4.hasNext(); a = var10000.append(MapleCharacter.getCharacterNameById(info.getId())).append("#k : ").append(info.getMeso()).append("金币\r\n").toString()) {
+            info = (MapleGuildRanking.JzRankingInfo)var4.next();
+            var10000 = (new StringBuilder()).append(a).append(" #b");
+            this.getPlayer();
+        }
+
+        a = a + "\r\n我不能透露现在捐赠的人数有谁，";
+        a = a + "\r\n这些记录每周六凌晨23：59截止每周一凌晨00：00清空。";
+        return a;
+    }
+    public void MapleMSpvpkills() {
+        MapleGuildRanking.MapleMSpvpkills(this.c, this.npc);
+    }
+
+    public void 增加角色最大生命值(short hp) {
+        Map<MapleStat, Integer> statup = new EnumMap(MapleStat.class);
+        if (this.c.getPlayer().getStat().getMaxHp() + hp > 30000) {
+            this.c.getPlayer().getStat().setMaxHp((short)30000);
+        } else {
+            this.c.getPlayer().getStat().setMaxHp((short)(this.c.getPlayer().getStat().getMaxHp() + hp));
+        }
+
+        statup.put(MapleStat.MAXHP, Integer.valueOf(this.c.getPlayer().getStat().getMaxHp()));
+        this.c.sendPacket(MaplePacketCreator.updatePlayerStats(statup, this.c.getPlayer()));
+    }
+
+    public void 增加角色最大法力值(short MP) {
+        Map<MapleStat, Integer> statup = new EnumMap(MapleStat.class);
+        if (this.c.getPlayer().getStat().getMaxMp() + MP > 30000) {
+            this.c.getPlayer().getStat().setMaxMp((short)30000);
+        } else {
+            this.c.getPlayer().getStat().setMaxMp((short)(this.c.getPlayer().getStat().getMaxMp() + MP));
+        }
+
+        statup.put(MapleStat.MAXMP, Integer.valueOf(this.c.getPlayer().getStat().getMaxMp()));
+        this.c.sendPacket(MaplePacketCreator.updatePlayerStats(statup, this.c.getPlayer()));
+    }
+
+    public int 判断兑换卡是否存在(String id) {
+        int data = 0;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT code as DATA FROM nxcodez WHERE code = ?");
+                ps.setString(1, id);
+                ResultSet rs = ps.executeQuery();
+                Throwable var7 = null;
+
+                try {
+                    if (rs.next()) {
+                        ++data;
+                    }
+                } catch (Throwable var32) {
+                    var7 = var32;
+                    throw var32;
+                } finally {
+                    if (rs != null) {
+                        if (var7 != null) {
+                            try {
+                                rs.close();
+                            } catch (Throwable var31) {
+                                var7.addSuppressed(var31);
+                            }
+                        } else {
+                            rs.close();
+                        }
+                    }
+
+                }
+            } catch (Throwable var34) {
+                var4 = var34;
+                throw var34;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var30) {
+                            var4.addSuppressed(var30);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var36) {
+            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+        }
+
+        return data;
+    }
+
+    public int 判断兑换卡类型(String code) throws SQLException {
+        int item = -1;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT `leixing` FROM nxcodez WHERE code = ?");
+                ps.setString(1, code);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    item = rs.getInt("leixing");
+                }
+
+                rs.close();
+                ps.close();
+            } catch (Throwable var15) {
+                var4 = var15;
+                throw var15;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var14) {
+                            var4.addSuppressed(var14);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var17) {
+            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+        }
+
+        return item;
+    }
+
+    public int 判断兑换卡数额(String code) throws SQLException {
+        int item = -1;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT `valid` FROM nxcodez WHERE code = ?");
+                ps.setString(1, code);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    item = rs.getInt("valid");
+                }
+
+                rs.close();
+                ps.close();
+            } catch (Throwable var15) {
+                var4 = var15;
+                throw var15;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var14) {
+                            var4.addSuppressed(var14);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var17) {
+            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+        }
+
+        return item;
+    }
+
+    public int 判断兑换卡礼包(String code) throws SQLException {
+        int item = -1;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT `itme` FROM nxcodez WHERE code = ?");
+                ps.setString(1, code);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    item = rs.getInt("itme");
+                }
+
+                rs.close();
+                ps.close();
+            } catch (Throwable var15) {
+                var4 = var15;
+                throw var15;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var14) {
+                            var4.addSuppressed(var14);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var17) {
+            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+        }
+
+        return item;
+    }
+
+    public void Deleteexchangecard(String a) {
+        PreparedStatement ps1 = null;
+        ResultSet rs = null;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var5 = null;
+
+            try {
+                ps1 = con.prepareStatement("SELECT * FROM nxcodez ");
+                rs = ps1.executeQuery();
+
+                while(rs.next()) {
+                    String sqlstr = " delete from nxcodez where code = '" + a + "' ";
+                    ps1.executeUpdate(sqlstr);
+                }
+            } catch (Throwable var15) {
+                var5 = var15;
+                throw var15;
+            } finally {
+                if (con != null) {
+                    if (var5 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var14) {
+                            var5.addSuppressed(var14);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var17) {
+        }
+
+    }
+
 }

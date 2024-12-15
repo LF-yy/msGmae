@@ -117,14 +117,9 @@ public class CheatTracker
         if (skillId == 21101003 || skillId == 5110001) {
             AtkDelay = 0;
         }
-        if (tickcount - this.lastAttackTickCount >0  && tickcount - this.lastAttackTickCount < AtkDelay) {
+        if (tickcount - this.lastAttackTickCount >0  && tickcount - this.lastAttackTickCount < AtkDelay && LtMS.ConfigValuesMap.get("攻速预设值") >= AtkDelay) {
             if (((MapleCharacter)this.chr.get()).get打怪() >= 100) {
                 if (!((MapleCharacter)this.chr.get()).hasGmLevel(1)) {
-                   // ((MapleCharacter)this.chr.get()).ban(((MapleCharacter)this.chr.get()).getName() + "攻击速度异常攻速为"+(tickcount - this.lastAttackTickCount)+"，技能：" + skillId, true, true, false);
-                    //((MapleCharacter)this.chr.get()).getClient().getSession().close();
-                    final String reason = "使用违法程式练功";
-                    //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁密语] " + ((MapleCharacter)this.chr.get()).getName() + " 因为" + reason + "攻击无延续自动封锁。"));
-                    //Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + ((MapleCharacter)this.chr.get()).getName() + " 攻击无延续自动封锁! "));
                     if (LtMS.ConfigValuesMap.get("开启封锁")> 0) {
                         if (LtMS.ConfigValuesMap.get("封停账号") > 0) {
                             if (chr.get().is超人变身()){
@@ -147,7 +142,7 @@ public class CheatTracker
             if (tickcount - this.lastAttackTickCount >0  &&  GameConstants.getWuYanChi(skillId)) {
                 //FileoutputUtil.logToFile("logs/Hack/攻击速度异常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + "\u3000技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ") check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
                 if (WorldConstants.WUYANCHI) {
-                    //Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语开加速]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语开加速]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常,速度:"+AtkDelay+"，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
                     this.noError = 0;
                     this.error = this.error+1;
                     if(this.error > LtMS.ConfigValuesMap.get("攻速异常次数")) {
@@ -173,26 +168,6 @@ public class CheatTracker
                 this.error =0;
             }
         }
-        if (((MapleCharacter)this.chr.get()).getDebugMessage()) {
-            ((MapleCharacter)this.chr.get()).dropMessage("Delay [" + skillId + "] = " + (tickcount - this.lastAttackTickCount) + ", " + (int)AtkDelay);
-        }
-//        if (WorldConstants.LieDetector) {
-//            this.lastAttackTime = System.currentTimeMillis();
-//            if (this.chr.get() != null && this.lastAttackTime - ((MapleCharacter)this.chr.get()).getChangeTime() > 60000L) {
-//                ((MapleCharacter)this.chr.get()).setChangeTime(false);
-//                if (!GameConstants.isBossMap(((MapleCharacter)this.chr.get()).getMapId()) && ((MapleCharacter)this.chr.get()).getEventInstance() == null && ((MapleCharacter)this.chr.get()).getMap().getMobsSize() >= 1) {
-//                    ++this.inMapIimeCount;
-//                    if (this.inMapIimeCount >= 30) {
-//                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 打怪时间超過 30 分鐘，該玩家可能在掛機。 "));
-//                    }
-//                    if (this.inMapIimeCount >= 30) {
-//                        this.inMapIimeCount = 0;
-//                        ((MapleCharacter)this.chr.get()).startLieDetector(false);
-//                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 打怪时间超過 30 分鐘，系統啟動測謊儀系統。 "));
-//                    }
-//                }
-//            }
-//        }
         final long STime_TC = System.currentTimeMillis() - (long)tickcount;
         if (this.Server_ClientAtkTickDiff - STime_TC > 1000L && GameConstants.getWuYanChi(skillId) && WorldConstants.WUYANCHI) {
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语延迟]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));

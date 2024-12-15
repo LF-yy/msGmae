@@ -150,7 +150,7 @@ public class CashShopOperation
                     MapleCharacterUtil.setNXCodeUsed(c.getPlayer().getName(), code);
                 }
                 catch (SQLException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
             int maplePoints = 0;
@@ -451,10 +451,10 @@ public class CashShopOperation
                 break;
             }
             case 13: {
-                final IItem item2 = c.getPlayer().getCashInventory().findByCashId((int)slea.readLong());
+                 IItem item2 = c.getPlayer().getCashInventory().findByCashId((int)slea.readLong());
                 if (item2 != null && item2.getQuantity() > 0 && MapleInventoryManipulator.checkSpace(c, item2.getItemId(), (int)item2.getQuantity(), item2.getOwner())) {
-                    final IItem item_ = item2.copy();
-                    final short pos = MapleInventoryManipulator.addbyItem(c, item_, true);
+                     IItem item_ = item2.copy();
+                     short pos = MapleInventoryManipulator.addbyItem(c, item_, true);
                     if (pos >= 0) {
                         if (item_.getPet() != null) {
                             item_.getPet().setInventoryPosition(pos);
@@ -475,17 +475,23 @@ public class CashShopOperation
                 break;
             }
             case 14: {
-                final int uniqueid = (int)slea.readLong();
-                final MapleInventoryType type2 = MapleInventoryType.getByType(slea.readByte());
-                final IItem item3 = c.getPlayer().getInventory(type2).findByUniqueId(uniqueid);
+                 int uniqueid = (int)slea.readLong();
+                 MapleInventoryType type2 = MapleInventoryType.getByType(slea.readByte());
+                 if (type2 == null){
+                     return;
+                 }
+                 IItem item3 = c.getPlayer().getInventory(type2).findByUniqueId(uniqueid);
+                 if(item3 == null || item3.getQuantity() <= 0 || item3.getUniqueId() <= 0 || c.getPlayer().getCashInventory().getItemsSize() >= 100){
+                     return;
+                 }
                 if (item3.getItemId() == 5150043 || item3.getItemId() == 5150037) {
                     RefreshCashShop(c);
                     return;
                 }
-                if (item3 != null && item3.getQuantity() > 0 && item3.getUniqueId() > 0 && c.getPlayer().getCashInventory().getItemsSize() < 100) {
-                    final IItem item_2 = item3.copy();
+                if (item3.getQuantity() > 0 && item3.getUniqueId() > 0 && c.getPlayer().getCashInventory().getItemsSize() < 100) {
+                     IItem item_2 = item3.copy();
                     c.getPlayer().getInventory(type2).removeItem(item3.getPosition(), item3.getQuantity(), false);
-                    final int sn2 = CashItemFactory.getInstance().getItemSN(item_2.getItemId());
+                     int sn2 = CashItemFactory.getInstance().getItemSN(item_2.getItemId());
                     if (item_2.getPet() != null) {
                         c.getPlayer().removePet(item_2.getPet());
                     }

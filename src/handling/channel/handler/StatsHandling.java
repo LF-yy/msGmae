@@ -1,5 +1,9 @@
 package handling.channel.handler;
 
+import gui.LtMS;
+import server.MapleItemInformationProvider;
+import server.Start;
+import snail.Marathon;
 import tools.FilePrinter;
 import constants.GameConstants;
 import client.ISkill;
@@ -183,6 +187,10 @@ public class StatsHandling
     }
     
     public static void DistributeSP(final int skillid, final MapleClient c, MapleCharacter chr) {
+        if (Marathon.isBegain() && chr.haveItem(Marathon.getItemId())) {
+            chr.dropMessage(1, "马拉松比赛正在进行中，检测到你持有 " + MapleItemInformationProvider.getInstance().getName((Integer) LtMS.ConfigValuesMap.get("马拉松比赛道具ID")) + "，无法分配技能点！");
+            chr.getClient().sendPacket(MaplePacketCreator.enableActions());
+        }
         boolean isBeginnerSkill = false;
         int remainingSp = 0;
         switch (skillid) {
@@ -300,50 +308,96 @@ public class StatsHandling
     }
     
     static int gainStatByType(MapleCharacter chr, final MapleStat type, final int gain) {
+//        if (chr != null) {
+//            short newVal = 0;
+//            if (type.equals((Object)MapleStat.STR)) {
+//                newVal = (short)(chr.getStat().getStr() + gain);
+//                if (newVal > 999) {
+//                    chr.getStat().setStr((short)999);
+//                }
+//                else {
+//                    chr.getStat().setStr(newVal);
+//                }
+//            }
+//            else if (type.equals((Object)MapleStat.INT)) {
+//                newVal = (short)(chr.getStat().getInt() + gain);
+//                if (newVal > 999) {
+//                    chr.getStat().setInt((short)999);
+//                }
+//                else {
+//                    chr.getStat().setInt(newVal);
+//                }
+//            }
+//            else if (type.equals((Object)MapleStat.LUK)) {
+//                newVal = (short)(chr.getStat().getLuk() + gain);
+//                if (newVal > 999) {
+//                    chr.getStat().setLuk((short)999);
+//                }
+//                else {
+//                    chr.getStat().setLuk(newVal);
+//                }
+//            }
+//            else if (type.equals((Object)MapleStat.DEX)) {
+//                newVal = (short)(chr.getStat().getDex() + gain);
+//                if (newVal > 999) {
+//                    chr.getStat().setDex((short)999);
+//                }
+//                else {
+//                    chr.getStat().setDex(newVal);
+//                }
+//            }
+//            if (newVal > 999) {
+//                chr.updateSingleStat(type, 999);
+//                return newVal - 999;
+//            }
+//            chr.updateSingleStat(type, (int)newVal);
+//        }
+//        return 0;
         if (chr != null) {
-            short newVal = 0;
-            if (type.equals((Object)MapleStat.STR)) {
-                newVal = (short)(chr.getStat().getStr() + gain);
-                if (newVal > 999) {
-                    chr.getStat().setStr((short)999);
-                }
-                else {
-                    chr.getStat().setStr(newVal);
-                }
+            int newVal = 0;
+            int maxVal = (Integer)LtMS.ConfigValuesMap.get("属性点最大值");
+            if (maxVal > 32767) {
+                maxVal = 32767;
             }
-            else if (type.equals((Object)MapleStat.INT)) {
+
+            if (type.equals(MapleStat.STR)) {
+                newVal = chr.getStat().getStr() + gain;
+                if (newVal > maxVal) {
+                    chr.getStat().setStr((short)maxVal);
+                } else {
+                    chr.getStat().setStr((short)newVal);
+                }
+            } else if (type.equals(MapleStat.INT)) {
                 newVal = (short)(chr.getStat().getInt() + gain);
-                if (newVal > 999) {
-                    chr.getStat().setInt((short)999);
+                if (newVal > maxVal) {
+                    chr.getStat().setInt((short)maxVal);
+                } else {
+                    chr.getStat().setInt((short)newVal);
                 }
-                else {
-                    chr.getStat().setInt(newVal);
-                }
-            }
-            else if (type.equals((Object)MapleStat.LUK)) {
+            } else if (type.equals(MapleStat.LUK)) {
                 newVal = (short)(chr.getStat().getLuk() + gain);
-                if (newVal > 999) {
-                    chr.getStat().setLuk((short)999);
+                if (newVal > maxVal) {
+                    chr.getStat().setLuk((short)maxVal);
+                } else {
+                    chr.getStat().setLuk((short)newVal);
                 }
-                else {
-                    chr.getStat().setLuk(newVal);
-                }
-            }
-            else if (type.equals((Object)MapleStat.DEX)) {
+            } else if (type.equals(MapleStat.DEX)) {
                 newVal = (short)(chr.getStat().getDex() + gain);
-                if (newVal > 999) {
-                    chr.getStat().setDex((short)999);
-                }
-                else {
-                    chr.getStat().setDex(newVal);
+                if (newVal > maxVal) {
+                    chr.getStat().setDex((short)maxVal);
+                } else {
+                    chr.getStat().setDex((short)newVal);
                 }
             }
-            if (newVal > 999) {
-                chr.updateSingleStat(type, 999);
-                return newVal - 999;
+
+            if (newVal > maxVal) {
+                chr.updateSingleStat(type, maxVal);
+                return newVal - maxVal;
             }
-            chr.updateSingleStat(type, (int)newVal);
+
+            chr.updateSingleStat(type, newVal);
         }
+
         return 0;
     }
 }

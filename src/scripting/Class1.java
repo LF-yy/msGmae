@@ -8,6 +8,7 @@ package scripting;
 import gui.服务端输出信息;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
+import tools.FileoutputUtil;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;

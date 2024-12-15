@@ -85,7 +85,7 @@ public class BankItemManager
             }
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             try {
                 if (rs != null) {
                     rs.close();
@@ -95,7 +95,7 @@ public class BankItemManager
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         finally {
@@ -138,7 +138,7 @@ public class BankItemManager
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             return ret;
         }
         finally {
@@ -148,7 +148,7 @@ public class BankItemManager
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         return ret;
@@ -164,7 +164,7 @@ public class BankItemManager
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             return ret;
         }
         finally {
@@ -174,7 +174,7 @@ public class BankItemManager
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         return ret;
@@ -193,7 +193,7 @@ public class BankItemManager
             ret = ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             return ret;
         }
         finally {
@@ -203,7 +203,7 @@ public class BankItemManager
                 }
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         return ret;
@@ -216,5 +216,10 @@ public class BankItemManager
         static {
             instance = new BankItemManager();
         }
+    }
+
+    public static void main(String[] args) {
+        byte type = (byte)(1332066/ 1000000);
+        System.out.println(type);
     }
 }

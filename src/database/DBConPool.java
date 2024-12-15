@@ -91,7 +91,7 @@ public class DBConPool
         DBConPool.dataSource.setPassword(DBConPool.dbPass);
         DBConPool.dataSource.setInitialSize(300);
         DBConPool.dataSource.setMinIdle(200);
-        DBConPool.dataSource.setMaxActive(3000);
+        DBConPool.dataSource.setMaxActive(30000);
         DBConPool.dataSource.setTimeBetweenEvictionRunsMillis(60000L);
         DBConPool.dataSource.setMinEvictableIdleTimeMillis(300000L);
         DBConPool.dataSource.setValidationQuery("SELECT * FROM characters WHERE gm < 1 LIMIT 1");
@@ -170,7 +170,7 @@ public class DBConPool
             try {
                 rs.close();
             }catch (SQLException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
         if (ps != null) {

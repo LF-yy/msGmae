@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package server.events;
+package snail;
 
 import client.MapleCharacter;
 import constants.GameConstants;

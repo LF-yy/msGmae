@@ -12,7 +12,7 @@ public enum MapleJob
     見習騎士(120), 
     騎士(121), 
     聖騎士(122), 
-    槍騎兵(130), 
+    枪騎兵(130), 
     嗜血狂騎(131), 
     黑騎士(132), 
     法師(200), 
@@ -43,11 +43,11 @@ public enum MapleJob
     打手(510), 
     格鬥家(511), 
     拳霸(512), 
-    槍手(520), 
-    神槍手(521), 
-    槍神(522), 
+    枪手(520), 
+    神枪手(521), 
+    枪神(522), 
     MANAGER(800), 
-    管理員(900), 
+    管理员(900), 
     貴族(1000), 
     聖魂劍士1轉(1100), 
     聖魂劍士2轉(1110), 
@@ -160,11 +160,11 @@ public enum MapleJob
         return job / 10 == 51;
     }
     
-    public static boolean is槍神(final int job) {
+    public static boolean is枪神(final int job) {
         return job / 10 == 52;
     }
     
-    public static boolean is管理員(final int job) {
+    public static boolean is管理员(final int job) {
         return job == 800 || job == 900 || job == 910;
     }
     
@@ -288,7 +288,24 @@ public enum MapleJob
         }
         return result;
     }
-    
+    public static int get转数(int jobid) {
+        byte result;
+        if (!is初心者(jobid) && jobid % 100 != 0 && jobid != 501 && jobid != 3101 && jobid != 508) {
+            int v1 = jobid % 10;
+            int v2;
+            if (jobid / 10 == 43) {
+                v2 = v1 / 2 + 2;
+            } else {
+                v2 = v1 + 2;
+            }
+
+            result = 0;
+        } else {
+            result = 1;
+        }
+
+        return result;
+    }
     public static boolean isJob12000(final int job) {
         boolean result = isJob12000HighLv(job);
         if (isJob12000LowLv(job) || result) {
@@ -346,8 +363,8 @@ public enum MapleJob
         if (getJobGroup(job) != getJobGroup(job2)) {
             return false;
         }
-        if (is管理員(job) || is管理員(job)) {
-            return is管理員(job2) && is管理員(job2);
+        if (is管理员(job) || is管理员(job)) {
+            return is管理员(job2) && is管理员(job2);
         }
         if (jobNum == 1 || job2Num == 1) {
             return job / 100 == job2 / 100;

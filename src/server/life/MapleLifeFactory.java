@@ -38,11 +38,29 @@ public class MapleLifeFactory
         System.err.println("Unknown Life type: " + type + "");
         return null;
     }
+
     public static void deleteStats(int mobId) {
         if (monsterStats.containsKey(mobId)) {
             monsterStats.remove(mobId);
         }
 
+    }
+
+    public static void clearStats() {
+        if (!monsterStats.isEmpty()) {
+            monsterStats.clear();
+        }
+
+    }
+
+    public static String getName(int mobId) {
+        MapleMonsterStats stats = (MapleMonsterStats)monsterStats.get(mobId);
+        if (stats == null) {
+            MapleMonster mob = getMonster(mobId);
+            return mob != null ? mob.getName() : "";
+        } else {
+            return stats.getName();
+        }
     }
     public static int getNPCLocation(final int npcid) {
         if (MapleLifeFactory.NPCLoc.containsKey((Object)Integer.valueOf(npcid))) {
@@ -76,7 +94,13 @@ public class MapleLifeFactory
             }
         }
     }
-    
+    public static void addStats(int mobId, MapleMonsterStats stats) {
+        if (monsterStats.containsKey(mobId)) {
+            monsterStats.remove(mobId);
+        }
+
+        monsterStats.put(mobId, stats);
+    }
     public static List<Integer> getQuestCount(final int id) {
         return (List<Integer>)MapleLifeFactory.questCount.get((Object)Integer.valueOf(id));
     }
@@ -94,23 +118,37 @@ public class MapleLifeFactory
             stats = new MapleMonsterStats();
             if(ListUtil.isNotEmpty(Start.mobInfoMap.get(mid))){
                 MobInfo mobInfos = Start.mobInfoMap.get(mid).get(0);
-                stats.setHp(mobInfos.getHp());
+                if(mobInfos.getHp()<0){
+                    stats.setHp((long)MapleDataTool.getIntConvert("maxHP", monsterInfoData));
+                }else {
+                    stats.setHp(mobInfos.getHp());
+                }
+
                 stats.setMp(mobInfos.getMp());
                 stats.setExp(mobInfos.getExp());
-                stats.setLevel((short)(Math.min(mobInfos.getLevel(), 260)));
-                stats.setEva((short)(Math.min(mobInfos.getEva(), 32767)));
-                stats.setPhysicalDefense((short)(Math.min(mobInfos.getDamage(),32767)));
-                stats.setMagicDefense((short)(Math.min(mobInfos.getDamage(), 32767)));
+                if(mobInfos.getLevel()<0){
+                    stats.setLevel((short)MapleDataTool.getIntConvert("level", monsterInfoData));
+                }else {
+                    stats.setLevel((short) (Math.min(mobInfos.getLevel(), 255)));
+                }
+                //stats.setEva((short)(Math.min(mobInfos.getEva(), 32767)));
+                if (mobInfos.getDamage()>0) {
+                    stats.setPhysicalDefense((short) (Math.min(mobInfos.getDamage(), 32767)));
+                    stats.setMagicDefense((short) (Math.min(mobInfos.getDamage(), 32767)));
+                }else{
+                    stats.setPhysicalDefense((short)MapleDataTool.getIntConvert("PDDamage", monsterInfoData, 0));
+                    stats.setMagicDefense((short)MapleDataTool.getIntConvert("MDDamage", monsterInfoData, 0));
+                }
             }else{
                 stats.setHp((long)MapleDataTool.getIntConvert("maxHP", monsterInfoData));
                 stats.setMp(MapleDataTool.getIntConvert("maxMP", monsterInfoData, 0));
                 stats.setExp(MapleDataTool.getIntConvert("exp", monsterInfoData, 0));
                 stats.setLevel((short)MapleDataTool.getIntConvert("level", monsterInfoData));
-                stats.setEva((short)MapleDataTool.getIntConvert("eva", monsterInfoData, 0));
                 stats.setPhysicalDefense((short)MapleDataTool.getIntConvert("PDDamage", monsterInfoData, 0));
                 stats.setMagicDefense((short)MapleDataTool.getIntConvert("MDDamage", monsterInfoData, 0));
             }
 
+            stats.setEva((short)MapleDataTool.getIntConvert("eva", monsterInfoData, 0));
             stats.setRemoveAfter(MapleDataTool.getIntConvert("removeAfter", monsterInfoData, 0));
             stats.setrareItemDropLevel((byte)MapleDataTool.getIntConvert("rareItemDropLevel", monsterInfoData, 0));//稀有物品掉落级别
             stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));//设置固定伤害

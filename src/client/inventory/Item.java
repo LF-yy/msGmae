@@ -8,7 +8,7 @@ public class Item implements IItem, Serializable
 {
     private int id;
     private short position;
-    private short quantity;
+    private short quantity=1;
     private byte flag;
     private long expiration;
     private long inventoryitemid;

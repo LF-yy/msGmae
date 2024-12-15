@@ -70,7 +70,7 @@ public class FixDropNullItem
                         pp.close();
                     }
                     catch (Exception ex) {
-                       ex.printStackTrace();
+                       //Ex.printStackTrace();
                     }
                 }
             }

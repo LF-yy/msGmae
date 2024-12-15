@@ -1,13 +1,30 @@
 package server.maps;
 
-import java.util.Iterator;
-import java.util.Collection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+import client.*;
+import client.inventory.Equip;
+import client.inventory.IItem;
+import client.inventory.ItemFlag;
+import client.inventory.MapleInventoryType;
+import constants.GameConstants;
+import constants.SkillConstants;
+import database.DBConPool;
+import gui.LtMS;
+import gui.服务端输出信息;
+import server.MapleInventoryManipulator;
+import server.MapleItemInformationProvider;
+import server.MapleStatEffect;
+import server.Start;
+import server.events.MapleEventType;
+import server.events.MapleGuildMatch;
 import server.life.MapleMonster;
 import tools.MaplePacketCreator;
 import server.life.MapleLifeFactory;
-import client.MapleStat;
-import client.MapleBuffStat;
-import client.MapleCharacter;
 import handling.channel.handler.AttackInfo;
 
 public class MaplePvp
@@ -128,177 +145,653 @@ public class MaplePvp
         MaplePvp.isRight = true;
         MaplePvp.isLeft = true;
     }
-    
-    private static void DamageBalancer(final AttackInfo attack) {
-        if (attack.skill == 0) {
-            MaplePvp.pvpDamage = 100;
-            MaplePvp.maxDis = 130;
-            MaplePvp.maxHeight = 35;
+
+    private static void DamageBalancer(MapleCharacter chr, AttackInfo attack) {
+        pvpDamage = (int)Math.floor(2.0 * Math.random() * 50.0 + 100.0);
+        maxDis = 130;
+        maxHeight = 35;
+        if (attack.skill != 0 && chr != null) {
+            int attackRate = (Integer) LtMS.ConfigValuesMap.get("PVP物理攻击技能伤害系数百分比");
+            int magicAttackRate = (Integer)LtMS.ConfigValuesMap.get("PVP魔法攻击技能伤害系数百分比");
+            ISkill skill = SkillFactory.getSkill(attack.skill);
+            if (skill != null) {
+                if (GameConstants.isPKBanSkill(skill.getId())) {
+                    pvpDamage = 0;
+                    maxDis = 0;
+                    maxHeight = 0;
+                    return;
+                }
+
+                MapleStatEffect effect = skill.getEffect(chr.getSkillLevel(skill.getId()));
+                if (effect != null) {
+                    if (effect.getLt() != null && effect.getRb() != null) {
+                        maxDis = Math.max(Math.abs(effect.getLt().x), Math.abs(effect.getRb().x));
+                        maxHeight = Math.max(Math.abs(effect.getLt().y), Math.abs(effect.getRb().y));
+                    } else if (effect.getRange() > 0) {
+                        maxDis = effect.getRange();
+                        maxHeight = effect.getRange();
+                    }
+
+                    if (SkillConstants.isMagicSkill(skill.getId())) {
+                        if (effect.getMatk() > 0) {
+                            pvpDamage += (int)((double)effect.getMatk() * ((double)magicAttackRate / 100.0));
+                        } else if (effect.getDamage() > 0) {
+                            pvpDamage += (int)((double)effect.getDamage() * ((double)magicAttackRate / 100.0));
+                        }
+                    } else if (effect.getDamage() > 0) {
+                        pvpDamage += (int)((double)effect.getDamage() * ((double)attackRate / 100.0));
+                    } else if (effect.getMatk() > 0) {
+                        pvpDamage += (int)((double)effect.getMatk() * ((double)attackRate / 100.0));
+                    }
+                }
+
+                int range;
+                ISkill skill1;
+                MapleStatEffect effect1;
+                if (skill.getId() == 4121007 || skill.getId() == 4111005 || skill.getId() == 4001344 || skill.getId() == 14111005 || skill.getId() == 14111002 || skill.getId() == 14001004) {
+                    maxDis = 220;
+                    maxHeight = 50;
+                    range = 0;
+                    if (chr.getSkillLevel(4000001) > 0) {
+                        skill1 = SkillFactory.getSkill(4000001);
+                        if (skill1 != null) {
+                            effect1 = skill1.getEffect(chr.getSkillLevel(skill1.getId()));
+                            if (effect1 != null && effect1.getRange() > 0 && effect1.getRange() > range) {
+                                range = effect1.getRange();
+                            }
+                        }
+                    }
+
+                    if (chr.getSkillLevel(14000001) > 0) {
+                        skill1 = SkillFactory.getSkill(14000001);
+                        if (skill1 != null) {
+                            effect1 = skill1.getEffect(chr.getSkillLevel(skill1.getId()));
+                            if (effect1 != null && effect1.getRange() > 0 && effect1.getRange() > range) {
+                                range = effect1.getRange();
+                            }
+                        }
+                    }
+
+                    if (range > 0) {
+                        maxDis += range;
+                        maxHeight = (int)((double)maxHeight + (double)range * 0.2);
+                    }
+                }
+
+                if (skill.getId() == 3001004 || skill.getId() == 3001005 || skill.getId() == 3101005 || skill.getId() == 3111003 || skill.getId() == 3111006 || skill.getId() == 3121003 || skill.getId() == 3121004 || skill.getId() == 3201005 || skill.getId() == 3211003 || skill.getId() == 3211006 || skill.getId() == 3221003 || skill.getId() == 3221001 || skill.getId() == 3221007 || skill.getId() == 13001003 || skill.getId() == 13101002 || skill.getId() == 13101005 || skill.getId() == 13111001 || skill.getId() == 13111002 || skill.getId() == 13111006 || skill.getId() == 13111007 || skill.getId() == 3100001 || skill.getId() == 3200001) {
+                    maxDis = 270;
+                    maxHeight = 50;
+                    range = 0;
+                    if (chr.getSkillLevel(3000002) > 0) {
+                        skill1 = SkillFactory.getSkill(3000002);
+                        if (skill1 != null) {
+                            effect1 = skill1.getEffect(chr.getSkillLevel(skill1.getId()));
+                            if (effect1 != null && effect1.getRange() > 0 && effect1.getRange() > range) {
+                                range = effect1.getRange();
+                            }
+                        }
+                    }
+
+                    if (chr.getSkillLevel(13000001) > 0) {
+                        skill1 = SkillFactory.getSkill(13000001);
+                        if (skill1 != null) {
+                            effect1 = skill1.getEffect(chr.getSkillLevel(skill1.getId()));
+                            if (effect1 != null && effect1.getRange() > 0 && effect1.getRange() > range) {
+                                range = effect1.getRange();
+                            }
+                        }
+                    }
+
+                    if (range > 0) {
+                        maxDis += range;
+                        maxHeight = (int)((double)maxHeight + (double)range * 0.2);
+                    }
+                }
+            }
         }
-        else if (isMeleeAttack(attack)) {
-            MaplePvp.maxDis = 130;
-            MaplePvp.maxHeight = 45;
-            MaplePvp.isAoe = false;
-            if (attack.skill == 4201005) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 70.0 + 5.0);
-            }
-            else if (attack.skill == 1121008) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 50.0);
-                MaplePvp.maxHeight = 50;
-            }
-            else if (attack.skill == 4221001) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 50.0);
-            }
-            else if (attack.skill == 1121006 || attack.skill == 1221007 || attack.skill == 1321003) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 50.0);
-            }
-            else {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 100.0 + 100.0);
-            }
-        }
-        else if (isRangeAttack(attack)) {
-            MaplePvp.maxDis = 300;
-            MaplePvp.maxHeight = 40;
-            MaplePvp.isAoe = false;
-            if (attack.skill == 4201005) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 5.0);
-            }
-            else if (attack.skill == 4121007) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 15.0);
-            }
-            else if (attack.skill == 4001344 || attack.skill == 2001005) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 10.0);
-            }
-            else if (attack.skill == 4221007) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 30.0);
-            }
-            else if (attack.skill == 3121004 || attack.skill == 3111006 || attack.skill == 3211006) {
-                MaplePvp.maxDis = 450;
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 30.0 + 20.0);
-            }
-            else if (attack.skill == 2121003 || attack.skill == 2221003) {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 30.0 + 30.0);
-            }
-            else {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 20.0 + 20.0);
-            }
-        }
-        else if (isAoeAttack(attack)) {
-            MaplePvp.maxDis = 350;
-            MaplePvp.maxHeight = 350;
-            MaplePvp.isAoe = true;
-            if (attack.skill == 2121001 || attack.skill == 2221001 || attack.skill == 2321001 || attack.skill == 2121006) {
-                MaplePvp.maxDis = 175;
-                MaplePvp.maxHeight = 175;
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 50.0 + 25.0);
-            }
-            else {
-                MaplePvp.pvpDamage = (int)Math.floor(Math.random() * 10.0 + 10.0);
-            }
-        }
+
     }
-    
-    private static void monsterBomb(final MapleCharacter player, final MapleCharacter attackedPlayers, final MapleMap map, final AttackInfo attack) {
-        if (attackedPlayers.getLevel() > player.getLevel() + 25) {
-            MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage * 1.35);
-        }
-        else if (attackedPlayers.getLevel() < player.getLevel() - 25) {
-            MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage / 1.35);
-        }
-        else if (attackedPlayers.getLevel() > player.getLevel() + 100) {
-            MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage * 1.5);
-        }
-        else if (attackedPlayers.getLevel() < player.getLevel() - 100) {
-            MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage / 1.5);
-        }
-        final Integer mguard = attackedPlayers.getBuffedValue(MapleBuffStat.MAGIC_GUARD);
-        final Integer mesoguard = attackedPlayers.getBuffedValue(MapleBuffStat.MESOGUARD);
-        final int magicattack = (player.getDex() + player.getInt() + player.getLuk() + player.getStr()) / 2000;
-        MaplePvp.pvpDamage += magicattack;
-        final int magicat = (player.getStat().getTotalMagic() + player.getStat().getTotalWatk()) / 1000;
-        MaplePvp.pvpDamage += magicat;
-        if (MaplePvp.pvpDamage > 500) {//pvp限制伤害
-            MaplePvp.pvpDamage = 500;
-        }
-        if (mguard != null) {
-            final int mploss = (int)((double)MaplePvp.pvpDamage / 0.5);
-            MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage * 0.7);
-            if (mploss > attackedPlayers.getStat().getMp()) {
-                MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage / 0.7);
-                attackedPlayers.cancelEffectFromBuffStat(MapleBuffStat.MAGIC_GUARD);
-            }
-            else {
-                attackedPlayers.setMp(attackedPlayers.getStat().getMp() - mploss);
-                attackedPlayers.updateSingleStat(MapleStat.MP, (int)attackedPlayers.getStat().getMp());
-            }
-        }
-        else if (mesoguard != null) {
-            final int mesoloss = (int)((double)MaplePvp.pvpDamage * 0.75);
-            MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage * 0.75);
-            if (mesoloss > attackedPlayers.getMeso()) {
-                MaplePvp.pvpDamage = (int)((double)MaplePvp.pvpDamage / 0.75);
-                attackedPlayers.cancelEffectFromBuffStat(MapleBuffStat.MESOGUARD);
-            }
-            else {
-                attackedPlayers.gainMeso(-mesoloss, false);
-            }
-        }
-        final MapleMonster pvpMob = MapleLifeFactory.getMonster(9400711);
-        map.spawnMonsterOnGroundBelow(pvpMob, attackedPlayers.getPosition());
-        for (int attacks = 0; attacks < attack.hits; ++attacks) {
-            if (attack.skill == 0) {
-                map.broadcastMessage(MaplePacketCreator.damagePlayer(1, pvpMob.getId(), attackedPlayers.getId(), MaplePvp.pvpDamage, 0, (byte)0, 0, false, pvpMob.getObjectId(), (int)pvpMob.getPosition().getX(), (int)pvpMob.getPosition().getY()));
-                attackedPlayers.addHP(-MaplePvp.pvpDamage);
-            }
-            else {
-                map.broadcastMessage(MaplePacketCreator.damagePlayer(1, pvpMob.getId(), attackedPlayers.getId(), MaplePvp.pvpDamage * attackedPlayers.getLevel(), 0, (byte)0, 0, false, pvpMob.getObjectId(), (int)pvpMob.getPosition().getX(), (int)pvpMob.getPosition().getY()));
-                attackedPlayers.addHP(-MaplePvp.pvpDamage * attackedPlayers.getLevel());
-            }
-        }
-        int attackedDamage = 0;
-        if (attack.skill == 0) {
-            attackedDamage = MaplePvp.pvpDamage * attack.hits * attackedPlayers.getLevel();
-        }
-        else {
-            attackedDamage = MaplePvp.pvpDamage * attack.hits * attackedPlayers.getLevel();
-        }
-        attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice(player.getName() + " 打了 " + attackedDamage + " 點的伤害!"));
-        map.killMonster(pvpMob, player, false, false, (byte)(-1));
-        if (attackedPlayers.getStat().getHp() <= 0 && !attackedPlayers.isAlive()) {
-            int expReward = attackedPlayers.getLevel() * 100;
-            final int gpReward = (int)Math.floor(Math.random() * 150.0 + 50.0);
-            if ((double)player.getLevel() * 0.25 >= (double)player.getLevel()) {
-                expReward *= 20;
-            }
-            attackedPlayers.getClient().getPlayer().setBossLog1("pvp积分");
-            int pvp积分 = attackedPlayers.getClient().getPlayer().getBossLog1("pvp积分");
-            player.getClient().sendPacket(MaplePacketCreator.getErrorNotice("你殺了 " + attackedPlayers.getName() + "!!获得了1点决斗积分,当前积分为"+pvp积分+"点"));
-            attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("無情的" + player.getName() + "殺了你"));
-            final int random = (int)Math.floor(Math.random() * 100000.0);
-            if (attackedPlayers.getMeso() >= random) {
-                attackedPlayers.getMap().spawnMesoDrop(random, attackedPlayers.getPosition(), (MapleMapObject)attackedPlayers, attackedPlayers, false, (byte)0);
-                attackedPlayers.gainMeso(-random, true);
-                attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("無情的" + player.getName() + "殺了你 你損失了" + random + "元!"));
-            }
-            else {
-                attackedPlayers.dropMessage("[系統警告] 您的金币已經不足，請馬上離開。");
-                player.dropMessage("[系統警告] 請不要再殘害他，對方金币已耗盡。");
+
+    private static void monsterBomb(MapleCharacter player, MapleCharacter attackedPlayers, MapleMap map, AttackInfo attack) {
+        if (!player.getName().equals(attackedPlayers.getName())) {
+            if (!GameConstants.isPKPartyMap(player.getMapId()) || player.getParty() == null || attackedPlayers.getParty() == null || player.getParty().getId() != attackedPlayers.getParty().getId()) {
+                if (!GameConstants.isPKGuildMap(player.getMapId()) || player.getGuildId() <= 0 || attackedPlayers.getGuildId() <= 0 || player.getGuildId() != attackedPlayers.getGuildId()) {
+                    if (!GameConstants.isPKGuildChannel(player.getClient().getChannel()) || GameConstants.isPKPlayerMap(player.getMapId()) || GameConstants.isPKPartyMap(player.getMapId()) || player.getGuildId() <= 0 || attackedPlayers.getGuildId() <= 0 || player.getGuildId() != attackedPlayers.getGuildId()) {
+                        if (attackedPlayers.getLevel() > player.getLevel() + 25) {
+                            pvpDamage = (int)((double)pvpDamage * 1.35);
+                        } else if (attackedPlayers.getLevel() < player.getLevel() - 25) {
+                            pvpDamage = (int)((double)pvpDamage / 1.35);
+                        } else if (attackedPlayers.getLevel() > player.getLevel() + 100) {
+                            pvpDamage = (int)((double)pvpDamage * 1.5);
+                        } else if (attackedPlayers.getLevel() < player.getLevel() - 100) {
+                            pvpDamage = (int)((double)pvpDamage / 1.5);
+                        }
+
+                        Integer mguard = attackedPlayers.getBuffedValue(MapleBuffStat.MAGIC_GUARD);
+                        Integer mesoguard = attackedPlayers.getBuffedValue(MapleBuffStat.MESOGUARD);
+                        int magicattack = (player.getDex() + player.getInt() + player.getLuk() + player.getStr()) / 300;
+                        pvpDamage += magicattack;
+                        int magicat = (player.getStat().getTotalMagic() + player.getStat().getTotalWatk()) / 100;
+                        pvpDamage += magicat;
+                        if ((Integer)LtMS.ConfigValuesMap.get("PVP根据战斗力计算伤害开关") > 0) {
+                            damageBalanceByPower(player, attackedPlayers);
+                        }
+
+                        if (pvpDamage > 99999) {
+                            pvpDamage = 99999;
+                        }
+
+                        int mesoloss;
+                        if (mguard != null) {
+                            mesoloss = (int)((double)pvpDamage / 0.5);
+                            pvpDamage = (int)((double)pvpDamage * 0.7);
+                            if (mesoloss > attackedPlayers.getStat().getMp()) {
+                                pvpDamage = (int)((double)pvpDamage / 0.7);
+                                attackedPlayers.cancelEffectFromBuffStat(MapleBuffStat.MAGIC_GUARD);
+                            } else {
+                                attackedPlayers.setMp(attackedPlayers.getStat().getMp() - mesoloss);
+                                attackedPlayers.updateSingleStat(MapleStat.MP, attackedPlayers.getStat().getMp());
+                            }
+                        } else if (mesoguard != null) {
+                            mesoloss = (int)((double)pvpDamage * 0.75);
+                            pvpDamage = (int)((double)pvpDamage * 0.75);
+                            if (mesoloss > attackedPlayers.getMeso()) {
+                                pvpDamage = (int)((double)pvpDamage / 0.75);
+                                attackedPlayers.cancelEffectFromBuffStat(MapleBuffStat.MESOGUARD);
+                            } else {
+                                attackedPlayers.gainMeso((-mesoloss), false);
+                            }
+                        }
+
+                        mesoloss = getBalanceRatio(player.getJob());
+                        pvpDamage = pvpDamage * mesoloss / 100;
+                        MapleMonster pvpMob = MapleLifeFactory.getMonster(9400711);
+                        map.spawnMonsterOnGroundBelow(pvpMob, attackedPlayers.getPosition());
+
+                        int attackedDamage;
+                        for(attackedDamage = 0; attackedDamage < attack.hits; ++attackedDamage) {
+                            attackedPlayers.addHP(-pvpDamage);
+                        }
+
+                        attackedDamage = pvpDamage;
+                        attackedDamage = pvpDamage * attack.hits;
+                        if (pvpMob != null) {
+                            pvpMob.sendYellowDamage((long)attackedDamage, false);
+                        }
+
+                        attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice(player.getName() + " 打了 " + attackedDamage + " 点的伤害!"));
+                        map.killMonster(pvpMob, player, false, false, (byte)-1);
+                        if (attackedPlayers.getStat().getHp() <= 0 && !attackedPlayers.isAlive()) {
+                            int expReward = attackedPlayers.getLevel() * (Integer)LtMS.ConfigValuesMap.get("PK击败得到经验系数");
+                            int gpReward = (int)Math.floor(Math.random() * 150.0 + 50.0);
+                            if ((double)player.getLevel() * 0.25 >= (double)player.getLevel()) {
+                                expReward *= 20;
+                            }
+
+                            if (expReward > 0) {
+                                player.gainExp(expReward, true, true, true);
+                            }
+
+                            player.getClient().sendPacket(MaplePacketCreator.getErrorNotice("你杀了 " + attackedPlayers.getName() + "!! !"));
+                            attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("无情的" + player.getName() + "杀了你"));
+                            MapleGuildMatch guildEvent = (MapleGuildMatch)player.getClient().getChannelServer().getEvent(MapleEventType.家族对抗赛);
+                            if (guildEvent != null && guildEvent.isBegain() && guildEvent.getTimeLeft() > 0L && guildEvent.containMapId(player.getMapId())) {
+                                guildEvent.addPoints(player.getGuildId(), (Integer)LtMS.ConfigValuesMap.get("家族对抗赛_击败玩家获得积分"));
+                                guildEvent.addPoints(attackedPlayers.getGuildId(), -(Integer)LtMS.ConfigValuesMap.get("家族对抗赛_被击败玩家扣除积分"));
+                            }
+
+                            boolean isDropedItem = false;
+                            int random;
+                            int mount;
+                            if ((Integer)LtMS.ConfigValuesMap.get("PK死亡掉落装备开关") > 0) {
+                                ArrayList existDropEquipList;
+                                ArrayList existDropConsumeList;
+                                ArrayList existDropInstallList;
+                                ArrayList existDropEtcList;
+                                ArrayList existDropCashList;
+                                short i;
+                               // Equip source;
+                                int index0;
+                                int count;
+                                long dropMount;
+                                Iterator var26;
+                                Map.Entry entry;
+                                ArrayList indexList;
+                                short index1;
+                                IItem source;
+                                HashMap ret;
+                                if (Math.random() * 100.0 < (double)(Integer)LtMS.ConfigValuesMap.get("PK死亡掉落装备概率")) {
+                                    existDropEquipList = new ArrayList();
+                                    existDropConsumeList = new ArrayList();
+                                    existDropInstallList = new ArrayList();
+                                    existDropEtcList = new ArrayList();
+                                    existDropCashList = new ArrayList();
+                                    i = 1;
+
+                                    while(true) {
+                                        if (i > 96) {
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.USE).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropConsumeList.add(i);
+                                                }
+                                            }
+
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.SETUP).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropInstallList.add(i);
+                                                }
+                                            }
+
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.ETC).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropEtcList.add(i);
+                                                }
+                                            }
+
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.CASH).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropCashList.add(i);
+                                                }
+                                            }
+
+                                            ret = new HashMap();
+                                            if (existDropEquipList.size() > 0) {
+                                                ret.put("EQUIP", existDropEquipList);
+                                            }
+
+                                            if (existDropConsumeList.size() > 0) {
+                                                ret.put("CONSUME", existDropConsumeList);
+                                            }
+
+                                            if (existDropInstallList.size() > 0) {
+                                                ret.put("INSTALL", existDropInstallList);
+                                            }
+
+                                            if (existDropEtcList.size() > 0) {
+                                                ret.put("ETC", existDropEtcList);
+                                            }
+
+                                            if (existDropCashList.size() > 0) {
+                                                ret.put("CASH", existDropCashList);
+                                            }
+
+                                            if (ret.size() <= 0) {
+                                                break;
+                                            }
+
+                                            index0 = (new Random()).nextInt(ret.size());
+                                            count = 0;
+                                            dropMount = (long)((new Random()).nextInt((Integer)LtMS.ConfigValuesMap.get("PK掉落道具最大数量") - (Integer)LtMS.ConfigValuesMap.get("PK掉落道具最小数量")) + (Integer)LtMS.ConfigValuesMap.get("PK掉落道具最小数量"));
+
+                                            for(var26 = ret.entrySet().iterator(); var26.hasNext(); ++count) {
+                                                entry = (Map.Entry)var26.next();
+                                                if (index0 == count) {
+                                                    indexList = (ArrayList)entry.getValue();
+                                                    index1 = (Short)indexList.get((new Random()).nextInt(indexList.size()));
+                                                    if (((String)entry.getKey()).equals("EQUIP")) {
+                                                        source = (Equip)attackedPlayers.getInventory(MapleInventoryType.EQUIP).getItem(index1);
+                                                        if (source.getQuantity() < dropMount) {
+                                                            dropMount = source.getQuantity();
+                                                        }
+
+                                                        MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.EQUIP, index1, source.getQuantity());
+                                                    } else if (((String)entry.getKey()).equals("CONSUME")) {
+                                                        source = attackedPlayers.getInventory(MapleInventoryType.USE).getItem(index1);
+                                                        if (source.getQuantity() < dropMount) {
+                                                            dropMount = source.getQuantity();
+                                                        }
+
+                                                        MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.USE, index1, source.getQuantity());
+                                                    } else if (((String)entry.getKey()).equals("INSTALL")) {
+                                                        source = attackedPlayers.getInventory(MapleInventoryType.SETUP).getItem(index1);
+                                                        if (source.getQuantity() < dropMount) {
+                                                            dropMount = source.getQuantity();
+                                                        }
+
+                                                        MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.SETUP, index1, source.getQuantity());
+                                                    } else if (((String)entry.getKey()).equals("ETC")) {
+                                                        source = attackedPlayers.getInventory(MapleInventoryType.ETC).getItem(index1);
+                                                        if (source.getQuantity() < dropMount) {
+                                                            dropMount = source.getQuantity();
+                                                        }
+
+                                                        MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.ETC, index1, source.getQuantity());
+                                                    } else if (((String)entry.getKey()).equals("CASH")) {
+                                                        source = attackedPlayers.getInventory(MapleInventoryType.CASH).getItem(index1);
+                                                        if (source.getQuantity() < dropMount) {
+                                                            dropMount = source.getQuantity();
+                                                        }
+
+                                                        MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.CASH, index1, source.getQuantity());
+                                                    }
+
+                                                    attackedPlayers.dropMessage(5, "[PK警告] 您身上的一件道具掉落了出来。");
+                                                    player.dropMessage(5, "[PK提示] 对方的一件道具被你打掉了。");
+                                                }
+                                            }
+
+                                            isDropedItem = true;
+                                            break;
+                                        }
+
+                                        source = (Equip)attackedPlayers.getInventory(MapleInventoryType.EQUIP).getItem(i);
+                                        if (source != null && GameConstants.isPKDropItem(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                            existDropEquipList.add(i);
+                                        }
+
+                                        ++i;
+                                    }
+                                }
+
+                                if (Math.random() * 100.0 < (double)(Integer)LtMS.ConfigValuesMap.get("PK死亡掉落装备概率2")) {
+                                    existDropEquipList = new ArrayList();
+                                    existDropConsumeList = new ArrayList();
+                                    existDropInstallList = new ArrayList();
+                                    existDropEtcList = new ArrayList();
+                                    existDropCashList = new ArrayList();
+                                    i = 1;
+
+                                    while(true) {
+                                        if (i > 96) {
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.USE).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem2(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropConsumeList.add(i);
+                                                }
+                                            }
+
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.SETUP).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem2(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropInstallList.add(i);
+                                                }
+                                            }
+
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.ETC).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem2(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropEtcList.add(i);
+                                                }
+                                            }
+
+                                            for(i = 1; i <= 96; ++i) {
+                                                source = attackedPlayers.getInventory(MapleInventoryType.CASH).getItem(i);
+                                                if (source != null && GameConstants.isPKDropItem2(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                                    existDropCashList.add(i);
+                                                }
+                                            }
+
+                                            ret = new HashMap();
+                                            if (existDropEquipList.size() > 0) {
+                                                ret.put("EQUIP", existDropEquipList);
+                                            }
+
+                                            if (existDropConsumeList.size() > 0) {
+                                                ret.put("CONSUME", existDropConsumeList);
+                                            }
+
+                                            if (existDropInstallList.size() > 0) {
+                                                ret.put("INSTALL", existDropInstallList);
+                                            }
+
+                                            if (existDropEtcList.size() > 0) {
+                                                ret.put("ETC", existDropEtcList);
+                                            }
+
+                                            if (existDropCashList.size() > 0) {
+                                                ret.put("CASH", existDropCashList);
+                                            }
+
+                                            if (ret.size() > 0) {
+                                                index0 = (new Random()).nextInt(ret.size());
+                                                count = 0;
+                                                dropMount = (long)((new Random()).nextInt((Integer)LtMS.ConfigValuesMap.get("PK掉落道具最大数量") - (Integer)LtMS.ConfigValuesMap.get("PK掉落道具最小数量")) + (Integer)LtMS.ConfigValuesMap.get("PK掉落道具最小数量"));
+
+                                                for(var26 = ret.entrySet().iterator(); var26.hasNext(); ++count) {
+                                                    entry = (Map.Entry)var26.next();
+                                                    if (index0 == count) {
+                                                        indexList = (ArrayList)entry.getValue();
+                                                        index1 = (Short)indexList.get((new Random()).nextInt(indexList.size()));
+                                                        if (((String)entry.getKey()).equals("EQUIP")) {
+                                                            source = (Equip)attackedPlayers.getInventory(MapleInventoryType.EQUIP).getItem(index1);
+                                                            if (source.getQuantity() < dropMount) {
+                                                                dropMount = source.getQuantity();
+                                                            }
+
+                                                            MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.EQUIP, index1, source.getQuantity());
+                                                        } else if (((String)entry.getKey()).equals("CONSUME")) {
+                                                            source = attackedPlayers.getInventory(MapleInventoryType.USE).getItem(index1);
+                                                            if (source.getQuantity() < dropMount) {
+                                                                dropMount = source.getQuantity();
+                                                            }
+
+                                                            MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.USE, index1, source.getQuantity());
+                                                        } else if (((String)entry.getKey()).equals("INSTALL")) {
+                                                            source = attackedPlayers.getInventory(MapleInventoryType.SETUP).getItem(index1);
+                                                            if (source.getQuantity() < dropMount) {
+                                                                dropMount = source.getQuantity();
+                                                            }
+
+                                                            MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.SETUP, index1, source.getQuantity());
+                                                        } else if (((String)entry.getKey()).equals("ETC")) {
+                                                            source = attackedPlayers.getInventory(MapleInventoryType.ETC).getItem(index1);
+                                                            if (source.getQuantity() < dropMount) {
+                                                                dropMount = source.getQuantity();
+                                                            }
+
+                                                            MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.ETC, index1, source.getQuantity());
+                                                        } else if (((String)entry.getKey()).equals("CASH")) {
+                                                            source = attackedPlayers.getInventory(MapleInventoryType.CASH).getItem(index1);
+                                                            if (source.getQuantity() < dropMount) {
+                                                                dropMount = source.getQuantity();
+                                                            }
+
+                                                            MapleInventoryManipulator.drop(attackedPlayers.getClient(), MapleInventoryType.CASH, index1, source.getQuantity());
+                                                        }
+
+                                                        attackedPlayers.dropMessage(5, "[PK警告] 您身上的一件道具掉落了出来。");
+                                                        player.dropMessage(5, "[PK提示] 对方的一件道具被你打掉了。");
+                                                    }
+                                                }
+                                            }
+
+                                            isDropedItem = true;
+                                            break;
+                                        }
+
+                                        source = (Equip)attackedPlayers.getInventory(MapleInventoryType.EQUIP).getItem(i);
+                                        if (source != null && GameConstants.isPKDropItem2(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
+                                            existDropEquipList.add(i);
+                                        }
+
+                                        ++i;
+                                    }
+                                }
+
+                                if (!isDropedItem) {
+                                    random = (int)Math.floor((double)(Integer)LtMS.ConfigValuesMap.get("PK掉落金币最小数量") + Math.random() * (double)((Integer)LtMS.ConfigValuesMap.get("PK掉落金币最大数量") - (Integer)LtMS.ConfigValuesMap.get("PK掉落金币最小数量")));
+                                    if (attackedPlayers.getMeso() >= random) {
+                                        attackedPlayers.getMap().spawnMesoDrop(random, attackedPlayers.getPosition(), attackedPlayers, attackedPlayers, false, (byte)0);
+                                        attackedPlayers.gainMeso((-random), true);
+                                        attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("无情的" + player.getName() + "杀了你 你损失了" + random + "金币!"));
+                                    } else if (attackedPlayers.getMeso() > 0) {
+                                        mount = attackedPlayers.getMeso();
+                                        attackedPlayers.getMap().spawnMesoDrop(mount, attackedPlayers.getPosition(), attackedPlayers, attackedPlayers, false, (byte)0);
+                                        attackedPlayers.gainMeso((-mount), true);
+                                        attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("无情的" + player.getName() + "杀了你 你损失了" + mount + "金币!"));
+                                    } else {
+                                        attackedPlayers.dropMessage("[系统警告] 您已经被搜刮的一穷二白了，光脚的不怕穿鞋的，干就完了。");
+                                        player.dropMessage("[系统警告] 请不要再残害他，对方已被你榨干了。");
+                                    }
+                                }
+                            } else {
+                                random = (int)Math.floor((double)(Integer)LtMS.ConfigValuesMap.get("PK掉落金币最小数量") + Math.random() * (double)((Integer)LtMS.ConfigValuesMap.get("PK掉落金币最大数量") - (Integer)LtMS.ConfigValuesMap.get("PK掉落金币最小数量")));
+                                if (attackedPlayers.getMeso() >= random) {
+                                    attackedPlayers.getMap().spawnMesoDrop(random, attackedPlayers.getPosition(), attackedPlayers, attackedPlayers, false, (byte)0);
+                                    attackedPlayers.gainMeso((-random), true);
+                                    attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("无情的" + player.getName() + "杀了你 你损失了" + random + "金币!"));
+                                } else if (attackedPlayers.getMeso() > 0) {
+                                    mount = attackedPlayers.getMeso();
+                                    attackedPlayers.getMap().spawnMesoDrop(mount, attackedPlayers.getPosition(), attackedPlayers, attackedPlayers, false, (byte)0);
+                                    attackedPlayers.gainMeso((-mount), true);
+                                    attackedPlayers.getClient().sendPacket(MaplePacketCreator.getErrorNotice("无情的" + player.getName() + "杀了你 你损失了" + mount + "金币!"));
+                                } else {
+                                    attackedPlayers.dropMessage("[系统警告] 您已经被搜刮的一穷二白了，光脚的不怕穿鞋的，干就完了。");
+                                    player.dropMessage("[系统警告] 请不要再残害他，对方已被你榨干了。");
+                                }
+                            }
+                        }
+
+                    }
+                }
             }
         }
     }
 
 
     //pvp对战
-    public static void doPvP(final MapleCharacter player, final MapleMap map, final AttackInfo attack) {
-        DamageBalancer(attack);
+    public static void doPvP(MapleCharacter player, MapleMap map, AttackInfo attack) {
+        DamageBalancer(player, attack);
         getDirection(attack);
-        for (final MapleCharacter attackedPlayers : player.getMap().getNearestPvpChar(player.getPosition(), (double)MaplePvp.maxDis, (double)MaplePvp.maxHeight, (Collection<MapleCharacter>)player.getMap().getCharacters())) {
-            if (attackedPlayers.getLevel() >= 70 && attackedPlayers.isAlive() && (player.getParty() == null || player.getParty() != attackedPlayers.getParty())) {
-                monsterBomb(player, attackedPlayers, map, attack);
+        Iterator var3 = player.getMap().getNearestPvpChar(player.getPosition(), (double)maxDis, (double)maxHeight, player.getMap().getCharacters()).iterator();
+
+        while(true) {
+            while(true) {
+                MapleCharacter attackedPlayers;
+                do {
+                    do {
+                        do {
+                            if (!var3.hasNext()) {
+                                return;
+                            }
+
+                            attackedPlayers = (MapleCharacter)var3.next();
+                        } while(attackedPlayers.getLevel() < 30);
+                    } while(!attackedPlayers.isAlive());
+                } while(player.getParty() != null && player.getParty() == attackedPlayers.getParty());
+
+                MapleGuildMatch guildEvent = (MapleGuildMatch)player.getClient().getChannelServer().getEvent(MapleEventType.家族对抗赛);
+                if (guildEvent != null && guildEvent.isBegain() && guildEvent.getTimeLeft() > 0L && guildEvent.containMapId(player.getMapId())) {
+                    if (player.getGuildId() != attackedPlayers.getGuildId()) {
+                        monsterBomb(player, attackedPlayers, map, attack);
+                    }
+                } else {
+                    monsterBomb(player, attackedPlayers, map, attack);
+                }
             }
         }
     }
-    
+
+    public static void damageBalanceByPower(MapleCharacter player, MapleCharacter attackedPlayer) {
+        double rate = Math.sqrt((double)player.getPower() / (double)attackedPlayer.getPower());
+        pvpDamage = (int)((double)pvpDamage * rate);
+        if (pvpDamage < 0) {
+            pvpDamage = 0;
+        }
+
+        if (pvpDamage > 0) {
+            int def0 = player.getStat().wdef + player.getStat().mdef;
+            int def1 = attackedPlayer.getStat().wdef + attackedPlayer.getStat().mdef;
+            if (def1 > def0) {
+                rate = (double)def0 / (double)def1;
+                pvpDamage = (int)((double)pvpDamage * 0.4 + (double)pvpDamage * rate * 0.6);
+            }
+
+            int acc = player.getStat().accuracy;
+            int avoid = attackedPlayer.getStat().avoid;
+            if (avoid > acc) {
+                int a = (int)((1.0 - (double)acc / (double)avoid) * 10000.0);
+                if (a > 7000) {
+                    a = 7000;
+                }
+
+                if (Math.random() * 10000.0 < (double)a) {
+                    pvpDamage = 0;
+                }
+            }
+
+            if (pvpDamage > 0) {
+                Map<ISkill, SkillEntry> skillMap = attackedPlayer.getSkills();
+                Iterator var9 = skillMap.entrySet().iterator();
+
+                while(true) {
+                    ISkill skill;
+                    do {
+                        do {
+                            if (!var9.hasNext()) {
+                                return;
+                            }
+
+                            Map.Entry<ISkill, SkillEntry> key = (Map.Entry)var9.next();
+                            skill = (ISkill)key.getKey();
+                        } while(skill == null);
+                    } while(skill.getId() != 4120002 && skill.getId() != 4220002);
+
+                    if (Math.random() * 100.0 < (double)(skill.getEffect(attackedPlayer.getSkillLevel(skill)).getProb() / 2)) {
+                        attackedPlayer.dropMessage(5, "假动作生效，你成功躲避了对手的攻击！");
+                        attackedPlayer.sendSkillEffect(skill.getId(), 2);
+                        pvpDamage = 0;
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+
+    public static Map<Integer, Integer> jobBalanceMap = new HashMap();
+    public static boolean loadJobBalanceMapFromDB() {
+        jobBalanceMap.clear();
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var1 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_pk_job_balance");
+                ResultSet rs = ps.executeQuery();
+
+                while(rs.next()) {
+                    jobBalanceMap.put(rs.getInt("jobid"), rs.getInt("ratio"));
+                }
+
+                ps.close();
+                rs.close();
+                return true;
+            } catch (Throwable var12) {
+                var1 = var12;
+                throw var12;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var11) {
+                            var1.addSuppressed(var11);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var14) {
+            服务端输出信息.println_err("【错误】loadJobBalanceMapFromDB错误，错误原因：" + var14);
+            var14.printStackTrace();
+            return false;
+        }
+    }
+    public static int getBalanceRatio(int jobId) {
+        if (jobBalanceMap.size() == 0) {
+            loadJobBalanceMapFromDB();
+        }
+
+        return (Integer)jobBalanceMap.get(jobId);
+    }
     static {
         MaplePvp.isAoe = false;
         MaplePvp.isLeft = false;

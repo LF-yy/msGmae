@@ -10,18 +10,21 @@ import gui.LtMS;
 import gui.服务端输出信息;
 import scripting.NPCConversationManager;
 import scripting.ReactorScriptManager;
-import server.ShutdownServer;
-import server.Start;
+import server.*;
+import server.life.MapleLifeFactory;
 import server.life.MapleMonsterInformationProvider;
 import handling.world.family.MapleFamilyCharacter;
 import handling.world.family.MapleFamily;
 import handling.world.guild.MapleGuildAlliance;
 
+import java.awt.*;
 import java.util.*;
 
 import handling.world.guild.MapleGuildSummary;
 import handling.world.guild.MapleBBSThread;
 import handling.world.guild.MapleGuildCharacter;
+
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import handling.world.guild.MapleGuild;
 import client.BuddyList.BuddyAddResult;
@@ -35,16 +38,16 @@ import java.sql.SQLException;
 import server.maps.MapleMapObject;
 import server.shops.HiredMerchant;
 import server.shops.IMaplePlayerShop;
+import snail.TimeLogCenter;
 import tools.*;
 import database.DBConPool;
 import java.util.concurrent.atomic.AtomicInteger;
-import server.Randomizer;
+
 import server.Timer.EventTimer;
 import tools.packet.PetPacket;
 import client.inventory.MapleInventoryType;
 import client.inventory.PetDataFactory;
 import client.inventory.MaplePet;
-import server.ServerProperties;
 import client.status.MonsterStatusEffect;
 import server.life.MapleMonster;
 import server.maps.MapleMapItem;
@@ -62,7 +65,16 @@ public class World
 {
     public static boolean isShutDown;
     public static boolean isShopShutDown;
-    private static ArrayList<Integer> outsideMap = new ArrayList();
+
+    private static long lastSuccessTime = 0L;
+    private static long lastSuccessTimeI = 0L;
+    private static long oldTime = 0L;
+    public static ArrayList<Pair<MapleMonster, MapleMap>> bossAndMapRecord = new ArrayList<>();
+    private static ArrayList<Pair<Integer, Integer>> outsideBoss = new ArrayList<>();
+    private static ArrayList<Integer> outsideMap = new ArrayList<>();
+
+    private static ArrayList<MapleMonster> durationMonsterList = new ArrayList<>();
+
     public static ArrayList<Integer> getOutsideMap() {
         return outsideMap;
     }
@@ -79,6 +91,9 @@ public class World
         final StringBuilder ret = new StringBuilder();
         int totalUsers = 0;
         for (final ChannelServer cs : ChannelServer.getAllInstances()) {
+            for (MapleMap mapleMap : cs.getMapFactory().getAllMapThreadSafe()) {
+                mapleMap.地图回收();
+            }
             ret.append("頻道 ");
             ret.append(cs.getChannel());
             ret.append(": ");
@@ -113,9 +128,6 @@ public class World
         ret.put(Integer.valueOf(0), Integer.valueOf(total));
         return ret;
     }
-
-    private static ArrayList<MapleMonster> durationMonsterList = new ArrayList();
-
     public static void addDurationMonster(MapleMonster mob) {
         if (mob != null && mob.getDuration() > 0L) {
             durationMonsterList.add(mob);
@@ -279,7 +291,7 @@ public class World
                                     mons.cancelSingleStatus(mse);
                                 }
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                ////e.printStackTrace();
                             }
                         }
                     }
@@ -1731,24 +1743,17 @@ public class World
         @Override
         public void run() {
             ++this.numTimes;
-            ChannelServer.getAllInstances().parallelStream().forEach(cserv -> {
+            ChannelServer.getAllInstances().forEach(cserv -> {
                 Collection<MapleMap> maps = cserv.getMapFactory().getAllMapThreadSafe();
-                maps.parallelStream().forEach(map -> {
+                maps.forEach(map -> {
                     World.handleMap(map, this.numTimes, map.getCharactersSize());
                 });
 
-//                for (final MapleMap map : maps) {
-//                    World.handleMap(map, this.numTimes, map.getCharactersSize());
-//                }
                 if (LtMS.ConfigValuesMap.get("开启双线刷怪")>0) {
-                    maps = cserv.getMapFactory().getAllInstanceMaps();
-                    maps.parallelStream().forEach(map -> {
+                    cserv.getMapFactory().getAllInstanceMaps().forEach(map -> {
                         World.handleMap(map, this.numTimes, map.getCharactersSize());
                     });
                 }
-//                for (final MapleMap map : maps) {
-//                    World.handleMap(map, this.numTimes, map.getCharactersSize());
-//                }
             });
 //            for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
 //                Collection<MapleMap> maps = cserv.getMapFactory().getAllMapThreadSafe();
@@ -1760,7 +1765,7 @@ public class World
 //                    World.handleMap(map, this.numTimes, map.getCharactersSize());
 //                }
 //            }
-            if (this.numTimes % 2400 == 0) {
+            if (this.numTimes % 4800 == 0) {
                 MapleMonsterInformationProvider.getInstance().clearDrops();
                 ReactorScriptManager.getInstance().clearDrops();
             }
@@ -2303,4 +2308,102 @@ public class World
             return false;
         }
     }
+
+
+
+    public static ArrayList<Pair<Integer, Integer>> getOutsideBossSQL() {
+        outsideBoss.clear();
+        Connection con = DBConPool.getConnection();
+
+        try {
+            PreparedStatement ps = con.prepareStatement("SELECT  * FROM snail_outside_boss");
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                outsideBoss.add(new Pair(rs.getInt("mobid"), rs.getInt("point")));
+            }
+        } catch (SQLException var3) {
+            服务端输出信息.println_err("getOutsideBoss 错误，错误原因：" + var3);
+        }
+
+        return outsideBoss;
+    }
+    public static void outsideBoss(int min) {
+        WorldTimer.getInstance().register(new Runnable() {
+            public void run() {
+                long interval = (long)((Integer)LtMS.ConfigValuesMap.get("随机野外BOSS刷新时间") * 60 * 1000);
+                int mobMount = (Integer)LtMS.ConfigValuesMap.get("随机野外BOSS刷新数量");
+                if (mobMount != 0 && interval != 0L) {
+                    int i;
+                    if (World.oldTime == 0L) {
+                        ArrayList<Pair<Integer, Integer>> boss = World.getOutsideBossSQL();
+                        ArrayList<Integer> maps = World.getOutsideMapSQL();
+                        if (boss.isEmpty() || maps.isEmpty()) {
+                            return;
+                        }
+
+                        i = 0;
+
+                        while(i < mobMount) {
+                            Iterator var7 = ChannelServer.getAllInstances().iterator();
+
+                            while(var7.hasNext()) {
+                                ChannelServer cs = (ChannelServer)var7.next();
+                                Random rand = new Random();
+                                MapleMap map = cs.getMapFactory().getMap((Integer)maps.get(rand.nextInt(maps.size() - 1)));
+                                MapleMonster mob = MapleLifeFactory.getMonster((Integer)((Pair)boss.get(rand.nextInt(boss.size() - 1))).left);
+                                World.bossAndMapRecord.add(new Pair(mob, map));
+                                ArrayList<MaplePortal> portalList = new ArrayList(map.getPortals());
+                                Point myPoint = ((MaplePortal)portalList.get((int)(Math.random() * (double)portalList.size()))).getPosition();
+                                myPoint.y -= 30;
+                                map.spawnMonsterOnGroundBelow(mob, myPoint);
+                                String message = "[随机野外BOSS]： " + mob.getStats().getName() + " 在频道 " + cs.getChannel() + " 的 " + map.getStreetName() + ":" + map.getMapName() + " 出现了！还有 " + interval / 60L / 1000L + " 分钟消失。";
+                                World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, message));
+                                ++i;
+                                portalList.clear();
+                                if (i >= mobMount) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        World.oldTime = Calendar.getInstance().getTimeInMillis();
+                    }
+
+                    Iterator var15;
+                    Pair once;
+                    if (Calendar.getInstance().get(12) % 10 == 0 && !World.bossAndMapRecord.isEmpty()) {
+                        var15 = World.bossAndMapRecord.iterator();
+
+                        while(var15.hasNext()) {
+                            once = (Pair)var15.next();
+                            i = (int)((World.oldTime + interval - Calendar.getInstance().getTimeInMillis()) / 60L / 1000L);
+                            String messagexx = "[随机野外BOSS]： " + ((MapleMonster)once.left).getStats().getName() + " 仍然在频道 " + ((MapleMap)once.right).getChannel() + " 的 " + ((MapleMap)once.right).getStreetName() + ":" + ((MapleMap)once.right).getMapName() + " 游荡！还有 " + i + " 分钟消失。";
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, messagexx));
+                        }
+                    }
+
+                    if (Calendar.getInstance().getTimeInMillis() > World.oldTime + interval && World.oldTime != 0L) {
+                        var15 = World.bossAndMapRecord.iterator();
+
+                        while(var15.hasNext()) {
+                            once = (Pair)var15.next();
+                            ((MapleMap)once.right).killMonster(((MapleMonster)once.left).getId());
+                            String messagex = "[随机野外BOSS]： 出现在频道 " + ((MapleMap)once.right).getChannel() + " " + ((MapleMap)once.right).getStreetName() + ":" + ((MapleMap)once.right).getMapName() + " 的怪物 " + ((MapleMonster)once.left).getStats().getName() + " 在冒险岛女神的光芒照耀下，魔力逐渐散去，最终消失了！ ";
+                            World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, messagex));
+                        }
+
+                        World.bossAndMapRecord.clear();
+                        World.oldTime = 0L;
+                    }
+
+                }
+            }
+        }, (long)(min * 60 * 1000), (long)(min * 60 * 1000));
+    }
+
+    public static ArrayList<Pair<Integer, Integer>> getOutsideBoss() {
+        return outsideBoss;
+    }
+
 }

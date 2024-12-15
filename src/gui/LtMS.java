@@ -20,6 +20,7 @@ import handling.world.World;
 import handling.world.World.Find;
 import org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper;
 import org.jb2011.lnf.beautyeye.ch3_button.BEButtonUI;
+import scripting.AbstractScriptManager;
 import scripting.PortalScriptManager;
 import scripting.ReactorScriptManager;
 import server.Timer;
@@ -207,10 +208,10 @@ public class LtMS extends JFrame {
 
         } catch (FileNotFoundException e) {
             System.out.println("没有找到文件");
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (IOException e) {
             System.out.println("读取配置文件失败");
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -339,7 +340,7 @@ public class LtMS extends JFrame {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         }
@@ -4420,9 +4421,7 @@ public class LtMS extends JFrame {
 
     private void 重载脚本按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载包头按钮2ActionPerformed
         try {
-            Start.in.clear();
-            Start.se.clear();
-            Start.iv.clear();
+            AbstractScriptManager.reloadScriptCache();
             System.out.println("重载脚本成功");
         } catch (Exception e) {
             System.out.println("重载脚本失败");
@@ -4449,8 +4448,20 @@ public class LtMS extends JFrame {
         Start.getAttackInfo();
         Start.getMobInfo();
         Start.setLtSkillWucdTable();
-
-        Start.setdrops();
+        Start.getLtMobSpawnBoss();
+        Start.getMobUnhurt();
+        //暗黑破坏神玩法词条加载
+        Start.setLtDiabloEquipments();
+        //pk
+        GameConstants.loadPKChannelList();
+        GameConstants.loadPKGuildChannelList();
+        GameConstants.loadPKPlayerMapList();
+        GameConstants.loadPKPartyMapList();
+        GameConstants.loadPKGuildMapList();
+        GameConstants.loadPKBanSkillsList();
+        GameConstants.loadPKDropItemsList();
+        GameConstants.loadPKDropItemsList2();
+       // Start.setdrops();
 //        System.out.println("清理物品表开始");
 //        //Start.清理物品表();
 //        System.out.println("清理物品表结束");
@@ -4503,7 +4514,7 @@ public class LtMS extends JFrame {
             JOptionPane.showMessageDialog(null, "商城重载成功。");
             printChatLog(输出);
         } catch (HeadlessException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }//GEN-LAST:event_重载商城按钮2ActionPerformed
 
@@ -4514,7 +4525,7 @@ public class LtMS extends JFrame {
             JOptionPane.showMessageDialog(null, "传送门重载成功。");
             printChatLog(输出);
         } catch (HeadlessException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }//GEN-LAST:event_重载传送门按钮2ActionPerformed
 
@@ -4525,18 +4536,19 @@ public class LtMS extends JFrame {
             JOptionPane.showMessageDialog(null, "反应堆重载成功。");
             printChatLog(输出);
         } catch (HeadlessException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }//GEN-LAST:event_重载反应堆按钮2ActionPerformed
 
     private void 重载爆率按钮2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_重载爆率按钮2ActionPerformed
         try {
             MapleMonsterInformationProvider.getInstance().clearDrops();
+            Start.setdrops();
             String 输出 = "[重载系统] 爆率重载成功。";
             JOptionPane.showMessageDialog(null, "爆率重载成功。");
             printChatLog(输出);
         } catch (HeadlessException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }//GEN-LAST:event_重载爆率按钮2ActionPerformed
 
@@ -4549,7 +4561,7 @@ public class LtMS extends JFrame {
             }
             JOptionPane.showMessageDialog(null, "副本重载成功。");
         } catch (HeadlessException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }//GEN-LAST:event_重载副本按钮2ActionPerformed
 
@@ -6133,7 +6145,7 @@ public class LtMS extends JFrame {
         ServerConfig.BeiShu2Maxlevel = maxlevel;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
             for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
-                chr.getStat().recalcLocalStats1(false,chr);
+                chr.getStat().recalcLocalStats();
             }
         }
         System.out.println("区间二经验倍率已修改为" + ServerConfig.BeiShu2 + "倍。");
@@ -6171,7 +6183,7 @@ public class LtMS extends JFrame {
         ServerConfig.BeiShu3Maxlevel = maxlevel;
         for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
             for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
-                chr.getStat().recalcLocalStats1(false,chr);
+                chr.getStat().recalcLocalStats();
             }
         }
         System.out.println("区间三经验倍率已修改为" + ServerConfig.BeiShu3 + "倍。");
@@ -6772,7 +6784,8 @@ public class LtMS extends JFrame {
                     windows.put(w, new 物品删除管理工具());
                     break;
                 case 套装系统:
-                    windows.put(w, new 套装系统());
+                   // windows.put(w, new 套装系统());
+                    windows.put(w, new TzJFrame());
                     break;
                 case 删除自添加NPC工具:
                     windows.put(w, new 删除自添加NPC工具());

@@ -114,7 +114,7 @@ public class MapleQuestStatus implements Serializable
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/殺死怪物計次異常.txt", (Throwable)ex);
         }
         return false;

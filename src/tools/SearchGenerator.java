@@ -127,7 +127,10 @@ public class SearchGenerator
         SearchGenerator.searchs.put(type, values);
         return values;
     }
-    
+
+
+
+
     public static Map<Integer, String> getSearchData(final int type, final String search) {
         return getSearchData(SearchType.valueOf(SearchType.nameOf(type)), search);
     }

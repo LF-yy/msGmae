@@ -118,13 +118,13 @@ public class SkillType
         public static int 楓葉淨化 = 1221012;
     }
     
-    public static class 槍騎兵
+    public static class 枪騎兵
     {
-        public static int 精準之槍 = 1300000;
+        public static int 精準之枪 = 1300000;
         public static int 精準之矛 = 1300001;
-        public static int 終極之槍 = 1300002;
+        public static int 終極之枪 = 1300002;
         public static int 終極之矛 = 1300003;
-        public static int 快速之槍 = 1301004;
+        public static int 快速之枪 = 1301004;
         public static int 快速之矛 = 1301005;
         public static int 禦魔陣 = 1301006;
         public static int 神聖之火 = 1301007;
@@ -133,9 +133,9 @@ public class SkillType
     public static class 龍騎士
     {
         public static int 魔法抵抗 = 1310000;
-        public static int 槍連擊 = 1311001;
+        public static int 枪連擊 = 1311001;
         public static int 矛連擊 = 1311002;
-        public static int 無雙槍 = 1311003;
+        public static int 無雙枪 = 1311003;
         public static int 無雙矛 = 1311004;
         public static int 龍之獻祭 = 1311005;
         public static int 龍咆哮 = 1311006;
@@ -449,9 +449,9 @@ public class SkillType
         public static int 偽裝術 = 5101007;
     }
     
-    public static class 槍手
+    public static class 枪手
     {
-        public static int 精通槍法 = 5200000;
+        public static int 精通枪法 = 5200000;
         public static int 散射 = 5201001;
         public static int 炸彈投擲 = 5201002;
         public static int 迅雷再起 = 5201003;
@@ -470,7 +470,7 @@ public class SkillType
         public static int 衝擊波 = 5111006;
     }
     
-    public static class 神槍手
+    public static class 神枪手
     {
         public static int 三連發 = 5210000;
         public static int 章魚砲台 = 5211001;
@@ -494,7 +494,7 @@ public class SkillType
         public static int 时间置換 = 5121010;
     }
     
-    public static class 槍神
+    public static class 枪神
     {
         public static int 楓葉祝福 = 5221000;
         public static int 瞬冰火連擊 = 5220001;

@@ -98,7 +98,7 @@ public class MapleGenericPortal implements MaplePortal
                     PortalScriptManager.getInstance().executePortalScript((MaplePortal)this, c);
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    ////e.printStackTrace();
                 }
             }
             else if (this.getTargetMapId() != 999999999) {

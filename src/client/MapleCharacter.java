@@ -10,12 +10,9 @@ import gui.服务端输出信息;
 import scripting.EventManager;
 import server.*;
 import server.Timer.EventTimer;
-import server.bean.EquipFieldEnhancement;
-import server.bean.PackageOfEquipments;
-import server.bean.Potential;
-import server.bean.SkillSkin;
-import server.lt.TimeLogCenter;
-import server.maps.MapleMapEffect;
+import server.maps.*;
+import server.shops.HiredMerchant;
+import snail.TimeLogCenter;
 import handling.world.World.Find;
 import constants.MapConstants;
 import constants.ServerConfig;
@@ -30,8 +27,8 @@ import handling.world.World;
 import handling.world.PlayerBuffStorage;
 import handling.world.MapleMessengerCharacter;
 import io.netty.channel.Channel;
+import snail.*;
 import tools.*;
-import server.maps.MapleFoothold;
 
 import java.util.*;
 
@@ -43,7 +40,7 @@ import fumo.FumoSkill;
 import server.life.MobSkill;
 import handling.world.World.Guild;
 import handling.world.guild.MapleGuild;
-import server.maps.MapleMapObjectType;
+
 import java.sql.Statement;
 import java.sql.Timestamp;
 
@@ -52,7 +49,6 @@ import tools.packet.MobPacket;
 import handling.world.PartyOperation;
 import constants.ServerConstants;
 import handling.world.World.Family;
-import server.maps.FieldLimitType;
 import tools.packet.MTSCSPacket;
 import handling.world.MaplePartyCharacter;
 import handling.world.PlayerBuffValueHolder;
@@ -73,7 +69,6 @@ import tools.data.MaplePacketLittleEndianWriter;
 import server.life.PlayerNPC;
 import database.DatabaseException;
 
-import server.maps.MapleMapFactory;
 import constants.GameConstants;
 import java.util.Map.Entry;
 import handling.world.World.Party;
@@ -86,8 +81,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import database.DBConPool;
-import server.maps.SavedLocationType;
-import server.maps.Event_PyramidSubway;
+
 import java.util.concurrent.ScheduledFuture;
 
 import scripting.EventInstanceManager;
@@ -96,30 +90,28 @@ import handling.world.guild.MapleGuildCharacter;
 import handling.world.MapleParty;
 import server.shops.IMaplePlayerShop;
 import handling.world.MapleMessenger;
-import server.maps.MapleMap;
 import client.anticheat.CheatTracker;
 
-import server.maps.MapleSummon;
 import server.quest.MapleQuest;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import server.maps.MapleMapObject;
+
 import server.life.MapleMonster;
 
 import java.lang.ref.WeakReference;
 
-import server.maps.MapleDoor;
 import server.movement.LifeMovementFragment;
+import util.ListUtil;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.awt.Point;
 import java.io.Serializable;
-import server.maps.AbstractAnimatedMapleMapObject;
 
 public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Serializable
 {
     private static final long serialVersionUID = 845748950829L;
     public SkillSkin skillSkin = new SkillSkin(this, 0);
+    public int id;
     private String name;
     private String chalktext;
     private String BlessOfFairy_Origin;
@@ -164,7 +156,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public short job;
     public short remainingAp;
     private int accountid;
-    private int id;
+
     private int meso;
     private int exp;
     private int hair;
@@ -210,6 +202,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int CsMod;
     private int 在线时间;
     private long 被驱散时间;
+    private long 被诱导时间;
+    private long 被封印时间;
     private long 物理无效时间;
     private long 魔法无效时间;
     private Point old;
@@ -225,6 +219,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private boolean 公会聊天开关;
     private boolean 联盟聊天开关;
     private boolean GM吸怪信息开关;
+    private boolean 开启自动回收;
     private boolean canSetBeansNum;
     private boolean Vip_Medal;
     private boolean auto吸怪;
@@ -243,6 +238,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private int[] savedFaces;
     private transient AtomicInteger inst;
     private transient List<LifeMovementFragment> lastres;
+    private transient List<LifeMovementFragment> lastresOld;
     private List<Integer> lastmonthfameids;
     private List<MapleDoor> doors;
     private List<MaplePet> pets;
@@ -279,11 +275,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private byte[] petStore;
     private transient IMaplePlayerShop playerShop;
     private MapleParty party;
-    private boolean invincible;
-    private boolean canTalk;
-    private boolean clone;
-    private boolean followinitiator;
-    private boolean followon;
+    private boolean invincible = false;
+    private boolean canTalk = true;
+    private boolean clone = false;
+    private boolean followinitiator = false;
+    private boolean followon = false;
     private MapleGuildCharacter mgc;
     private MapleFamilyCharacter mfc;
     private transient EventInstanceManager eventInstance;
@@ -349,6 +345,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public long 上线提醒冷却;
     public long 整理背包冷却;
     public long 对话冷却;
+    public long NPC对话冷却;
     public long 吸怪检测;
     public long 愤怒之火掉血;
     public long 神圣之火回血;
@@ -428,30 +425,23 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     private Map<Integer, Integer> _equippedFuMoMap;
     private transient List<LifeMovementFragment> 吸怪RES;
     private ArrayList<IItem> 临时防滑鞋子 = new ArrayList();
-    public boolean 套装1是否共存 = false, 套装2是否共存 = false, 套装3是否共存 = false, 套装4是否共存 = false, 套装5是否共存 = false, 套装6是否共存 = false;
-    public int TZ1 = 0;
-    public int TZ2 = 0;
-    public int TZ3 = 0;
-    public int TZ4 = 0;
-    public int TZ5 = 0;
-    public int TZ6 = 0;
-    private double 套装伤害加成;
-    private int clonedamgerate;
-    private boolean 是否开店 = false;
-    private boolean 是否储备经验 = false;
-    private boolean 是否防滑 = false;
-    private long power = 0L;
+
+    public double 套装伤害加成;
+    public int clonedamgerate;
+    public boolean 是否开店 = false;
+    public boolean 是否储备经验 = false;
+    public boolean 是否防滑 = false;
+    public boolean 屏蔽特效 = false;
+    public long power = 0L;
     private final Map<Integer, Integer> potentialMap;
 
 
-   // public SkillSkin skillSkin = new SkillSkin(this, 0);
     private long lastSkillSkinTime = 0L;
-    private ArrayList<Integer> mountList = new ArrayList();
-    private int mountId = 1932003;
-    private int tamingMobId = 0;
-    private int tamingMobItemId = 0;
+    public ArrayList<Integer> mountList = new ArrayList<>();
+
     private int petHpItemId;
     private int petMpItemId;
+
     private int lastTakeDamageValue;
     private long lastPetHpTime;
     private long lastPetVacTime;
@@ -522,19 +512,73 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public long loadDuration = 0L;
     public long lastComboTime = 0L;
     public int nextMapId = 0;
-
-    private long max_damage;
+    public long max_damage;
+    private boolean isShowChair = true;
+    private boolean isShowEquip = true;
+    public int todayOnlineTime;
+    public int totalOnlineTime;
+    public boolean superTransformation;
+    public int cloneDamagePercentage = 50;
+    public boolean fake;
+    public int fakeOwnerId;
+    public TreeMap<Integer, MonsterKillQuest> monsterKillQuestMap = new TreeMap<>();
+    public ArrayList<Integer> sellWhenPickUpItemList = new ArrayList<>();
     private long exp_reserve;
+    private boolean showSkill = true;
+    private boolean dropOnMyFoot = false;
+    private boolean dropOnMyBag = false;
+    private int mountId = 1932003;
+    private int tamingMobId = 0;
+    private int tamingMobItemId = 0;
     private byte imprison = 0;
+    private int[] cloneDamageRateList = new int[]{50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
     private int guildPoints;
     private int stage;
     private int breakLevel;
     private float expRateChr = 1.0F;
     private float mesoRateChr = 1.0F;
     private float dropRateChr = 1.0F;
+    private long qpStartTime = 0L;
+    private long lyStartTime = 0L;
+    private transient MapleDragon dragon;
+
+    public long getLyStartTime() {
+        return lyStartTime;
+    }
+
+    public void setLyStartTime(long lyStartTime) {
+        this.lyStartTime = lyStartTime;
+    }
+
+    public long getQpStartTime() {
+        return qpStartTime;
+    }
+
+    public void setQpStartTime(long qpStartTime) {
+        this.qpStartTime = qpStartTime;
+    }
+
+    public boolean is开启自动回收() {
+        return 开启自动回收;
+    }
+
+    public void set开启自动回收(boolean 开启自动回收) {
+        this.开启自动回收 = 开启自动回收;
+    }
+
+    public void set开启or关闭自动回收() {
+        if (getBossLog1("开启自动回收",1)>0){
+            setBossLog1("开启自动回收",1,-getBossLog1("开启自动回收",1));
+            this.开启自动回收 = false;
+        }else{
+            setBossLog1("开启自动回收",1);
+            this.开启自动回收 = true;
+        }
+
+    }
     public ArrayList<Integer> getMountList() {
         if (this.mountList.isEmpty()) {
-            loadMountListFromDB();
+            this.loadMountListFromDB();
         }
 
         return this.mountList;
@@ -650,7 +694,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.finishedAchievements = new ArrayList<Integer>();
         this.invincible = false;
         this.canTalk = true;
-        this.clone = false;
         this.followinitiator = false;
         this.followon = false;
         this.skillMacros = new SkillMacro[5];
@@ -676,6 +719,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.上线提醒冷却 = 0L;
         this.整理背包冷却 = 0L;
         this.对话冷却 = 0L;
+        this.NPC对话冷却 = 0L;
         this.吸怪检测 = 0L;
         this.愤怒之火掉血 = 0L;
         this.神圣之火回血 = 0L;
@@ -740,6 +784,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.记录移动坐标Y1 = 0.0;
         this.记录移动坐标X2 = 0.0;
         this.记录移动坐标Y2 = 0.0;
+        this.打怪数量 = 0;
+        this.打Boss数量=0;
         this.等级上限 = 0;
         this.被驱散时间 = System.currentTimeMillis();
         this.物理无效时间 = System.currentTimeMillis();
@@ -799,6 +845,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.questinfo = new LinkedHashMap<Integer, String>();
             this.anticheat = new CheatTracker(this);
             this.pets = new ArrayList<MaplePet>();
+            this.开启自动回收 = getBossLog1("开启自动回收",1)>0 ? true : false;
         }
     }
     public long getPower() {
@@ -898,6 +945,30 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void set被驱散时间(long 被驱散时间) {
         this.被驱散时间 = 被驱散时间;
     }
+
+    public long get被诱导时间() {
+        return 被诱导时间;
+    }
+
+    public void set被诱导时间(long 被诱导时间) {
+        this.被诱导时间 = 被诱导时间;
+    }
+    public long get被封印时间() {
+        return 被封印时间;
+    }
+
+    public void set被封印时间(long 被封印时间) {
+        this.被封印时间 = 被封印时间;
+    }
+
+    public long getNPC对话冷却() {
+        return NPC对话冷却;
+    }
+
+    public void setNPC对话冷却(long NPC对话冷却) {
+        this.NPC对话冷却 = NPC对话冷却;
+    }
+
     public long get对话冷却() {
         return 对话冷却;
     }
@@ -930,7 +1001,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.corona += corona;
     }
     public synchronized void setCorona(int corona) {
-        this.corona = corona;
+        this.corona = this.corona - corona;
     }
     public void set最高伤害(long corona) {
         this.最高伤害 = corona;
@@ -982,6 +1053,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.PGSXDJ = 0;
         ret.gachexp = 0;
         ret.max_damage = 199999L;
+        ret.guildPoints = 0;
+        ret.exp_reserve = 0L;
+        ret.breakLevel = 0;
 
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT name, 2ndpassword, mPoints,  vpoints, VIP, loginkey, serverkey, clientkey FROM accounts WHERE id = ?");
@@ -1114,6 +1188,32 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.PGSXDJ = ct.PGSXDJ;
         ret.skillSkin = ct.skillSkin;
         ret.dropItemFilterList = ct.dropItemFilterList;
+        ret.isShowChair = ct.isShowChair;
+        ret.isShowEquip = ct.isShowEquip;
+        ret.max_damage = ct.max_damage;
+        ret.todayOnlineTime = ct.todayOnlineTime;
+        ret.totalOnlineTime = ct.totalOnlineTime;
+        ret.exp_reserve = ct.exp_reserve;
+        ret.dropOnMyBag = ct.dropOnMyBag;
+        ret.dropOnMyFoot = ct.dropOnMyFoot;
+        ret.mountId = ct.mountId;
+        ret.mountList = ct.mountList;
+        ret.imprison = ct.imprison;
+        ret.superTransformation = ct.superTransformation;
+        ret.cloneDamagePercentage = ct.cloneDamagePercentage;
+        ret.cloneDamageRateList = ct.cloneDamageRateList;
+        ret.fake = ct.fake;
+        ret.fakeOwnerId = ct.fakeOwnerId;
+        ret.guildPoints = ct.guildPoints;
+        ret.breakLevel = ct.breakLevel;
+        ret.stage = ct.stage;
+        ret.monsterKillQuestMap = ct.monsterKillQuestMap;
+        ret.dropItemFilterList = ct.dropItemFilterList;
+        ret.sellWhenPickUpItemList = ct.sellWhenPickUpItemList;
+        ret.expRateChr = ct.expRateChr;
+        ret.mesoRateChr = ct.mesoRateChr;
+        ret.dropRateChr = ct.dropRateChr;
+
         if (isChannel) {
             final MapleMapFactory mapFactory = ChannelServer.getInstance(client.getChannel()).getMapFactory();
             ret.map = mapFactory.getMap(ret.mapid);
@@ -1203,9 +1303,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public static MapleCharacter loadCharFromDB(final int charid, final MapleClient client, final boolean channelserver) {
+        if(charid>10000000){
+            return null;
+        }
         final MapleCharacter ret = new MapleCharacter(channelserver);
         ret.client = client;
         ret.id = charid;
+        long time0 = System.currentTimeMillis();
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             PreparedStatement ps = null;
             ResultSet rs = null;
@@ -1602,9 +1706,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret.skillSkin.loadChrSkill();
                     ret.loadMountListFromDB();
                     EquipFieldEnhancement.getInstance().loadCharFromDB(charid, con);
-                   //ret.loadMonsterKillQuestFromDB(con);
+                   ret.loadMonsterKillQuestFromDB(con);
                    ret.loadDropItemFilterListFromDB(con);
-                   //ret.loadSellWhenPickUpItemListFromDB(con);
+                   ret.loadSellWhenPickUpItemListFromDB(con);
                     ret.stats.recalcLocalStats(true);
                 }
                 else {
@@ -1632,6 +1736,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         catch (SQLException exxx) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)exxx);
         }
+        System.out.println("角色載入完成用时:"+(System.currentTimeMillis()-time0)+"ms");
         return ret;
     }
     public void loadDropItemFilterListFromDB(Connection con) {
@@ -1660,6 +1765,295 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         } catch (SQLException var7) {
             服务端输出信息.println_err("【错误】loadDropItemFilterListFromDB错误，原因：" + var7);
             var7.printStackTrace();
+        }
+
+    }
+
+    public TreeMap<Integer, MonsterKillQuest> getMonsterKillQuestMap() {
+        return this.monsterKillQuestMap;
+    }
+
+    public void clearMonsterKillQuestMap() {
+        Iterator var1 = this.monsterKillQuestMap.entrySet().iterator();
+
+        while(var1.hasNext()) {
+            Map.Entry<Integer, MonsterKillQuest> entry = (Map.Entry)var1.next();
+            ((MonsterKillQuest)entry.getValue()).clearMonsterKillMap();
+        }
+
+        this.monsterKillQuestMap.clear();
+    }
+    public int getTotalOnlineTime() {
+        return this.totalOnlineTime;
+    }
+
+    public void gainTotalOnlineTime(int s) {
+        this.totalOnlineTime += s;
+    }
+
+    public void setTotalOnlineTime(int s) {
+        this.totalOnlineTime = s;
+    }
+
+    public boolean isFake() {
+        return this.fake;
+    }
+
+    public void setFake(boolean fake) {
+        this.fake = fake;
+    }
+
+    public int getFakeOwnerId() {
+        return this.fakeOwnerId;
+    }
+
+    public void setFakeOwnerId(int fakeOwnerId) {
+        this.fakeOwnerId = fakeOwnerId;
+    }
+
+    public boolean isQuestMonster(int monsterId) {
+        boolean ret = false;
+        Iterator var3 = this.monsterKillQuestMap.entrySet().iterator();
+
+        while(var3.hasNext()) {
+            Map.Entry<Integer, MonsterKillQuest> entry = (Map.Entry)var3.next();
+            if (((MonsterKillQuest)entry.getValue()).hasMonster(monsterId)) {
+                ret = true;
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    public ArrayList<MonsterKillQuest> getMonsterKillQuestByMonsterId(int monsterId) {
+        ArrayList<MonsterKillQuest> ret = new ArrayList();
+        Iterator var3 = this.monsterKillQuestMap.entrySet().iterator();
+
+        while(var3.hasNext()) {
+            Map.Entry<Integer, MonsterKillQuest> entry = (Map.Entry)var3.next();
+            if (((MonsterKillQuest)entry.getValue()).hasMonster(monsterId)) {
+                ret.add(entry.getValue());
+            }
+        }
+
+        return ret;
+    }
+
+    public void deleteMonsterKillQuest(int questId) {
+        if (this.monsterKillQuestMap.containsKey(questId)) {
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var3 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("DELETE FROM snail_monster_kill_quest WHERE character_id =? AND quest_id = ?");
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, questId);
+                    ps.executeUpdate();
+                    ps.close();
+                    this.monsterKillQuestMap.remove(questId);
+                } catch (Throwable var13) {
+                    var3 = var13;
+                    throw var13;
+                } finally {
+                    if (con != null) {
+                        if (var3 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var12) {
+                                var3.addSuppressed(var12);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var15) {
+                服务端输出信息.println_err("【错误】deleteMonsterKillQuest错误，原因：" + var15);
+                var15.printStackTrace();
+            }
+        }
+
+    }
+
+    public MonsterKillQuest getMonsterKillQuestByQuestId(int questId) {
+        return (MonsterKillQuest)this.monsterKillQuestMap.get(questId);
+    }
+
+    public MonsterKillQuest newMonsterKillQuest() {
+        int questId = 1;
+        Iterator var2 = this.monsterKillQuestMap.entrySet().iterator();
+
+        while(var2.hasNext()) {
+            Map.Entry<Integer, MonsterKillQuest> entry = (Map.Entry)var2.next();
+            if (questId <= (Integer)entry.getKey()) {
+                questId = (Integer)entry.getKey() + 1;
+            }
+        }
+
+        while(this.monsterKillQuestMap.containsKey(questId)) {
+            ++questId;
+        }
+
+        MonsterKillQuest monsterKillQuest = new MonsterKillQuest(this.getId(), questId);
+        this.monsterKillQuestMap.put(questId, monsterKillQuest);
+        return monsterKillQuest;
+    }
+
+    public void saveMonsterKillQuestToDB(Connection con) {
+        try {
+            boolean isNewConnection = false;
+            if (con == null || con.isClosed()) {
+                con = DBConPool.getNewConnection();
+                isNewConnection = true;
+                con.setTransactionIsolation(1);
+                con.setAutoCommit(false);
+            }
+
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_monster_kill_quest");
+            PreparedStatement ps1 = con.prepareStatement("UPDATE snail_monster_kill_quest SET `count` = ?,finish_count = ?,`state` = ? WHERE id = ?");
+            PreparedStatement ps2 = con.prepareStatement("INSERT INTO snail_monster_kill_quest (character_id, quest_id, monster_id, `count`, finish_count, `state`) VALUES (?,?,?,?,?,?)");
+            PreparedStatement ps3 = con.prepareStatement("UPDATE snail_monster_kill_quest SET begin_time = ?, finish_time = ? WHERE character_id = ? AND quest_id = ?");
+            int batchSize1 = 1000;
+            int count1 = 0;
+            int batchSize2 = 1000;
+            int count2 = 0;
+            int batchSize3 = 1000;
+            int count3 = 0;
+            ResultSet rs = ps.executeQuery();
+            Iterator var14 = this.monsterKillQuestMap.entrySet().iterator();
+
+            while(var14.hasNext()) {
+                Map.Entry<Integer, MonsterKillQuest> entry = (Map.Entry)var14.next();
+                HashMap<Integer, MonsterKillQuest.MonsterKill> monsterMap = ((MonsterKillQuest)entry.getValue()).getMonsterKillMap();
+                Iterator var17 = monsterMap.entrySet().iterator();
+
+                while(var17.hasNext()) {
+                    Map.Entry<Integer, MonsterKillQuest.MonsterKill> entry2 = (Map.Entry)var17.next();
+                    ps = con.prepareStatement("SELECT * FROM snail_monster_kill_quest WHERE character_id = ? AND quest_id = ? AND monster_id = ?");
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, (Integer)entry.getKey());
+                    ps.setInt(3, (Integer)entry2.getKey());
+                    rs = ps.executeQuery();
+
+                    boolean isExist;
+                    for(isExist = false; rs.next(); isExist = true) {
+                        ps1.setInt(1, ((MonsterKillQuest.MonsterKill)entry2.getValue()).getNowQuantity());
+                        ps1.setInt(2, ((MonsterKillQuest.MonsterKill)entry2.getValue()).getFinishQuantity());
+                        ps1.setByte(3, (byte)(((MonsterKillQuest.MonsterKill)entry2.getValue()).getNowQuantity() >= ((MonsterKillQuest.MonsterKill)entry2.getValue()).getFinishQuantity() ? 1 : 0));
+                        ps1.setInt(4, rs.getInt("id"));
+                        ps1.addBatch();
+                        ++count1;
+                        if (count1 % batchSize1 == 0) {
+                            ps1.executeBatch();
+                            ps1.clearBatch();
+                        }
+                    }
+
+                    if (!isExist) {
+                        ps2.setInt(1, this.id);
+                        ps2.setInt(2, (Integer)entry.getKey());
+                        ps2.setInt(3, (Integer)entry2.getKey());
+                        ps2.setInt(4, ((MonsterKillQuest.MonsterKill)entry2.getValue()).getNowQuantity());
+                        ps2.setInt(5, ((MonsterKillQuest.MonsterKill)entry2.getValue()).getFinishQuantity());
+                        ps2.setByte(6, (byte)(((MonsterKillQuest.MonsterKill)entry2.getValue()).getNowQuantity() >= ((MonsterKillQuest.MonsterKill)entry2.getValue()).getFinishQuantity() ? 1 : 0));
+                        ps2.addBatch();
+                        ++count2;
+                        if (count2 % batchSize2 == 0) {
+                            ps2.executeBatch();
+                            ps2.clearBatch();
+                        }
+                    }
+                }
+
+                ps3.setTimestamp(1, ((MonsterKillQuest)entry.getValue()).getBeginTime());
+                ps3.setTimestamp(2, ((MonsterKillQuest)entry.getValue()).getFinishTime());
+                ps3.setInt(3, this.id);
+                ps3.setInt(4, (Integer)entry.getKey());
+                ps3.addBatch();
+                ++count3;
+                if (count3 % batchSize3 == 0) {
+                    ps3.executeBatch();
+                    ps3.clearBatch();
+                }
+            }
+
+            if (count1 % batchSize1 != 0) {
+                ps1.executeBatch();
+            }
+
+            if (count2 % batchSize2 != 0) {
+                ps2.executeBatch();
+            }
+
+            if (count3 % batchSize3 != 0) {
+                ps3.executeBatch();
+            }
+
+            ps.close();
+            rs.close();
+            ps1.close();
+            ps2.close();
+            ps3.close();
+            if (isNewConnection) {
+                con.setAutoCommit(true);
+                con.setTransactionIsolation(4);
+                con.close();
+            }
+        } catch (SQLException var20) {
+            服务端输出信息.println_err("【错误】 saveMonsterKillQuestToDB错误，原因：" + var20);
+            var20.printStackTrace();
+        }
+
+    }
+
+    public void loadMonsterKillQuestFromDB(Connection con) {
+        try {
+            if (con == null || con.isClosed()) {
+                con = DBConPool.getConnection();
+            }
+
+            PreparedStatement ps = con.prepareStatement("SELECT DISTINCT quest_id FROM snail_monster_kill_quest WHERE character_id = ? ORDER BY quest_id");
+            ps.setInt(1, this.id);
+            ResultSet rs = ps.executeQuery();
+            ArrayList<Integer> questIdList = new ArrayList();
+
+            while(rs.next()) {
+                int questId = rs.getInt("quest_id");
+                if (!questIdList.contains(questId)) {
+                    questIdList.add(questId);
+                }
+            }
+
+            this.clearMonsterKillQuestMap();
+            Iterator var10 = questIdList.iterator();
+
+            while(var10.hasNext()) {
+                int questId = (Integer)var10.next();
+                ps = con.prepareStatement("SELECT * FROM snail_monster_kill_quest WHERE character_id = ? AND quest_id = ?");
+                ps.setInt(1, this.id);
+                ps.setInt(2, questId);
+                rs = ps.executeQuery();
+                MonsterKillQuest quest = new MonsterKillQuest(this.id, questId);
+
+                for(boolean setTime = true; rs.next(); quest.addMonsterKill(rs.getInt("monster_id"), rs.getInt("count"), rs.getInt("finish_count"))) {
+                    if (setTime) {
+                        quest.setBeginTime(rs.getTimestamp("begin_time"));
+                        quest.setFinishTime(rs.getTimestamp("finish_time"));
+                        setTime = false;
+                    }
+                }
+
+                this.monsterKillQuestMap.put(questId, quest);
+            }
+
+            ps.close();
+            rs.close();
+        } catch (SQLException var9) {
+            服务端输出信息.println_err("【错误】 loadMonsterKillQuestFromDB错误，原因：" + var9);
+            var9.printStackTrace();
         }
 
     }
@@ -2022,6 +2416,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.打怪数量 = 0;
             this.打Boss数量 = 0;
             int retValue = 1;
+            long time = System.currentTimeMillis();
             Connection con = null;
             PreparedStatement ps = null;
             PreparedStatement pse = null;
@@ -2030,7 +2425,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
                 con.setTransactionIsolation(1);
                 con.setAutoCommit(false);
-                ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpApUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, monsterbookcover = ?, dojo_pts = ?, dojoRecord = ?, pets = ?, subcategory = ?, marriageId = ?, currentrep = ?, totalrep = ?, charmessage = ?, expression = ?, constellation = ?, blood = ?, month = ?, jf = ?, zdjf = ?, rwjf = ?, zs = ?, cz = ?, dy = ?, rmb = ?, yb =?,  playerPoints = ?, playerEnergy = ?, jf1 = ?, jf2 = ?, jf3 = ?, jf4 = ?, jf5 = ?, jf6 = ?, jf7 = ?, jf8 = ?, jf9 = ?, jf10 = ?, day = ?, beans = ?, prefix = ?, PGSXDJ = ?,gachexp = ?, name = ?, VipMedal = ?, saved_faces = ?, saved_hairs = ? WHERE id = ?");
+                ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpApUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, monsterbookcover = ?, dojo_pts = ?, dojoRecord = ?, pets = ?, subcategory = ?, marriageId = ?, currentrep = ?, totalrep = ?, charmessage = ?, expression = ?, constellation = ?, blood = ?, month = ?, jf = ?, zdjf = ?, rwjf = ?, zs = ?, cz = ?, dy = ?, rmb = ?, yb =?,  playerPoints = ?, playerEnergy = ?, jf1 = ?, jf2 = ?, jf3 = ?, jf4 = ?, jf5 = ?, jf6 = ?, jf7 = ?, jf8 = ?, jf9 = ?, jf10 = ?, day = ?, beans = ?, prefix = ?, PGSXDJ = ?,gachexp = ?, name = ?, VipMedal = ?, saved_faces = ?, saved_hairs = ? , max_damage = ? , exp_reserve = ?, imprison = ?, guildpoints = ?, stage = ?, break_level = ?, exp_rate = ?, meso_rate = ?, drop_rate = ? WHERE id = ?");
                 ps.setInt(1, (int) this.level);
                 ps.setShort(2, this.fame);
                 ps.setShort(3, this.stats.getStr());
@@ -2148,13 +2543,35 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
                 final String saved_hairs = hairs.toString();
                 ps.setString(67, saved_hairs.substring(0, saved_hairs.length() - 1));
-                ps.setInt(68, this.id);
+//                ps.setInt(68, this.todayOnlineTime);
+//                ps.setInt(69, this.totalOnlineTime);
+                if (this.max_damage < 199999L) {
+                    this.max_damage = 199999L;
+                }
+
+                ps.setLong(68, this.max_damage);
+                ps.setLong(69, this.exp_reserve);
+                ps.setByte(70, this.imprison);
+                ps.setInt(71, this.guildPoints);
+                ps.setInt(72, this.stage);
+                ps.setInt(73, this.breakLevel);
+                ps.setFloat(74, this.expRateChr);
+                ps.setFloat(75, this.mesoRateChr);
+                ps.setFloat(76, this.dropRateChr);
+                ps.setInt(77, this.id);
+
                 if (ps.executeUpdate() < 1) {
                     ps.close();
                     throw new DatabaseException("Character not in database (" + this.id + ")");
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps.close();
                 this.deleteWhereCharacterId(con, "DELETE FROM skillmacros WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.1累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 //System.out.println("移除技能宏");
                 for (int l = 0; l < 5; ++l) {
                     //System.out.println("新增技能宏");
@@ -2172,7 +2589,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         ps.close();
                     }
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.2累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM inventoryslot WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.3累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO inventoryslot (characterid, `equip`, `use`, `setup`, `etc`, `cash`) VALUES (?, ?, ?, ?, ?, ?)");
                 ps.setInt(1, this.id);
                 ps.setByte(2, this.getInventory(MapleInventoryType.EQUIP).getSlotLimit());
@@ -2182,9 +2605,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.setByte(6, this.getInventory(MapleInventoryType.CASH).getSlotLimit());
                 ps.execute();
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.4累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 //保存装备数据
                 this.saveInventory(con);
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.5累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM questinfo WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.6累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO questinfo (`characterid`, `quest`, `customData`) VALUES (?, ?, ?)");
                 ps.setInt(1, this.id);
                 for (final Entry<Integer, String> q : this.questinfo.entrySet()) {
@@ -2193,7 +2625,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ps.execute();
                 }
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.7累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM queststatus WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.8累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `forfeited`, `customData`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", 1);
                 pse = con.prepareStatement("INSERT INTO queststatusmobs VALUES (DEFAULT, ?, ?, ?)", 1);
                 ps.setInt(1, this.id);
@@ -2220,7 +2658,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
                 ps.close();
                 pse.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置1.9累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM skills WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.0累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO skills (characterid, skillid, skilllevel, masterlevel, expiration) VALUES (?, ?, ?, ?, ?)");
                 ps.setInt(1, this.id);
                 for (final Entry<ISkill, SkillEntry> skill : this.skills.entrySet()) {
@@ -2233,6 +2677,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                 }
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.1累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 //技能冷却
                 final List<MapleCoolDownValueHolder> cd = this.getCooldowns();
                 if (dc && cd.size() > 0) {
@@ -2246,7 +2693,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                     ps.close();
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.2累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM savedlocations WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.3累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO savedlocations (characterid, `locationtype`, `map`) VALUES (?, ?, ?)");
                 ps.setInt(1, this.id);
                 for (final SavedLocationType savedLocationType : SavedLocationType.values()) {
@@ -2257,10 +2710,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                 }
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.4累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("DELETE FROM achievements WHERE accountid = ?");
                 ps.setInt(1, this.accountid);
                 ps.executeUpdate();
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.5累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO achievements(charid, achievementid, accountid) VALUES(?, ?, ?)");
                 for (final Integer achid : this.finishedAchievements) {
                     ps.setInt(1, this.id);
@@ -2269,7 +2728,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ps.executeUpdate();
                 }
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.6累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM buddies WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.7累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("INSERT INTO buddies (characterid, `buddyid`, `pending`) VALUES (?, ?, ?)");
                 ps.setInt(1, this.id);
                 for (final BuddyEntry entry : this.buddylist.getBuddies()) {
@@ -2280,6 +2745,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                 }
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.8累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 ps = con.prepareStatement("UPDATE accounts SET `mPoints` = ?, `vpoints` = ?, `VIP` = ? WHERE id = ?");
                 ps.setInt(1, this.maplepoints);
                 ps.setInt(2, this.vpoints);
@@ -2287,17 +2755,47 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.setInt(4, this.client.getAccID());
                 ps.execute();
                 ps.close();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置2.9累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 if (this.storage != null) {
                     this.storage.saveToDB(con);
                 }
-                if (this.cs != null) {
-                    this.cs.save(con);
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.0累计耗时：" + (System.currentTimeMillis() - time));
+//                }
+                try {
+                    if (this.cs != null) {
+                        this.cs.save(con);
+                    }
+                } catch (SQLException e) {
+                    FileoutputUtil.outError("logs/物品保存异常.txt", (Throwable) e);
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.1累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 PlayerNPC.updateByCharId(this, con);
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.2累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.keylayout.saveKeys(this.id, con);
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.3累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.mount.saveMount(this.id, con);
-                this.monsterbook.saveCards(this.id, con);
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.4累计耗时：" + (System.currentTimeMillis() - time));
+//                }
+                if (this.monsterbook != null) {
+                    this.monsterbook.saveCards(this.id, con);
+                }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.5累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM wishlist WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.6计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 for (int m = 0; m < this.getWishlistSize(); ++m) {
                     ps = con.prepareStatement("INSERT INTO wishlist(characterid, sn) VALUES(?, ?) ");
                     ps.setInt(1, this.getId());
@@ -2305,7 +2803,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ps.execute();
                     ps.close();
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.7累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM trocklocations WHERE characterid = ?");
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.8累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 for (int m = 0; m < this.rocks.length; ++m) {
                     if (this.rocks[m] != 999999999) {
                         ps = con.prepareStatement("INSERT INTO trocklocations(characterid, mapid) VALUES(?, ?) ");
@@ -2315,6 +2819,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         ps.close();
                     }
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置3.9累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.deleteWhereCharacterId(con, "DELETE FROM regrocklocations WHERE characterid = ?");
                 for (int m = 0; m < this.regrocks.length; ++m) {
                     if (this.regrocks[m] != 999999999) {
@@ -2325,10 +2832,26 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         ps.close();
                     }
                 }
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置4.0累计耗时：" + (System.currentTimeMillis() - time));
+//                }
+                this.loadMountListFromDB();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置4.1累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 EquipFieldEnhancement.getInstance().saveChrToDB(this.id, (Connection) null);
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置4.2累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.skillSkin.saveChrSkill();
+//                if (this.getGMLevel() > 0) {
+//                    this.dropMessage(5, "存档位置4.3累计耗时：" + (System.currentTimeMillis() - time));
+//                }
                 this.saveMountListToDB(con);
-                //this.saveMonsterKillQuestToDB(con);
+                if (this.getGMLevel() > 0) {
+                    this.dropMessage(5, "最终存档累计耗时：" + (System.currentTimeMillis() - time));
+                }
+                this.saveMonsterKillQuestToDB(con);
 
                 con.commit();
             } catch (UnsupportedOperationException ex2) {
@@ -2972,13 +3495,167 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         return clonez;
     }
-    
+    public void setMorph(int itemId, int morphId, int localDuration, boolean cancelable) {
+        this.setMorph(itemId, morphId, localDuration, cancelable, false);
+    }
+    public void setMorph(int itemId, int morphId, int localDuration, boolean cancelable, boolean isSkill) {
+        MapleStatEffect effect = MapleItemInformationProvider.getInstance().getItemEffect_s(itemId, false);
+        effect.setMorph(morphId);
+        effect.setDuration(localDuration);
+        effect.setCancelMorph(cancelable);
+        if (!cancelable) {
+            long nowTime = Calendar.getInstance().getTimeInMillis();
+            this.noCancelBuffMap.put(effect.getSourceId(), new Pair(nowTime, effect.getDuration()));
+        }
+
+        List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, effect.getMorph(this)));
+        this.getMap().broadcastMessage(this, MaplePacketCreator.giveForeignBuff(this.getId(), stat, effect), false);
+        ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList();
+        Selfstat.add(new Pair(MapleBuffStat.JUMP, 0));
+        Selfstat.add(new Pair(MapleBuffStat.WDEF, 0));
+        Selfstat.add(new Pair(MapleBuffStat.MDEF, 0));
+        Selfstat.add(new Pair(MapleBuffStat.SPEED, 0));
+        Selfstat.add(new Pair(MapleBuffStat.MORPH, morphId));
+        this.cancelEffect(effect, true, -1L, Selfstat);
+        if (isSkill) {
+            this.getClient().sendPacket(MaplePacketCreator.giveBuff(itemId, localDuration, Selfstat, effect));
+        } else {
+            this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, localDuration, Selfstat, effect));
+        }
+
+        long starttime = System.currentTimeMillis();
+        MapleStatEffect.CancelEffectAction cancelAction = new MapleStatEffect.CancelEffectAction(this, effect, starttime);
+
+        try {
+            ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, starttime + (long)localDuration - System.currentTimeMillis());
+            this.registerEffect(effect, starttime, schedule, Selfstat, false, localDuration, this.getId());
+        } catch (Exception var13) {
+            服务端输出信息.println_err("MapleCharacter.setMorph 发生错误，错误原因：" + var13);
+        }
+
+    }
+    public void setMorphForSendDamage(int itemId, int morphId, int localDuration, boolean cancelable) {
+        MapleStatEffect effect = MapleItemInformationProvider.getInstance().getItemEffect_s(itemId, false);
+        effect.setMorph(morphId);
+        effect.setDuration(localDuration);
+        effect.setCancelMorph(cancelable);
+        List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, effect.getMorph(this)));
+        this.getMap().broadcastMessage(this, MaplePacketCreator.giveForeignBuff(this.getId(), stat, effect), false);
+        ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList();
+        Selfstat.add(new Pair(MapleBuffStat.JUMP, 0));
+        Selfstat.add(new Pair(MapleBuffStat.WDEF, 0));
+        Selfstat.add(new Pair(MapleBuffStat.MDEF, 0));
+        Selfstat.add(new Pair(MapleBuffStat.SPEED, 0));
+        Selfstat.add(new Pair(MapleBuffStat.MORPH, morphId));
+        this.cancelEffect(effect, true, -1L, Selfstat);
+        this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, localDuration, Selfstat, effect));
+        long starttime = System.currentTimeMillis();
+        MapleStatEffect.CancelEffectAction cancelAction = new MapleStatEffect.CancelEffectAction(this, effect, starttime);
+
+        try {
+            ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, starttime + (long)localDuration - System.currentTimeMillis());
+            this.registerEffect(effect, starttime, schedule, Selfstat, false, localDuration, this.getId());
+        } catch (Exception var12) {
+            服务端输出信息.println_err("MapleCharacter.setMorph 发生错误，错误原因：" + var12);
+        }
+
+    }
     public void cancelEffect( MapleStatEffect effect,  boolean overwrite,  long startTime) {
         if (this != null && effect != null) {
             this.cancelEffect(effect, overwrite, startTime, effect.getStatups());
         }
     }
-    
+    public void cancelEffect(MapleStatEffect effect, boolean overwrite, long startTime, List<Pair<MapleBuffStat, Integer>> statups, boolean forceCancel) {
+        if (this.noCancelBuffMap.containsKey(effect.getSourceId()) && !forceCancel) {
+            Pair<Long, Integer> timePair = (Pair)this.noCancelBuffMap.get(effect.getSourceId());
+            long nowTime = Calendar.getInstance().getTimeInMillis();
+            if (nowTime < (Long)timePair.left + (long)(Integer)timePair.right) {
+                this.dropMessage(5, "该BUFF不能取消！");
+                return;
+            }
+
+            this.noCancelBuffMap.remove(effect.getSourceId());
+        }
+
+        Object buffstats;
+        if (!overwrite) {
+            buffstats = this.getBuffStats(effect, startTime);
+        } else {
+            buffstats = new ArrayList(statups.size());
+            Iterator var13 = statups.iterator();
+
+            while(var13.hasNext()) {
+                Pair<MapleBuffStat, Integer> statup = (Pair)var13.next();
+                ((List)buffstats).add(statup.getLeft());
+            }
+        }
+
+        if (((List)buffstats).size() > 0) {
+            boolean clonez = this.deregisterBuffStats((List)buffstats);
+            if (effect.isMagicDoor()) {
+                if (!this.getDoors().isEmpty()) {
+                    this.removeDoor();
+                    this.silentPartyUpdate();
+                }
+            } else if (effect.isMonsterRiding_()) {
+                this.getMount().cancelSchedule();
+            } else if (effect.isAranCombo()) {
+                this.combo = 0;
+            }
+
+            int var11;
+            WeakReference chr;
+            WeakReference[] var17;
+            int var18;
+            if (!overwrite) {
+                this.cancelPlayerBuffs((List)buffstats);
+                if (this.isGM() && effect.isHide() && this.client.getChannelServer().getPlayerStorage().getCharacterById(this.getId()) != null) {
+                    this.hidden = false;
+                    if (this.isGod()) {
+                        this.map.broadcastGMMessage(this, MaplePacketCreator.spawnPlayerMapobject(this), false);
+                    } else {
+                        this.map.broadcastMessage(this, MaplePacketCreator.spawnPlayerMapobject(this), false);
+                    }
+
+                    Iterator var16 = this.pets.iterator();
+
+                    while(var16.hasNext()) {
+                        MaplePet pet = (MaplePet)var16.next();
+                        if (pet.getSummoned()) {
+                            this.map.broadcastMessage(this, PetPacket.showPet(this, pet, false, false), false);
+                        }
+                    }
+
+                    var17 = this.clones;
+                    var18 = var17.length;
+
+                    for(var11 = 0; var11 < var18; ++var11) {
+                        chr = var17[var11];
+                        if (chr.get() != null) {
+                            this.map.broadcastMessage((MapleCharacter)chr.get(), MaplePacketCreator.spawnPlayerMapobject((MapleCharacter)chr.get()), false);
+                        }
+                    }
+                }
+            }
+
+            if (!clonez) {
+                var17 = this.clones;
+                var18 = var17.length;
+
+                for(var11 = 0; var11 < var18; ++var11) {
+                    chr = var17[var11];
+                    if (chr.get() != null) {
+                        ((MapleCharacter)chr.get()).cancelEffect(effect, overwrite, startTime);
+                    }
+                }
+            }
+
+            if (this.getDebugMessage()) {
+                this.dropMessage("取消技能 - " + effect.getName() + "(" + effect.getSourceId() + ")");
+            }
+
+        }
+    }
     //取消buff
     public void cancelEffect( MapleStatEffect effect,  boolean overwrite,  long startTime,  List<Pair<MapleBuffStat, Integer>> statups) {
         if (this.noCancelBuffMap.containsKey(effect.getSourceId())) {
@@ -2994,8 +3671,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         List<MapleBuffStat> buffstats;
         if (!overwrite) {
             buffstats = this.getBuffStats(effect, startTime);
-        }
-        else {
+        } else {
             buffstats = new ArrayList<MapleBuffStat>(statups.size());
             for (final Pair<MapleBuffStat, Integer> statup : statups) {
                 buffstats.add(statup.getLeft());
@@ -3730,7 +4406,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     //切换地图
     private void changeMapInternal(final MapleMap to, final Point pos, final byte[] warpPacket, final MaplePortal pto) {
-        if (to == null) {
+        if (to == null || this ==null || this.getAntiMacro() ==null) {
             return;
         }
 //        if (pto != null && GameConstants.isNotTo(to.getId(), pto.getName())) {
@@ -3957,7 +4633,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.baseSkills();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             FilePrinter.printError("MapleCharacter.txt", (Throwable)e);
         }
     }
@@ -4142,7 +4818,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
     }
-    
+
+
+    public MapleDragon getDragon() {
+        return this.dragon;
+    }
     public void receivePartyMemberHP() {
         if (this.party == null) {
             return;
@@ -4214,76 +4894,99 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.client.sendPacket(MaplePacketCreator.updatePlayerStats(statup, itemReaction, this));
     }
     
-    public void gainExp(final int total, final boolean show, final boolean inChat, final boolean white) {
+    public void gainExp( int total,  boolean show,  boolean inChat,  boolean white) {
         try {
+            if(total>=Integer.MAX_VALUE){
+                total = Integer.MAX_VALUE;
+            }
 
             if (等级上限 == 0 ){
                 等级上限 =  this.取限制等级1(getId());
             }
-            int shijiedengji = this.取限制等级();
-            if (shijiedengji > 等级上限){
-                等级上限 = shijiedengji;
-            }
             if ( this.level >= 等级上限) {
                 if(this.exp + total >= Integer.MAX_VALUE) {
-                this.经验入池(this.id,total);
+               // this.经验入池(this.id,total);
                 }
             }
-                final int prevexp = this.getExp();
-                int needed = GameConstants.getExpNeededForLevel((int) this.level);
-                final int 骑士团等级上限 = LtMS.ConfigValuesMap.get("骑士团等级上限");
-                final int 冒险家等级上限 = LtMS.ConfigValuesMap.get("冒险家等级上限");
-                if (total > 0) {
-                    this.stats.checkEquipLevels(this, total);
+            int prevexp = this.getExp();
+            int needed = GameConstants.getExpNeededForLevel(this.level);
+            int maxLevel;
+            if ((Integer)LtMS.ConfigValuesMap.get("高等级经验限制开关") > 0 && this.getLevel() >= (Integer)LtMS.ConfigValuesMap.get("高等级经验限制判定等级")) {
+                maxLevel = total - total / (Integer)LtMS.ConfigValuesMap.get("高等级经验减少倍数");
+                this.增加经验储备((long)maxLevel);
+                this.client.sendPacket(MaplePacketCreator.GainEXP_Others(maxLevel, false, false));
+                total /= (Integer)LtMS.ConfigValuesMap.get("高等级经验减少倍数");
+            }
+
+            if (total > 0) {
+                this.stats.checkEquipLevels(this, total);
+            }
+
+            maxLevel = ServerConfig.maxlevel;
+            int kocMaxLevel = ServerConfig.kocmaxlevel;
+            if ((Integer)LtMS.ConfigValuesMap.get("突破服务器等级上限开关") > 0) {
+                maxLevel += this.getBreakLevel();
+                if (maxLevel > 255) {
+                    maxLevel = 255;
                 }
-                if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && this.level >= 骑士团等级上限)) {
+
+                kocMaxLevel += this.getBreakLevel();
+                if (kocMaxLevel > 255) {
+                    kocMaxLevel = 255;
+                }
+            }
+
+            if (this.是否储备经验) {
+                this.增加经验储备((long)total);
+            } else if (this.level >= maxLevel || GameConstants.isKOC(this.job) && this.level >= kocMaxLevel) {
+                if (this.level <= maxLevel && (!GameConstants.isKOC(this.job) || this.level <= kocMaxLevel)) {
                     if (this.exp + total > needed) {
                         this.setExp(needed);
+                        this.增加经验储备((long)total);
                     } else {
-                        if (this.exp + total < Integer.MAX_VALUE) {
-                            this.exp += total;
-                        }
-                    }
-                } else {
-                    boolean leveled = false;
-                    if (this.exp + total < Integer.MAX_VALUE) {
                         this.exp += total;
                     }
-                    long oexp = (long) this.exp;
-                    short olevel = this.level;
-                    while (oexp >= (long) needed) {
-                        this.levelUp();
-                        leveled = true;
-                        oexp -= (long) needed;
-                        ++olevel;
-                        needed = GameConstants.getExpNeededForLevel((int) olevel);
-                        if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && olevel >= 骑士团等级上限) || oexp < (long) needed) {
-                            break;
-                        }
-                    }
-                    if (total > 0) {
-                        this.familyRep(prevexp, needed, leveled);
-                    }
+                } else {
+                    this.增加经验储备((long)total);
                 }
-                if (total != 0) {
-                    if (this.exp < 0) {
-                        if (total > 0) {
-                            this.setExp(needed);
-                        }
-                        else if (total < 0) {
-                            this.setExp(0);
-                        }
+            } else {
+                boolean leveled = false;
+                if (this.exp + total >= needed) {
+                    this.exp += total;
+                    this.levelUp();
+                    leveled = true;
+                    needed = GameConstants.getExpNeededForLevel(this.level);
+                    if (this.exp > needed) {
+                        this.setExp(needed);
                     }
-                    this.updateSingleStat(MapleStat.EXP, this.getExp());
-                    if (show) {
-                        this.client.sendPacket(MaplePacketCreator.GainEXP_Others(total, inChat, white));
+                } else {
+                    this.exp += total;
+                }
+
+                if (total > 0) {
+                    this.familyRep(prevexp, needed, leveled);
+                }
+            }
+
+            if (total != 0) {
+                if (this.exp < 0) {
+                    if (total > 0) {
+                        this.setExp(needed);
+                    } else if (total < 0) {
+                        this.setExp(0);
                     }
                 }
 
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            FilePrinter.printError("MapleCharacter.txt", (Throwable)e);
+                this.updateSingleStat(MapleStat.EXP, this.getExp());
+                if (show) {
+                    if(LtMS.ConfigValuesMap.get("经验显示开关") > 0){
+                        this.client.sendPacket(MaplePacketCreator.GainEXP_Others(total, inChat, white));
+                    }
+                }
+            }
+        } catch (Exception var10) {
+            服务端输出信息.println_err(var10);
+            FilePrinter.printError("MapleCharacter.txt", var10);
         }
     }
     
@@ -4312,138 +5015,142 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void gainExpMonster(int gain, final boolean show, final boolean white, final byte pty, final int Class_Bonus_EXP, final int Equipment_Bonus_EXP, final int Premium_Bonus_EXP) {
-        if (this == null) {
-            return;
-        }
-        if (等级上限 == 0 ){
-            等级上限 =  this.取限制等级1(getId());
-        }
-        int shijiedengji = this.取限制等级();
-        if (shijiedengji > 等级上限){
-            等级上限 = shijiedengji;
-        }
+        if (this != null) {
+            this.expirationTask(true, false);
+            if (this.getExpm() > 1.0) {
+                gain = (int)((double)gain * this.getExpm());
+            }
 
-        this.expirationTask(true, false);
-        if (this.getExpm() > 1.0) {
-            gain = (int)((double)gain * this.getExpm());
-        }
-        if (this.isVip()) {
-            gain = (int)((double)gain * (1.0 + (double)this.getVipExpRate() / 100.0));
-        }
-        if (this.getStat().equippedRing) {
+            if (this.isVip()) {
+                gain = (int)((double)gain * (1.0 + (double)this.getVipExpRate() / 100.0));
+            }
+
+            if (this.getStat().equippedRing) {
+                if (pty > 1) {
+                    if (pty > 5) {
+                        gain = (int)((double)gain * 1.3);
+                    } else {
+                        gain = (int)((double)gain * (1.0 + 0.1 + 0.05 * (double)(pty - 1)));
+                    }
+                } else {
+                    gain = (int)((double)gain * 1.1);
+                }
+            }
+
+            boolean merch = World.hasMerchant(this.getAccountID());
+            if (merch) {
+                gain = (int)((double)gain * 1.05);
+            }
+
+            int total = gain + Class_Bonus_EXP + Equipment_Bonus_EXP + Premium_Bonus_EXP;
+            int partyinc = 0;
+            int prevexp = this.getExp();
             if (pty > 1) {
-                if (pty > 5) {
-                    gain = (int)((double)gain * 1.3);
-                }
-                else {
-                    gain = (int)((double)gain * (1.0 + (0.1 + 0.05 * (double)(pty - 1))));
-                }
+                partyinc = (int)((float)((double)gain / 5.5) * (float)(pty + 1));
+                total += partyinc;
             }
-            else {
-                gain = (int)((double)gain * 1.1);
-            }
-        }
-        int H_EXP = 0;
-        if (ServerConstants.getENABLE_H_EXP().get() && this.getStat().getExpModH() > 0) {
-            H_EXP = gain * this.getStat().getExpModH() / 100;
-        }
-        int total = gain + Class_Bonus_EXP + Equipment_Bonus_EXP + Premium_Bonus_EXP + H_EXP;
-        int partyinc = 0;
-        final int prevexp = this.getExp();
-        if (pty == 2) {
-            partyinc = (int)((double)gain / 100.0 * 50.0);
-            total += partyinc;
-        }
-        else if (pty == 3) {
-            partyinc = (int)((double)gain / 100.0 * 40.0);
-            total += partyinc;
-        }
-        else if (pty == 4) {
-            partyinc = (int)((double)gain / 100.0 * 35.0);
-            total += partyinc;
-        }
-        else if (pty == 5) {
-            partyinc = (int)((double)gain / 100.0 * 30.0);
-            total += partyinc;
-        }
-        else if (pty == 6) {
-            partyinc = (int)((double)gain / 100.0 * 20.0);
-            total += partyinc;
-        }
-        if (gain > 0 && total < gain) {
-            total = Integer.MAX_VALUE;
-        }
-        if (total > 0) {
-            this.stats.checkEquipLevels(this, total);
-        }
 
+            if (gain > 0 && total < gain) {
+                total = Integer.MAX_VALUE;
+            }
 
-        final int 冒险家等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"冒险家等级上限"));
-        final int 骑士团等级上限 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"骑士团等级上限"));
-        int needed = GameConstants.getExpNeededForLevel((int)this.level);
-        if ( this.level >= 等级上限) {
-            if(this.exp + gain >= Integer.MAX_VALUE) {
-                this.经验入池(this.id,gain);
-            }else {
-                this.exp += total;
+            if (total > 0) {
+                this.stats.checkEquipLevels(this, total);
             }
-        }else if (this.level >= 冒险家等级上限 || (GameConstants.isKOC((int)this.job) && this.level >= 骑士团等级上限)) {
-            if (this.exp + total > needed) {
-                this.setExp(needed);
+
+            int maxLevel = ServerConfig.maxlevel;
+            int kocMaxLevel = ServerConfig.kocmaxlevel;
+            if ((Integer)LtMS.ConfigValuesMap.get("突破服务器等级上限开关") > 0) {
+                maxLevel += this.getBreakLevel();
+                if (maxLevel > 255) {
+                    maxLevel = 255;
+                }
+
+                kocMaxLevel += this.getBreakLevel();
+                if (kocMaxLevel > 255) {
+                    kocMaxLevel = 255;
+                }
             }
-            else {
-                this.exp += total;
+
+            int needed = GameConstants.getExpNeededForLevel(this.level);
+            if ((Integer)LtMS.ConfigValuesMap.get("高等级经验限制开关") > 0 && this.getLevel() >= (Integer)LtMS.ConfigValuesMap.get("高等级经验限制判定等级")) {
+                int expToStore = total - total / (Integer)LtMS.ConfigValuesMap.get("高等级经验减少倍数");
+                this.增加经验储备((long)expToStore);
+                this.client.sendPacket(MaplePacketCreator.GainEXP_Others(expToStore, false, false));
+                total /= (Integer)LtMS.ConfigValuesMap.get("高等级经验减少倍数");
+                gain /= (Integer)LtMS.ConfigValuesMap.get("高等级经验减少倍数");
             }
-        }
-        else if (this.level >= 冒险家等级上限) {
-            this.setExp(0);
-        }
-        else {
-            boolean leveled = false;
-            this.exp += total;
-            long oexp = (long)this.exp;
-            short olevel = this.level;
-            if (LtMS.ConfigValuesMap.get("等级连升开关") ==1) {
-                while (oexp >= (long) needed) {
-                    this.levelUp();
-                    leveled = true;
-                    oexp -= (long) needed;
-                    ++olevel;
-                    //获取当前等级经验上限
-                    needed = GameConstants.getExpNeededForLevel((int) olevel);
-                    if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && olevel >= 骑士团等级上限) || oexp < (long) needed) {
-                        break;
+
+            if (this.是否储备经验) {
+                this.增加经验储备((long)total);
+            } else if (GameConstants.isKOC(this.job) && this.level >= kocMaxLevel) {
+                if (this.level > kocMaxLevel) {
+                    this.增加经验储备((long)total);
+                } else if (this.exp + total > needed) {
+                    this.setExp(needed);
+                    this.增加经验储备((long)total);
+                } else {
+                    this.exp += total;
+                }
+            } else if (this.level >= maxLevel) {
+                if (this.level > maxLevel) {
+                    this.增加经验储备((long)total);
+                } else if (this.exp + total > needed) {
+                    this.setExp(needed);
+                    this.增加经验储备((long)total);
+                } else {
+                    this.exp += total;
+                }
+            } else {
+                boolean leveled = false;
+                if (this.exp + total < needed && this.exp < needed) {
+                    this.exp += total;
+                } else {
+                    boolean levelUpTimesLimit = true;
+                    long oexp = (long)this.exp;
+                    this.exp += total;
+
+                    while(oexp + (long)total > (long)needed) {
+                        this.levelUp();
+                        leveled = true;
+                        needed = GameConstants.getExpNeededForLevel(this.level);
+                        if (levelUpTimesLimit) {
+                            break;
+                        }
+                    }
+
+                    if (this.level >= maxLevel) {
+                        this.setExp(0);
+                    } else {
+                        needed = GameConstants.getExpNeededForLevel(this.level);
+                        if (this.exp >= needed) {
+                            this.setExp(needed);
+                        }
                     }
                 }
-            }else {
-                if (oexp >= (long) needed) {
-                    this.levelUp();
-                    leveled = true;
-                    oexp = 0L;
-                    olevel++;
-                    needed = GameConstants.getExpNeededForLevel((int) olevel);
-                    if (olevel >= 冒险家等级上限 || (GameConstants.isKOC((int) this.job) && olevel >= 骑士团等级上限) || oexp < (long) needed) {
+
+                if (total > 0) {
+                    this.familyRep(prevexp, needed, leveled);
+                }
+            }
+
+            if (gain != 0) {
+                if (this.exp < 0) {
+                    if (gain > 0) {
+                        this.setExp(GameConstants.getExpNeededForLevel(this.level));
+                    } else if (gain < 0) {
                         this.setExp(0);
                     }
                 }
-            }
-            if (total > 0) {
-                this.familyRep(prevexp, needed, leveled);
-            }
-        }
-        if (gain != 0) {
-            if (this.exp < 0) {
-                if (gain > 0) {
-                    this.setExp(GameConstants.getExpNeededForLevel((int)this.level));
-                }
-                else if (gain < 0) {
-                    this.setExp(0);
+
+                this.updateSingleStat(MapleStat.EXP, this.getExp());
+                if (show) {
+                    if(LtMS.ConfigValuesMap.get("经验显示开关") > 0) {
+                        this.client.sendPacket(MaplePacketCreator.GainEXP_Monster(gain, white, partyinc, Class_Bonus_EXP, Equipment_Bonus_EXP, Premium_Bonus_EXP));
+                    }
                 }
             }
-            this.updateSingleStat(MapleStat.EXP, this.getExp());
-            if (show) {
-                this.client.sendPacket(MaplePacketCreator.GainEXP_Monster(gain, white, partyinc, Class_Bonus_EXP, Equipment_Bonus_EXP, Premium_Bonus_EXP, H_EXP));
-            }
+
         }
     }
     
@@ -4528,77 +5235,78 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void expirationTask(final boolean pending) {
         this.expirationTask(false, pending);
     }
-    
-    public void expirationTask(final boolean packet, final boolean pending) {
-        if (pending) {
-            if (this.pendingExpiration != null) {
-                for (final Integer z : this.pendingExpiration) {
-                    this.client.sendPacket(MTSCSPacket.itemExpired((int)z));
-                }
-            }
-            this.pendingExpiration = null;
-            if (this.pendingSkills != null) {
-                for (final Integer z : this.pendingSkills) {
-                    this.client.sendPacket(MaplePacketCreator.updateSkill((int)z, 0, 0, -1L));
-                    this.client.sendPacket(MaplePacketCreator.serverNotice(5, "[" + SkillFactory.getSkillName((int)z) + "] 技能已經過期，系統自動從技能栏位移除。"));
-                }
-            }
-            this.pendingSkills = null;
-            return;
-        }
-        final List<Integer> ret = new ArrayList<Integer>();
-        final long currenttime = System.currentTimeMillis();
-        final List<Pair<MapleInventoryType, IItem>> toberemove = new ArrayList<Pair<MapleInventoryType, IItem>>();
-        final List<IItem> tobeunlock = new ArrayList<IItem>();
-        for (final MapleInventoryType inv : MapleInventoryType.values()) {
-            for (final IItem item : this.getInventory(inv)) {
-                final long expiration = item.getExpiration();
-                if (expiration != -1L && !GameConstants.isPet(item.getItemId()) && currenttime > expiration) {
-                    if (ItemFlag.LOCK.check((int)item.getFlag())) {
-                        tobeunlock.add(item);
+
+    public final void expirationTask(boolean packet, boolean pending) {
+        try {
+            if (pending) {
+                Integer z;
+                if (this.pendingExpiration != null) {
+                    for (Integer integer : this.pendingExpiration) {
+                        this.client.sendPacket(MTSCSPacket.itemExpired(integer));
                     }
-                    else {
-                        if (currenttime <= expiration) {
-                            continue;
+                }
+                this.pendingExpiration = null;
+                if (this.pendingSkills != null) {
+                    for (Integer pendingSkill : this.pendingSkills) {
+                        this.client.sendPacket(MaplePacketCreator.updateSkill(pendingSkill, 0, 0, -1L));
+                        this.client.sendPacket(MaplePacketCreator.serverNotice(5, "[" + SkillFactory.getSkillName(pendingSkill) + "] 技能已经过期，系统自动从技能栏位移除。"));
+                    }
+                }
+                this.pendingSkills = null;
+                return;
+            }
+            List<Integer> ret = new ArrayList<>();
+            long currenttime = System.currentTimeMillis();
+            List<Pair<MapleInventoryType, IItem>> toberemove = new ArrayList<>();
+            List<IItem> tobeunlock = new ArrayList<>();
+            MapleInventoryType[] mapleInventoryTypes = MapleInventoryType.values();
+
+            for(int i = 0; i < mapleInventoryTypes.length; ++i) {
+                MapleInventoryType inv = mapleInventoryTypes[i];
+                for (IItem item : this.getInventory(inv)) {
+                    long expiration = item.getExpiration();
+                    if (expiration != -1L && !GameConstants.isPet(item.getItemId()) && currenttime > expiration) {
+                        if (ItemFlag.LOCK.check(item.getFlag())) {
+                            tobeunlock.add(item);
+                        } else if (currenttime > expiration) {
+                            toberemove.add(new Pair(inv, item));
                         }
-                        toberemove.add(new Pair<MapleInventoryType, IItem>(inv, item));
+                    } else if (item.getItemId() == 5000054 && item.getPet() != null && item.getPet().getSecondsLeft() <= 0) {
+                        toberemove.add(new Pair(inv, item));
                     }
                 }
-                else {
-                    if (item.getItemId() != 5000054 || item.getPet() == null || item.getPet().getSecondsLeft() > 0) {
-                        continue;
-                    }
-                    toberemove.add(new Pair<MapleInventoryType, IItem>(inv, item));
+            }
+            toberemove.forEach(itemz-> {
+                IItem item = (IItem)itemz.getRight();
+                ret.add(item.getItemId());
+                if (packet) {
+                    this.getInventory((MapleInventoryType)itemz.getLeft()).removeItem(item.getPosition(), item.getQuantity(), false, this);
+                } else {
+                    this.getInventory((MapleInventoryType)itemz.getLeft()).removeItem(item.getPosition(), item.getQuantity(), false);
                 }
-            }
+            });
+            tobeunlock.forEach(itemz->{
+                itemz.setExpiration(-1L);
+                itemz.setFlag((byte)(itemz.getFlag() - ItemFlag.LOCK.getValue()));
+            });
+
+            this.pendingExpiration = ret;
+            List<Integer> skilz = new ArrayList<>();
+            List<ISkill> toberem = new ArrayList<>();
+            this.skills.forEach((key, value) -> {
+                if (((SkillEntry) value).expiration != -1L && currenttime > ((SkillEntry) value).expiration) {
+                    toberem.add(key);
+                }
+            });
+            toberem.forEach(skil->{
+                skilz.add(skil.getId());
+                this.skills.remove(skil);
+            });
+            this.pendingSkills = skilz;
+        } catch (Exception var16) {
+            //服务端输出信息.println_err("【错误】expirationTask错误，错误原因：" + var16);
+            // var16.printStackTrace();
         }
-        for (final Pair<MapleInventoryType, IItem> itemz : toberemove) {
-            final IItem item2 = (IItem)itemz.getRight();
-            ret.add(Integer.valueOf(item2.getItemId()));
-            if (packet) {
-                this.getInventory((MapleInventoryType)itemz.getLeft()).removeItem(item2.getPosition(), item2.getQuantity(), false, this);
-            }
-            else {
-                this.getInventory((MapleInventoryType)itemz.getLeft()).removeItem(item2.getPosition(), item2.getQuantity(), false);
-            }
-        }
-        for (final IItem itemz2 : tobeunlock) {
-            itemz2.setExpiration(-1L);
-            itemz2.setFlag((byte)(itemz2.getFlag() - ItemFlag.LOCK.getValue()));
-        }
-        this.pendingExpiration = ret;
-        final List<Integer> skilz = new ArrayList<Integer>();
-        final List<ISkill> toberem = new ArrayList<ISkill>();
-        for (final Entry<ISkill, SkillEntry> skil : this.skills.entrySet()) {
-            if (((SkillEntry)skil.getValue()).expiration != -1L && currenttime > ((SkillEntry)skil.getValue()).expiration) {
-                toberem.add(skil.getKey());
-            }
-        }
-        for (final ISkill skil2 : toberem) {
-            skilz.add(Integer.valueOf(skil2.getId()));
-            this.skills.remove((Object)skil2);
-        }
-        this.pendingSkills = skilz;
     }
     
     public MapleShop getShop() {
@@ -4715,7 +5423,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/殺死怪物計次異常.txt", (Throwable)ex);
         }
     }
@@ -5367,7 +6075,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return;
         }
         this.map.broadcastMessage(this, MaplePacketCreator.updateCharLook(this), false);
-        this.stats.recalcLocalStats();
+        this.stats.recalcLocalStats(true);
         if (this.getMessenger() != null) {
             Messenger.updateMessenger(this.getMessenger().getId(), this.getName(), this.client.getChannel());
         }
@@ -6325,7 +7033,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.getStat().pWatk <= 0 && this.getStat().pMatk <= 0 && this.getStat().pWdef <= 0 && this.getStat().pMdef <= 0 && this.getStat().pAcc <= 0 && this.getStat().pAvoid <= 0 && this.getStat().pSpeed <= 0 && this.getStat().pJump <= 0 && this.getStat().pMaxHpPercent <= 0 && this.getStat().pMaxMpPercent <= 0) {
             this.givePotentialBuff(itemId, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 1000, true);
         } else {
-            this.givePotentialBuff(itemId, (short)this.getStat().pWatk, (short)this.getStat().pMatk, (short)this.getStat().pWdef, (short)this.getStat().pMdef, (short)this.getStat().pAcc, (short)this.getStat().pAvoid, (short)this.getStat().pSpeed, (short)this.getStat().pJump, (short)this.getStat().pMaxHpPercent, (short)this.getStat().pMaxMpPercent, duration, isCanCancel);
+            this.givePotentialBuff(itemId, (short)(Math.min(this.getStat().pWatk, 32766)), (short)(Math.min(this.getStat().pMatk, 32766)), (short)(Math.min(this.getStat().pWdef, 32766)), (short)(Math.min(this.getStat().pMdef, 32766)), (short)(Math.min(this.getStat().pAcc, 32766)), (short)(Math.min(this.getStat().pAvoid, 32766)), (short)(Math.min(this.getStat().pSpeed, 32766)), (short)(Math.min(this.getStat().pJump, 32766)), (short)(Math.min(this.getStat().pMaxHpPercent, 30000)), (short)(Math.min(this.getStat().pMaxMpPercent, 30000)), duration, isCanCancel);
         }
 
     }
@@ -6349,19 +7057,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             if (!isCanCancel) {
                 long nowTime = Calendar.getInstance().getTimeInMillis();
-                this.noCancelBuffMap.put(effect.getSourceId(), new Pair(nowTime, effect.getDuration()));
+                this.noCancelBuffMap.put(effect.getSourceId(), new Pair<>(nowTime, effect.getDuration()));
             }
 
-            List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, effect.getMorph(this)));
-            ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList();
-            Selfstat.add(new Pair(MapleBuffStat.WATK, Integer.valueOf(effect.getWatk()) + this.getStat().pWatk));
-            Selfstat.add(new Pair(MapleBuffStat.MATK, Integer.valueOf(effect.getMatk()) + this.getStat().pMatk));
-            Selfstat.add(new Pair(MapleBuffStat.WDEF, Integer.valueOf(effect.getWdef()) + this.getStat().pWdef));
-            Selfstat.add(new Pair(MapleBuffStat.MDEF, Integer.valueOf(effect.getMdef()) + this.getStat().pMdef));
-            Selfstat.add(new Pair(MapleBuffStat.ACC, Integer.valueOf(effect.getAcc()) + this.getStat().pAcc));
-            Selfstat.add(new Pair(MapleBuffStat.AVOID, Integer.valueOf(effect.getAvoid()) + this.getStat().pAvoid));
-            Selfstat.add(new Pair(MapleBuffStat.SPEED, Integer.valueOf(effect.getSpeed()) + this.getStat().pSpeed));
-            Selfstat.add(new Pair(MapleBuffStat.JUMP, Integer.valueOf(effect.getJump()) + this.getStat().pJump));
+            List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<>(MapleBuffStat.MORPH, effect.getMorph(this)));
+            ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList<>();
+            Selfstat.add(new Pair<>(MapleBuffStat.WATK, (int) effect.getWatk() + this.getStat().pWatk));
+            Selfstat.add(new Pair<>(MapleBuffStat.MATK, (int) effect.getMatk() + this.getStat().pMatk));
+            Selfstat.add(new Pair<>(MapleBuffStat.WDEF, (int) effect.getWdef() + this.getStat().pWdef));
+            Selfstat.add(new Pair<>(MapleBuffStat.MDEF, (int) effect.getMdef() + this.getStat().pMdef));
+            Selfstat.add(new Pair<>(MapleBuffStat.ACC, (int) effect.getAcc() + this.getStat().pAcc));
+            Selfstat.add(new Pair<>(MapleBuffStat.AVOID, (int) effect.getAvoid() + this.getStat().pAvoid));
+            Selfstat.add(new Pair<>(MapleBuffStat.SPEED, (int) effect.getSpeed() + this.getStat().pSpeed));
+            Selfstat.add(new Pair<>(MapleBuffStat.JUMP, (int) effect.getJump() + this.getStat().pJump));
             this.cancelEffect(effect, true, -1L, Selfstat);
             this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, duration, Selfstat, effect));
             this.setHp(this.getHp() + hp);
@@ -6939,7 +7647,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setLastRes(final List<LifeMovementFragment> lastres) {
         this.lastres = lastres;
     }
-    
+
+    public List<LifeMovementFragment> getLastResOld() {
+        return this.lastresOld;
+    }
+
+    public void setLastResOld(final List<LifeMovementFragment> lastres) {
+        this.lastresOld = lastres;
+    }
+
     public void setMonsterBookCover(final int bookCover) {
         this.bookCover = bookCover;
     }
@@ -6991,6 +7707,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
+    public int getTodayOnlineTime() {
+        return this.todayOnlineTime;
+    }
+
+    public void gainTodayOnlineTime(int s) {
+        this.todayOnlineTime += s;
+    }
+
+    public void setTodayOnlineTime(int s) {
+        this.todayOnlineTime = s;
+    }
+
     public int getOneTimeLoga(String log) {
         return TimeLogCenter.getInstance().getOneTimeLoga(this.getAccountID(), log);
     }
@@ -7337,7 +8065,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -7352,7 +8080,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getOneTimeLog(final String log) {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             int ret_count = 0;
-            final PreparedStatement ps = con.prepareStatement("select count(*) from OneTimelog where characterid = ? and log = ?");
+            final PreparedStatement ps = con.prepareStatement("select sum(count) from OneTimelog where characterid = ? and log = ?");
             ps.setInt(1, this.id);
             ps.setString(2, log);
             final ResultSet rs = ps.executeQuery();
@@ -7360,7 +8088,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret_count = rs.getInt(1);
             }
             else {
-                ret_count = -1;
+                ret_count = 0;
             }
             rs.close();
             ps.close();
@@ -7404,9 +8132,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     public void setOneTimeLog(final String log) {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
-            final PreparedStatement ps = con.prepareStatement("insert into OneTimelog (characterid, log) values (?,?)");
+            final PreparedStatement ps = con.prepareStatement("insert into OneTimelog (characterid, log,count) values (?,?,?)");
             ps.setInt(1, this.id);
             ps.setString(2, log);
+            ps.setInt(3, 1);
             ps.executeUpdate();
             ps.close();
         }
@@ -7452,7 +8181,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret_count = rs.getInt(1);
             }
             else {
-                ret_count = -1;
+                ret_count = 0;
             }
             rs.close();
             ps.close();
@@ -7501,7 +8230,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret_count = rs.getInt(1);
             }
             else {
-                ret_count = -1;
+                ret_count = 0;
             }
             rs.close();
             ps.close();
@@ -7524,7 +8253,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret_count = rs.getInt(1);
             }
             else {
-                ret_count = -1;
+                ret_count = 0;
             }
             rs.close();
             ps.close();
@@ -7667,7 +8396,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.canTalk = talk;
     }
     
-    public int getEXPMod() {
+    public double getEXPMod() {
         return this.stats.expMod;
     }
     
@@ -8059,6 +8788,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.beans = this.beans;
         ret.blood = this.blood;
         ret.month = this.month;
+        ret.max_damage = this.max_damage;
+        ret.exp_reserve = this.exp_reserve;
         ret.jf = this.jf;
         ret.zdjf = this.zdjf;
         ret.rwjf = this.rwjf;
@@ -8157,6 +8888,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         MapleClient cloneClient = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
         int minus = this.getId() + 10000000;
         MapleCharacter ret = new MapleCharacter(true);
+        ret.cloneDamagePercentage = cloneDamagePercentage;
         ret.id = minus;
         ret.client = cloneClient;
         ret.exp = 0;
@@ -8236,6 +8968,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.clone = true;
         ret.client.setChannel(this.client.getChannel());
         ret.max_damage = this.max_damage;
+        ret.exp_reserve = this.exp_reserve;
         ret.guildPoints = this.guildPoints;
         while (this.map.getCharacterById(ret.id) != null || this.client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null) {
             final MapleCharacter mapleCharacter = ret;
@@ -8244,23 +8977,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.client.setPlayer(ret);
         return ret;
     }
-    public void cloneLook() {
-        if (this.clone) {
-            return;
+    public final void cloneLook() {
+        if (this.cloneDamageRateList.length >0 && this.cloneDamageRateList[0]!=50) {
+            this.cloneLook(this.cloneDamageRateList[0]);
+        }else{
+            this.cloneLook(50);
         }
-        for (int i = 0; i < this.clones.length; ++i) {
-            if (this.clones[i].get() == null) {
-                //复制角色属性,技能
-                final MapleCharacter newp = this.cloneLooks();
-                this.map.addPlayer(newp);
-                this.map.broadcastMessage(MaplePacketCreator.updateCharLook(newp));
-                this.map.movePlayer(newp, this.getPosition());
-                this.clones[i] = new WeakReference<MapleCharacter>(newp);
-                return;
-            }
-        }
+
+
     }
-    private int[] cloneDamageRateList = new int[]{50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
 
     public final void cloneLook(int damagePercentage) {
         if (!this.clone) {
@@ -8470,6 +9195,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         PlayerBuffStorage.addBuffsToStorage(this.getId(), this.getAllBuffs());
         PlayerBuffStorage.addCooldownsToStorage(this.getId(), this.getCooldowns());
         PlayerBuffStorage.addDiseaseToStorage(this.getId(), this.getAllDiseases());
+        PlayerBuffStorage.addSnailValuesToStorage(this.getId(), this.getSnailValues());
         World.channelChangeData(new CharacterTransfer(this), this.getId(), channel);
         if (ch != null) {
             ch.removePlayer(this);
@@ -8537,7 +9263,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         this.client.setPlayer(null);
         this.client.setReceiving(false);
+        this.等级上限 = this.取限制等级();
         this.expirationTask(true, false);
+
     }
     
     public void expandInventory(final byte type, final int amount) {
@@ -10414,7 +11142,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return meso;
     }
@@ -10431,7 +11159,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return meso;
     }
@@ -10448,7 +11176,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return meso;
     }
@@ -10464,7 +11192,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10487,7 +11215,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret_count = rs.getInt(1);
             }
             else {
-                ret_count = -1;
+                ret_count = 0;
             }
             rs.close();
             ps.close();
@@ -10645,7 +11373,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10668,7 +11396,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10691,7 +11419,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10754,7 +11482,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10762,7 +11490,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException Ex) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
-            return -1;
+            return 0;
         }
     }
     
@@ -10777,7 +11505,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10807,7 +11535,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10876,7 +11604,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -10898,7 +11626,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -11325,7 +12053,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret_count = rs.getInt(1);
                 }
                 else {
-                    ret_count = -1;
+                    ret_count = 0;
                 }
             }
             ps.close();
@@ -12051,7 +12779,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void 打开奖励() {
-        NPCScriptManager.getInstance().dispose(this.client);
         NPCScriptManager.getInstance().start(this.client, 9000011, "5");
     }
     
@@ -12060,6 +12787,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void 击杀野外BOSS特效() {
+        this.map.broadcastMessage(MaplePacketCreator.environmentChange("dojang/end/clear", 3));
     }
     
     public void 时间到() {
@@ -12589,7 +13317,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret_count = rs.getInt("Point");
             }
             else {
-                ret_count = -1;
+                ret_count = 0;
             }
             rs.close();
             ps.close();
@@ -13408,7 +14136,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             if (!chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具"),1) && !chr.haveItem(LtMS.ConfigValuesMap.get("VIP道具1"),1)){
                 return;
             }
-            if (chr.getBossLog1("开启自动回收",1)==0){
+            if (!chr.is开启自动回收()){
                 return;
             }
             if (chr.getInventory(MapleInventoryType.EQUIP).getItem((short)80) == null) {
@@ -13437,8 +14165,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             chr.dropMessage(6, "装备回收成功，共获得 " + mesosGained + " 冒险币！");
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
+
+        try {
+            if(chr.getMeso() >2000000000 && LtMS.ConfigValuesMap.get("金币道具自动兑换") >0 ){
+                chr.gainMeso(-(LtMS.ConfigValuesMap.get("金币道具价值")), true);
+                chr.gainItem(LtMS.ConfigValuesMap.get("金币道具"),1);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
     }  //回收装备
     public void openAutoSkillBuff(final MapleClient c, MapleCharacter chr) {
 
@@ -13572,7 +14311,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     c.useSkill(c.getPlayer(),4101004,c.getPlayer().getSkillLevel(4101004));
                     c.useSkill(c.getPlayer(),4111001,c.getPlayer().getSkillLevel(4111001));
                     c.useSkill(c.getPlayer(),4111002,c.getPlayer().getSkillLevel(4111002));
-                    c.useSkill(c.getPlayer(),4121006,c.getPlayer().getSkillLevel(4121006));
+                    //c.useSkill(c.getPlayer(),4121006,c.getPlayer().getSkillLevel(4121006));
 
                     break;
                 //标飞
@@ -13622,7 +14361,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
     public static int calculateMesos(IItem item) {
@@ -13651,6 +14390,114 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this._equippedFuMoMap;
     }
 
+    public int getHyPay(int type) {
+        int pay = 0;
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("select * from hypay where accname = ?");
+            ps.setString(1, this.getClient().getAccountName());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                if (type == 1) {
+                    pay = rs.getInt("pay");
+                } else if (type == 2) {
+                    pay = rs.getInt("payUsed");
+                } else if (type == 3) {
+                    pay = rs.getInt("pay") + rs.getInt("payUsed");
+                } else if (type == 4) {
+                    pay = rs.getInt("payReward");
+                } else {
+                    pay = 0;
+                }
+            } else {
+                PreparedStatement psu = con.prepareStatement("insert into hypay (accname, pay, payUsed, payReward) VALUES (?, ?, ?, ?)");
+                psu.setString(1, this.getClient().getAccountName());
+                psu.setInt(2, 0);
+                psu.setInt(3, 0);
+                psu.setInt(4, 0);
+                psu.executeUpdate();
+                psu.close();
+            }
+
+            DBConPool.close(ps);
+            rs.close();
+        } catch (SQLException var7) {
+            服务端输出信息.println_err("获充值信息发生错误: " + var7);
+        }
+
+        return pay;
+    }
+
+    public int gainHyPay(int hypay) {
+        int pay = this.getHyPay(1);
+        int payUsed = this.getHyPay(2);
+        int payReward = this.getHyPay(4);
+        if (hypay <= 0) {
+            return 0;
+        } else {
+            try {
+                Connection con = DBConPool.getConnection();
+                PreparedStatement ps = con.prepareStatement("UPDATE hypay SET pay = ? ,payUsed = ? ,payReward = ? where accname = ?");
+                ps.setInt(1, pay + hypay);
+                ps.setInt(2, payUsed);
+                ps.setInt(3, payReward);
+                ps.setString(4, this.getClient().getAccountName());
+                ps.executeUpdate();
+                DBConPool.close(ps);
+                return 1;
+            } catch (SQLException var7) {
+                服务端输出信息.println_err("加减充值信息发生错误: " + var7);
+                return 0;
+            }
+        }
+    }
+
+    public int addHyPay(int hypay) {
+        int pay = this.getHyPay(1);
+        int payUsed = this.getHyPay(2);
+        int payReward = this.getHyPay(4);
+        if (hypay > pay) {
+            return -1;
+        } else {
+            try {
+                Connection con = DBConPool.getConnection();
+                PreparedStatement ps = con.prepareStatement("UPDATE hypay SET pay = ? ,payUsed = ? ,payReward = ? where accname = ?");
+                ps.setInt(1, pay - hypay);
+                ps.setInt(2, payUsed + hypay);
+                ps.setInt(3, payReward + hypay);
+                ps.setString(4, this.getClient().getAccountName());
+                ps.executeUpdate();
+                DBConPool.close(ps);
+                return 1;
+            } catch (SQLException var7) {
+                服务端输出信息.println_err("加减充值信息发生错误: " + var7);
+                return -1;
+            }
+        }
+    }
+
+    public int delPayReward(int pay) {
+        int payReward = this.getHyPay(4);
+        if (pay <= 0) {
+            return -1;
+        } else if (pay > payReward) {
+            return -1;
+        } else {
+            try {
+                Connection con = DBConPool.getConnection();
+                PreparedStatement ps = con.prepareStatement("UPDATE hypay SET payReward = ? where accname = ?");
+                ps.setInt(1, payReward - pay);
+                ps.setString(2, this.getClient().getAccountName());
+                ps.executeUpdate();
+                DBConPool.close(ps);
+                return 1;
+            } catch (SQLException var5) {
+                服务端输出信息.println_err("加减消费奖励信息发生错误: " + var5);
+                return -1;
+            }
+        }
+    }
     public void 刷新身上装备镶嵌汇总数据() {
         this._equippedFuMoMap.clear();
 
@@ -13771,6 +14618,36 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 获取镶嵌汇总值(int fumoType) {
         return this._equippedFuMoMap.containsKey(fumoType) ? (Integer)this._equippedFuMoMap.get(fumoType) : 0;
     }
+//    public void reloadPotentialMap() {
+//
+//
+//        try {
+//            Collection<IItem> list = this.getInventory(MapleInventoryType.EQUIPPED).list();
+//            if(ListUtil.isEmpty(list) || list.size() == 0){
+//                return;
+//            }
+//            this.potentialMap.clear();
+//
+//            list.forEach(iItem -> {
+//                Equip equip = (Equip)iItem;
+//                String potentials = equip.getPotentials();
+//                String[] arr = potentials.split(",");
+//                for (String s : arr) {
+//                    String[] arr2 = s.split(":");
+//                    int potentialType = Integer.parseInt(arr2[0]);
+//                    int potentialVal = Integer.parseInt(arr2[1]);
+//                    if (this.potentialMap.containsKey(potentialType)) {
+//                        this.potentialMap.put(potentialType, (Integer)this.potentialMap.get(potentialType) + potentialVal);
+//                    } else {
+//                        this.potentialMap.put(potentialType, potentialVal);
+//                    }
+//                }
+//            });
+//        } catch (Exception var13) {
+//            服务端输出信息.println_err("reloadPotentialMap出错：" + var13);
+//            var13.printStackTrace();
+//        }
+//    }
     public void reloadPotentialMap() {
         this.potentialMap.clear();
 
@@ -13818,6 +14695,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             var13.printStackTrace();
         }
     }
+
+
+
 
     public void reloadPotentialMapFromDB() {
         this.potentialMap.clear();
@@ -13977,7 +14857,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
 
-    public boolean 增加里程_数据库(int mount) {
+    public boolean 增加积分_数据库(int mount) {
         if (mount <= 0) {
             return false;
         } else {
@@ -14002,17 +14882,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
                 ps.close();
                 rs.close();
-                this.dropMessage(5, "里程数增加 " + mount);
+                this.dropMessage(5, "积分数增加 " + mount);
                 return true;
             } catch (SQLException var6) {
-                服务端输出信息.println_err("增加里程，读取数据库错误，错误原因：" + var6);
+                服务端输出信息.println_err("增加积分，读取数据库错误，错误原因：" + var6);
                 var6.printStackTrace();
                 return false;
             }
         }
     }
 
-    public boolean 减少里程_数据库(int mount) {
+    public boolean 减少积分_数据库(int mount) {
         if (mount <= 0) {
             return false;
         } else {
@@ -14037,9 +14917,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.executeUpdate();
                 ps.close();
                 rs.close();
-                this.dropMessage(5, "里程数减少 " + mount);
+                this.dropMessage(5, "积分数减少 " + mount);
             } catch (SQLException var6) {
-                服务端输出信息.println_err("减少里程，读取数据库错误，错误原因：" + var6);
+                服务端输出信息.println_err("减少积分，读取数据库错误，错误原因：" + var6);
                 var6.printStackTrace();
             }
 
@@ -14047,7 +14927,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-    public int 获得里程_数据库() {
+    public int 获得积分_数据库() {
         Connection con = DBConPool.getConnection();
         int point = 0;
 
@@ -14062,7 +14942,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
             rs.close();
         } catch (SQLException var5) {
-            服务端输出信息.println_err("获得里程_数据库错误，错误原因：" + var5);
+            服务端输出信息.println_err("获得积分_数据库错误，错误原因：" + var5);
             var5.printStackTrace();
         }
 
@@ -14106,15 +14986,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
 
     }
-    private boolean showSkill = true;
     public boolean isShowSkill() {
         return this.showSkill;
     }
     public void setShowSkill(boolean showSkill) {
         this.showSkill = showSkill;
     }
-    private boolean dropOnMyFoot = false;
-    private boolean dropOnMyBag = false;
+    public final long 判断物品数量(int itemid) {
+        MapleInventoryType type = GameConstants.getInventoryType(itemid);
+        return this.inventory[type.ordinal()].countById(itemid);
+    }
     public boolean isDropOnMyFoot() {
         return GameConstants.isBanChannel(this.getClient().getChannel()) && !this.isGM() ? false : this.dropOnMyFoot;
     }
@@ -14213,7 +15094,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getOneTimeLogi(String log) {
         try {
             Connection con = DBConPool.getConnection();
-            int ret_count = -1;
+            int ret_count = 0;
             try {
                 PreparedStatement ps = con.prepareStatement("select count(*) from onetimelogi where ip = ? and log = ?");
                 ps.setString(1, this.getClient().getSessionIPAddress());
@@ -14572,7 +15453,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
         if (inc_damage > 0L) {
             now_damage += inc_damage;
-            this.max_damage = now_damage;
+                this.max_damage = now_damage;
+           long a = Math.abs((now_damage-199999L)/10000);
+           if(a>=214700){
+               this.PGSXDJ = 214700;
+           }else{
+               this.PGSXDJ = (int) a;
+           }
+
         }
 
     }
@@ -15588,13 +16476,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             TimeLogCenter.getInstance().setBossLoga(this.getAccountID(), bossid, count);
         }
     }
-    public boolean loadMountListFromDB() {
+    public void loadMountListFromDB() {
         this.mountList.clear();
 
         try {
             Connection con = DBConPool.getConnection();
-            Throwable var2 = null;
-
             try {
                 PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_chr_mount_list WHERE chrid = ?");
                 ps.setInt(1, this.getId());
@@ -15606,29 +16492,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
                 ps.close();
                 rs.close();
-                boolean var5 = true;
-                return var5;
-            } catch (Throwable var15) {
-                var2 = var15;
-                throw var15;
+            } catch (Exception var15) {
             } finally {
                 if (con != null) {
-                    if (var2 != null) {
                         try {
                             con.close();
                         } catch (Throwable var14) {
-                            var2.addSuppressed(var14);
                         }
-                    } else {
-                        con.close();
-                    }
                 }
 
             }
         } catch (Exception var17) {
             服务端输出信息.println_err("【错误】loadMountListFromDB 错误，错误原因：" + var17);
             var17.printStackTrace();
-            return false;
         }
     }
 
@@ -15682,7 +16558,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getBossLogi(String bossid) {
         try {
             Connection con = DBConPool.getConnection();
-            int ret_count = -1;
+            int ret_count = 0;
             try {
                 PreparedStatement ps = con.prepareStatement("select count(*) from bosslogi where ip = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
                 ps.setString(1, this.getClient().getSessionIPAddress());
@@ -15760,6 +16636,1252 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
 
+    public boolean isShowChair() {
+        return this.isShowChair;
+    }
+
+    public void setShowChair(boolean isShowChair) {
+        this.isShowChair = isShowChair;
+    }
+
+    public boolean isShowEquip() {
+        return this.isShowEquip;
+    }
+
+    public void setShowEquip(boolean isShowEquip) {
+        this.isShowEquip = isShowEquip;
+    }
+
+    public void showEffect(boolean broadcast, String effect) {
+        if (broadcast) {
+            this.getMap().broadcastMessage(MaplePacketCreator.showEffect(effect));
+        } else {
+            this.getClient().sendPacket(MaplePacketCreator.showEffect(effect));
+        }
+
+    }
+
+    public void 增加经验储备(long inc_exp) {
+        long now_exp = this.exp_reserve;
+        if (now_exp <= 0L) {
+            now_exp = 0L;
+        }
+
+        if (inc_exp > 0L) {
+            now_exp += inc_exp;
+            this.exp_reserve = now_exp;
+        }
+
+    }
+
+    public void 扣除经验储备(long inc_exp) {
+        long now_exp = this.exp_reserve;
+        if (now_exp <= 199999L) {
+            now_exp = 199999L;
+        }
+
+        if (inc_exp > 0L) {
+            now_exp -= inc_exp;
+            if (now_exp <= 0L) {
+                now_exp = 0L;
+            }
+
+            this.exp_reserve = now_exp;
+        }
+
+    }
+
+    public long 读取经验储备() {
+        return this.exp_reserve;
+    }
+
+    public int getTamingMobId() {
+        return this.tamingMobId;
+    }
+
+    public void setTamingMobId(int tamingMobId) {
+        this.tamingMobId = tamingMobId;
+    }
+
+    public int getTamingMobItemId() {
+        return this.tamingMobItemId;
+    }
+
+    public void setTamingMobItemId(int tamingMobItemId) {
+        this.tamingMobItemId = tamingMobItemId;
+    }
 
 
+    public byte getImprison() {
+        return this.imprison;
+    }
+
+    public void setImprison(byte imprison) {
+        this.imprison = imprison;
+    }
+    public int[] getCloneDamageRateList() {
+        return this.cloneDamageRateList;
+    }
+
+    public void setCloneDamageRateList(int[] cloneDamageRateList) {
+        this.cloneDamageRateList = cloneDamageRateList;
+    }
+
+    public int getStage() {
+        return this.stage;
+    }
+
+    public void setStage(int stage) {
+        this.stage = stage;
+    }
+
+    public String getStageName() {
+        return this.getStageName(this.stage);
+    }
+
+    public String getStageName(int stage) {
+        return GameConstants.getChrStageName(stage);
+    }
+
+    public int getStageCount(int stage) {
+        return GameConstants.getChrStageCount(stage);
+    }
+
+    public int getStageCount() {
+        return GameConstants.getChrStageCount(this.stage);
+    }
+
+    public int getNextStageCount() {
+        return this.stage >= GameConstants.getMaxChrStage() ? -1 : GameConstants.getChrStageCount(this.stage + 1);
+    }
+
+    public Map<Integer, Pair<String, Integer>> getStageMap() {
+        return GameConstants.getChrStageMap();
+    }
+    public int getBreakLevel() {
+        return this.breakLevel;
+    }
+
+    public void setBreakLevel(int breakLevel) {
+        this.breakLevel = breakLevel;
+    }
+
+    public float getExpRateChr() {
+        return this.expRateChr;
+    }
+
+    public void setExpRateChr(float expRateChr) {
+        this.expRateChr = expRateChr;
+    }
+
+    public void gainExpRateChr(float expRateChr) {
+        this.expRateChr += expRateChr;
+    }
+
+    public float getMesoRateChr() {
+        return this.mesoRateChr;
+    }
+
+    public void setMesoRateChr(float mesoRateChr) {
+        this.mesoRateChr = mesoRateChr;
+    }
+
+    public void gainMesoRateChr(float mesoRateChr) {
+        this.mesoRateChr += mesoRateChr;
+    }
+
+    public float getDropRateChr() {
+        return this.dropRateChr;
+    }
+
+    public void setDropRateChr(float dropRateChr) {
+        this.dropRateChr = dropRateChr;
+    }
+
+    public void gainDropRateChr(float dropRateChr) {
+        this.dropRateChr += dropRateChr;
+    }
+
+    public int getLastTakeDamageValue() {
+        return this.lastTakeDamageValue;
+    }
+
+    public void setLastTakeDamageValue(int lastTakeDamageValue) {
+        this.lastTakeDamageValue = lastTakeDamageValue;
+    }
+
+    public long getLastPetHpTime() {
+        return this.lastPetHpTime;
+    }
+
+    public void setLastPetHpTime(long lastPetHpTime) {
+        this.lastPetHpTime = lastPetHpTime;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public static MapleCharacter loadCharFromDB(int charid, boolean channelserver, Connection con) {
+        MapleCharacter ret = new MapleCharacter(channelserver);
+        ret.client = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
+        ret.setId(charid);
+        if (Game.调试2.equals("开")) {
+            服务端输出信息.println_out("开始从数据库读取角色" + charid + "的数据：");
+        }
+
+        try {
+            PreparedStatement ps = null;
+            ResultSet rs = null;
+
+            try {
+                ps = con.prepareStatement("SELECT * FROM characters WHERE id = ?");
+                ps.setInt(1, charid);
+                rs = ps.executeQuery();
+                if (!rs.next()) {
+                    throw new RuntimeException("Loading the Char Failed (char not found)");
+                }
+
+                ret.Vip_Medal = rs.getShort("VipMedal") > 0;
+                ret.name = rs.getString("name");
+                ret.level = rs.getShort("level");
+                ret.fame = rs.getShort("fame");
+                ret.stats.str = rs.getShort("str");
+                ret.stats.dex = rs.getShort("dex");
+                ret.stats.int_ = rs.getShort("int");
+                ret.stats.luk = rs.getShort("luk");
+                ret.stats.maxhp = rs.getShort("maxhp");
+                ret.stats.maxmp = rs.getShort("maxmp");
+                ret.stats.hp = rs.getShort("hp");
+                ret.stats.mp = rs.getShort("mp");
+                ret.exp = rs.getInt("exp");
+                ret.hpmpApUsed = rs.getShort("hpApUsed");
+                String[] sp = rs.getString("sp").split(",");
+
+                for(int i = 0; i < ret.remainingSp.length; ++i) {
+                    ret.remainingSp[i] = Integer.parseInt(sp[i]);
+                }
+
+                if (Game.调试2.equals("开")) {
+                    服务端输出信息.println_out("正在读取角色" + charid + " characters表的数据，角色名为：" + ret.name);
+                }
+
+                ret.remainingAp = rs.getShort("ap");
+                ret.beans = rs.getInt("beans");
+                ret.todayOnlineTime = rs.getInt("todayOnlineTime");
+                ret.totalOnlineTime = rs.getInt("totalOnlineTime");
+                ret.max_damage = rs.getLong("max_damage");
+
+                if (ret.max_damage < 199999L) {
+                    ret.max_damage = 199999L;
+                }
+
+                ret.meso = rs.getInt("meso");
+                ret.gmLevel = rs.getByte("gm");
+                ret.skinColor = rs.getByte("skincolor");
+                ret.gender = rs.getByte("gender");
+                ret.job = rs.getShort("job");
+                ret.hair = rs.getInt("hair");
+                ret.face = rs.getInt("face");
+                ret.accountid = rs.getInt("accountid");
+                ret.mapid = rs.getInt("map");
+                ret.initialSpawnPoint = rs.getByte("spawnpoint");
+                ret.world = rs.getByte("world");
+                ret.guildid = rs.getInt("guildid");
+                ret.guildrank = rs.getByte("guildrank");
+                ret.allianceRank = rs.getByte("allianceRank");
+                ret.currentrep = rs.getInt("currentrep");
+                ret.totalrep = rs.getInt("totalrep");
+                ret.makeMFC(rs.getInt("familyid"), rs.getInt("seniorid"), rs.getInt("junior1"), rs.getInt("junior2"));
+                if (ret.guildid > 0) {
+                    ret.mgc = new MapleGuildCharacter(ret);
+                }
+
+                ret.buddylist = new BuddyList(rs.getByte("buddyCapacity"));
+                ret.subcategory = rs.getByte("subcategory");
+                ret.mount = new MapleMount(ret, 0, ret.job > 1000 && ret.job < 2000 ? 10001004 : (ret.job < 2000 ? 1004 : (ret.job != 2001 && (ret.job < 2200 || ret.job > 2218) ? (ret.job >= 3000 ? 30001004 : 20001004) : 20011004)), (byte)0, (byte)1, 0);
+                ret.rank = rs.getInt("rank");
+                ret.rankMove = rs.getInt("rankMove");
+                ret.jobRank = rs.getInt("jobRank");
+                ret.jobRankMove = rs.getInt("jobRankMove");
+                ret.marriageId = rs.getInt("marriageId");
+                ret.charmessage = rs.getString("charmessage");
+                ret.expression = rs.getInt("expression");
+                ret.constellation = rs.getInt("constellation");
+                ret.blood = rs.getInt("blood");
+                ret.month = rs.getInt("month");
+                ret.day = rs.getInt("day");
+                ret.prefix = rs.getString("prefix");
+                ret.gachexp = rs.getInt("gachexp");
+
+                ret.exp_reserve = rs.getLong("exp_reserve");
+                ret.imprison = rs.getByte("imprison");
+                ret.guildPoints = rs.getInt("guildpoints");
+                ret.stage = rs.getInt("stage");
+                ret.breakLevel = rs.getInt("break_level");
+                ret.expRateChr = rs.getFloat("exp_rate");
+                ret.mesoRateChr = rs.getFloat("meso_rate");
+                ret.dropRateChr = rs.getFloat("drop_rate");
+                if (channelserver) {
+                    MapleMapFactory mapFactory = ChannelServer.getInstance(1).getMapFactory();
+                    ret.antiMacro = new MapleLieDetector(ret.id);
+                    ret.map = mapFactory.getMap(ret.mapid);
+                    if (ret.mapid == 801000210) {
+                        ret.map = mapFactory.getMap(801000000);
+                    }
+
+                    if (ret.mapid == 801000110) {
+                        ret.map = mapFactory.getMap(801000000);
+                    }
+
+                    if (ret.map == null) {
+                        ret.map = mapFactory.getMap(100000000);
+                    }
+
+                    MaplePortal portal = ret.map.getPortal(ret.initialSpawnPoint);
+                    if (portal == null) {
+                        portal = ret.map.getPortal(0);
+                        ret.initialSpawnPoint = 0;
+                    }
+
+                    ret.setPosition(portal.getPosition());
+                    int partyid = rs.getInt("party");
+                    if (partyid >= 0) {
+                        MapleParty party = Party.getParty(partyid);
+                        if (party != null && party.getMemberById(ret.id) != null) {
+                            ret.party = party;
+                        }
+                    }
+
+                    ret.bookCover = rs.getInt("monsterbookcover");
+                    ret.dojo = rs.getInt("dojo_pts");
+                    ret.dojoRecord = rs.getByte("dojoRecord");
+                    String[] pets = rs.getString("pets").split(",");
+
+                    for(int i = 0; i < ret.petStore.length; ++i) {
+                        ret.petStore[i] = Byte.parseByte(pets[i]);
+                    }
+
+                    rs.close();
+                    ps.close();
+                    ps = con.prepareStatement("SELECT achievementid FROM achievements WHERE accountid = ?");
+                    ps.setInt(1, ret.accountid);
+                    rs = ps.executeQuery();
+
+                    while(rs.next()) {
+                        ret.finishedAchievements.add(rs.getInt("achievementid"));
+                    }
+
+                    if (Game.调试2.equals("开")) {
+                        服务端输出信息.println_out("正在读取角色" + charid + " achievements表的数据");
+                    }
+                }
+
+                rs.close();
+                ps.close();
+                boolean compensate_previousEvans = false;
+                ps = con.prepareStatement("SELECT * FROM queststatus WHERE characterid = ?");
+                ps.setInt(1, charid);
+                rs = ps.executeQuery();
+                if (Game.调试2.equals("开")) {
+                    服务端输出信息.println_out("正在读取角色" + charid + " queststatus表的数据");
+                }
+
+                PreparedStatement pse = con.prepareStatement("SELECT * FROM queststatusmobs WHERE queststatusid = ?");
+                if (Game.调试2.equals("开")) {
+                    服务端输出信息.println_out("正在读取角色" + charid + " queststatusmobs表的数据");
+                }
+
+                while(rs.next()) {
+                    int id = rs.getInt("quest");
+                    if (id == 170000) {
+                        compensate_previousEvans = true;
+                    }
+
+                    MapleQuest q = MapleQuest.getInstance(id);
+                    MapleQuestStatus status = new MapleQuestStatus(q, rs.getByte("status"));
+                    long cTime = rs.getLong("time");
+                    if (cTime > -1L) {
+                        status.setCompletionTime(cTime * 1000L);
+                    }
+
+                    status.setForfeited(rs.getInt("forfeited"));
+                    status.setCustomData(rs.getString("customData"));
+                    ret.quests.put(q, status);
+                    pse.setLong(1, rs.getLong("queststatusid"));
+                    ResultSet rsMobs = pse.executeQuery();
+                    Throwable var15 = null;
+
+                    try {
+                        while(rsMobs.next()) {
+                            status.setMobKills(rsMobs.getInt("mob"), rsMobs.getInt("count"));
+                        }
+                    } catch (Throwable var41) {
+                        var15 = var41;
+                        throw var41;
+                    } finally {
+                        if (rsMobs != null) {
+                            if (var15 != null) {
+                                try {
+                                    rsMobs.close();
+                                } catch (Throwable var40) {
+                                    var15.addSuppressed(var40);
+                                }
+                            } else {
+                                rsMobs.close();
+                            }
+                        }
+
+                    }
+                }
+
+                rs.close();
+                ps.close();
+                pse.close();
+                Iterator var50;
+                Pair mit;
+                if (channelserver) {
+                    ret.CRand = new PlayerRandomStream();
+                    ret.monsterbook = MonsterBook.loadCards(charid);
+                    ps = con.prepareStatement("SELECT * FROM inventoryslot where characterid = ?");
+                    if (Game.调试2.equals("开")) {
+                        服务端输出信息.println_out("正在读取角色" + charid + " inventoryslot表的数据");
+                    }
+
+                    ps.setInt(1, charid);
+                    rs = ps.executeQuery();
+                    if (!rs.next()) {
+                        throw new RuntimeException("No Inventory slot column found in SQL. [inventoryslot]");
+                    }
+
+                    ret.getInventory(MapleInventoryType.EQUIP).setSlotLimit(rs.getByte("equip"));
+                    ret.getInventory(MapleInventoryType.USE).setSlotLimit(rs.getByte("use"));
+                    ret.getInventory(MapleInventoryType.SETUP).setSlotLimit(rs.getByte("setup"));
+                    ret.getInventory(MapleInventoryType.ETC).setSlotLimit(rs.getByte("etc"));
+                    ret.getInventory(MapleInventoryType.CASH).setSlotLimit(rs.getByte("cash"));
+                    if (Game.调试2.equals("开")) {
+                        服务端输出信息.println_out("equip=" + rs.getByte("equip"));
+                    }
+
+                    ps.close();
+                    rs.close();
+                    var50 = ItemLoader.INVENTORY.loadItems(con, false, new Integer[]{charid}).values().iterator();
+
+                    while(var50.hasNext()) {
+                        mit = (Pair)var50.next();
+                        ret.getInventory((MapleInventoryType)mit.getRight()).addFromDB((IItem)mit.getLeft());
+                        if (((IItem)mit.getLeft()).getPet() != null) {
+                            ret.pets.add(((IItem)mit.getLeft()).getPet());
+                        }
+                    }
+
+                    ps = con.prepareStatement("SELECT name, 2ndpassword, mPoints, vpoints, VIP, loginkey, serverkey, clientkey FROM accounts WHERE id = ?");
+                    if (Game.调试2.equals("开")) {
+                        服务端输出信息.println_out("正在读取角色" + charid + " accounts表的数据");
+                    }
+
+                    ps.setInt(1, ret.accountid);
+                    rs = ps.executeQuery();
+                    if (rs.next()) {
+                        ret.getClient().setAccountName(rs.getString("name"));
+                        ret.accountsecondPassword = rs.getString("2ndpassword");
+                        ret.maplepoints = rs.getInt("mPoints");
+                        ret.vpoints = rs.getInt("vpoints");
+                        ret.vip = rs.getInt("VIP");
+                        ret.loginkey = rs.getString("loginkey");
+                        ret.serverkey = rs.getString("serverkey");
+                        ret.clientkey = rs.getString("clientkey");
+                    } else {
+                        rs.close();
+                    }
+
+                    ps.close();
+                    ps = con.prepareStatement("SELECT quest, customData FROM questinfo WHERE characterid = ?");
+                    if (Game.调试2.equals("开")) {
+                        服务端输出信息.println_out("正在读取角色" + charid + " questinfo表的数据");
+                    }
+
+                    ps.setInt(1, charid);
+                    rs = ps.executeQuery();
+
+                    while(rs.next()) {
+                        ret.questinfo.put(rs.getInt("quest"), rs.getString("customData"));
+                    }
+
+                    rs.close();
+                    ps.close();
+                    ps = con.prepareStatement("SELECT skillid, skilllevel, masterlevel, expiration FROM skills WHERE characterid = ?");
+                    if (Game.调试2.equals("开")) {
+                        服务端输出信息.println_out("正在读取角色" + charid + " skills表的数据");
+                    }
+
+                    ps.setInt(1, charid);
+                    rs = ps.executeQuery();
+
+                    while(true) {
+                        int[] var10000;
+                        while(rs.next()) {
+                            ISkill skil = SkillFactory.getSkill(rs.getInt("skillid"));
+                            if (skil != null && GameConstants.isApplicableSkill(rs.getInt("skillid")) && rs.getByte("skilllevel") >= 0) {
+                                ret.skills.put(skil, new SkillEntry(rs.getByte("skilllevel"), rs.getByte("masterlevel"), rs.getLong("expiration")));
+                            } else if (skil == null) {
+                                var10000 = ret.remainingSp;
+                                int var10001 = GameConstants.getSkillBookForSkill(rs.getInt("skillid"));
+                                var10000[var10001] += rs.getByte("skilllevel");
+                            }
+                        }
+
+                        rs.close();
+                        ps.close();
+                        ret.expirationTask(false);
+                        ps = con.prepareStatement("SELECT id, name, level FROM characters WHERE accountid = ? ORDER BY level DESC");
+                        if (Game.调试2.equals("开")) {
+                            服务端输出信息.println_out("正在读取角色" + charid + " characters表的数据");
+                        }
+
+                        ps.setInt(1, ret.accountid);
+                        rs = ps.executeQuery();
+                        byte maxlevel_ = 0;
+
+                        while(true) {
+                            int position;
+                            while(rs.next()) {
+                                if (rs.getInt("id") != charid) {
+                                    byte maxlevel = (byte)(rs.getShort("level") / 10);
+                                    if (maxlevel > 20) {
+                                        maxlevel = 20;
+                                    }
+
+                                    if (maxlevel > maxlevel_) {
+                                        maxlevel_ = maxlevel;
+                                        ret.BlessOfFairy_Origin = rs.getString("name");
+                                    }
+                                } else if (charid < 17000 && !compensate_previousEvans && ret.job >= 2200 && ret.job <= 2218) {
+                                    for(position = 0; position <= GameConstants.getSkillBook(ret.job); ++position) {
+                                        var10000 = ret.remainingSp;
+                                        var10000[position] += 2;
+                                    }
+
+                                    ret.setQuestAdd(MapleQuest.getInstance(170000), (byte)0, (String)null);
+                                }
+                            }
+
+                            ret.skills.put(SkillFactory.getSkill(GameConstants.getBofForJob(ret.job)), new SkillEntry(maxlevel_, (byte)0, -1L));
+                            ps.close();
+                            rs.close();
+                            ps = con.prepareStatement("SELECT * FROM skillmacros WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " skillmacros表的数据：");
+                            }
+
+                            ps.setInt(1, charid);
+
+                            SkillMacro macro;
+                            for(rs = ps.executeQuery(); rs.next(); ret.skillMacros[position] = macro) {
+                                if (Game.调试2.equals("开")) {
+                                    服务端输出信息.println_out("position " + rs.getInt("position") + " skill1 " + rs.getInt("skill1") + " skill2 " + rs.getInt("skill2") + " skill3 " + rs.getInt("skill3") + " name " + rs.getString("name") + " shout " + rs.getInt("shout"));
+                                }
+
+                                position = rs.getInt("position");
+                                macro = new SkillMacro(rs.getInt("skill1"), rs.getInt("skill2"), rs.getInt("skill3"), rs.getString("name"), rs.getInt("shout"), position);
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ps = con.prepareStatement("SELECT `key`,`type`,`action` FROM keymap WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " keymap表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+                            rs = ps.executeQuery();
+                            Map<Integer, Pair<Byte, Integer>> keyb = ret.keylayout.Layout();
+
+                            while(rs.next()) {
+                                keyb.put(rs.getInt("key"), new Pair(rs.getByte("type"), rs.getInt("action")));
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ps = con.prepareStatement("SELECT `locationtype`,`map` FROM savedlocations WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " savedlocations表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+
+                            for(rs = ps.executeQuery(); rs.next(); ret.savedLocations[rs.getInt("locationtype")] = rs.getInt("map")) {
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ps = con.prepareStatement("SELECT `characterid_to`,`when` FROM famelog WHERE characterid = ? AND DATEDIFF(NOW(),`when`) < 30");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " famelog表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+                            rs = ps.executeQuery();
+                            ret.lastfametime = 0L;
+                            ret.lastmonthfameids = new ArrayList(31);
+
+                            while(rs.next()) {
+                                ret.lastfametime = Math.max(ret.lastfametime, rs.getTimestamp("when").getTime());
+                                ret.lastmonthfameids.add(rs.getInt("characterid_to"));
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ret.buddylist.loadFromDb(charid);
+                            ret.storage = MapleStorage.loadStorage(ret.accountid, con);
+                            ret.cs = new CashShop(ret.accountid, charid, ret.getJob());
+                            ps = con.prepareStatement("SELECT sn FROM wishlist WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " wishlist表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+                            rs = ps.executeQuery();
+
+                            int i;
+                            for(i = 0; rs.next(); ++i) {
+                                ret.wishlist[i] = rs.getInt("sn");
+                            }
+
+                            while(i < 10) {
+                                ret.wishlist[i] = 0;
+                                ++i;
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ps = con.prepareStatement("SELECT mapid FROM trocklocations WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " trocklocations表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+                            rs = ps.executeQuery();
+
+                            int r;
+                            for(r = 0; rs.next(); ++r) {
+                                ret.rocks[r] = rs.getInt("mapid");
+                            }
+
+                            while(r < 10) {
+                                ret.rocks[r] = 999999999;
+                                ++r;
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ps = con.prepareStatement("SELECT mapid FROM regrocklocations WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " regrocklocations表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+                            rs = ps.executeQuery();
+
+                            for(r = 0; rs.next(); ++r) {
+                                ret.regrocks[r] = rs.getInt("mapid");
+                            }
+
+                            while(r < 5) {
+                                ret.regrocks[r] = 999999999;
+                                ++r;
+                            }
+
+                            rs.close();
+                            ps.close();
+                            ps = con.prepareStatement("SELECT * FROM mountdata WHERE characterid = ?");
+                            if (Game.调试2.equals("开")) {
+                                服务端输出信息.println_out("正在读取角色" + charid + " mountdata表的数据");
+                            }
+
+                            ps.setInt(1, charid);
+                            rs = ps.executeQuery();
+                            if (!rs.next()) {
+                                throw new RuntimeException("No mount data found on SQL column");
+                            }
+
+                            IItem mount = ret.getInventory(MapleInventoryType.EQUIPPED).getItem((short)-18);
+                            ret.mount = new MapleMount(ret, mount != null ? mount.getItemId() : 0, ret.job > 1000 && ret.job < 2000 ? 10001004 : (ret.job >= 2000 ? (ret.job != 2001 && ret.job < 2200 ? (ret.job >= 3000 ? 30001004 : 20001004) : 20011004) : 1004), rs.getByte("Fatigue"), rs.getByte("Level"), rs.getInt("Exp"));
+                            ps.close();
+                            rs.close();
+                            ret.skillSkin.loadChrSkill();
+                            ret.loadMountListFromDB();
+                           // ret.loadMonsterKillQuestFromDB(con);
+                            ret.stats.recalcLocalStats(true);
+                            return ret;
+                        }
+                    }
+                } else {
+                    var50 = ItemLoader.INVENTORY.loadItems(con, true, new Integer[]{charid}).values().iterator();
+
+                    while(var50.hasNext()) {
+                        mit = (Pair)var50.next();
+                        ret.getInventory((MapleInventoryType)mit.getRight()).addFromDB((IItem)mit.getLeft());
+                    }
+                }
+            } catch (SQLException var43) {
+                FilePrinter.printError("MapleCharacter.txt", var43, "载入角色失败..");
+            } finally {
+                try {
+                    if (ps != null) {
+                        ps.close();
+                    }
+
+                    if (rs != null) {
+                        rs.close();
+                    }
+                } catch (SQLException var39) {
+                    FileoutputUtil.outError("logs/资料库异常.txt", var39);
+                }
+
+            }
+        } catch (Exception var45) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var45);
+        }
+
+        return ret;
+    }
+
+    public void forceCancelAllBuffs() {
+        LinkedList<MapleBuffStatValueHolder> allBuffs = new LinkedList(this.effects.values());
+        Iterator var2 = allBuffs.iterator();
+
+        while(var2.hasNext()) {
+            MapleBuffStatValueHolder mbsvh = (MapleBuffStatValueHolder)var2.next();
+            if (this != null && mbsvh.effect != null) {
+                this.cancelEffect(mbsvh.effect, false, mbsvh.startTime, mbsvh.effect.getStatups(), true);
+            }
+        }
+
+    }
+    public boolean 检测是否开店() {
+        IMaplePlayerShop merchant = this.getPlayerShop();
+        if (merchant != null && merchant.getShopType() == 1 && merchant.isOwner(this) && merchant.isAvailable()) {
+            this.是否开店 = true;
+            return true;
+        } else {
+            Iterator var2 = ChannelServer.getAllInstances().iterator();
+
+            while(var2.hasNext()) {
+                ChannelServer cs = (ChannelServer)var2.next();
+                Iterator var4 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+
+                while(var4.hasNext()) {
+                    MapleMap map = (MapleMap)var4.next();
+                    Iterator var6 = map.getAllMerchant().iterator();
+
+                    while(var6.hasNext()) {
+                        MapleMapObject obj = (MapleMapObject)var6.next();
+                        if (obj instanceof IMaplePlayerShop) {
+                            IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+                            if (obj instanceof HiredMerchant) {
+                                HiredMerchant merchant1 = (HiredMerchant)ips;
+                                if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(this) && merchant1.isAvailable()) {
+                                    this.是否开店 = true;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.是否开店 = false;
+            return false;
+        }
+    }
+    public boolean 是否开店() {
+        return this.是否开店;
+    }
+
+    public int 读取开店经验加成() {
+        return this.是否开店 ? (Integer)LtMS.ConfigValuesMap.get("开店经验加成") : 0;
+    }
+
+    public void 开启储备经验() {
+        this.是否储备经验 = true;
+    }
+
+    public void 关闭储备经验() {
+        this.是否储备经验 = false;
+    }
+
+    public boolean 是否储备经验() {
+        return this.是否储备经验;
+    }
+    public boolean getSuperTransformation() {
+        return this.superTransformation;
+    }
+    public void setSuperTransformation(boolean superTransformation) {
+        this.superTransformation = superTransformation;
+    }
+
+    public long getLastSuperTransformationTime() {
+        return this.lastSuperTransformationTime;
+    }
+
+    public void setLastSuperTransformationTime(long lastSuperTransformationTime) {
+        this.lastSuperTransformationTime = lastSuperTransformationTime;
+    }
+    public void setCloneDamagePercentage(int cloneDamagePercentage) {
+        this.cloneDamagePercentage = cloneDamagePercentage;
+    }
+
+    public int getCloneDamagePercentage() {
+        return this.cloneDamagePercentage;
+    }
+
+    public boolean isSellWhenPickUpItem(int itemId) {
+        return this.sellWhenPickUpItemList.contains(itemId);
+    }
+    public ArrayList<Integer> getSellWhenPickUpItemList() {
+        return this.sellWhenPickUpItemList;
+    }
+
+    public void setSellWhenPickUpItemList(ArrayList<Integer> sellWhenPickUpItemList) {
+        this.sellWhenPickUpItemList = sellWhenPickUpItemList;
+    }
+
+    public void addSellWhenPickUpItem(int itemId) {
+        if (!this.sellWhenPickUpItemList.contains(itemId)) {
+            this.sellWhenPickUpItemList.add(itemId);
+
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var3 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("INSERT INTO snail_sell_pickup_items (character_id, item_id) VALUES (?, ?)");
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, itemId);
+                    ps.executeUpdate();
+                    ps.close();
+                } catch (Throwable var13) {
+                    var3 = var13;
+                    throw var13;
+                } finally {
+                    if (con != null) {
+                        if (var3 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var12) {
+                                var3.addSuppressed(var12);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var15) {
+                服务端输出信息.println_err("【错误】addSellWhenPickUpItem错误，原因：" + var15);
+                var15.printStackTrace();
+            }
+        }
+
+    }
+
+    public void deleteSellWhenPickUpItem(int itemId) {
+        if (this.sellWhenPickUpItemList.contains(itemId)) {
+            Iterator iter = this.sellWhenPickUpItemList.iterator();
+
+            while(iter.hasNext()) {
+                if (iter.next().equals(itemId)) {
+                    iter.remove();
+                }
+            }
+
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var4 = null;
+
+                try {
+                    PreparedStatement ps = con.prepareStatement("DELETE FROM snail_sell_pickup_items WHERE character_id = ? and item_id = ?");
+                    ps.setInt(1, this.id);
+                    ps.setInt(2, itemId);
+                    ps.executeUpdate();
+                    ps.close();
+                } catch (Throwable var14) {
+                    var4 = var14;
+                    throw var14;
+                } finally {
+                    if (con != null) {
+                        if (var4 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var13) {
+                                var4.addSuppressed(var13);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var16) {
+                服务端输出信息.println_err("【错误】addSellWhenPickUpItem错误，原因：" + var16);
+                var16.printStackTrace();
+            }
+        }
+
+    }
+    public void loadSellWhenPickUpItemListFromDB(Connection con) {
+        try {
+            if (con == null || con.isClosed()) {
+                con = DBConPool.getConnection();
+            }
+
+            ArrayList<Integer> ret = new ArrayList<>();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_sell_pickup_items WHERE character_id = ?");
+            ps.setInt(1, this.id);
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                ret.add(rs.getInt("item_id"));
+            }
+
+            LinkedHashSet<Integer> set = new LinkedHashSet<>(ret);
+            ArrayList<Integer> ret0 = new ArrayList<>(set);
+            rs.close();
+            ps.close();
+            ret.clear();
+            set.clear();
+            this.sellWhenPickUpItemList.clear();
+            this.sellWhenPickUpItemList = ret0;
+        } catch (SQLException var7) {
+            服务端输出信息.println_err("【错误】loadSellWhenPickUpItemListFromDB错误，原因：" + var7);
+            var7.printStackTrace();
+        }
+
+    }
+    public void loadSellWhenPickUpItemListFromDB() {
+        this.loadSellWhenPickUpItemListFromDB((Connection)null);
+    }
+
+    public void saveSellWhenPickUpItemListToDB(Connection con) {
+        try {
+            if (con == null) {
+                con = DBConPool.getConnection();
+            }
+
+            ArrayList<Integer> ret = new ArrayList(this.sellWhenPickUpItemList);
+            PreparedStatement ps = con.prepareStatement("DELETE FROM snail_sell_pickup_items WHERE character_id = ?");
+            ps.setInt(1, this.id);
+            ps.executeUpdate();
+            ps = con.prepareStatement("INSERT INTO snail_sell_pickup_items (character_id, item_id) VALUES (?, ?)");
+            ps.setInt(1, this.id);
+            Iterator var4 = ret.iterator();
+
+            while(var4.hasNext()) {
+                int itemId = (Integer)var4.next();
+                ps.setInt(2, itemId);
+                ps.executeUpdate();
+            }
+
+            ps.close();
+            ret.clear();
+        } catch (SQLException var6) {
+            服务端输出信息.println_err("【错误】saveSellWhenPickUpItemListToDB 错误，原因：" + var6);
+            var6.printStackTrace();
+        }
+
+    }
+
+    public void setOneTimeStringLog(String logName, String logVal) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var4 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT id FROM snail_onetime_string_log WHERE characterid = ? AND log_name = ?");
+                ps.setInt(1, this.id);
+                ps.setString(2, logName);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    ps = con.prepareStatement("UPDATE snail_onetime_string_log SET log_val = ? WHERE id = ?");
+                    ps.setString(1, logVal);
+                    ps.setInt(2, rs.getInt(1));
+                    ps.executeUpdate();
+                } else {
+                    ps = con.prepareStatement("INSERT INTO snail_onetime_string_log (characterid, log_name, log_val) VALUES (?,?,?)");
+                    ps.setInt(1, this.id);
+                    ps.setString(2, logName);
+                    ps.setString(3, logVal);
+                    ps.executeUpdate();
+                }
+
+                ps.close();
+                rs.close();
+            } catch (Throwable var15) {
+                var4 = var15;
+                throw var15;
+            } finally {
+                if (con != null) {
+                    if (var4 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var14) {
+                            var4.addSuppressed(var14);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var17) {
+            服务端输出信息.println_err("【错误】setOneTimeStringLog错误，原因：" + var17);
+            var17.printStackTrace();
+        }
+
+    }
+    public String getOneTimeStringLog(String logName) {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var3 = null;
+
+            String var7;
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_onetime_string_log WHERE characterid = ? AND log_name = ?");
+                ps.setInt(1, this.id);
+                ps.setString(2, logName);
+                ResultSet rs = ps.executeQuery();
+                String ret;
+                if (!rs.next()) {
+                    ps.close();
+                    rs.close();
+                    ret = "";
+                    return ret;
+                }
+
+                ret = rs.getString("log_val");
+                ps.close();
+                rs.close();
+                var7 = ret;
+            } catch (Throwable var18) {
+                var3 = var18;
+                throw var18;
+            } finally {
+                if (con != null) {
+                    if (var3 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var17) {
+                            var3.addSuppressed(var17);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+
+            return var7;
+        } catch (SQLException var20) {
+            服务端输出信息.println_err("【错误】getOneTimeStringLog错误，原因：" + var20);
+            var20.printStackTrace();
+            return "";
+        }
+    }
+
+
+    public void setWeekLog(String bossid, int count0) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setWeekLog(this.getId(), bossid, count0);
+        }
+    }
+
+    public void setWeekLog(String bossid) {
+        this.setWeekLog(bossid, 1);
+    }
+
+    public int getWeekLog(String bossid) {
+        return TimeLogCenter.getInstance().getWeekLog(this.getId(), bossid);
+    }
+
+    public void deleteWeekLog(String bossid) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().deleteWeekLogAll(this.getId(), bossid);
+        }
+    }
+
+    public void setWeekLoga(String bossid, int count0) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setWeekLoga(this.getAccountID(), bossid, count0);
+        }
+    }
+
+    public void setWeekLoga(String bossid) {
+        this.setWeekLoga(bossid, 1);
+    }
+
+    public int getWeekLoga(String bossid) {
+        return TimeLogCenter.getInstance().getWeekLoga(this.getAccountID(), bossid);
+    }
+
+    public void deleteWeekLoga(String bossid) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().deleteWeekLogaAll(this.getAccountID(), bossid);
+        }
+    }
+
+    public void setMonthLog(String bossid, int count0) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setMonthLog(this.getId(), bossid, count0);
+        }
+    }
+
+    public void setMonthLog(String bossid) {
+        this.setMonthLog(bossid, 1);
+    }
+
+    public int getMonthLog(String bossid) {
+        return TimeLogCenter.getInstance().getMonthLog(this.getId(), bossid);
+    }
+
+    public void deleteMonthLog(String bossid) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().deleteMonthLogAll(this.getId(), bossid);
+        }
+    }
+
+    public void setMonthLoga(String bossid, int count0) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().setMonthLoga(this.getAccountID(), bossid, count0);
+        }
+    }
+
+    public void setMonthLoga(String bossid) {
+        this.setMonthLoga(bossid, 1);
+    }
+
+    public int getMonthLoga(String bossid) {
+        return TimeLogCenter.getInstance().getMonthLoga(this.getAccountID(), bossid);
+    }
+
+    public void deleteMonthLoga(String bossid) {
+        if (!this.isClone()) {
+            TimeLogCenter.getInstance().deleteMonthLogaAll(this.getAccountID(), bossid);
+        }
+    }
+//
+//    public boolean 是否防滑() {
+//        return this.是否防滑;
+//    }
+//
+//    public void 开启防滑() {
+//        this.是否防滑 = true;
+//    }
+//
+//    public void 关闭防滑() {
+//        this.是否防滑 = false;
+//    }
+
+
+    public MapleCharacter fakeLooks() {
+        return this.fakeLooks(100);
+    }
+
+    public MapleCharacter fakeLooks(int cloneDamagePercentage) {
+        MapleClient cloneClient = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
+        int minus = this.getId() + 10000000;
+        MapleCharacter ret = new MapleCharacter(true);
+        ret.fake = true;
+        ret.fakeOwnerId = this.id;
+        ret.cloneDamagePercentage = cloneDamagePercentage;
+        ret.id = minus;
+        ret.client = cloneClient;
+        ret.exp = 0;
+        ret.meso = 0;
+        ret.beans = this.beans;
+        ret.todayOnlineTime = this.todayOnlineTime;
+        ret.totalOnlineTime = this.totalOnlineTime;
+        ret.max_damage = this.max_damage;
+        ret.exp_reserve = this.exp_reserve;
+        ret.blood = this.blood;
+        ret.month = this.month;
+        ret.day = this.day;
+        ret.charmessage = this.charmessage;
+        ret.expression = this.expression;
+        ret.constellation = this.constellation;
+        ret.remainingAp = 0;
+        ret.fame = 0;
+        ret.accountid = this.client.getAccID();
+        ret.name = this.name;
+        ret.level = this.level;
+        ret.fame = this.fame;
+        ret.job = this.job;
+        ret.hair = this.hair;
+        ret.face = this.face;
+        ret.skinColor = this.skinColor;
+        ret.bookCover = this.bookCover;
+        ret.monsterbook = this.monsterbook;
+        ret.mount = this.mount;
+        ret.CRand = new PlayerRandomStream();
+        ret.gmLevel = this.gmLevel;
+        ret.gender = this.gender;
+        ret.mapid = this.map.getId();
+        ret.map = this.map;
+        ret.setStance(this.getStance());
+        ret.chair = this.chair;
+        ret.itemEffect = this.itemEffect;
+        ret.guildid = this.guildid;
+        ret.currentrep = this.currentrep;
+        ret.totalrep = this.totalrep;
+        ret.stats = this.stats;
+        ret.effects.putAll(this.effects);
+        if (ret.effects.get(MapleBuffStat.ILLUSION) != null) {
+            ret.effects.remove(MapleBuffStat.ILLUSION);
+        }
+
+        if (ret.effects.get(MapleBuffStat.SUMMON) != null) {
+            ret.effects.remove(MapleBuffStat.SUMMON);
+        }
+
+        if (ret.effects.get(MapleBuffStat.PUPPET) != null) {
+            ret.effects.remove(MapleBuffStat.PUPPET);
+        }
+
+        ret.guildrank = this.guildrank;
+        ret.allianceRank = this.allianceRank;
+        ret.hidden = this.hidden;
+        ret.setPosition(new Point(this.getPosition()));
+        Iterator var5 = this.getInventory(MapleInventoryType.EQUIPPED).iterator();
+
+        while(var5.hasNext()) {
+            IItem equip = (IItem)var5.next();
+            ret.getInventory(MapleInventoryType.EQUIPPED).addFromDB(equip);
+        }
+
+        ret.skillMacros = this.skillMacros;
+        ret.keylayout = this.keylayout;
+        ret.questinfo = this.questinfo;
+        ret.savedLocations = this.savedLocations;
+        ret.wishlist = this.wishlist;
+        ret.rocks = this.rocks;
+        ret.regrocks = this.regrocks;
+        ret.buddylist = this.buddylist;
+        ret.keydown_skill = 0L;
+        ret.lastmonthfameids = this.lastmonthfameids;
+        ret.lastfametime = this.lastfametime;
+        ret.storage = this.storage;
+        ret.cs = this.cs;
+        ret.client.setAccountName(this.client.getAccountName());
+        ret.maplepoints = this.maplepoints;
+        ret.clone = true;
+        ret.client.setChannel(this.client.getChannel());
+        ret.max_damage = this.max_damage;
+        ret.exp_reserve = this.exp_reserve;
+        ret.guildPoints = this.guildPoints;
+
+        for(ret.breakLevel = this.breakLevel; this.map.getCharacterById(ret.id) != null || this.client.getChannelServer().getPlayerStorage().getCharacterById(ret.id) != null; ++ret.id) {
+        }
+
+        ret.client.setPlayer(ret);
+        return ret;
+    }
 }

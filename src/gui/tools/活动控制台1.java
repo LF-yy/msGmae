@@ -908,7 +908,7 @@ public class 活动控制台1 extends JFrame
             UIManager.setLookAndFeel((LookAndFeel)new SubstanceBusinessBlackSteelLookAndFeel());
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         EventQueue.invokeLater((Runnable)new Runnable() {
             @Override

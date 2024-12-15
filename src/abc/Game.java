@@ -483,7 +483,7 @@ public class Game
             return sdf.format(date);
         }
         catch (MalformedURLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         catch (IOException e2) {
             e2.printStackTrace();

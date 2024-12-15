@@ -247,7 +247,7 @@ public class CPUSampler
                 this.rthread.join();
             }
             catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
         

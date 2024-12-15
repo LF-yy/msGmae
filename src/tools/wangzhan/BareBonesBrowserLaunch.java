@@ -13,7 +13,7 @@ public class BareBonesBrowserLaunch
             Desktop.getDesktop().browse(uri);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         catch (URISyntaxException e2) {
             e2.printStackTrace();

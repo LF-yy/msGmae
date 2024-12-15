@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ltMS-1.0-SNAPSHOT-pg (8)">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/ltMS-1.0-SNAPSHOT-pg.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="jar://$PROJECT_DIR$/lib/ltMS-1.0-SNAPSHOT-pg.jar!/" recursive="false" />
+  </library>
+</component>

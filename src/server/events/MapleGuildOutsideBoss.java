@@ -184,7 +184,7 @@ public class MapleGuildOutsideBoss extends MapleEvent {
             this.count = 1;
         } catch (Exception var4) {
             服务端输出信息.println_err("【错误】MapleGuildOutsideBoss事件reset错误，错误原因：" + var4);
-            var4.printStackTrace();
+            //var4.printStackTrace();
         }
 
     }

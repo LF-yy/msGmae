@@ -29,21 +29,20 @@ public abstract class Timer
                 return t;
             }
         };
-        final ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(7, thread);
-        stpe.setKeepAliveTime(10L, TimeUnit.MINUTES);
-        stpe.allowCoreThreadTimeOut(true);
-        stpe.setCorePoolSize(7);
-        stpe.setMaximumPoolSize(100);
-        stpe.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-        this.ses = stpe;
+        ses = new ScheduledThreadPoolExecutor(7, thread);
+        ses.setKeepAliveTime(10L, TimeUnit.MINUTES);
+        ses.allowCoreThreadTimeOut(true);
+        ses.setCorePoolSize(7);
+        ses.setMaximumPoolSize(14);
+        ses.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
     }
     
     public void stop() {
         try {
-            this.ses.shutdownNow();
+            this.ses.shutdownNow();  //11
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             FilePrinter.printError("Timer.txt", (Throwable)e);
         }
     }
@@ -61,14 +60,11 @@ public abstract class Timer
         }
         return this.ses.scheduleAtFixedRate((Runnable)new LoggingSaveRunnable(r, this.file), 0L, repeatTime, TimeUnit.MILLISECONDS);
     }
-    
-    public ScheduledFuture<?> schedule(final Runnable r, final long delay) {
-        if (this.ses == null) {
-            return null;
-        }
-        return this.ses.schedule((Runnable)new LoggingSaveRunnable(r, this.file), delay, TimeUnit.MILLISECONDS);
+
+    public ScheduledFuture<?> schedule(Runnable r, long delay) {
+        return this.ses == null ? null : this.ses.schedule(new LoggingSaveRunnable(r, this.file), delay, TimeUnit.MILLISECONDS);
     }
-    
+
     public ScheduledFuture<?> scheduleAtTimestamp(final Runnable r, final long timestamp) {
         return this.schedule(r, timestamp - System.currentTimeMillis());
     }

@@ -3,16 +3,17 @@ package gui.tools;
 import javax.swing.UIManager.LookAndFeelInfo;
 import java.awt.EventQueue;
 import javax.swing.LookAndFeel;
+
+import database.DBConPool;
+import gui.服务端输出信息;
 import org.jvnet.substance.skin.SubstanceBusinessBlackSteelLookAndFeel;
 import javax.swing.JDialog;
 import javax.swing.UnsupportedLookAndFeelException;
+import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
+
 import database.DatabaseConnection;
 import javax.swing.JOptionPane;
 import java.awt.Color;
@@ -322,8 +323,93 @@ public class 一键还原 extends JFrame
         this.Delete("lt_attack_info_skills", 151);
         this.Delete("lt_field_skills", 152);
         this.Delete("lt_super_skills", 153);
+        deleteDBAll();
         JOptionPane.showMessageDialog(null, (Object)"清理完成");
         System.exit(0);
+    }
+
+    public static boolean deleteDBAll() {
+        Statement stmt;
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var41 = null;
+
+            boolean var43;
+            try {
+                String[] tableList = new String[]{"accounts", "accounts_info", "admin", "auctionitems", "auctionpoint", "auctionitems1", "auctionpoint1", "awarp", "bossrank", "bossrank1", "bossrank2", "bossrank3", "bossrank4", "bossrank5", "bossrank6", "bossrank7", "bossrank8", "bossrank9", "bosslog", "bossloga", "bosslogi", "buddies", "character_slots", "characters", "characterz", "csequipment", "csitems", "dlq_ban", "donate", "famelog", "fubenjilu", "gifts", "gmlog", "guilds", "hiredmerch", "hiredmerchequipment", "hiredmerchitems", "hypay", "inventoryequipment", "inventoryitems", "inventoryequipment_copy", "inventoryitems_copy", "inventoryslot", "ipbans", "keymap", "macbans", "monsterbook", "mountdata", "notes", "onetimelog", "onetimeloga", "onetimelogi", "pets", "questinfo", "questrequirements", "queststatus", "queststatusmobs", "regrocklocations", "rings", "savedlocations", "skillmacros", "skills", "skills_cooldowns", "speedruns", "storages", "trocklocations", "wishlist", "snail_skillskin_chrlist", "snail_boss_points", "snail_chr_mount_list", "snail_world_boss", "snail_world_level", "snail_memory_flowerpot", "snail_memory_garden", "snail_memory_seedpackage", "snail_time_log", "snail_weeklog", "snail_weekloga", "snail_monthlog", "snail_monthloga", "snail_monster_damage", "snail_guild_skills", "snail_prize_ban_list", "snail_dagong", "snail_equipment_field_enhancement", "snail_drop_item_filter", "snail_sell_pickup_items", "snail_lotto", "bank_jin", "bank_mzb", "snail_lottery_prize", "bank_item", "曾用名", "抽奖屏蔽", "技能范围检测", "蘑菇战令_记录", "蘑菇战令_任务", "蘑菇战令_信息", "骑士团link", "徒弟列表", "网关_ip白名单", "网关_宠吸授权", "网关_多开授权", "网关_机器码注册限制", "网关_内挂授权"};
+                stmt = con.createStatement();
+                stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 0;");
+                DatabaseMetaData dbm = con.getMetaData();
+                String[] var5 = tableList;
+                int var6 = tableList.length;
+
+                for(int var7 = 0; var7 < var6; ++var7) {
+                    String tableName = var5[var7];
+                    ResultSet rs = dbm.getTables((String)null, (String)null, tableName, (String[])null);
+                    if (rs.next()) {
+                        stmt.executeUpdate("truncate table " + tableName + ";");
+                    } else {
+                        服务端输出信息.println_out("【提示】删档过程中，表 [" + tableName + "] 不存在，跳过该表");
+                    }
+
+                    rs.close();
+                }
+
+                stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 1;");
+                stmt.close();
+                var43 = true;
+            } catch (Throwable var38) {
+                var41 = var38;
+                throw var38;
+            } finally {
+                if (con != null) {
+                    if (var41 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var35) {
+                            var41.addSuppressed(var35);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+
+            return var43;
+        } catch (SQLException var40) {
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var2 = null;
+
+                try {
+                    stmt = con.createStatement();
+                    stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 1;");
+                    stmt.close();
+                } catch (Throwable var34) {
+                    var2 = var34;
+                    throw var34;
+                } finally {
+                    if (con != null) {
+                        if (var2 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var33) {
+                                var2.addSuppressed(var33);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var37) {
+            }
+
+            服务端输出信息.println_err("【错误】deleteDBAll错误，原因：" + var40);
+            var40.printStackTrace();
+            return false;
+        }
     }
     
     private void jButton1ActionPerformed(final ActionEvent evt) {
@@ -1229,7 +1315,7 @@ public class 一键还原 extends JFrame
             UIManager.setLookAndFeel((LookAndFeel)new SubstanceBusinessBlackSteelLookAndFeel());
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         EventQueue.invokeLater((Runnable)new Runnable() {
             @Override

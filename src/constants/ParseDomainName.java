@@ -19,7 +19,7 @@ public class ParseDomainName
             this.myServer = InetAddress.getByName(this.domainName);
         }
         catch (UnknownHostException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return this.myServer;
     }

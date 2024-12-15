@@ -40,6 +40,7 @@ import server.maps.MapleMapObjectType;
 import server.maps.MapleMist;
 import server.maps.MapleSummon;
 import server.maps.SummonMovementType;
+import snail.Marathon;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import util.ListUtil;
@@ -92,6 +93,7 @@ public class MapleStatEffect implements Serializable
     private int moneyCon;
     private int cooldown;
     private int morphId;
+    private boolean cancelMorph = true;
     private int expinc;
     private int exp;
     private int fatigue;
@@ -923,7 +925,14 @@ public class MapleStatEffect implements Serializable
                 }
             }
         }
+
+
         if (this.overTime && !this.isEnergyCharge()) {
+            if (Marathon.isBegain() && applyto.haveItem(Marathon.getItemId())) {
+                applyto.dropMessage(1, "马拉松比赛正在进行中，检测到你持有 " + MapleItemInformationProvider.getInstance().getName((Integer)LtMS.ConfigValuesMap.get("马拉松比赛道具ID")) + "，无法使用BUFF道具！");
+                return false;
+            }
+
             if (this.sourceid >= 2380000 && this.sourceid < 2389000 && (Integer)LtMS.ConfigValuesMap.get("怪物卡片buff开关") < 1) {
                 applyto.dropMessage(5, "怪物卡片BUFF效果为关闭状态。");
             } else {
@@ -931,6 +940,7 @@ public class MapleStatEffect implements Serializable
             }
 
         }
+
         //if (this.skill) {}
         if (primary) {
             if ((this.overTime || this.isHeal()) && !this.isEnergyCharge()) {
@@ -1221,151 +1231,245 @@ public class MapleStatEffect implements Serializable
         }
     }
     //上BUFF属性
-    private void applyBuffEffect(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final int newDuration, final boolean dc) {
-//        int localDuration = newDuration;
-        int localDuration = (LtMS.ConfigValuesMap.get("无限BUFF") > 0) ? 8480832 : newDuration;
+    private void applyBuffEffect(MapleCharacter applyfrom, MapleCharacter applyto, boolean primary, int newDuration, boolean dc) {
+        int localDuration = newDuration;
         if (primary && applyto.getBuffedValue(MapleBuffStat.MORPH) == null) {
-            localDuration = (dc ? newDuration : this.alchemistModifyVal(applyfrom, localDuration, false));
+            localDuration = dc ? newDuration : this.alchemistModifyVal(applyfrom, newDuration, false);
             applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.showBuffeffect(applyto.getId(), this.sourceid, 1), false);
         }
-        List<Pair<MapleBuffStat, Integer>> localstatups = this.statups;
+
+        List<Pair<MapleBuffStat, Integer>> localStatups = new ArrayList<>();
+        if (this.statups != null && (Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+            for (Pair<MapleBuffStat, Integer> statup : this.statups) {
+                if (statup != null) {
+                    Pair<MapleBuffStat, Integer> newStatup = new Pair(statup.left, statup.right);
+                    if (((MapleBuffStat)statup.getLeft()).name().equals("WATK")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pWatk > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pWatk;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("MATK")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pMatk > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pMatk;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("WDEF")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pWdef > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pWdef;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("MDEF")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pMdef > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pMdef;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("ACC")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pAcc > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pAcc;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("AVOID")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pAvoid > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pAvoid;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("SPEED")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pSpeed > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pSpeed;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("JUMP")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pJump > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pJump;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("MAXHP")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pMaxHpPercent > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pMaxHpPercent;
+                        }
+                    } else if (((MapleBuffStat)statup.getLeft()).name().equals("MAXMP")) {
+                        if ((Integer)newStatup.right + applyto.getStat().pMaxMpPercent > 32767) {
+                            newStatup.right = 32767;
+                        } else {
+                            newStatup.right = (Integer)newStatup.right + applyto.getStat().pMaxMpPercent;
+                        }
+                    }
+
+                    ((List)localStatups).add(newStatup);
+                }
+            }
+        } else {
+            localStatups = this.statups;
+        }
+
+        if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+            int gainDurationPercent = applyto.getPotential(45);
+            if (gainDurationPercent > 0) {
+                localDuration += localDuration * gainDurationPercent / 100;
+            }
+        }
+
+        List<Pair<MapleBuffStat, Integer>> localstatups = localStatups;
         ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = null;
         boolean normal = true;
+        List stat;
         switch (this.sourceid) {
-            case 2022221:
-            case 2022222: {
-                Selfstat = new ArrayList<Pair<MapleBuffStat, Integer>>();
-                Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXHP, Integer.valueOf(this.mhp_temp)));
-                Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MAXMP, Integer.valueOf(this.mmp_temp)));
+            case 1111002:
+            case 11111001:
+                stat = Collections.singletonList(new Pair(MapleBuffStat.COMBO, 0));
+                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
                 break;
-            }
+            case 1121010:
+                applyto.handleOrbconsume();
+                break;
+            case 2022221:
+            case 2022222:
+                Selfstat = new ArrayList();
+                Selfstat.add(new Pair(MapleBuffStat.MAXHP, this.mhp_temp));
+                Selfstat.add(new Pair(MapleBuffStat.MAXMP, this.mmp_temp));
+                break;
+            case 3101004:
+            case 3201004:
+            case 13101003:
+                stat = Collections.singletonList(new Pair(MapleBuffStat.SOULARROW, 0));
+                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                break;
+            case 4001003:
+            case 4330001:
+            case 13101006:
+            case 14001003:
+                stat = Collections.singletonList(new Pair(MapleBuffStat.DARKSIGHT, 0));
+                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                break;
+            case 4111002:
+            case 14111000:
+                stat = Collections.singletonList(new Pair(MapleBuffStat.SHADOWPARTNER, 0));
+                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                break;
             case 4321000:
             case 5001005:
             case 5121009:
             case 15001003:
-            case 15111005: {
-                applyto.getClient().sendPacket(MaplePacketCreator.givePirate(this.statups, localDuration / 1000, this.sourceid));
-                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignPirate(this.statups, localDuration / 1000, applyto.getId(), this.sourceid), false);
+            case 15111005:
+                applyto.getClient().sendPacket(MaplePacketCreator.givePirate((List)localStatups, localDuration / 1000, this.sourceid));
+                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignPirate((List)localStatups, localDuration / 1000, applyto.getId(), this.sourceid), false);
                 normal = false;
                 break;
-            }
+            case 4331002:
+                stat = Collections.singletonList(new Pair(MapleBuffStat.SHADOWPARTNERX, 0));
+                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                break;
             case 5211006:
             case 5220011:
-            case 22151002: {
-                if (applyto.getLinkMid() > 0) {
-                    applyto.getClient().sendPacket(MaplePacketCreator.cancelHoming());
-                    applyto.getClient().sendPacket(MaplePacketCreator.giveHoming(this.sourceid, applyto.getLinkMid()));
-                    normal = false;
-                    break;
-                }
-                return;
-            }
-            case 4001003:
-            case 4330001:
-            case 13101006:
-            case 14001003: {
-                final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DARKSIGHT, Integer.valueOf(0)));
-                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                break;
-            }
-            case 1111002:
-            case 11111001: {
-                final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.COMBO, Integer.valueOf(0)));
-                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                break;
-            }
-            case 3101004:
-            case 3201004:
-            case 13101003: {
-                final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SOULARROW, Integer.valueOf(0)));
-                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                break;
-            }
-            case 4111002:
-            case 14111000: {
-                final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SHADOWPARTNER, Integer.valueOf(0)));
-                applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                break;
-            }
-            case 15111006: {
-                localstatups = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SPARK, Integer.valueOf(this.x)));
-                applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.sourceid, localDuration, localstatups, this));
-                normal = false;
-                break;
-            }
-            case 1121010: {
-                applyto.handleOrbconsume();
-                break;
-            }
-            default: {
-                if (this.isMorph() || this.isPirateMorph()) {
-                    final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MORPH, Integer.valueOf(this.getMorph(applyto))));
-                    applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                    Selfstat = new ArrayList<Pair<MapleBuffStat, Integer>>();
-                    Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.JUMP, Integer.valueOf((int)this.getJump())));
-                    Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.WDEF, Integer.valueOf((int)this.getWdef())));
-                    Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MDEF, Integer.valueOf((int)this.getWdef())));
-                    Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SPEED, Integer.valueOf((int)this.getSpeed())));
-                    Selfstat.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MORPH, Integer.valueOf(this.getMorph(applyto))));
-                    break;
-                }
-                if (this.isMonsterRiding()) {
-                    localDuration = 2100000000;
-                    final int mountid = parseMountInfo(applyto, this.sourceid);
-                    final int mountid2 = parseMountInfo_Pure(applyto, this.sourceid);
-                    if (mountid != 0 && mountid2 != 0) {
-                        final List<Pair<MapleBuffStat, Integer>> stat2 = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.MONSTER_RIDING, Integer.valueOf(0)));
-                        applyto.cancelEffectFromBuffStat(MapleBuffStat.POWERGUARD);
-                        applyto.cancelEffectFromBuffStat(MapleBuffStat.MANA_REFLECTION);
-                        applyto.getClient().getSession().writeAndFlush((Object)MaplePacketCreator.giveMount(mountid2, this.sourceid, stat2));
-                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.showMonsterRiding(applyto.getId(), stat2, mountid, this.sourceid), false);
-                        normal = false;
-                        break;
-                    }
+            case 22151002:
+                if (applyto.getLinkMid() <= 0) {
                     return;
                 }
-                else {
-                    if (this.isSoaring()) {
-                        localstatups = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.SOARING, Integer.valueOf(1)));
-                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), localstatups, this), false);
-                        applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.sourceid, localDuration, localstatups, this));
-                        normal = false;
-                        break;
-                    }
-                    if (this.isBerserkFury() || this.berserk2 > 0) {
-                        final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BERSERK_FURY, Integer.valueOf(1)));
-                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                        break;
-                    }
-                    if (this.isDivineBody()) {
-                        final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.DIVINE_BODY, Integer.valueOf(1)));
-                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
-                        break;
-                    }
-                    break;
+
+                applyto.getClient().sendPacket(MaplePacketCreator.cancelHoming());
+                applyto.getClient().sendPacket(MaplePacketCreator.giveHoming(this.sourceid, applyto.getLinkMid()));
+                normal = false;
+                break;
+            case 15111006:
+                localstatups = Collections.singletonList(new Pair(MapleBuffStat.SPARK, this.x));
+                applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.sourceid, localDuration, (List)localstatups, this));
+                normal = false;
+                break;
+            case 21100005:
+            case 21120007:
+                int reduce = applyto.Aran_ReduceCombo(this.sourceid);
+                if (applyto.getCombo() < reduce) {
+                    applyto.dropMessage(5, "你的连击数不够，技能无效！");
+                    return;
                 }
-            }
+            default:
+                if (!this.isMorph() && !this.isPirateMorph()) {
+                    if (this.isMonsterRiding()) {
+                        localDuration = 2100000000;
+                        int mountid = parseMountInfo_Snail(applyto, this.sourceid);
+                        int mountid2 = parseMountInfo_Pure(applyto, this.sourceid);
+                        if (mountid == 0 || mountid2 == 0) {
+                            return;
+                        }
+
+                        stat = Collections.singletonList(new Pair(MapleBuffStat.MONSTER_RIDING, 0));
+                        applyto.cancelEffectFromBuffStat(MapleBuffStat.POWERGUARD);
+                        applyto.cancelEffectFromBuffStat(MapleBuffStat.MANA_REFLECTION);
+                        applyto.getClient().getSession().writeAndFlush(MaplePacketCreator.giveMount(applyto, mountid2, this.sourceid, stat));
+                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.showMonsterRiding(applyto.getId(), stat, mountid, this.sourceid), false);
+                        normal = false;
+                    } else if (this.isSoaring()) {
+                        localstatups = Collections.singletonList(new Pair(MapleBuffStat.SOARING, 1));
+                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), (List)localstatups, this), false);
+                        applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.sourceid, localDuration, (List)localstatups, this));
+                        normal = false;
+                    } else if (!this.isBerserkFury() && this.berserk2 <= 0) {
+                        if (this.isDivineBody()) {
+                            stat = Collections.singletonList(new Pair(MapleBuffStat.DIVINE_BODY, 1));
+                            applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                        }
+                    } else {
+                        stat = Collections.singletonList(new Pair(MapleBuffStat.BERSERK_FURY, 1));
+                        applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                    }
+                } else {
+                    stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, this.getMorph(applyto)));
+                    applyto.getMap().broadcastMessage(applyto, MaplePacketCreator.giveForeignBuff(applyto.getId(), stat, this), false);
+                    Selfstat = new ArrayList();
+                    Selfstat.add(new Pair(MapleBuffStat.JUMP, Integer.valueOf(this.getJump())));
+                    Selfstat.add(new Pair(MapleBuffStat.WDEF, Integer.valueOf(this.getWdef())));
+                    Selfstat.add(new Pair(MapleBuffStat.MDEF, Integer.valueOf(this.getWdef())));
+                    Selfstat.add(new Pair(MapleBuffStat.SPEED, Integer.valueOf(this.getSpeed())));
+                    Selfstat.add(new Pair(MapleBuffStat.MORPH, this.getMorph(applyto)));
+                }
         }
-        //如果是骑宠技能 取消buff
+
         if (!this.isMonsterRiding_()) {
-            applyto.cancelEffect(this, true, -1L, (Selfstat == null) ? localstatups : Selfstat);
+            applyto.cancelEffect(this, true, -1L, (List)(Selfstat == null ? localstatups : Selfstat));
         }
-        if (normal && (this.statups.size() > 0 || (Selfstat != null && Selfstat.size() > 0))) {
-            applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.skill ? this.sourceid : (-this.sourceid), localDuration, (Selfstat == null) ? this.statups : Selfstat, this));
+
+        if (normal && (((List)localStatups).size() > 0 || Selfstat != null && Selfstat.size() > 0)) {
+            applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.skill ? this.sourceid : -this.sourceid, localDuration, (List)(Selfstat == null ? localStatups : Selfstat), this));
         }
-        final long starttime = System.currentTimeMillis();
-        final CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
+
+        long starttime = System.currentTimeMillis();
+        CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
+
         try {
-            final ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule((Runnable)cancelAction, starttime + (long)localDuration - System.currentTimeMillis());
-            //buff注册效果
-            applyto.registerEffect(this, starttime, schedule, (Selfstat == null) ? localstatups : Selfstat, false, localDuration, applyfrom.getId());
+            ScheduledFuture<?> schedule = BuffTimer.getInstance().schedule(cancelAction, starttime + (long)localDuration - System.currentTimeMillis());
+            applyto.registerEffect(this, starttime, schedule, (List)(Selfstat == null ? localstatups : Selfstat), false, localDuration, applyfrom.getId());
+        } catch (Exception var15) {
         }
-        catch (Exception ex) {}
+
         if (applyto.getDebugMessage()) {
             applyto.dropMessage("[ApplyBuffEffect] - [" + this.getName() + "(" + this.sourceid + ")] ");
         }
+
     }
-    
+    public static final int parseMountInfo_Snail(MapleCharacter player, int skillid) {
+        switch (skillid) {
+            case 1004:
+            case 10001004:
+            case 20001004:
+                if (player.getInventory(MapleInventoryType.EQUIPPED).getItem((short)-118) != null && player.getInventory(MapleInventoryType.EQUIPPED).getItem((short)-119) != null) {
+                    return player.getInventory(MapleInventoryType.EQUIPPED).getItem((short)-118).getItemId();
+                }
+
+                return parseMountInfo_Pure(player, skillid);
+            default:
+                return skillid != 1017 && skillid != 1027 && skillid != 20001019 ? GameConstants.getMountItem(skillid) : player.getMountId();
+        }
+    }
     public static int parseMountInfo(final MapleCharacter player, final int skillid) {
         switch (skillid) {
             case 1004:
@@ -2522,5 +2626,16 @@ public class MapleStatEffect implements Serializable
 
     public void setCureDebuffs(List<MapleDisease> cureDebuffs) {
         this.cureDebuffs = cureDebuffs;
+    }
+
+    public void setMorph(int morphId) {
+        this.morphId = morphId;
+    }
+    public boolean getCancelMorph() {
+        return this.cancelMorph;
+    }
+
+    public void setCancelMorph(boolean cancelMorph) {
+        this.cancelMorph = cancelMorph;
     }
 }

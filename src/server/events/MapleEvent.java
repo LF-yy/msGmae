@@ -325,7 +325,7 @@ public abstract class MapleEvent
                             chr.gainMeso((Integer)pair.right, true);
                             break;
                         case 4:
-                            chr.增加里程_数据库((Integer)pair.right);
+                            chr.增加积分_数据库((Integer)pair.right);
                             break;
                         case 5:
                             chr.setMoney((Integer)pair.right);

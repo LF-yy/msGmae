@@ -1,9 +1,15 @@
 package constants;
 
+import database.DBConPool;
 import gui.CongMS;
 import gui.LtMS;
+import gui.服务端输出信息;
 import handling.login.LoginServer;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 import handling.world.MapleParty;
@@ -18,6 +24,7 @@ import client.inventory.MapleWeaponType;
 import client.inventory.MapleInventoryType;
 import server.Start;
 import server.maps.MapleMapObjectType;
+import tools.Pair;
 
 public class GameConstants
 {
@@ -50,58 +57,180 @@ public class GameConstants
     public static int[] superDrops;
     public static int[] owlItems;
     private static final List<Balloon> lBalloon;
+    private static ArrayList<ArrayList<Integer>> multiOnlyItemList = new ArrayList();
     private static ArrayList<Integer> banMultiMobRateMapIdList = new ArrayList();
     private static ArrayList<ArrayList<Integer>> multiOnlyEquipList = new ArrayList();
+    private static ArrayList<Integer> fishingChannelList = new ArrayList();
+    private static Map<Integer, Pair<Integer, Integer>> rateEquipmentMap = new HashMap();
+
+    private static ArrayList<Integer> pk_channelList = new ArrayList();
+    private static ArrayList<Integer> pk_guildChannelList = new ArrayList();
+    private static ArrayList<Integer> pk_playerMapList = new ArrayList();
+    private static ArrayList<Integer> pk_partyMapList = new ArrayList();
+    private static ArrayList<Integer> pk_guildMapList = new ArrayList();
+    private static ArrayList<Integer> pk_dropItemsList = new ArrayList();
+    private static ArrayList<Integer> pk_dropItemsList2 = new ArrayList();
+    private static ArrayList<Integer> pk_banSkillsList = new ArrayList<>();
+    private static ArrayList<Integer> pk_useConsumeCoolTimeWhiteList = new ArrayList<>();
+
 
     private static String banMultiMobRateListString = "";
     public static void setBanMultiMobRateList() {
         ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", banMultiMobRateListString);
     }
-    public static void loadMultiOnlyEquipList() {
-        multiOnlyEquipList.clear();
-        String list = ServerProperties.getProperty("server.settings.multiOnlyEquipList", "-1");
-        if (list.equals("-1")) {
-            list = "|1112446*1112447*1112448*1112449*1112450*1112451*1112452*1112453*1112454*1112455*1112456*1112457*1112458*1112459*1112460*1112461*1112462*1112463*1112464*1112465*1112466*1112467*1112468*1112469*1112470*1112471*1112472*1112473*1112474*1112475*1112476*1112477*1112478*1112479*1112480*1112481*1112482*1112483*1112484*1112485*1112486*1112487*1112488*1112489*1112490*1112491*1112492*1112493*1112494*1112495|\n|1112435*1112436*1112437*1112438*1112439|";
-            ServerProperties.setProperty("server.settings.multiOnlyEquipList", list);
-        }
 
+    private static ArrayList<Integer> banChannelList = new ArrayList<>();
+    private static String banChannelListString = "";
+
+    public static ArrayList<Integer> getBanChannelList() {
+        return banChannelList;
+    }
+    public static void setBanChannelList() {
+        ServerProperties.setProperty("server.settings.banChannelList", banChannelListString);
+    }
+    public static void loadBanChannelList() {
+        banChannelList.clear();
+        banChannelListString = ServerProperties.getProperty("server.settings.banChannelList", "-1, -1");
+        String list = banChannelListString;
         list = list.replace(" ", "");
         list = list.replace(".", "").replace("/", "");
-        list = list.replace("\n", "");
-        list = list.replace("\r", "");
-        String[] var1 = list.split("\\|");
+        String[] var1 = list.split(",");
         int var2 = var1.length;
 
         for(int var3 = 0; var3 < var2; ++var3) {
             String str = var1[var3];
-            if (!str.equals("")) {
-                ArrayList<Integer> list0 = new ArrayList();
-                String[] var6 = str.split("\\*");
-                int var7 = var6.length;
-
-                for(int var8 = 0; var8 < var7; ++var8) {
-                    String str1 = var6[var8];
-                    if (!str1.equals("")) {
-                        int a = Integer.parseInt(str1);
-                        if (a > 0) {
-                            list0.add(Integer.parseInt(str1));
-                        }
-                    }
-                }
-
-                if (!list0.isEmpty()) {
-                    multiOnlyEquipList.add(list0);
-                }
-            }
+            banChannelList.add(Integer.parseInt(str));
         }
 
     }
-    private static ArrayList<Integer> banChannelList = new ArrayList();
+    public static boolean isTripleExpCard(int itemId) {
+        switch (itemId) {
+            case 5211050:
+            case 5211051:
+            case 5211052:
+            case 5211053:
+            case 5211054:
+            case 5211060:
+                return true;
+            case 5211055:
+            case 5211056:
+            case 5211057:
+            case 5211058:
+            case 5211059:
+            default:
+                return false;
+        }
+    }
+
+    public static boolean isDoubleExpCard(int itemId) {
+        int hour = Calendar.getInstance().get(11);
+        int weekDay = Calendar.getInstance().get(7);
+        switch (itemId) {
+            case 4100000:
+            case 4100001:
+            case 5210000:
+            case 5210001:
+                return hour >= 10 && hour <= 22 && weekDay >= 2 && weekDay <= 6 || weekDay == 1 || weekDay == 7;
+            case 4100002:
+            case 4100003:
+            case 5210002:
+            case 5210003:
+                if ((hour < 6 || hour > 18 || weekDay < 2 || weekDay > 6) && weekDay != 1 && weekDay != 7) {
+                    return false;
+                }
+
+                return true;
+            case 4100004:
+            case 4100005:
+            case 5210004:
+            case 5210005:
+                if ((hour < 18 && hour > 6 || weekDay < 2 || weekDay > 6) && weekDay != 1 && weekDay != 7) {
+                    return false;
+                }
+
+                return true;
+            case 5210006:
+            case 5211000:
+            case 5211001:
+            case 5211002:
+            case 5211003:
+            case 5211046:
+            case 5211047:
+            case 5211048:
+            case 5211049:
+            case 5211061:
+                return true;
+            default:
+                return false;
+        }
+    }
+    public static boolean isDoubleDropCard(int itemId) {
+        int hour = Calendar.getInstance().get(11);
+        switch (itemId) {
+            case 5360000:
+            case 5360014:
+            case 5360015:
+            case 5360016:
+                return true;
+            case 5360001:
+                if (hour >= 6 && hour <= 12) {
+                    return true;
+                }
+
+                return false;
+            case 5360002:
+                if (hour >= 12 && hour <= 18) {
+                    return true;
+                }
+
+                return false;
+            case 5360003:
+                if (hour >= 18 && hour <= 24) {
+                    return true;
+                }
+
+                return false;
+            case 5360004:
+            case 5360005:
+            case 5360006:
+            case 5360007:
+            case 5360008:
+            case 5360009:
+            case 5360010:
+            case 5360011:
+            case 5360012:
+            case 5360013:
+            default:
+                return false;
+        }
+    }
+
+    public static final Pair<Integer, Integer> getEquipRate(int itemId) {
+        Iterator var1 = rateEquipmentMap.entrySet().iterator();
+
+        Map.Entry entry;
+        do {
+            if (!var1.hasNext()) {
+                return new Pair(0, 0);
+            }
+
+            entry = (Map.Entry)var1.next();
+        } while((Integer)entry.getKey() != itemId);
+
+        return (Pair)entry.getValue();
+    }
 
     public static boolean isBanChannel(Integer channel) {
         return channel == 0 ? false : banChannelList.contains(channel);
     }
-
+    public static boolean 消耗箱子(int a) {
+        switch (a) {
+            case 1204033:
+                return true;
+            default:
+                return false;
+        }
+    }
     public static boolean isLinkedAttackSkill(final int id) {
         return getLinkedAttackSkill(id) != id;
     }
@@ -507,13 +636,10 @@ public class GameConstants
     public static boolean isWeapon(final int itemId) {
         return itemId >= 1300000 && itemId < 1500000;
     }
-    
-    public static MapleInventoryType getInventoryType(final int itemId) {
-        final byte type = (byte)(itemId / 1000000);
-        if (type < 1 || type > 5) {
-            return MapleInventoryType.UNDEFINED;
-        }
-        return MapleInventoryType.getByType(type);
+
+    public static MapleInventoryType getInventoryType(int itemId) {
+        byte type = (byte)(itemId / 1000000);
+        return type >= 1 && type <= 5 ? MapleInventoryType.getByType(type) : MapleInventoryType.UNDEFINED;
     }
     
     public static MapleWeaponType getWeaponType(final int itemId) {
@@ -521,40 +647,40 @@ public class GameConstants
         cat %= 100;
         switch (cat) {
             case 30: {
-                return MapleWeaponType.單手劍;
+                return MapleWeaponType.单手剑;
             }
             case 31: {
-                return MapleWeaponType.單手斧;
+                return MapleWeaponType.单手斧;
             }
             case 32: {
-                return MapleWeaponType.單手棍;
+                return MapleWeaponType.单手棍;
             }
             case 33: {
-                return MapleWeaponType.短劍;
+                return MapleWeaponType.短剑;
             }
             case 34: {
-                return MapleWeaponType.雙刀;
+                return MapleWeaponType.双刀;
             }
             case 37: {
-                return MapleWeaponType.長杖;
+                return MapleWeaponType.长杖;
             }
             case 38: {
                 return MapleWeaponType.短杖;
             }
             case 40: {
-                return MapleWeaponType.雙手劍;
+                return MapleWeaponType.双手剑;
             }
             case 41: {
-                return MapleWeaponType.雙手斧;
+                return MapleWeaponType.双手斧;
             }
             case 42: {
-                return MapleWeaponType.雙手棍;
+                return MapleWeaponType.双手棍;
             }
             case 43: {
                 return MapleWeaponType.矛;
             }
             case 44: {
-                return MapleWeaponType.槍;
+                return MapleWeaponType.枪;
             }
             case 45: {
                 return MapleWeaponType.弓;
@@ -569,10 +695,10 @@ public class GameConstants
                 return MapleWeaponType.指虎;
             }
             case 49: {
-                return MapleWeaponType.火槍;
+                return MapleWeaponType.火枪;
             }
             default: {
-                return MapleWeaponType.沒有武器;
+                return MapleWeaponType.没有武器;
             }
         }
     }
@@ -628,16 +754,16 @@ public class GameConstants
     
     public static boolean isTwoHanded(final int itemId) {
         switch (getWeaponType(itemId)) {
-            case 雙手斧:
-            case 火槍:
+            case 双手斧:
+            case 火枪:
             case 指虎:
-            case 雙手棍:
+            case 双手棍:
             case 弓:
             case 拳套:
             case 弩:
-            case 槍:
+            case 枪:
             case 矛:
-            case 雙手劍: {
+            case 双手剑: {
                 return true;
             }
             default: {
@@ -3130,15 +3256,15 @@ public class GameConstants
     
     private static double getAttackRangeByWeapon(MapleCharacter chr) {
         final IItem weapon_item = chr.getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-11));
-        final MapleWeaponType weapon = (weapon_item == null) ? MapleWeaponType.沒有武器 : getWeaponType(weapon_item.getItemId());
+        final MapleWeaponType weapon = (weapon_item == null) ? MapleWeaponType.没有武器 : getWeaponType(weapon_item.getItemId());
         switch (weapon) {
-            case 槍: {
+            case 枪: {
                 return 200000.0;
             }
             case 拳套: {
                 return 250000.0;
             }
-            case 火槍:
+            case 火枪:
             case 弓:
             case 弩: {
                 return 180000.0;
@@ -3641,15 +3767,619 @@ public class GameConstants
                 }
         }
     }
+    public static void loadChrStageMapFromDB() {
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var1 = null;
 
+            try {
+                chrStageMap.clear();
+                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_chr_stage");
+                ResultSet rs = ps.executeQuery();
 
+                while(rs.next()) {
+                    chrStageMap.put(rs.getInt("stage"), new Pair(rs.getString("name"), rs.getInt("count")));
+                }
 
+                ps.close();
+                rs.close();
+            } catch (Throwable var12) {
+                var1 = var12;
+                throw var12;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var11) {
+                            var1.addSuppressed(var11);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
 
+            }
+        } catch (SQLException var14) {
+            服务端输出信息.println_err("【错误】loadChrStageMapFromDB错误，原因：" + var14);
+            var14.printStackTrace();
+        }
 
+    }
+    private static TreeMap<Integer, Pair<String, Integer>> chrStageMap = new TreeMap();
+    public static String getChrStageName(int stage) {
+        if (chrStageMap.isEmpty()) {
+            loadChrStageMapFromDB();
+        }
 
+        if (chrStageMap.get(stage) == null) {
+            return "";
+        } else {
+            return stage > chrStageMap.size() - 1 ? (String)((Pair)chrStageMap.get(chrStageMap.size() - 1)).left : (String)((Pair)chrStageMap.get(stage)).left;
+        }
+    }
 
+    public static int getChrStageCount(int stage) {
+        if (chrStageMap.isEmpty()) {
+            loadChrStageMapFromDB();
+        }
 
+        return chrStageMap.get(stage) == null ? -1 : (Integer)((Pair)chrStageMap.get(stage)).right;
+    }
 
+    public static int getMaxChrStage() {
+        if (chrStageMap.isEmpty()) {
+            loadChrStageMapFromDB();
+        }
+
+        return chrStageMap.size() - 1;
+    }
+
+    public static int checkPickUpMultiOnlyItem(MapleCharacter chr, int itemId) {
+        if (chr == null) {
+            return -1;
+        } else {
+            Iterator var2 = multiOnlyItemList.iterator();
+
+            while(true) {
+                ArrayList list;
+                do {
+                    if (!var2.hasNext()) {
+                        return -1;
+                    }
+
+                    list = (ArrayList)var2.next();
+                } while(!list.contains(itemId));
+
+                Iterator var4 = list.iterator();
+
+                while(var4.hasNext()) {
+                    int a = (Integer)var4.next();
+                    if (chr.haveItem(a, 1, true, true)) {
+                        return a;
+                    }
+                }
+            }
+        }
+    }
+
+    public static Map<Integer, Pair<String, Integer>> getChrStageMap() {
+        return chrStageMap;
+    }
+    public static void loadFishingChannelList() {
+        fishingChannelList.clear();
+
+        try {
+            Connection con = DBConPool.getConnection();
+            Throwable var1 = null;
+
+            try {
+                PreparedStatement ps = con.prepareStatement("SELECT open_channels FROM snail_channel_function WHERE function_name = '钓鱼'");
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    String ret = rs.getString(1);
+                    ret = ret.replaceAll(" ", "");
+                    String[] retList = ret.split(",");
+                    String[] var6 = retList;
+                    int var7 = retList.length;
+
+                    for(int var8 = 0; var8 < var7; ++var8) {
+                        String a = var6[var8];
+                        int b = Integer.parseInt(a);
+                        if (b > 0 && !fishingChannelList.contains(b)) {
+                            fishingChannelList.add(b);
+                        }
+                    }
+                }
+
+                ps.close();
+                rs.close();
+            } catch (Throwable var19) {
+                var1 = var19;
+                throw var19;
+            } finally {
+                if (con != null) {
+                    if (var1 != null) {
+                        try {
+                            con.close();
+                        } catch (Throwable var18) {
+                            var1.addSuppressed(var18);
+                        }
+                    } else {
+                        con.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var21) {
+            服务端输出信息.println_err("【错误】LoadFishingChannelList错误，原因：" + var21);
+            var21.printStackTrace();
+        }
+
+    }
+
+    public static ArrayList<Integer> getFishingChannelList() {
+        return fishingChannelList;
+    }
+
+    public static boolean isFishingChannel(int channel) {
+        return fishingChannelList.contains(channel);
+    }
+
+    public static boolean isMarket(int mapId) {
+        switch (mapId) {
+            case 910000000:
+            case 910000001:
+            case 910000002:
+            case 910000003:
+            case 910000004:
+            case 910000005:
+            case 910000006:
+            case 910000007:
+            case 910000008:
+            case 910000009:
+            case 910000010:
+            case 910000011:
+            case 910000012:
+            case 910000013:
+            case 910000014:
+            case 910000015:
+            case 910000016:
+            case 910000017:
+            case 910000018:
+            case 910000019:
+            case 910000020:
+            case 910000021:
+            case 910000022:
+            case 910000023:
+            case 910000024:
+            case 910000088:
+                return true;
+            case 910000025:
+            case 910000026:
+            case 910000027:
+            case 910000028:
+            case 910000029:
+            case 910000030:
+            case 910000031:
+            case 910000032:
+            case 910000033:
+            case 910000034:
+            case 910000035:
+            case 910000036:
+            case 910000037:
+            case 910000038:
+            case 910000039:
+            case 910000040:
+            case 910000041:
+            case 910000042:
+            case 910000043:
+            case 910000044:
+            case 910000045:
+            case 910000046:
+            case 910000047:
+            case 910000048:
+            case 910000049:
+            case 910000050:
+            case 910000051:
+            case 910000052:
+            case 910000053:
+            case 910000054:
+            case 910000055:
+            case 910000056:
+            case 910000057:
+            case 910000058:
+            case 910000059:
+            case 910000060:
+            case 910000061:
+            case 910000062:
+            case 910000063:
+            case 910000064:
+            case 910000065:
+            case 910000066:
+            case 910000067:
+            case 910000068:
+            case 910000069:
+            case 910000070:
+            case 910000071:
+            case 910000072:
+            case 910000073:
+            case 910000074:
+            case 910000075:
+            case 910000076:
+            case 910000077:
+            case 910000078:
+            case 910000079:
+            case 910000080:
+            case 910000081:
+            case 910000082:
+            case 910000083:
+            case 910000084:
+            case 910000085:
+            case 910000086:
+            case 910000087:
+            default:
+                return false;
+        }
+    }
+
+    public static void loadPKChannelList() {
+        pk_channelList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKChannelList", "-1");
+        if (list.equals("-1")) {
+            list = "|11|12|13|";
+            ServerProperties.setProperty("server.settings.PKChannelList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_channelList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKGuildChannelList() {
+        pk_guildChannelList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKGuildChannelList", "-1");
+        if (list.equals("-1")) {
+            list = "|14|15|16|";
+            ServerProperties.setProperty("server.settings.PKGuildChannelList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_guildChannelList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKUseConsumeCoolTimeWhiteList() {
+        pk_useConsumeCoolTimeWhiteList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKUseConsumeCoolTimeWhiteList", "-1");
+        if (list.equals("-1")) {
+            list = "|2000000|2000003|";
+            ServerProperties.setProperty("server.settings.PKUseConsumeCoolTimeWhiteList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_useConsumeCoolTimeWhiteList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKDropItemsList() {
+        pk_dropItemsList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKDropItemsList", "-1");
+        if (list.equals("-1")) {
+            list = "|4031456|4001126|";
+            ServerProperties.setProperty("server.settings.PKDropItemsList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_dropItemsList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKDropItemsList2() {
+        pk_dropItemsList2.clear();
+        String list = ServerProperties.getProperty("server.settings.PKDropItemsList2", "-1");
+        if (list.equals("-1")) {
+            list = "|4031457|4001127|";
+            ServerProperties.setProperty("server.settings.PKDropItemsList2", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_dropItemsList2.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKBanSkillsList() {
+        pk_banSkillsList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKBanSkillsList", "-1");
+        if (list.equals("-1")) {
+            list = "|11121064|11121057|";
+            ServerProperties.setProperty("server.settings.PKBanSkillsList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_banSkillsList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKPlayerMapList() {
+        pk_playerMapList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKPlayerMapList", "-1");
+        if (list.equals("-1")) {
+            list = "|910000000|100000000|";
+            ServerProperties.setProperty("server.settings.PKPlayerMapList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_playerMapList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKPartyMapList() {
+        pk_partyMapList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKPartyMapList", "-1");
+        if (list.equals("-1")) {
+            list = "|100000001|100000002|";
+            ServerProperties.setProperty("server.settings.PKPartyMapList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_partyMapList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadPKGuildMapList() {
+        pk_guildMapList.clear();
+        String list = ServerProperties.getProperty("server.settings.PKGuildMapList", "-1");
+        if (list.equals("-1")) {
+            list = "|100000003|100000004|";
+            ServerProperties.setProperty("server.settings.PKGuildMapList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                int a = Integer.parseInt(str);
+                if (a > 0) {
+                    pk_guildMapList.add(Integer.parseInt(str));
+                }
+            }
+        }
+
+    }
+
+    public static void loadMultiOnlyItemList() {
+        multiOnlyItemList.clear();
+        String list = ServerProperties.getProperty("server.settings.multiOnlyItemList", "-1");
+        if (list.equals("-1")) {
+            list = "|2434490*2434491*2434492*24344923*24344924|24344925*24344926*24344927|";
+            ServerProperties.setProperty("server.settings.multiOnlyItemList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                ArrayList<Integer> list0 = new ArrayList();
+                String[] var6 = str.split("\\*");
+                int var7 = var6.length;
+
+                for(int var8 = 0; var8 < var7; ++var8) {
+                    String str1 = var6[var8];
+                    if (!str1.equals("")) {
+                        int a = Integer.parseInt(str1);
+                        if (a > 0) {
+                            list0.add(Integer.parseInt(str1));
+                        }
+                    }
+                }
+
+                if (!list0.isEmpty()) {
+                    multiOnlyItemList.add(list0);
+                }
+            }
+        }
+
+    }
+
+    public static void loadMultiOnlyEquipList() {
+        multiOnlyEquipList.clear();
+        String list = ServerProperties.getProperty("server.settings.multiOnlyEquipList", "-1");
+        if (list.equals("-1")) {
+            list = "|1112446*1112447*1112448*1112449*1112450*1112451*1112452*1112453*1112454*1112455*1112456*1112457*1112458*1112459*1112460*1112461*1112462*1112463*1112464*1112465*1112466*1112467*1112468*1112469*1112470*1112471*1112472*1112473*1112474*1112475*1112476*1112477*1112478*1112479*1112480*1112481*1112482*1112483*1112484*1112485*1112486*1112487*1112488*1112489*1112490*1112491*1112492*1112493*1112494*1112495|\n|1112435*1112436*1112437*1112438*1112439|";
+            ServerProperties.setProperty("server.settings.multiOnlyEquipList", list);
+        }
+
+        list = list.replace(" ", "");
+        list = list.replace(".", "").replace("/", "");
+        list = list.replace("\n", "");
+        list = list.replace("\r", "");
+        String[] var1 = list.split("\\|");
+        int var2 = var1.length;
+
+        for(int var3 = 0; var3 < var2; ++var3) {
+            String str = var1[var3];
+            if (!str.equals("")) {
+                ArrayList<Integer> list0 = new ArrayList();
+                String[] var6 = str.split("\\*");
+                int var7 = var6.length;
+
+                for(int var8 = 0; var8 < var7; ++var8) {
+                    String str1 = var6[var8];
+                    if (!str1.equals("")) {
+                        int a = Integer.parseInt(str1);
+                        if (a > 0) {
+                            list0.add(Integer.parseInt(str1));
+                        }
+                    }
+                }
+
+                if (!list0.isEmpty()) {
+                    multiOnlyEquipList.add(list0);
+                }
+            }
+        }
+
+    }
+    public static boolean isPKChannel(int channel) {
+        return pk_channelList.contains(channel);
+    }
+
+    public static boolean isPKGuildChannel(int channel) {
+        return pk_guildChannelList.contains(channel);
+    }
+
+    public static boolean isPKPlayerMap(int mapId) {
+        return pk_playerMapList.contains(mapId);
+    }
+
+    public static boolean isPKPartyMap(int mapId) {
+        return pk_partyMapList.contains(mapId);
+    }
+
+    public static boolean isPKGuildMap(int mapId) {
+        return pk_guildMapList.contains(mapId);
+    }
+
+    public static boolean isPKDropItem(int itemId) {
+        return pk_dropItemsList.contains(itemId);
+    }
+
+    public static boolean isPKDropItem2(int itemId) {
+        return pk_dropItemsList2.contains(itemId);
+    }
+
+    public static boolean isPKBanSkill(int skillId) {
+        return pk_banSkillsList.contains(skillId);
+    }
+
+    public static boolean isPKUseConsumeNoCoolTime(int itemId) {
+        return pk_useConsumeCoolTimeWhiteList.contains(itemId);
+    }
 
 
     static {

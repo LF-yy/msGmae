@@ -6,18 +6,17 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 
 import bean.SuperSkills;
+import client.*;
 import client.inventory.Equip;
-import constants.ServerConfig;
 import database.DBConPool;
 import java.awt.geom.Point2D;
 
 import gui.LtMS;
-import handling.world.World;
 import scripting.NPCConversationManager;
 import server.*;
-import server.Timer;
-import server.bean.Potential;
+import snail.Potential;
 import server.life.*;
+import tools.Pair;
 import tools.packet.UIPacket;
 import constants.MapConstants;
 
@@ -27,7 +26,6 @@ import server.maps.MapleMap;
 import server.maps.AnimatedMapleMapObject;
 import server.movement.LifeMovementFragment;
 import server.maps.MapleMapObject;
-import gui.CongMS;
 
 import java.lang.ref.WeakReference;
 import server.Timer.CloneTimer;
@@ -37,29 +35,21 @@ import java.awt.Point;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import client.ISkill;
-import client.PlayerStats;
-import client.SkillFactory;
 import tools.packet.MobPacket;
 import io.netty.channel.Channel;
-import tools.MapleAESOFB;
 import tools.MockIOSession;
 import abc.离线人偶;
 import handling.channel.ChannelServer;
 import tools.packet.MTSCSPacket;
 import server.maps.FieldLimitType;
-import client.MapleBuffStat;
 import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import handling.world.World.Broadcast;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
 import server.quest.MapleQuest;
-import client.SkillMacro;
 import tools.data.LittleEndianAccessor;
 import constants.GameConstants;
-import client.MapleCharacter;
-import client.MapleClient;
 import util.ListUtil;
 
 public class PlayerHandler
@@ -132,57 +122,124 @@ public class PlayerHandler
         }
     }
     
-    public static void UseChair(final int itemId, final MapleClient c, MapleCharacter chr) {
-        if (chr == null) {
-            return;
-        }
+//    public static void UseChair(final int itemId, final MapleClient c, MapleCharacter chr) {
+//        if (chr == null) {
+//            return;
+//        }
+//        if (itemId == 3012024) {
+//            c.sendPacket(MaplePacketCreator.enableActions());
+//            return;
+//        }
+//        final MapleInventoryType type = GameConstants.getInventoryType(itemId);
+//        IItem toUse = chr.getInventory(type).findById(itemId);
+//        if (toUse == null && itemId >= 3010000 && itemId < 9999999) {
+//            FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品");
+//            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理员永久停權。"));
+//            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密語]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品"));
+//            c.getPlayer().ban("修改封包", true, true, false);
+//            //c.getSession().close();
+//            return;
+//        }
+//        if (itemId / 10000 == 301 && GameConstants.isFishingMap(chr.getMapId())) {
+//            if (!chr.haveItem(5340000) && !chr.haveItem(5340001)) {
+//                chr.dropMessage(1, "你背包里没有普通鱼竿或者高级鱼竿。");
+//            }
+//            if (!chr.haveItem(2300000) && !chr.haveItem(2300001)) {
+//                chr.dropMessage(1, "你背包里没有鱼饵。");
+//            }
+//            if (GameConstants.isFishingChannel(c.getChannel())) {
+//                chr.dropMessage(1, "该频道不允许钓鱼，请尝试其他频道。");
+//            }
+//
+//            boolean haz = false;
+//            for (final IItem item : c.getPlayer().getInventory(MapleInventoryType.CASH).list()) {
+//                if (item.getItemId() == 5340000) {
+//                    haz = true;
+//                }
+//                else {
+//                    if (item.getItemId() != 5340001) {
+//                        continue;
+//                    }
+//                    haz = false;
+//                    if (chr.Getcharactera("" + chr.getId() + "", 1) <= 1) {
+//                        chr.startFishingTask(true);
+//                        break;
+//                    }
+//                    break;
+//                }
+//            }
+//            if (haz && chr.Getcharactera("" + chr.getId() + "", 1) <= 1) {
+//                chr.startFishingTask(false);
+//            }
+//        }
+//        chr.setChair(itemId);
+//        chr.getMap().broadcastMessage(chr, MaplePacketCreator.showChair(chr.getId(), itemId), false);
+//        c.sendPacket(MaplePacketCreator.enableActions());
+//    }
+public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
+    if (chr != null) {
         if (itemId == 3012024) {
             c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        final MapleInventoryType type = GameConstants.getInventoryType(itemId);
-        IItem toUse = chr.getInventory(type).findById(itemId);
-        if (toUse == null && itemId >= 3010000 && itemId < 9999999) {
-            FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品");
-            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理員永久停權。"));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密語]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品"));
-            c.getPlayer().ban("修改封包", true, true, false);
-            //c.getSession().close();
-            return;
-        }
-        if (itemId / 10000 == 301 && GameConstants.isFishingMap(chr.getMapId())) {
-            if (!chr.haveItem(5340000) && !chr.haveItem(5340001)) {
-                chr.dropMessage(1, "你背包里没有普通鱼竿或者高级鱼竿。");
-            }
-            if (!chr.haveItem(2300000) && !chr.haveItem(2300001)) {
-                chr.dropMessage(1, "你背包里没有鱼饵。");
-            }
-            boolean haz = false;
-            for (final IItem item : c.getPlayer().getInventory(MapleInventoryType.CASH).list()) {
-                if (item.getItemId() == 5340000) {
-                    haz = true;
-                }
-                else {
-                    if (item.getItemId() != 5340001) {
-                        continue;
+        } else {
+            MapleInventoryType type = GameConstants.getInventoryType(itemId);
+            IItem toUse = chr.getInventory(type).findById(itemId);
+            if (toUse == null && itemId >= 3010000 && itemId < 9999999) {
+                FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子时封锁。 身上并没有该物品");
+                Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封锁系统] " + c.getPlayer().getName() + " 因为修改封包而被管理员永久停权。"));
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子时封锁。 身上并没有该物品"));
+                c.getPlayer().ban("修改封包", true, true, false);
+                c.getSession().close();
+            } else {
+                if ((itemId / 10000 == 301 || itemId / 10000 == 302) && GameConstants.isFishingMap(chr.getMapId())) {
+                    boolean haz = false;
+                    boolean yg = false;
+                    if (GameConstants.isFishingChannel(c.getChannel())) {
+                        for (IItem item : c.getPlayer().getInventory(MapleInventoryType.CASH).list()) {
+                            if (item.getItemId() == 5340000) {
+                                haz = true;
+                                yg = true;
+                            } else if (item.getItemId() == 5340001) {
+                                haz = false;
+                                yg = true;
+                                chr.startFishingTask(true);
+                                break;
+                            }
+                        }
+                        if (haz) {
+                            chr.startFishingTask(false);
+                        }
+
+                        if (!yg) {
+                            chr.dropMessage(5, "您没有钓鱼竿，无法钓鱼。");
+                        }
+                    } else {
+                        chr.dropMessage(5, "该频道不允许钓鱼，请尝试其他频道。");
                     }
-                    haz = false;
-                    if (chr.Getcharactera("" + chr.getId() + "", 1) <= 1) {
-                        chr.startFishingTask(true);
-                        break;
-                    }
-                    break;
                 }
-            }
-            if (haz && chr.Getcharactera("" + chr.getId() + "", 1) <= 1) {
-                chr.startFishingTask(false);
+
+                chr.setChair(itemId);
+                int tamingMob = MapleItemInformationProvider.getInstance().getChairMountId(itemId) - '썐';
+                if (tamingMob <= 0) {
+                    tamingMob = 0;
+                } else if (itemId >= 3010000 && itemId < 4000000 && (Integer)LtMS.ConfigValuesMap.get("椅子骑宠节点读取开关") < 1) {
+                    tamingMob = 0;
+                }
+
+                chr.getMap().broadcastMessageChair(chr, MaplePacketCreator.showChair(chr.getId(), itemId), false);
+                if (tamingMob > 0) {
+                    List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<>(MapleBuffStat.MONSTER_RIDING, 0));
+                    chr.getClient().getSession().write(MaplePacketCreator.giveMount(chr, tamingMob, itemId, stat));
+                    chr.getMap().broadcastMessage(chr, MaplePacketCreator.showChair(chr.getId(), itemId), false);
+                    chr.getMap().broadcastMessage(chr, MaplePacketCreator.showMonsterRiding(chr.getId(), stat, tamingMob, itemId), false);
+                }
+
+                chr.setTamingMobId(tamingMob);
+                chr.setTamingMobItemId(itemId);
+                c.sendPacket(MaplePacketCreator.enableActions());
             }
         }
-        chr.setChair(itemId);
-        chr.getMap().broadcastMessage(chr, MaplePacketCreator.showChair(chr.getId(), itemId), false);
-        c.sendPacket(MaplePacketCreator.enableActions());
     }
-    
+}
     public static void CancelChair(final short id, final MapleClient c, MapleCharacter chr) {
         if (chr == null || c == null) {
             return;
@@ -298,8 +355,11 @@ public class PlayerHandler
         }
     }
 
-    //复活?
+    //碰撞伤害
     public static void TakeDamage(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
+        if ((Integer)LtMS.ConfigValuesMap.get("VIP无敌开关") > 0 && chr.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无敌道具ID"))) {
+            return;
+        }
         if (slea.available() < 5L) {
             return;
         }
@@ -324,6 +384,8 @@ public class PlayerHandler
         if (chr.isGM() && chr.isInvincible()) {
             return;
         }
+
+
         final PlayerStats stats = chr.getStat();
         if (type != -2 && type != -3 && type != -4) {
             monsteridfrom = slea.readInt();
@@ -351,11 +413,14 @@ public class PlayerHandler
                 }
             }
         }
+
+
+
         if (damage == -1) {
             fake = 4020002 + (chr.getJob() / 10 - 40) * 100000;
         }
         else if (damage < -1 || damage > 60000) {
-            AutobanManager.getInstance().addPoints(c, 1000, 60000L, "Taking abnormal amounts of damge from " + monsteridfrom + " : " + damage);
+            AutobanManager.getInstance().addPoints(c, 1000, 60000L, "来自怪物的异常伤害值: " + monsteridfrom + " : " + damage);
             return;
         }
         if (!chr.inBossMap()) {
@@ -468,9 +533,12 @@ public class PlayerHandler
             }
             chr.handleBattleshipHP(-damage);
         }
+
+
         if (!chr.isHidden()) {
             chr.getMap().broadcastMessage(chr, MaplePacketCreator.damagePlayer((int)type, monsteridfrom, chr.getId(), damage, fake, direction, reflect, is_pg, oid, pos_x, pos_y), false);
         }
+
     }
     
     public static void UseItemEffect(final int itemId, final MapleClient c, MapleCharacter chr) {
@@ -557,9 +625,7 @@ public class PlayerHandler
          MapleStatEffect effect = skill.getEffect(chr.getSkillLevel(GameConstants.getLinkedSkill(skillid)));
 
         int checkSkillId = 1013;
-        if (ServerConfig.version == 85) {
-            checkSkillId = 1025;
-        }
+
         if (skillid == checkSkillId && chr.skillisCooling(skillid) && !chr.isGM()) {
             chr.dropMessage(5, "技能冷却时间尚未结束，暂时无法使用。");
             c.sendPacket(MaplePacketCreator.enableActions());
@@ -595,12 +661,21 @@ public class PlayerHandler
         switch (skillid) {
             case 1013:
             case 1025:
+                if(c.getPlayer().getId()>10000000){
+                    break;
+                }
                 Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem((short)-120);
                 if (target != null && (target.getItemId() == 1602008 || target.getItemId() == 1602009 || target.getItemId() == 1602010)) {
                     chr.getMap().killMonsterAll2(9900000);
                     chr.getMap().killMonsterAll2(9900001);
                     chr.getMap().killMonsterAll2(9900002);
-                    chr.giveBuff(3020032, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 600000, true);
+                    try {
+                        chr.giveBuff(3020032, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 600000, true);
+                    } catch (Exception e) {
+                       if (LtMS.ConfigValuesMap.get("轮回异常中断")>0){
+                           return;
+                       }
+                    }
                     MapleMonster mainb;
                     if (chr.getOneTimeLog("轮回等级") == 1) {
                         mainb = MapleLifeFactory.getMonster(9900001);
@@ -684,7 +759,7 @@ public class PlayerHandler
         }
     }
     
-    public static void closeRangeAttack(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr, final boolean energy) {
+    public static final void closeRangeAttack(final LittleEndianAccessor slea,  MapleClient c, MapleCharacter chr, final boolean energy) {
         if (chr == null || (energy && chr.getBuffedValue(MapleBuffStat.ENERGY_CHARGE) == null && chr.getBuffedValue(MapleBuffStat.BODY_PRESSURE) == null && !GameConstants.isKOC((int)chr.getJob()))) {
             return;
         }
@@ -695,7 +770,20 @@ public class PlayerHandler
         }
         final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
         double maxdamage = (double)chr.getStat().getCurrentMaxBaseDamage();
-//        System.out.println("1:"+maxdamage);
+        if(!c.getPlayer().屏蔽特效) {
+            chr.sendSkillSkin(attack.skill);
+        }
+        if (chr.getSuperTransformation() && attack.skill != 0) {
+            long nowTime = System.currentTimeMillis();
+            if (nowTime - chr.getLastSuperTransformationTime() > (long)(Integer)LtMS.ConfigValuesMap.get("变身无延迟攻击间隔")) {
+                chr.setLastSuperTransformationTime(nowTime);
+                if (chr.getJob() >= 500 && chr.getJob() <= 512) {
+                    chr.setMorph(5121003, 1103, 60000, true, true);
+                } else {
+                    chr.setMorph(5121003, 1103, 1, true, true);
+                }
+            }
+        }
         int attackCount = 1;
         int skillLevel = 0;
         MapleStatEffect effect = null;
@@ -744,6 +832,13 @@ public class PlayerHandler
                     }
                     c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
                     chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (effect.getCooldown() * 1000));
+                }else{
+                    if (chr.skillisCooling(attack.skill)) {
+                        c.sendPacket(MaplePacketCreator.enableActions());
+                        return;
+                    }
+                    c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, Start.ltSkillWucdTable.get(attack.skill)));
+                    chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (Start.ltSkillWucdTable.get(attack.skill)*1000));
                 }
             }
         }
@@ -847,25 +942,25 @@ public class PlayerHandler
             }
         }
         //身外化身处理
-        final WeakReference<MapleCharacter>[] clones = chr.getClones();
-        for (int i = 0; i < clones.length; ++i) {
-            if (clones[i].get() != null) {
-                final MapleCharacter clone = (MapleCharacter)clones[i].get();
-                final ISkill skil2 = skill;
-                final int skillLevel2 = skillLevel;
-                final int attackCount2 = attackCount;
-                final double maxdamage2 = maxdamage;
-                final MapleStatEffect eff2 = effect;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.getItemQuantity(LtMS.ConfigValuesMap.get("分身伤害道具"),true)/100.0);//chr.isGM() ? 1 : 4
-                CloneTimer.getInstance().schedule((Runnable)new Runnable() {
-                    @Override
-                    public void run() {
-                        clone.getMap().broadcastMessage(MaplePacketCreator.closeRangeAttack(clone.getId(), (int)attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, energy, (int)clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk, attack2.charge));
-                        DamageParse.applyAttack(attack2, skil2, chr, attackCount2, maxdamage2, eff2, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
-                    }
-                }, (long)(500 * i + 500));
-            }
-        }
+//        final WeakReference<MapleCharacter>[] clones = chr.getClones();
+//        for (int i = 0; i < clones.length; ++i) {
+//            if (clones[i].get() != null) {
+//                final MapleCharacter clone = (MapleCharacter)clones[i].get();
+//                final ISkill skil2 = skill;
+//                final int skillLevel2 = skillLevel;
+//                final int attackCount2 = attackCount;
+//                final double maxdamage2 = maxdamage;
+//                final MapleStatEffect eff2 = effect;
+//                final AttackInfo attack2 = DamageParse.DivideAttack(attack, clone.getCloneDamagePercentage());//chr.isGM() ? 1 : 4
+//                CloneTimer.getInstance().schedule((Runnable)new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        clone.getMap().broadcastMessage(MaplePacketCreator.closeRangeAttack(clone.getId(), (int)attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, energy, (int)clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk, attack2.charge));
+//                        DamageParse.applyAttack(attack2, skil2, chr, attackCount2, maxdamage2, eff2, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
+//                    }
+//                }, (long)(500 * i + 500));
+//            }
+//        }
     }
     //远程攻击
     public static void rangedAttack(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
@@ -877,6 +972,20 @@ public class PlayerHandler
             return;
         }
         final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgR(slea), chr, 2);
+        if(!c.getPlayer().屏蔽特效) {
+            chr.sendSkillSkin(attack.skill);
+        }
+        if (chr.getSuperTransformation() && attack.skill != 0) {
+            long nowTime = System.currentTimeMillis();
+            if (nowTime - chr.getLastSuperTransformationTime() > (long)(Integer)LtMS.ConfigValuesMap.get("变身无延迟攻击间隔")) {
+                chr.setLastSuperTransformationTime(nowTime);
+                if (chr.getJob() >= 500 && chr.getJob() <= 512) {
+                    chr.setMorph(5121003, 1103, 60000, true, true);
+                } else {
+                    chr.setMorph(5121003, 1103, 1, true, true);
+                }
+            }
+        }
         int bulletCount = 1;
         int skillLevel = 0;
         MapleStatEffect effect = null;
@@ -928,6 +1037,13 @@ public class PlayerHandler
                     }
                     c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
                     chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (effect.getCooldown() * 1000));
+                }else{
+                    if (chr.skillisCooling(attack.skill)) {
+                        c.sendPacket(MaplePacketCreator.enableActions());
+                        return;
+                    }
+                    c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, Start.ltSkillWucdTable.get(attack.skill)));
+                    chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (Start.ltSkillWucdTable.get(attack.skill)*1000));
                 }
             }
         }
@@ -1072,26 +1188,26 @@ public class PlayerHandler
             }
         }
 
-        final WeakReference<MapleCharacter>[] clones = chr.getClones();
-        for (int i = 0; i < clones.length; ++i) {
-            if (clones[i].get() != null) {
-                final MapleCharacter clone = (MapleCharacter)clones[i].get();
-                final ISkill skil2 = skill;
-                final MapleStatEffect eff2 = effect;
-                final double basedamage2 = basedamage;
-                final int bulletCount2 = bulletCount;
-                final int visProjectile2 = visProjectile;
-                final int skillLevel2 = skillLevel;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.getItemQuantity(LtMS.ConfigValuesMap.get("分身伤害道具"),true)/100.0);//chr.isGM() ? 1 : 4
-                CloneTimer.getInstance().schedule((Runnable)new Runnable() {
-                    @Override
-                    public void run() {
-                        clone.getMap().broadcastMessage(MaplePacketCreator.rangedAttack(clone.getId(), attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, visProjectile2, attack2.allDamage, attack2.position, (int)clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk));
-                        DamageParse.applyAttack(attack2, skil2, chr, bulletCount2, basedamage2, eff2, AttackType.RANGED);
-                    }
-                }, (long)(500 * i + 500));
-            }
-        }
+//        final WeakReference<MapleCharacter>[] clones = chr.getClones();
+//        for (int i = 0; i < clones.length; ++i) {
+//            if (clones[i].get() != null) {
+//                final MapleCharacter clone = (MapleCharacter)clones[i].get();
+//                final ISkill skil2 = skill;
+//                final MapleStatEffect eff2 = effect;
+//                final double basedamage2 = basedamage;
+//                final int bulletCount2 = bulletCount;
+//                final int visProjectile2 = visProjectile;
+//                final int skillLevel2 = skillLevel;
+//                final AttackInfo attack2 = DamageParse.DivideAttack(attack, clone.getCloneDamagePercentage());//chr.isGM() ? 1 : 4
+//                CloneTimer.getInstance().schedule((Runnable)new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        clone.getMap().broadcastMessage(MaplePacketCreator.rangedAttack(clone.getId(), attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, visProjectile2, attack2.allDamage, attack2.position, (int)clone.getLevel(), clone.getStat().passive_mastery(), attack2.unk));
+//                        DamageParse.applyAttack(attack2, skil2, chr, bulletCount2, basedamage2, eff2, AttackType.RANGED);
+//                    }
+//                }, (long)(500 * i + 500));
+//            }
+//        }
     }
     //释放魔法攻击
     public static void MagicDamage(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
@@ -1103,6 +1219,20 @@ public class PlayerHandler
             return;
         }
         final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgMa(slea), chr, 3);
+        if(!c.getPlayer().屏蔽特效) {
+            chr.sendSkillSkin(attack.skill);
+        }
+        if (chr.getSuperTransformation() && attack.skill != 0) {
+            long nowTime = System.currentTimeMillis();
+            if (nowTime - chr.getLastSuperTransformationTime() > (long)(Integer)LtMS.ConfigValuesMap.get("变身无延迟攻击间隔")) {
+                chr.setLastSuperTransformationTime(nowTime);
+                if (chr.getJob() >= 500 && chr.getJob() <= 512) {
+                    chr.setMorph(5121003, 1103, 60000, true, true);
+                } else {
+                    chr.setMorph(5121003, 1103, 1, true, true);
+                }
+            }
+        }
         final ISkill skill = SkillFactory.getSkill(GameConstants.getLinkedSkill(attack.skill));
         final int skillLevel = chr.getSkillLevel(skill);
         final MapleStatEffect effect = attack.getAttackEffect(chr, skillLevel, skill);
@@ -1132,6 +1262,13 @@ public class PlayerHandler
                 }
                 c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, effect.getCooldown()));
                 chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (effect.getCooldown() * 1000));
+            }else{
+                if (chr.skillisCooling(attack.skill)) {
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                    return;
+                }
+                c.sendPacket(MaplePacketCreator.skillCooldown(attack.skill, Start.ltSkillWucdTable.get(attack.skill)));
+                chr.addCooldown(attack.skill, System.currentTimeMillis(), (long) (Start.ltSkillWucdTable.get(attack.skill)*1000));
             }
         }
         chr.checkFollow();
@@ -1150,24 +1287,24 @@ public class PlayerHandler
             }
         }
 
-        final WeakReference<MapleCharacter>[] clones = chr.getClones();
-
-        for (int i = 0; i < clones.length; ++i) {
-            if (clones[i].get() != null) {
-                final MapleCharacter clone = (MapleCharacter)clones[i].get();
-                final ISkill skil2 = skill;
-                final MapleStatEffect eff2 = effect;
-                final int skillLevel2 = skillLevel;
-                final AttackInfo attack2 = DamageParse.DivideAttack(attack, chr.getItemQuantity(LtMS.ConfigValuesMap.get("分身伤害道具"),true)/100.0);//chr.isGM() ? 1 : 4
-                CloneTimer.getInstance().schedule((Runnable)new Runnable() {
-                    @Override
-                    public void run() {
-                        clone.getMap().broadcastMessage(MaplePacketCreator.magicAttack(clone.getId(), (int)attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, attack2.charge, (int)clone.getLevel(), attack2.unk));
-                        DamageParse.applyAttackMagic(attack2, skil2, chr, eff2);
-                    }
-                }, (long)(500 * i + 500));
-            }
-        }
+//        final WeakReference<MapleCharacter>[] clones = chr.getClones();
+//
+//        for (int i = 0; i < clones.length; ++i) {
+//            if (clones[i].get() != null) {
+//                final MapleCharacter clone = (MapleCharacter)clones[i].get();
+//                final ISkill skil2 = skill;
+//                final MapleStatEffect eff2 = effect;
+//                final int skillLevel2 = skillLevel;
+//                final AttackInfo attack2 = DamageParse.DivideAttack(attack, clone.getCloneDamagePercentage());//chr.isGM() ? 1 : 4
+//                CloneTimer.getInstance().schedule((Runnable)new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        clone.getMap().broadcastMessage(MaplePacketCreator.magicAttack(clone.getId(), (int)attack2.tbyte, attack2.skill, skillLevel2, attack2.display, attack2.animation, attack2.speed, attack2.allDamage, attack2.charge, (int)clone.getLevel(), attack2.unk));
+//                        DamageParse.applyAttackMagic(attack2, skil2, chr, eff2);
+//                    }
+//                }, (long)(500 * i + 500));
+//            }
+//        }
     }
 
     public static void DropMeso(final int meso, MapleCharacter chr) {
@@ -1199,7 +1336,7 @@ public class PlayerHandler
                     chr.getClient().getSession().close();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 System.out.println("处理丢弃金币检测异常");
             }
         });
@@ -1295,12 +1432,16 @@ public class PlayerHandler
                 c.getPlayer().getMap().broadcastGMMessage(chr, MaplePacketCreator.movePlayer(chr.getId(), res, Original_Pos), false);
             }
             else {
-
+                chr.setLastRes(res2);
                 c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.movePlayer(chr.getId(), res, Original_Pos), false);
             }
             MovementParse.updatePosition(res, (AnimatedMapleMapObject)chr, 0);
             final Point pos = chr.getPosition();
-            map.movePlayer(chr, pos);
+            try {
+                map.movePlayer(chr, pos);
+            } catch (Exception e) {
+
+            }
             if (chr.getFollowId() > 0 && chr.isFollowOn() && chr.isFollowInitiator()) {
                 final MapleCharacter fol = map.getCharacterById(chr.getFollowId());
 
@@ -1343,8 +1484,6 @@ public class PlayerHandler
             }
             int count = c.getPlayer().getFallCounter();
             if (map.getFootholds().findBelow(c.getPlayer().getPosition()) == null && c.getPlayer().getPosition().y > c.getPlayer().getOldPosition().y && c.getPlayer().getPosition().x == c.getPlayer().getOldPosition().x) {
-
-
                 if (count > 10) {
                     if (map.getId() == 926010010 || map.getId() == 926010030 || map.getId() == 926010050 || map.getId() == 926010070) {
                         c.getPlayer().changeMap(926010000);

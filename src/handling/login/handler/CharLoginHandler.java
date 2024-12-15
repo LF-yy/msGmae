@@ -4,12 +4,11 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
 
-import GuaiSetting.Game;
 import constants.ServerConfig;
 import database.DBConPool;
 
 import java.sql.SQLException;
-import java.util.Iterator;
+import java.util.*;
 
 import gui.LtMS;
 import handling.cashshop.CashShopServer;
@@ -23,19 +22,16 @@ import client.inventory.MapleInventoryType;
 import handling.login.LoginInformationProvider;
 import client.MapleCharacterUtil;
 import client.MapleCharacter;
-import java.util.List;
 import constants.WorldConstants;
 import handling.channel.ChannelServer;
 import server.ServerProperties;
 import gui.CongMS;
-import java.util.Calendar;
 import handling.login.LoginWorker;
 import tools.KoreanDateUtil;
 import tools.MaplePacketCreator;
 import handling.login.LoginServer;
 import tools.FileoutputUtil;
 import tools.StringUtil;
-import java.util.Random;
 import tools.packet.LoginPacket;
 import tools.data.LittleEndianAccessor;
 import client.MapleClient;
@@ -72,6 +68,7 @@ public class CharLoginHandler
     }
     
     public static void handleLogin(final LittleEndianAccessor slea, final MapleClient c) {
+
         //设置登陆人数
         if (在线人数()> ServerConfig.userlimit){
             c.sendPacket(MaplePacketCreator.serverNotice(1, "服务器人数已满."));
@@ -85,9 +82,16 @@ public class CharLoginHandler
             c.getSession().close();
             return;
         }
-        final String account = slea.readMapleAsciiString();
-        final String password = slea.readMapleAsciiString();
-        final String loginkey = RandomString();
+         String account = slea.readMapleAsciiString();
+         String password = slea.readMapleAsciiString();
+         String loginkey = RandomString();
+        //限制账户注册登录
+        if (Start.gatEwayAccountExists(account) && LtMS.ConfigValuesMap.get("限制账户注册登录")>0){
+            c.getSession().writeAndFlush((Object)MaplePacketCreator.serverNotice(1, "你没有权限注册."));
+            return;
+        }
+
+
         final int loginkeya = (int)((Math.random() * 9.0 + 1.0) * 100000.0);
         c.setAccountName(account);
         final int[] bytes = new int[6];
@@ -107,13 +111,18 @@ public class CharLoginHandler
         int loginok = c.login(account, password, ban);
         final Calendar tempbannedTill = c.getTempBanCalendar();
         String errorInfo = null;
+
+
         if (c.getLastLoginTime() != 0L && c.getLastLoginTime() + 5000L < System.currentTimeMillis()) {
-            errorInfo = "您登入的速度過快!\r\n請重新輸入.";
+            errorInfo = "您登录的速度過快!\r\n請重新輸入.";
             loginok = 1;
         }
         else if (loginok == 0 && ban && !c.isGm()) {
             loginok = 3;
-            FileoutputUtil.logToFile("logs/data/" + (macBan ? "MAC" : "IP") + "封鎖_登入账号.txt", "\r\n 时间\u3000[" + FileoutputUtil.NowTime() + "]  所有MAC位址: " + (Object)c.getMacs() + " IP地址: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号：\u3000" + account + " 密碼：" + password);
+            FileoutputUtil.logToFile("logs/data/" + (macBan ? "MAC" : "IP") + "封鎖_登录账号.txt", "\r\n 时间\u3000[" + FileoutputUtil.NowTime() + "]  所有MAC位址: " + (Object)c.getMacs() + " IP地址: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号：\u3000" + account + " 密碼：" + password);
+        }else if (loginok == 7) {
+            errorInfo = "排队顶号中，请稍后再试！.";
+            loginok = 1;
         }
         else {
             if (loginok == 0 && (c.getGender() == 10 || c.getSecondPassword() == null)) {
@@ -146,15 +155,23 @@ public class CharLoginHandler
             else if (!LoginServer.canLoginAgain(c.getAccID())) {
                 final int sec = (int)((LoginServer.getLoginAgainTime(c.getAccID()) + 50000L - System.currentTimeMillis()) / 1000L);
                 c.loginAttempt = 0;
-                errorInfo = "游戏账号將於" + sec + "秒后可以登入， 請耐心等候。";
+                errorInfo = "游戏账号将于" + sec + "秒后可以登录， 请耐心等候。";
                 loginok = 1;
             }
             else if (!LoginServer.canEnterGameAgain(c.getAccID())) {
                 final int sec = (int)((LoginServer.getEnterGameAgainTime(c.getAccID()) + 60000L - System.currentTimeMillis()) / 1000L);
                 c.loginAttempt = 0;
-                errorInfo = "游戏账号將於" + sec + "秒后可以登入， 請耐心等候。";
+                errorInfo = "游戏账号将于" + sec + "秒后可以登录， 请耐心等候。";
                 loginok = 1;
             }
+        }
+        if (LtMS.ConfigValuesMap.get("Mac地址检查")>0 && Objects.isNull(c.getMacs())){
+            c.getSession().writeAndFlush((Object)MaplePacketCreator.serverNotice(1, "请勿非法登录1."));
+            return;
+        }
+        if (LtMS.ConfigValuesMap.get("ip地址检查")>0 && (Objects.isNull( c.getSessionIPAddress()) || c.getSessionIPAddress().equals("0.0.0.0") || c.getSessionIPAddress().equals("127.0.0.1"))){
+            c.getSession().writeAndFlush((Object)MaplePacketCreator.serverNotice(1, "请勿非法登录2."));
+            return;
         }
 
         if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"IP多开开关")) == 1) {
@@ -207,7 +224,7 @@ public class CharLoginHandler
             c.setLoginKey(loginkey);
             c.updateLoginKey(loginkey);
             LoginServer.addLoginKey(loginkey, c.getAccID());
-            FileoutputUtil.logToFile("logs/data/登入账号.txt", "\r\n 时间\u3000[" + FileoutputUtil.NowTime() + "] IP 地址 : " + c.getSession().remoteAddress().toString().split(":")[0] + " MAC: " + macData + " 账号：\u3000" + account + " 密碼：" + password);
+            FileoutputUtil.logToFile("logs/data/登录账号.txt", "\r\n 时间\u3000[" + FileoutputUtil.NowTime() + "] IP 地址 : " + c.getSession().remoteAddress().toString().split(":")[0] + " MAC: " + macData + " 账号：\u3000" + account + " 密碼：" + password);
             c.setLoginKeya(loginkeya);
             LoginWorker.registerClient(c);
         }
@@ -596,7 +613,7 @@ public class CharLoginHandler
             }
         }
         if (state == 0) {
-            state = (byte)c.deleteCharacter(characterId);
+           // state = (byte)c.deleteCharacter(characterId);
         }
         c.sendPacket(LoginPacket.deleteCharResponse(characterId, (int)state));
     }

@@ -210,23 +210,23 @@ public class MobPacket
      * @return
      */
     public static byte[] spawnMonster(final MapleMonster life, final int spawnType, final int effect, final int link) {
-        UserAttraction userAttraction = NPCConversationManager.getAttractList(life.getMap().getChannel(), life.getMap().getId());
-//        if (Objects.isNull(userAttraction)) {
-//             userAttraction = NPCConversationManager.getAttractLhList(life.getMap().getChannel(), life.getMap().getId());
-//        }
+     UserAttraction userAttraction = NPCConversationManager.getAttractList(life.getMap().getChannel(), life.getMap().getId());
+//     if (Objects.isNull(userAttraction)) {
+//          userAttraction = NPCConversationManager.getAttractLhList(life.getMap().getChannel(), life.getMap().getId());
+//     }
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SPAWN_MONSTER.getValue());
         mplew.writeInt(life.getObjectId());
         mplew.write(1);
         mplew.writeInt(life.getId());
         addMonsterStatus(mplew, life);
-        if (Objects.nonNull(userAttraction)) {
-            mplew.writeShort(userAttraction.getPosition().x);
-            mplew.writeShort(userAttraction.getPosition().y);
-        }else {
-            mplew.writeShort(life.getPosition().x);
-            mplew.writeShort(life.getPosition().y);
-        }
+       if (Objects.nonNull(userAttraction)) {
+           mplew.writeShort(userAttraction.getPosition().x);
+           mplew.writeShort(userAttraction.getPosition().y);
+       }else {
+         mplew.writeShort(life.getPosition().x);
+         mplew.writeShort(life.getPosition().y);
+       }
         mplew.write(life.getStance());
         mplew.writeShort(0);
         mplew.writeShort(life.getFh());

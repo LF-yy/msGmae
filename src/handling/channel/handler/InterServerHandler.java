@@ -1,20 +1,30 @@
 package handling.channel.handler;
 
+import client.messages.CommandProcessor;
+import constants.ServerConfig;
 import constants.tzjc;
+import database.DBConPool;
 import gui.LtMS;
 import gui.服务端输出信息;
 import scripting.NPCScriptManager;
+import server.MapleItemInformationProvider;
 import server.ServerProperties;
 import server.Start;
-import server.bean.Potential;
+import snail.Marathon;
+import snail.Potential;
 import server.maps.FieldLimitType;
 import tools.data.LittleEndianAccessor;
 import handling.world.guild.MapleGuild;
 import handling.world.MapleMessenger;
 import handling.world.CharacterIdChannelPair;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import abc.离线人偶;
-import java.util.Iterator;
+
 import java.util.List;
 import client.BuddyEntry;
 import client.MapleQuestStatus;
@@ -31,7 +41,6 @@ import handling.world.PartyOperation;
 import handling.world.World.Buddy;
 import constants.GameConstants;
 import client.SkillFactory;
-import gui.CongMS;
 import handling.login.LoginServer;
 import handling.world.World.Broadcast;
 import handling.cashshop.CashShopServer;
@@ -52,54 +61,101 @@ public class InterServerHandler
     public static boolean 离线挂机;
     
     public static void EnterCashShop(final MapleClient c, MapleCharacter chr, final boolean mts) {
-        if (c.getCloseSession()) {
-            return;
+//        if (c.getCloseSession()) {
+//            return;
+//        }
+//        if (World.isShutDown && !chr.isGM()) {
+//            c.sendPacket(MaplePacketCreator.serverBlocked(2));
+//            c.sendPacket(MaplePacketCreator.enableActions());
+//            return;
+//        }
+//        if ((!WorldConstants.CS_ENABLE && !chr.isGM()) || mts) {
+//            c.sendPacket(MaplePacketCreator.serverBlocked(2));
+//            c.sendPacket(MaplePacketCreator.enableActions());
+//            return;
+//        }
+//        if (chr == null || chr.getMap() == null || chr.getEventInstance() != null || c.getChannelServer() == null) {
+//            c.getSession().write((Object)MaplePacketCreator.serverBlocked(2));
+//            c.getSession().write((Object)MaplePacketCreator.enableActions());
+//            return;
+//        }
+//        if (chr.getAntiMacro().inProgress()) {
+//            c.getPlayer().dropMessage(1, "被使用測謊儀時無法操作。");
+//            c.sendPacket(MaplePacketCreator.enableActions());
+//            return;
+//        }
+//        try {
+//            chr.saveToDB(false, false);
+//        }
+//        catch (Exception ex) {
+//            FileoutputUtil.logToFile("logs/進入商城保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
+//            FileoutputUtil.outError("logs/進入商城保存数据異常.txt", (Throwable)ex);
+//        }
+//        final ChannelServer ch = ChannelServer.getInstance(c.getChannel());
+//        chr.dispelBuff();
+//        chr.changeRemoval();
+//        if (chr.getMessenger() != null) {
+//            final MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(chr);
+//            Messenger.leaveMessenger(chr.getMessenger().getId(), messengerplayer);
+//        }
+//        PlayerBuffStorage.addBuffsToStorage(chr.getId(), chr.getAllBuffs());
+//        PlayerBuffStorage.addCooldownsToStorage(chr.getId(), chr.getCooldowns());
+//        PlayerBuffStorage.addDiseaseToStorage(chr.getId(), chr.getAllDiseases());
+//        World.channelChangeData(new CharacterTransfer(chr), chr.getId(), mts ? -20 : -10);
+//        ch.removePlayer(chr);
+//        c.updateLoginState(6, c.getSessionIPAddress());
+//        chr.getMap().removePlayer(chr);
+//        c.sendPacket(MaplePacketCreator.getChannelChange(c, Integer.parseInt(CashShopServer.getIP().split(":")[1])));
+//        c.getPlayer().expirationTask(true, false);
+//        c.setPlayer(null);
+//        c.setReceiving(false);
+        if (!c.getCloseSession()) {
+            if (World.isShutDown && !chr.isGM()) {
+                c.sendPacket(MaplePacketCreator.serverBlocked(2));
+                c.sendPacket(MaplePacketCreator.enableActions());
+            } else if (!WorldConstants.CS_ENABLE && !chr.isGM()) {
+                c.getPlayer().dropMessage(1, "商城维护中，暂时无法进入");
+                c.sendPacket(MaplePacketCreator.enableActions());
+            } else if (Marathon.isBegain() && c.getPlayer().haveItem(Marathon.getItemId())) {
+                c.getPlayer().dropMessage(1, "马拉松比赛正在进行中，检测到你持有 " + MapleItemInformationProvider.getInstance().getName((Integer) LtMS.ConfigValuesMap.get("马拉松比赛道具ID")) + "，无法进入商城！");
+                c.sendPacket(MaplePacketCreator.enableActions());
+            } else if (chr != null && chr.getMap() != null && chr.getEventInstance() == null && c.getChannelServer() != null) {
+                if (chr.getAntiMacro().inProgress()) {
+                    c.getPlayer().dropMessage(1, "被使用测谎仪时无法操作。");
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                } else {
+                    try {
+                        chr.saveToDB(false, false);
+                    } catch (Exception var5) {
+                        FileoutputUtil.logToFile("logs/进入商城保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
+                        FileoutputUtil.outError("logs/进入商城保存数据异常.txt", var5);
+                    }
+
+                    ChannelServer ch = ChannelServer.getInstance(c.getChannel());
+                    chr.dispelBuff();
+                    chr.changeRemoval();
+                    if (chr.getMessenger() != null) {
+                        MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(chr);
+                        Messenger.leaveMessenger(chr.getMessenger().getId(), messengerplayer);
+                    }
+
+                    PlayerBuffStorage.addBuffsToStorage(chr.getId(), chr.getAllBuffs());
+                    PlayerBuffStorage.addCooldownsToStorage(chr.getId(), chr.getCooldowns());
+                    PlayerBuffStorage.addDiseaseToStorage(chr.getId(), chr.getAllDiseases());
+                    World.channelChangeData(new CharacterTransfer(chr), chr.getId(), mts ? -20 : -10);
+                    ch.removePlayer(chr);
+                    c.updateLoginState(6, c.getSessionIPAddress());
+                    chr.getMap().removePlayer(chr);
+                    c.sendPacket(MaplePacketCreator.getChannelChange(c, Integer.parseInt(CashShopServer.getIP().split(":")[1])));
+                    c.getPlayer().expirationTask(true, false);
+                    c.setPlayer((MapleCharacter)null);
+                    c.setReceiving(false);
+                }
+            } else {
+                c.getSession().write(MaplePacketCreator.serverBlocked(2));
+                c.getSession().write(MaplePacketCreator.enableActions());
+            }
         }
-        if (World.isShutDown && !chr.isGM()) {
-            c.sendPacket(MaplePacketCreator.serverBlocked(2));
-            c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        if ((!WorldConstants.CS_ENABLE && !chr.isGM()) || mts) {
-            c.sendPacket(MaplePacketCreator.serverBlocked(2));
-            c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        if (chr == null || chr.getMap() == null || chr.getEventInstance() != null || c.getChannelServer() == null) {
-            c.getSession().write((Object)MaplePacketCreator.serverBlocked(2));
-            c.getSession().write((Object)MaplePacketCreator.enableActions());
-            return;
-        }
-        if (chr.getAntiMacro().inProgress()) {
-            c.getPlayer().dropMessage(1, "被使用測謊儀時無法操作。");
-            c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        try {
-            chr.saveToDB(false, false);
-        }
-        catch (Exception ex) {
-            FileoutputUtil.logToFile("logs/進入商城保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
-            FileoutputUtil.outError("logs/進入商城保存数据異常.txt", (Throwable)ex);
-        }
-        final ChannelServer ch = ChannelServer.getInstance(c.getChannel());
-        chr.dispelBuff();
-        chr.changeRemoval();
-        if (chr.getMessenger() != null) {
-            final MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(chr);
-            Messenger.leaveMessenger(chr.getMessenger().getId(), messengerplayer);
-        }
-        PlayerBuffStorage.addBuffsToStorage(chr.getId(), chr.getAllBuffs());
-        PlayerBuffStorage.addCooldownsToStorage(chr.getId(), chr.getCooldowns());
-        PlayerBuffStorage.addDiseaseToStorage(chr.getId(), chr.getAllDiseases());
-        World.channelChangeData(new CharacterTransfer(chr), chr.getId(), mts ? -20 : -10);
-        ch.removePlayer(chr);
-        c.updateLoginState(6, c.getSessionIPAddress());
-        chr.getMap().removePlayer(chr);
-        c.sendPacket(MaplePacketCreator.getChannelChange(c, Integer.parseInt(CashShopServer.getIP().split(":")[1])));
-        c.getPlayer().expirationTask(true, false);
-        c.setPlayer(null);
-        c.setReceiving(false);
     }
     
     public static void LoggedIn( int playerid,  MapleClient c) {
@@ -151,7 +207,7 @@ public class InterServerHandler
                     charactercs.getClient().getSession().close();
                 }
             }
-            if (System.getProperty(String.valueOf(playerid)) == null || !System.getProperty(String.valueOf(playerid)).equals((Object)"1")) {
+            if (System.getProperty(String.valueOf(playerid)) == null || !System.getProperty(String.valueOf(playerid)).equals((Object) "1")) {
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
@@ -164,8 +220,7 @@ public class InterServerHandler
             player = MapleCharacter.loadCharFromDB(playerid, c, true);
             LoginServer.addEnterGameAgainTime(c.getAccID());
             player.setMrqdTime(System.currentTimeMillis());
-        }
-        else {
+        } else {
             player = MapleCharacter.ReconstructChr(transfer, c, true);
         }
         if (!LoginServer.CanLoginKey(player.getLoginKey(), player.getAccountID()) || (LoginServer.getLoginKey(player.getAccountID()) == null && !player.getLoginKey().isEmpty())) {
@@ -234,19 +289,47 @@ public class InterServerHandler
             c.getSession().close();
             return;
         }
-        final int 管理隐身 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"管理隐身开关"));
+
+        int channel = c.getChannel();
+        int itemId = ServerConfig.getMyChannelNeedItemId(channel);
+        if (itemId > 0) {
+            if (!player.haveItem(itemId, 1, true, true)) {
+                int newChannel = -1;
+
+                for(int i = 1; i <= 20; ++i) {
+                    if (ServerConfig.getMyChannelNeedItemId(i) <= 0) {
+                        newChannel = i;
+                        break;
+                    }
+                }
+
+                if (newChannel <= 0) {
+                    c.getPlayer().dropMessage(1, "该频道需要持有道具 [" + MapleItemInformationProvider.getInstance().getName(itemId) + "] \r\n才可进入！");
+                    c.disconnect(true, false);
+                    c.getSession().close();
+                } else {
+                    c.getPlayer().dropMessage(1, "该频道需要持有道具 [" + MapleItemInformationProvider.getInstance().getName(itemId) + "] \r\n才可进入！\r\n已将您传送到其他频道！");
+                    c.getPlayer().changeChannel(newChannel);
+                }
+
+                return;
+            }
+
+            c.getPlayer().dropMessage(1, "欢迎进入\r\n[" + MapleItemInformationProvider.getInstance().getName(itemId) + "] \r\n专享频道！");
+        }
+
+
+        final int 管理隐身 = (int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "管理隐身开关"));
         if (管理隐身 <= 0 && player.isGM()) {
             SkillFactory.getSkill(9001004).getEffect(1).applyTo(player);
-            final int 管理加速 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"管理加速开关"));
+            final int 管理加速 = (int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "管理加速开关"));
             if (管理加速 <= 0) {
                 SkillFactory.getSkill(9001001).getEffect(1).applyTo(player);
-                if (GameConstants.isKOC((int)player.getJob())) {
+                if (GameConstants.isKOC((int) player.getJob())) {
                     SkillFactory.getSkill(10001010).getEffect(1).applyTo(player, 2100000000);
-                }
-                else if (GameConstants.isAran((int)player.getJob())) {
+                } else if (GameConstants.isAran((int) player.getJob())) {
                     SkillFactory.getSkill(20001010).getEffect(1).applyTo(player, 2100000000);
-                }
-                else {
+                } else {
                     SkillFactory.getSkill(1010).getEffect(1).applyTo(player, 2100000000);
                 }
             }
@@ -257,7 +340,7 @@ public class InterServerHandler
             if (clones != null) {
                 final long 奖励时间 = nowTimestamp - clones.liftTime;
                 if (奖励时间 >= 60000L) {
-                    int 离线时间 = (int)奖励时间 / 60000;
+                    int 离线时间 = (int) 奖励时间 / 60000;
                     if (离线时间 >= 1440) {
                         离线时间 = 1440;
                         c.getPlayer().dropMessage(5, "您的离线时间超过24小时,离线奖励按照一天算。");
@@ -327,38 +410,49 @@ public class InterServerHandler
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     player.setGuildId(0);
-                    player.setGuildRank((byte)5);
-                    player.setAllianceRank((byte)5);
+                    player.setGuildRank((byte) 5);
+                    player.setAllianceRank((byte) 5);
                     player.saveGuildStatus();
                 }
-            }
-            else {
+            } else {
                 c.sendPacket(MaplePacketCreator.勳章(player));
             }
             if (player.getFamilyId() > 0) {
                 Family.setFamilyMemberOnline(player.getMFC(), true, c.getChannel());
             }
             c.sendPacket(FamilyPacket.getFamilyInfo(player));
-        }
-        catch (Exception e) {
-            FilePrinter.printError("LoginError.txt", (Throwable)e);
+        } catch (Exception e) {
+            FilePrinter.printError("LoginError.txt", (Throwable) e);
         }
         c.sendPacket(FamilyPacket.getFamilyData());
-
-
-            if (!player.getBackupInventory() && (Integer)LtMS.ConfigValuesMap.get("自动备份玩家背包开关") > 0 && player.getBossLog("自动备份背包") <= 0) {
-                if (World.backupInventoryItems(player.getId())) {
-                    player.setBossLog("自动备份背包");
-                } else {
-                    服务端输出信息.println_err("【错误】角色id" + player.getId() + "自动备份背包失败！");
-                }
+        if (Marathon.isBegain() && c.getPlayer().haveItem(Marathon.getItemId())) {
+            Marathon.setMorph(c.getPlayer());
+        } else {
+            if (c.getPlayer().haveItem(Marathon.getItemId())) {
+                c.getPlayer().removeAll(Marathon.getItemId(), true);
             }
 
-            player.setPower(player.获取角色战斗力());
+            Marathon.returnSkills(c.getPlayer());
+        }
+
+        if (player.getImprison() > 0) {
+            player.dropMessage(1, "您正在被关禁闭中，自动传送到禁闭地图。");
+            player.changeMap(180000001);
+        }
+
+        if (!player.getBackupInventory() && (Integer) LtMS.ConfigValuesMap.get("自动备份玩家背包开关") > 0 && player.getBossLog("自动备份背包") <= 0) {
+            if (World.backupInventoryItems(player.getId())) {
+                player.setBossLog("自动备份背包");
+            } else {
+                服务端输出信息.println_err("【错误】角色id" + player.getId() + "自动备份背包失败！");
+            }
+        }
+
+        player.setPower(player.获取角色战斗力());
         if ((Integer) LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
+            c.getPlayer().getStat().recalcLocalStats();
             player.givePotentialBuff(Potential.buffItemId, Potential.duration, true);
         }
         player.sendMacros();
@@ -370,25 +464,23 @@ public class InterServerHandler
         if (c.getPlayer().hasEquipped(1122017)) {
             player.dropMessage(5, "您装备了精灵吊坠！打怪时可以额外获得道具佩戴经验奖励！");
         }
-        if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"上线提醒开关")) >0) {
+        if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "上线提醒开关")) > 0) {
             if (player.getGender() == 0) {
                 Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(11, c.getChannel(), "[登录公告] 【帅哥】" + player.getName() + " : 进入游戏，大家热烈欢迎他吧！！！"));
-            }
-            else {
+            } else {
                 Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(12, c.getChannel(), "[登录公告] 【美女】" + player.getName() + " : 进入游戏，大家热烈欢迎她吧！！！"));
             }
         }
         player.updatePetAuto();
-        if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"登陆帮助开关")) >0) {
+        if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "登陆帮助开关")) > 0) {
             if (player.getGMLevel() > 0 && player.getBossLog("管理上线提示") == 0) {
                 player.dropMessage(5, "指令: [LtMs079服务端] 查看管理员指令文本");
                 player.dropMessage(5, "指令: [@帮助] 查看玩家指令");
-            }
-            else if (player.getGMLevel() <= 0 && player.getBossLog("玩家上线提示") > 0) {
+            } else if (player.getGMLevel() <= 0 && player.getBossLog("玩家上线提示") > 0) {
                 player.dropMessage(5, "指令: [@帮助] 查看玩家指令");
             }
         }
-        if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"幸运职业开关")) > 0) {
+        if ((int) Integer.valueOf(LtMS.ConfigValuesMap.get((Object) "幸运职业开关")) > 0) {
             final int 职业 = player.getJob();
             final int 职业2 = MapleParty.幸运职业;
             if (职业 == 职业2 || 职业 - 职业2 == 1 || 职业2 - 职业 == -1) {
@@ -411,8 +503,6 @@ public class InterServerHandler
 
         player.spawnClones();
         player.set在线时间(player.getGamePoints());
-        //套装伤害加载
-        player.set套装伤害加成(tzjc.check_tz(player));
         player.spawnSavedPets();
         final boolean ChrdangerousIp = player.chrdangerousIp(c.getSession().remoteAddress().toString());
         if (ChrdangerousIp) {
@@ -428,24 +518,81 @@ public class InterServerHandler
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
             FileoutputUtil.logToFile("logs/Data/危險账号登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId());
         }
+        if (player.isGM() && !CommandProcessor.isMyGM(player)) {
+            FileoutputUtil.logToFile("logs/Data/非法GM号登入.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName());
+            c.getPlayer().ban("非法GM登入", true, true, false);
+            return;
+        }
+        //套装伤害加载
+        player.set套装伤害加成(tzjc.check_tz(player));
     }
     
     public static void ChangeChannel(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
-        if (c.getCloseSession()) {
-            return;
+        if (!c.getCloseSession()) {
+            if (!chr.hasBlockedInventory(true) && chr.getEventInstance() == null && chr.getMap() != null && !FieldLimitType.ChannelSwitch.check(chr.getMap().getFieldLimit())) {
+                if (chr.getAntiMacro().inProgress()) {
+                    chr.dropMessage(5, "被使用测谎仪时无法操作。");
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                } else if (Marathon.isBegain() && c.getPlayer().haveItem(Marathon.getItemId())) {
+                    c.getPlayer().dropMessage(1, "马拉松比赛正在进行中，检测到你持有 " + MapleItemInformationProvider.getInstance().getName((Integer)LtMS.ConfigValuesMap.get("马拉松比赛道具ID")) + "，无法换线！");
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                } else if (chr.getImprison() > 0) {
+                    c.getPlayer().dropMessage(1, "您正在被关禁闭中，无法换线！");
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                } else {
+                    int channel = slea.readByte() + 1;
+                    int itemId = ServerConfig.getMyChannelNeedItemId(channel);
+                    if (itemId > 0 && !chr.haveItem(itemId, 1, true, true)) {
+                        c.getPlayer().dropMessage(5, "该频道需要持有道具 [" + MapleItemInformationProvider.getInstance().getName(itemId) + "] 才可进入！");
+                        c.sendPacket(MaplePacketCreator.enableActions());
+                    } else {
+                        chr.changeChannel(channel);
+                    }
+                }
+            } else {
+                c.sendPacket(MaplePacketCreator.enableActions());
+            }
         }
-        if (chr.hasBlockedInventory(true) || chr.getEventInstance() != null || chr.getMap() == null || FieldLimitType.ChannelSwitch.check(chr.getMap().getFieldLimit())) {
-            c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        if (chr.getAntiMacro().inProgress()) {
-            chr.dropMessage(5, "被使用測謊儀時無法操作。");
-            c.sendPacket(MaplePacketCreator.enableActions());
-            return;
-        }
-        chr.changeChannel(slea.readByte() + 1);
     }
-    
+    public static String 账号ID取账号(int id) {
+        String data = "";
+
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE id = ?");
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            Throwable var5 = null;
+
+            try {
+                if (rs.next()) {
+                    data = rs.getString("name");
+                }
+            } catch (Throwable var15) {
+                var5 = var15;
+                throw var15;
+            } finally {
+                if (rs != null) {
+                    if (var5 != null) {
+                        try {
+                            rs.close();
+                        } catch (Throwable var14) {
+                            var5.addSuppressed(var14);
+                        }
+                    } else {
+                        rs.close();
+                    }
+                }
+
+            }
+
+            ps.close();
+        } catch (SQLException var17) {
+            服务端输出信息.println_err("[队列提醒]；账号ID取账号、出错");
+        }
+
+        return data;
+    }
     static {
         InterServerHandler.离线挂机 = Boolean.parseBoolean(ServerProperties.getProperty("LtMS.离线挂机"));
     }

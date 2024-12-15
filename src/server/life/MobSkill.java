@@ -1,23 +1,24 @@
 package server.life;
 
 import java.awt.Rectangle;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+
+import client.ISkill;
+import client.SkillFactory;
 import constants.GameConstants;
 import gui.LtMS;
+import server.MapleStatEffect;
+import server.Start;
 import server.maps.MapleMist;
 import client.MapleDisease;
 import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
 import tools.MaplePacketCreator;
 import gui.CongMS;
-import java.util.LinkedList;
-import java.util.EnumMap;
 import client.status.MonsterStatus;
 import client.MapleCharacter;
-import java.util.ArrayList;
+
 import java.awt.Point;
-import java.util.List;
 
 public class MobSkill
 {
@@ -182,6 +183,11 @@ public class MobSkill
         if (player.haveItem(LtMS.ConfigValuesMap.get("神圣之躯"),1)){
             return;
         }
+        if ((Integer) LtMS.ConfigValuesMap.get("VIP无效BOSS技能开关") > 0 && player.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无效BOSS技能道具ID"))) {
+            return;
+        } else if ((Integer)LtMS.ConfigValuesMap.get("VIP无敌开关") > 0 && player.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无敌道具ID"))) {
+            return;
+        }
         try {
             MapleDisease disease = null;
             final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);
@@ -313,6 +319,37 @@ public class MobSkill
                 }
             }
 
+            int targetMapId;
+            if (this.isCanAvoidSkill(this.skillId) && (player.getSkillLevel(4120002) > 0 || player.getSkillLevel(4220002) > 0)) {
+                ISkill skill0 = SkillFactory.getSkill(4120002);
+                if (skill0 != null) {
+                    MapleStatEffect skillEff = skill0.getEffect(player.getSkillLevel(4120002));
+                    if (skillEff != null) {
+                        targetMapId = skillEff.getProb();
+                        Random rand = new Random();
+                        if (rand.nextInt(100) <= targetMapId) {
+                            player.sendSkillEffect(4120002, 2);
+                            player.dropMessage(5, "假动作生效，你成功躲避了怪物的技能。");
+                            return;
+                        }
+                    }
+                }
+
+                ISkill skill1 = SkillFactory.getSkill(4220002);
+                if (skill1 != null) {
+                    MapleStatEffect skillEff = skill1.getEffect(player.getSkillLevel(4220002));
+                    if (skillEff != null) {
+                        int prob = skillEff.getProb();
+                        Random rand = new Random();
+                        if (rand.nextInt(100) <= prob) {
+                            player.sendSkillEffect(4220002, 2);
+                            player.dropMessage(5, "假动作生效，你成功躲避了怪物的技能。");
+                            return;
+                        }
+                    }
+                }
+            }
+
             switch (this.skillId) {
             case 100:
             case 110:
@@ -354,44 +391,62 @@ public class MobSkill
                 stats.put(MonsterStatus.SEAL, Integer.valueOf(this.x));
                 break;
             }
-            case 114: {
-                if (this.lt != null && this.rb != null && skill && monster != null) {
-                    final List<MapleMapObject> objects = this.getObjectsInRange(monster, MapleMapObjectType.MONSTER);
-                     int healHP = this.getHP();
-                    for (final MapleMapObject mons : objects) {
-                        long hp = ((MapleMonster)mons).getHp()*LtMS.ConfigValuesMap.get("治愈比例")/100;
-                        if (hp > Integer.MAX_VALUE){
-                            healHP= Integer.MAX_VALUE;
-                        }else{
-                            healHP= (int)hp;
+                case 114: {
+                    if (this.lt != null && this.rb != null && skill && monster != null) {
+                        final List<MapleMapObject> objects = this.getObjectsInRange(monster, MapleMapObjectType.MONSTER);
+                        int healHP = this.getHP();
+                        for (final MapleMapObject mons : objects) {
+                            long hp = ((MapleMonster)mons).getHp()*LtMS.ConfigValuesMap.get("治愈比例")/100;
+                            if (hp > Integer.MAX_VALUE){
+                                healHP= Integer.MAX_VALUE;
+                            }else{
+                                healHP= (int)hp;
+                            }
+                            ((MapleMonster)mons).heal(healHP, 0, true);
                         }
-                        ((MapleMonster)mons).heal(healHP, 0, true);
+                        break;
+                    }
+                    if (monster != null) {
+                        monster.heal(this.getHP(), 0, true);
+                        break;
                     }
                     break;
                 }
-                if (monster != null) {
-                    monster.heal(this.getHP(), 0, true);
-                    break;
+            case 120:{
+                if (System.currentTimeMillis()-player.get被封印时间() < LtMS.ConfigValuesMap.get("封印冷却时间")){
+                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [封印]未生效"));
+                    return;
                 }
+                player.set被封印时间(System.currentTimeMillis());
+                disease = MapleDisease.getByMobSkill(this.skillId);
                 break;
             }
-            case 120:
             case 121:
             case 122:
             case 123:
             case 124:
             case 125:
-            case 126:
-            case 128:
+            case 126:{
+                disease = MapleDisease.getByMobSkill(this.skillId);
+                break;
+            }
+
+            case 128:{
+                if (System.currentTimeMillis()-player.get被诱导时间() < LtMS.ConfigValuesMap.get("诱导冷却时间")){
+                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [诱导]未生效"));
+                    return;
+                }
+                player.set被诱导时间(System.currentTimeMillis());
+                disease = MapleDisease.getByMobSkill(this.skillId);
+                break;
+            }
+
             case 132:
             case 133:
             case 134:
             case 135:
             case 136:
             case 137: {
-                if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 && this.skillId ==120){
-                    break;
-                }
                 disease = MapleDisease.getByMobSkill(this.skillId);
                 break;
             }
@@ -607,12 +662,85 @@ public class MobSkill
             if (monster != null) {
                 monster.setMp(monster.getMp() - this.getMpCon());
             }
-        } catch (Exception e) {
-
-        }
+        } catch (Exception e) {}
 
     }
-    
+    public boolean isCanAvoidSkill(int skillId) {
+        switch (skillId) {
+            case 120:
+            case 121:
+            case 122:
+            case 123:
+            case 124:
+            case 125:
+            case 126:
+            case 127:
+            case 128:
+            case 131:
+            case 132:
+            case 133:
+            case 135:
+            case 136:
+            case 137:
+            case 183:
+            case 186:
+            case 187:
+            case 188:
+                return true;
+            case 129:
+            case 130:
+            case 134:
+            case 138:
+            case 139:
+            case 140:
+            case 141:
+            case 142:
+            case 143:
+            case 144:
+            case 145:
+            case 146:
+            case 147:
+            case 148:
+            case 149:
+            case 150:
+            case 151:
+            case 152:
+            case 153:
+            case 154:
+            case 155:
+            case 156:
+            case 157:
+            case 158:
+            case 159:
+            case 160:
+            case 161:
+            case 162:
+            case 163:
+            case 164:
+            case 165:
+            case 166:
+            case 167:
+            case 168:
+            case 169:
+            case 170:
+            case 171:
+            case 172:
+            case 173:
+            case 174:
+            case 175:
+            case 176:
+            case 177:
+            case 178:
+            case 179:
+            case 180:
+            case 181:
+            case 182:
+            case 184:
+            case 185:
+            default:
+                return false;
+        }
+    }
     public int getSkillId() {
         return this.skillId;
     }

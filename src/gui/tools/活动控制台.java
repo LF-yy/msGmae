@@ -7,8 +7,10 @@ package gui.tools;
 
 import database.DatabaseConnection;
 import gui.LtMS;
+import handling.channel.ChannelServer;
 import handling.world.MapleParty;
 import org.jvnet.substance.skin.SubstanceBusinessBlackSteelLookAndFeel;
+import server.Start;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -385,7 +387,13 @@ public class 活动控制台 extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void 刷新野外BOSS刷新时间ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_刷新野外BOSS刷新时间ActionPerformed
+        for ( ChannelServer cserv : ChannelServer.getAllInstances()) {
+            Start.ltMobSpawnBoss.forEach((s,mob) -> {
+                cserv.getMapFactory().getMap(s);
+            });
+        }
         刷新野外BOSS刷新时间();
+
     }//GEN-LAST:event_刷新野外BOSS刷新时间ActionPerformed
 
     private void 刷新野外BOSS刷新时间修改ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_刷新野外BOSS刷新时间修改ActionPerformed
@@ -647,7 +655,7 @@ public class 活动控制台 extends javax.swing.JFrame {
             UIManager.setLookAndFeel(new SubstanceBusinessBlackSteelLookAndFeel());
             // UIManager.setLookAndFeel(new SubstanceBusinessLookAndFeel());
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {

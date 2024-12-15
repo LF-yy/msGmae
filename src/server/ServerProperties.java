@@ -55,7 +55,7 @@ import java.util.Properties;
                     bf.close();
                 }
                 catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         }
@@ -164,7 +164,10 @@ import java.util.Properties;
     public static String getProperty(final String s) {
         return ServerProperties.props.getProperty(s);
     }
-    
+    public static float getProperty(String s, float def) {
+        String property = props.getProperty(s);
+        return property != null ? Float.parseFloat(property) : def;
+    }
     public static String getProperty(final String s, final String def) {
         return ServerProperties.props.getProperty(s, def);
     }

@@ -1,5 +1,6 @@
 package server.life;
 
+import fumo.FumoSkill;
 import gui.LtMS;
 import handling.world.MaplePartyCharacter;
 import client.inventory.IItem;
@@ -10,12 +11,11 @@ import client.inventory.Equip;
 import client.inventory.MapleInventoryType;
 import server.Randomizer;
 
-import java.awt.*;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import server.Start;
-import server.events.DamageManage;
+import snail.DamageManage;
 import tools.Pair;
 import server.Timer.MobTimer;
 import client.ISkill;
@@ -31,11 +31,9 @@ import client.MapleClient;
 import tools.MaplePacketCreator;
 import server.maps.MapleMapObject;
 import handling.channel.ChannelServer;
-import constants.ServerConfig;
 import client.MapleDisease;
 import handling.world.MapleParty;
 import client.MapleBuffStat;
-import gui.CongMS;
 import tools.packet.MobPacket;
 
 import java.util.concurrent.ScheduledFuture;
@@ -84,12 +82,12 @@ public class MapleMonster extends AbstractLoadedMapleLife
     private int owner;
     private long duration;
     private DamageManage.MobDamageData mobDamageData;
-
+    private long exp;
     private boolean monitor;
     public boolean isMonitor() {
         return this.monitor;
     }
-
+    private String name;
     public long getDuration() {
         return duration;
     }
@@ -109,6 +107,13 @@ public class MapleMonster extends AbstractLoadedMapleLife
         this.duration = duration;
         World.addDurationMonster(this);
 
+    }
+    public final long getExp() {
+        return this.exp;
+    }
+
+    public void setExp(int exp) {
+        this.exp = (long)exp;
     }
 
     public int getOwner() {
@@ -148,7 +153,13 @@ public class MapleMonster extends AbstractLoadedMapleLife
 
         this.initWithStats(stats);
     }
-    
+    public String getName() {
+        if (this.name == null || this.name.equals("")) {
+            this.name = MapleLifeFactory.getName(this.getId());
+        }
+
+        return this.name;
+    }
     public MapleMonster(final MapleMonster monster) {
         super((AbstractLoadedMapleLife)monster);
         this.ostats = null;
@@ -181,6 +192,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         this.stats = stats;
         this.hp = stats.getHp();
         this.mp = stats.getMp();
+        this.exp = (long)stats.getExp();
         this.venom_counter = 0;
         this.carnivalTeam = -1;
         this.fake = false;
@@ -426,7 +438,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
         this.startDropItemSchedule();
     }
-    
+
     public void heal(final int hp, final int mp, final boolean broadcast) {
         long totalHP = this.getHp() + (long)hp;
         int totalMP = this.getMp() + mp;
@@ -484,19 +496,15 @@ public class MapleMonster extends AbstractLoadedMapleLife
             }
         }
         if (exp > 0) {
-            if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"越级打怪开关")) == 1) {
-                final int 怪物 = this.getMobLevel();
-                final int 玩家 = attacker.getLevel();
+            if ((Integer) LtMS.ConfigValuesMap.get("越级打怪开关") >0 ) {
+                int 怪物 = this.getMobLevel();
+                int 玩家 = attacker.getLevel();
                 if (玩家 < 怪物) {
-                    final int 相差 = 怪物 - 玩家;
-                    if (相差 >= 10 && 相差 <= 20) {
-                        exp = (int)((double)exp * 0.8);
-                    }
-                    else if (相差 >= 21 && 相差 <= 30) {
-                        exp = (int)((double)exp * 0.7);
-                    }
-                    else if (相差 >= 31) {
-                        exp = (int)((double)exp * 0.6);
+                    int 相差 = 怪物 - 玩家;
+                    if (相差 >= (Integer)LtMS.ConfigValuesMap.get("越级打怪经验减半判定等级差") && 相差 < (Integer)LtMS.ConfigValuesMap.get("越级打怪经验全扣判定等级差")) {
+                        exp = (int)((double)exp * 0.5);
+                    } else if (相差 >= (Integer)LtMS.ConfigValuesMap.get("越级打怪经验全扣判定等级差")) {
+                        exp *= 0;
                     }
                 }
             }
@@ -513,6 +521,9 @@ public class MapleMonster extends AbstractLoadedMapleLife
                     else {
                         exp = (int)((double)exp * (1.0 + (double)holySymbol / 100.0));
                     }
+                    if (attacker.getEquippedFuMoMap().get(FumoSkill.FM("神圣祈祷ex")) != null) {
+                        attacker.gainExp(exp / 100 * (Integer)attacker.getEquippedFuMoMap().get(FumoSkill.FM("神圣祈祷ex")), true, false, false);
+                    }
                 }
                 final int 职业 = attacker.getJob();
                 final int 职业2 = MapleParty.幸运职业;
@@ -520,48 +531,58 @@ public class MapleMonster extends AbstractLoadedMapleLife
                     exp = (int)((double)exp + (double)exp * 0.5);
                 }
                 if (attacker.hasDisease(MapleDisease.CURSE)) {
-                    if (attacker.getEquippedFuMoMap().get((Object)Integer.valueOf(32)) != null) {
+                    if (attacker.getEquippedFuMoMap().get(FumoSkill.FM("苦中作乐")) != null) {
                         exp *= 5;
-                    }
-                    else {
+                    } else {
                         exp /= 2;
                     }
                 }
-                final double lastexp = (attacker.getStat().realExpBuff - 100.0 <= 0.0) ? 100.0 : (attacker.getStat().realExpBuff - 100.0);
-                exp *= attacker.getEXPMod() * (int)(attacker.getStat().expBuff / 100.0);
+
+                double lastexp = attacker.getStat().realExpBuff - 100.0 <= 0.0 ? 100.0 : attacker.getStat().realExpBuff - 100.0;
+                exp = (int)((double)exp * attacker.getEXPMod() * (double)attacker.getExpRateChr() * (double)((int)(lastexp / 100.0)));
                     if (attacker.getLevel() < 10) {
-                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
                     }
                     else if (attacker.getLevel() >= 10 && attacker.getLevel() < 30) {
-                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
                     }
                     else if (attacker.getLevel() >= 30 && attacker.getLevel() < 60) {
-                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
                     }
                     else if (attacker.getLevel() >= 60 && attacker.getLevel() < 90) {
-                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
                     }
                     else if (attacker.getLevel() >= 90 && attacker.getLevel() < 120) {
-                        exp = 1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate();
+                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
                     }
                     else {
                         exp *= ChannelServer.getInstance(this.map.getChannel()).getExpRate();
                     }
-               // exp = Math.min(Integer.MAX_VALUE, exp * ((attacker.getLevel() <= 255) ? GameConstants.getExpRate_Below10((int)attacker.getJob(), attacker) : ChannelServer.getInstance(this.map.getChannel()).getExpRate()));
-                int 活动经验 = 0;
-                int classBonusExp = 0;
+
+                int classBonusExp;
+                if (attacker.getExpm() > 1.0) {
+                    classBonusExp = 0;
+                    classBonusExp += (int)((double)exp * (attacker.getExpm() - 1.0));
+                    attacker.gainExp(classBonusExp, true, false, false);
+                }
+                exp = (int)Math.min(2.14748365E9F, (float)exp * (attacker.getLevel() < 10 ? (float)GameConstants.getExpRate_Below10(attacker.getJob()) : ChannelServer.getInstance(this.map.getChannel()).getExpRate() * ChannelServer.getInstance(this.map.getChannel()).getExpRateSpecial()));
+                classBonusExp = 0;
                 if (classBounsExpPercent > 0) {
                     classBonusExp = (int)((double)exp / 100.0 * (double)classBounsExpPercent);
                 }
-                int Premium_Bonus_EXP = 0;
-                if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"网吧经验加成")) == 1) {
-                    final int 网吧经验加成 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"网吧经验加成"));
-                    Premium_Bonus_EXP += (int)((double)exp / 100.0 * (double)网吧经验加成);
+                int premiumBonusExp = 0;
+                int equpBonusExp;
+                if ((Integer)LtMS.ConfigValuesMap.get("网吧经验加成") != 0) {
+                    equpBonusExp = (Integer)LtMS.ConfigValuesMap.get("网吧经验加成");
+                    premiumBonusExp += (int)((double)exp / 100.0 * (double)equpBonusExp);
                 }
-                int Equipment_Bonus_EXP = (int)((double)exp / 100.0 * (double)attacker.getStat().equipmentBonusExp);
-                if (attacker.getStat().精灵吊坠) {
-                    Equipment_Bonus_EXP += (int)((double)exp / 100.0 * (double)attacker.getFairyExp());
+
+                equpBonusExp = (int)((double)exp / 100.0 * (double)attacker.getStat().equipmentBonusExp);
+                if (attacker.getStat().equippedFairy) {
+                    equpBonusExp = (int)((1.0 + (double)((float)attacker.getFairyExp())) / 100.0 * (double)((float)exp));
                 }
+
+
                 int wedding_EXP = 0;
                 if (attacker.getMarriageId() > 0 && attacker.getMap().getCharacterById_InMap(attacker.getMarriageId()) != null && (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"结婚经验加成")) == 1) {
                     final int 结婚经验加成 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"结婚经验加成"));
@@ -570,21 +591,20 @@ public class MapleMonster extends AbstractLoadedMapleLife
                 if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"人气经验加成")) > 0 && attacker.getFame() > 0) {
                     attacker.人气经验加成();
                 }
-                int premiumBonusExp = 0;
-                if (Premium_Bonus_EXP_PERCENT > 0) {
-                    premiumBonusExp = (int)((double)exp / 100.0 * (double)Premium_Bonus_EXP_PERCENT);
+
+                int EXP;
+                if (attacker.是否开店()) {
+                    EXP = (Integer)LtMS.ConfigValuesMap.get("开店经验加成");
+                    EXP = (int)((double)exp / 100.0 * (double)EXP);
+                    attacker.gainExp(EXP, true, false, false);
                 }
-                int equpBonusExp = (int)((double)exp / 100.0 * (double)attacker.getStat().equipmentBonusExp);
-                if (attacker.getStat().equippedFairy) {
-                    equpBonusExp += (int)((double)exp / 100.0 * (double)attacker.getFairyExp());
+                if (attacker.getEquippedFuMoMap().get(FumoSkill.FM("幸运狩猎")) != null) {
+                    EXP = (int)((double)exp / 100.0 * (double)(Integer)attacker.getEquippedFuMoMap().get(FumoSkill.FM("幸运狩猎")));
+                    attacker.gainExp(EXP, true, false, false);
                 }
-                if (pty > 1) {
-                    exp = (int)((double)exp * 1.2);
-                    attacker.gainExpMonster(exp, true, true, pty, classBonusExp, equpBonusExp, premiumBonusExp);
-                }
-                else {
-                    attacker.gainExpMonster(exp, highestDamage, true, pty, classBonusExp, equpBonusExp, premiumBonusExp);
-                }
+                exp *= attacker.getExpRateChr();
+                attacker.gainExpMonster(Math.min(exp, Integer.MAX_VALUE), true, highestDamage, pty, classBonusExp, equpBonusExp, premiumBonusExp);
+
             }
             attacker.mobKilled(this.getId(), lastskillID);
         }
@@ -648,153 +668,153 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
     }
     
-    public void spawnRevives(final MapleMap map) {
-        final List<Integer> toSpawn = this.stats.getRevives();
-        if (toSpawn == null) {
-            return;
-        }
-        MapleMonster spongy = null;
-        switch (this.getId()) {
-            case 8810118:
-            case 8810119:
-            case 8810120:
-            case 8810121: {
-                final Iterator<Integer> iterator = toSpawn.iterator();
-                while (iterator.hasNext()) {
-                    final int i = (int)Integer.valueOf(iterator.next());
-                    final MapleMonster mob = MapleLifeFactory.getMonster(i);
-                    mob.setPosition(this.getPosition());
-                    if (this.eventInstance != null) {
-                        this.eventInstance.registerMonster(mob);
-                    }
-                    if (this.dropsDisabled()) {
-                        mob.disableDrops();
-                    }
-                    switch (mob.getId()) {
-                        case 8810119:
-                        case 8810120:
-                        case 8810121:
-                        case 8810122: {
-                            spongy = mob;
-                            continue;
-                        }
-                    }
-                }
-                if (spongy != null) {
-                    map.spawnRevives(spongy, this.getObjectId());
-                    for (final MapleMapObject mon : map.getAllMonstersThreadsafe()) {
-                        final MapleMonster mons = (MapleMonster)mon;
-                        if (mons.getObjectId() != spongy.getObjectId() && (mons.getSponge() == this || mons.getLinkOid() == this.getObjectId())) {
-                            mons.setSponge(spongy);
-                            mons.setLinkOid(spongy.getObjectId());
-                        }
-                    }
-                    break;
-                }
-                break;
-            }
-            case 8810026:
-            case 8810130:
-            case 8820008:
-            case 8820009:
-            case 8820010:
-            case 8820011:
-            case 8820012:
-            case 8820013: {
-                final List<MapleMonster> mobs = new ArrayList<MapleMonster>();
-                final Iterator<Integer> iterator3 = toSpawn.iterator();
-                while (iterator3.hasNext()) {
-                    final int j = (int)Integer.valueOf(iterator3.next());
-                    final MapleMonster mob2 = MapleLifeFactory.getMonster(j);
-                    mob2.setPosition(this.getPosition());
-                    if (this.eventInstance != null) {
-                        this.eventInstance.registerMonster(mob2);
-                    }
-                    if (this.dropsDisabled()) {
-                        mob2.disableDrops();
-                    }
-                    switch (mob2.getId()) {
-                        case 8810018:
-                        case 8810118:
-                        case 8820009:
-                        case 8820010:
-                        case 8820011:
-                        case 8820012:
-                        case 8820013:
-                        case 8820014: {
-                            spongy = mob2;
-                            continue;
-                        }
-                        default: {
-                            mobs.add(mob2);
-                            continue;
-                        }
-                    }
-                }
-                if (spongy != null) {
-                    map.spawnRevives(spongy, this.getObjectId());
-                    for (final MapleMonster k : mobs) {
-                        k.setSponge(spongy);
-                        map.spawnRevives(k, this.getObjectId());
-                    }
-                    break;
-                }
-                break;
-            }
-            default: {
-                final Iterator<Integer> iterator5 = toSpawn.iterator();
-                while (iterator5.hasNext()) {
-                    final int i = (int)Integer.valueOf(iterator5.next());
-                    final MapleMonster mob = MapleLifeFactory.getMonster(i);
-                    if (this.eventInstance != null) {
-                        this.eventInstance.registerMonster(mob);
-                    }
-                    mob.setPosition(this.getPosition());
-                    if (this.dropsDisabled()) {
-                        mob.disableDrops();
-                    }
-                    if (this.monitor && this.mobDamageData != null && !GameConstants.isFakeRevive(mob.getId())) {
-                        if (this.getId() != this.mobDamageData.getMainMobId() && mob.getId() != 8820001) {
-                            this.mobDamageData.addMonster(mob, false);
-                        } else {
-                            this.mobDamageData.addMonster(mob, true);
-                        }
-                    }
-                    map.spawnRevives(mob, this.getObjectId());
-
-                    if (this.eventInstance == null && !mob.getStats().isBoss() && (this.getMap().haveMonster(9900000) || this.getMap().haveMonster(9900001) && this.getMap().haveMonster(9900002))) {
-                        int rateByStone;
-                        if (this.getMap().getStoneLevel() == 1) {
-                            rateByStone = (Integer) LtMS.ConfigValuesMap.get("1级轮回碑石怪物倍数");
-                        } else if (this.getMap().getStoneLevel() >= 2) {
-                            rateByStone = (Integer)LtMS.ConfigValuesMap.get("2级轮回碑石怪物倍数");
-                        } else {
-                            rateByStone = (Integer)LtMS.ConfigValuesMap.get("轮回碑石怪物倍数");
-                        }
-
-                        for(int j = 0; j < rateByStone; ++j) {
-                            MapleMonster mob2 = MapleLifeFactory.getMonster(i);
-                            mob2.setPosition(this.getPosition());
-                            if (this.dropsDisabled()) {
-                                mob2.disableDrops();
-                            }
-
-                            map.spawnRevives(mob2, this.getObjectId());
-                        }
-                    }
-
-                    if (mob.getId() == 9300216) {
-                        map.broadcastMessage(MaplePacketCreator.environmentChange("Dojang/clear", 4));
-                        map.broadcastMessage(MaplePacketCreator.environmentChange("dojang/end/clear", 3));
-                    }
-                    if (map.getId() == 280030002) {
-                        MapleLifeFactory.deleteStats(i);
-                    }
-                }
-                break;
-            }
-        }
-    }
+//    public void spawnRevives(final MapleMap map) {
+//        final List<Integer> toSpawn = this.stats.getRevives();
+//        if (toSpawn == null) {
+//            return;
+//        }
+//        MapleMonster spongy = null;
+//        switch (this.getId()) {
+//            case 8810118:
+//            case 8810119:
+//            case 8810120:
+//            case 8810121: {
+//                final Iterator<Integer> iterator = toSpawn.iterator();
+//                while (iterator.hasNext()) {
+//                    final int i = (int)Integer.valueOf(iterator.next());
+//                    final MapleMonster mob = MapleLifeFactory.getMonster(i);
+//                    mob.setPosition(this.getPosition());
+//                    if (this.eventInstance != null) {
+//                        this.eventInstance.registerMonster(mob);
+//                    }
+//                    if (this.dropsDisabled()) {
+//                        mob.disableDrops();
+//                    }
+//                    switch (mob.getId()) {
+//                        case 8810119:
+//                        case 8810120:
+//                        case 8810121:
+//                        case 8810122: {
+//                            spongy = mob;
+//                            continue;
+//                        }
+//                    }
+//                }
+//                if (spongy != null) {
+//                    map.spawnRevives(spongy, this.getObjectId());
+//                    for (final MapleMapObject mon : map.getAllMonstersThreadsafe()) {
+//                        final MapleMonster mons = (MapleMonster)mon;
+//                        if (mons.getObjectId() != spongy.getObjectId() && (mons.getSponge() == this || mons.getLinkOid() == this.getObjectId())) {
+//                            mons.setSponge(spongy);
+//                            mons.setLinkOid(spongy.getObjectId());
+//                        }
+//                    }
+//                    break;
+//                }
+//                break;
+//            }
+//            case 8810026:
+//            case 8810130:
+//            case 8820008:
+//            case 8820009:
+//            case 8820010:
+//            case 8820011:
+//            case 8820012:
+//            case 8820013: {
+//                final List<MapleMonster> mobs = new ArrayList<MapleMonster>();
+//                final Iterator<Integer> iterator3 = toSpawn.iterator();
+//                while (iterator3.hasNext()) {
+//                    final int j = (int)Integer.valueOf(iterator3.next());
+//                    final MapleMonster mob2 = MapleLifeFactory.getMonster(j);
+//                    mob2.setPosition(this.getPosition());
+//                    if (this.eventInstance != null) {
+//                        this.eventInstance.registerMonster(mob2);
+//                    }
+//                    if (this.dropsDisabled()) {
+//                        mob2.disableDrops();
+//                    }
+//                    switch (mob2.getId()) {
+//                        case 8810018:
+//                        case 8810118:
+//                        case 8820009:
+//                        case 8820010:
+//                        case 8820011:
+//                        case 8820012:
+//                        case 8820013:
+//                        case 8820014: {
+//                            spongy = mob2;
+//                            continue;
+//                        }
+//                        default: {
+//                            mobs.add(mob2);
+//                            continue;
+//                        }
+//                    }
+//                }
+//                if (spongy != null) {
+//                    map.spawnRevives(spongy, this.getObjectId());
+//                    for (final MapleMonster k : mobs) {
+//                        k.setSponge(spongy);
+//                        map.spawnRevives(k, this.getObjectId());
+//                    }
+//                    break;
+//                }
+//                break;
+//            }
+//            default: {
+//                final Iterator<Integer> iterator5 = toSpawn.iterator();
+//                while (iterator5.hasNext()) {
+//                    final int i = (int)Integer.valueOf(iterator5.next());
+//                    final MapleMonster mob = MapleLifeFactory.getMonster(i);
+//                    if (this.eventInstance != null) {
+//                        this.eventInstance.registerMonster(mob);
+//                    }
+//                    mob.setPosition(this.getPosition());
+//                    if (this.dropsDisabled()) {
+//                        mob.disableDrops();
+//                    }
+//                    if (this.monitor && this.mobDamageData != null && !GameConstants.isFakeRevive(mob.getId())) {
+//                        if (this.getId() != this.mobDamageData.getMainMobId() && mob.getId() != 8820001) {
+//                            this.mobDamageData.addMonster(mob, false);
+//                        } else {
+//                            this.mobDamageData.addMonster(mob, true);
+//                        }
+//                    }
+//                    map.spawnRevives(mob, this.getObjectId());
+//
+//                    if (this.eventInstance == null && !mob.getStats().isBoss() && (this.getMap().haveMonster(9900000) || this.getMap().haveMonster(9900001) && this.getMap().haveMonster(9900002))) {
+//                        int rateByStone;
+//                        if (this.getMap().getStoneLevel() == 1) {
+//                            rateByStone = (Integer) LtMS.ConfigValuesMap.get("1级轮回碑石怪物倍数");
+//                        } else if (this.getMap().getStoneLevel() >= 2) {
+//                            rateByStone = (Integer)LtMS.ConfigValuesMap.get("2级轮回碑石怪物倍数");
+//                        } else {
+//                            rateByStone = (Integer)LtMS.ConfigValuesMap.get("轮回碑石怪物倍数");
+//                        }
+//
+//                        for(int j = 0; j < rateByStone; ++j) {
+//                            MapleMonster mob2 = MapleLifeFactory.getMonster(i);
+//                            mob2.setPosition(this.getPosition());
+//                            if (this.dropsDisabled()) {
+//                                mob2.disableDrops();
+//                            }
+//
+//                            map.spawnRevives(mob2, this.getObjectId());
+//                        }
+//                    }
+//
+//                    if (mob.getId() == 9300216) {
+//                        map.broadcastMessage(MaplePacketCreator.environmentChange("Dojang/clear", 4));
+//                        map.broadcastMessage(MaplePacketCreator.environmentChange("dojang/end/clear", 3));
+//                    }
+//                    if (map.getId() == 280030002) {
+//                        MapleLifeFactory.deleteStats(i);
+//                    }
+//                }
+//                break;
+//            }
+//        }
+//    }
     
     public void setCarnivalTeam(final byte team) {
         this.carnivalTeam = team;
@@ -1578,9 +1598,9 @@ public class MapleMonster extends AbstractLoadedMapleLife
         if (mse != null) {
             showdown += (double)(int)mse.getX();
         }
-        final ISkill steal = SkillFactory.getSkill(4201004);
-        final int level = chr.getSkillLevel(steal);
-        final int chServerrate = ChannelServer.getInstance(chr.getClient().getChannel()).getDropRate();
+         ISkill steal = SkillFactory.getSkill(4201004);
+         int level = chr.getSkillLevel(steal);
+         double chServerrate = ChannelServer.getInstance(chr.getClient().getChannel()).getDropRate();
         if (level > 0 && !this.getStats().isBoss() && this.stolen == -1 && steal.getEffect(level).makeChanceResult()) {
             final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
             final List<MonsterDropEntry> de = mi.retrieveDrop(this.getId());
@@ -1684,7 +1704,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
         this.listener = null;
     }
-    
+
     private final class PoisonTask implements Runnable
     {
         private final int poisonDamage;
@@ -1973,7 +1993,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
                 try {
                     MapleMonster.this.giveExpToCharacter((MapleCharacter)expReceiver2.getKey(), expmap.exp, mostDamage && expReceiver2.getKey() == highest, expMap.size(), expmap.ptysize, expmap.Class_Bonus_EXP, expmap.Premium_Bonus_EXP, lastSkill);
                 } catch (Exception e) {
-                   e.printStackTrace();
+                   //e.printStackTrace();
                 }
             }
         }
@@ -2028,6 +2048,268 @@ public class MapleMonster extends AbstractLoadedMapleLife
             this.map.broadcastMessage(MobPacket.healMonster(this.getObjectId(), Integer.MAX_VALUE));
         } else {
             this.map.broadcastMessage(MobPacket.healMonster(this.getObjectId(), (int)hp));
+        }
+
+        if (trueDamage) {
+            if (hp >= this.getHp()) {
+                this.getMap().killMonster(this, true);
+            } else {
+                this.setHp(this.getHp() - hp);
+            }
+        }
+
+    }
+
+    public final void spawnRevives(MapleMap map) {
+        List<Integer> toSpawn = this.stats.getRevives();
+        if (toSpawn != null) {
+            MapleMonster spongy = null;
+            Iterator var4;
+            int i;
+            MapleMonster mob;
+            switch (this.getId()) {
+                case 8810026:
+                case 8810130:
+                case 8820008:
+                case 8820009:
+                case 8820010:
+                case 8820011:
+                case 8820012:
+                case 8820013:
+                    List<MapleMonster> mobs = new ArrayList();
+                    Iterator var12 = toSpawn.iterator();
+
+                    while(var12.hasNext()) {
+                        i = (Integer)var12.next();
+                        mob = MapleLifeFactory.getMonster(i);
+                        if (this.isMonitor()) {
+                            if (mob.getId() != 8810018 && mob.getId() != 8820001) {
+                                this.mobDamageData.addMonster(mob, false);
+                            } else {
+                                this.mobDamageData.addMonster(mob, true);
+                            }
+                        }
+
+                        mob.setPosition(this.getPosition());
+                        if (this.eventInstance != null) {
+                            this.eventInstance.registerMonster(mob);
+                        }
+
+                        if (this.dropsDisabled()) {
+                            mob.disableDrops();
+                        }
+
+                        switch (mob.getId()) {
+                            case 8810018:
+                            case 8810118:
+                            case 8820009:
+                            case 8820010:
+                            case 8820011:
+                            case 8820012:
+                            case 8820013:
+                            case 8820014:
+                                spongy = mob;
+                                break;
+                            default:
+                                mobs.add(mob);
+                        }
+                    }
+
+                    if (spongy != null) {
+                        map.spawnRevives(spongy, this.getObjectId());
+                        var12 = mobs.iterator();
+
+                        while(var12.hasNext()) {
+                            mob = (MapleMonster)var12.next();
+                            mob.setSponge(spongy);
+                            map.spawnRevives(mob, this.getObjectId());
+                        }
+                    }
+                    break;
+                case 8810118:
+                case 8810119:
+                case 8810120:
+                case 8810121:
+                    var4 = toSpawn.iterator();
+
+                    while(var4.hasNext()) {
+                        i = (Integer)var4.next();
+                        mob = MapleLifeFactory.getMonster(i);
+                        mob.setPosition(this.getPosition());
+                        if (this.eventInstance != null) {
+                            this.eventInstance.registerMonster(mob);
+                        }
+
+                        if (this.dropsDisabled()) {
+                            mob.disableDrops();
+                        }
+
+                        switch (mob.getId()) {
+                            case 8810119:
+                            case 8810120:
+                            case 8810121:
+                            case 8810122:
+                                spongy = mob;
+                        }
+                    }
+
+                    if (spongy != null) {
+                        map.spawnRevives(spongy, this.getObjectId());
+                        var4 = map.getAllMonstersThreadsafe().iterator();
+
+                        while(true) {
+                            do {
+                                do {
+                                    if (!var4.hasNext()) {
+                                        return;
+                                    }
+
+                                    MapleMapObject mon = (MapleMapObject)var4.next();
+                                    mob = (MapleMonster)mon;
+                                } while(mob.getObjectId() == spongy.getObjectId());
+                            } while(mob.getSponge() != this && mob.getLinkOid() != this.getObjectId());
+
+                            mob.setSponge(spongy);
+                            mob.setLinkOid(spongy.getObjectId());
+                        }
+                    }
+                    break;
+                default:
+                    if (map.getId() == 280030002) {
+                        var4 = toSpawn.iterator();
+
+                        while(var4.hasNext()) {
+                            i = (Integer)var4.next();
+                            MapleLifeFactory.deleteStats(i);
+                            mob = MapleLifeFactory.getMonster(i);
+                            switch (i) {
+                                case 8800000:
+                                    mob.getStats().setName("进阶扎昆1");
+                                    mob.getStats().addSkill(145, 2);
+                                    mob.getStats().addSkill(123, 12);
+                                    mob.getStats().addSkill(127, 4);
+                                    mob.getStats().addSkill(128, 10);
+                                    mob.getStats().addSkill(132, 2);
+                                    break;
+                                case 8800001:
+                                    mob.getStats().setName("进阶扎昆2");
+                                    mob.getStats().addSkill(145, 2);
+                                    mob.getStats().addSkill(145, 2);
+                                    mob.getStats().addSkill(123, 12);
+                                    mob.getStats().addSkill(123, 19);
+                                    mob.getStats().addSkill(127, 4);
+                                    mob.getStats().addSkill(128, 10);
+                                    mob.getStats().addSkill(132, 2);
+                                    break;
+                                case 8800002:
+                                    mob.getStats().setName("进阶扎昆");
+                                    mob.getStats().addSkill(145, 2);
+                                    mob.getStats().addSkill(145, 2);
+                                    mob.getStats().addSkill(145, 2);
+                                    mob.getStats().addSkill(123, 12);
+                                    mob.getStats().addSkill(123, 19);
+                                    mob.getStats().addSkill(123, 19);
+                                    mob.getStats().addSkill(127, 4);
+                                    mob.getStats().addSkill(128, 10);
+                                    mob.getStats().addSkill(132, 2);
+                                    mob.getStats().addSkill(128, 10);
+                            }
+
+                            mob.getStats().setLevel((short)180);
+                            mob.getStats().setExp((int)(mob.getExp() * 5L));
+                            mob.getStats().setHp(mob.getHp() * (long)(Integer)LtMS.ConfigValuesMap.get("进阶扎昆血量倍数"));
+                            mob.getStats().setMp(mob.getMp() * 15);
+                            mob.getStats().setEva((short)(mob.getStats().getEva() * 10));
+                            mob.getStats().setPhysicalDefense((short)(mob.getStats().getPhysicalDefense() * 10));
+                            mob.getStats().setMagicDefense((short)(mob.getStats().getMagicDefense() * 10));
+                            mob.getStats().setFixedDamage(mob.getStats().getFixedDamage() * 10);
+                            MapleLifeFactory.addStats(i, mob.getStats());
+                        }
+                    }
+
+                    var4 = toSpawn.iterator();
+
+                    while(var4.hasNext()) {
+                        i = (Integer)var4.next();
+                        mob = MapleLifeFactory.getMonster(i);
+                        if (this.eventInstance != null) {
+                            this.eventInstance.registerMonster(mob);
+                        }
+
+                        mob.setPosition(this.getPosition());
+                        if (this.dropsDisabled()) {
+                            mob.disableDrops();
+                        }
+
+                        if (this.monitor && this.mobDamageData != null && !GameConstants.isFakeRevive(mob.getId())) {
+                            if (this.getId() != this.mobDamageData.getMainMobId() && mob.getId() != 8820001) {
+                                this.mobDamageData.addMonster(mob, false);
+                            } else {
+                                this.mobDamageData.addMonster(mob, true);
+                            }
+                        }
+
+                        map.spawnRevives(mob, this.getObjectId());
+                        if (this.eventInstance == null && !mob.getStats().isBoss() && (this.getMap().haveMonster(9900000) || this.getMap().haveMonster(9900001) && this.getMap().haveMonster(9900002))) {
+                            int rateByStone;
+                            if (this.getMap().getStoneLevel() == 1) {
+                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("1级轮回碑石怪物倍数");
+                            } else if (this.getMap().getStoneLevel() >= 2) {
+                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("2级轮回碑石怪物倍数");
+                            } else {
+                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("轮回碑石怪物倍数");
+                            }
+
+                            for(int j = 0; j < rateByStone; ++j) {
+                                MapleMonster mob2 = MapleLifeFactory.getMonster(i);
+                                mob2.setPosition(this.getPosition());
+                                if (this.dropsDisabled()) {
+                                    mob2.disableDrops();
+                                }
+
+                                map.spawnRevives(mob2, this.getObjectId());
+                            }
+                        }
+
+                        if (mob.getId() == 9300216) {
+                            map.broadcastMessage(MaplePacketCreator.environmentChange("Dojang/clear", 4));
+                            map.broadcastMessage(MaplePacketCreator.environmentChange("dojang/end/clear", 3));
+                        }
+
+                        if (map.getId() == 280030002) {
+                            MapleLifeFactory.deleteStats(i);
+                        }
+                    }
+            }
+
+        }
+    }
+
+    public final void sendYellowDamage(long hp, MapleCharacter chr) {
+        if (hp > 2147483647L) {
+            this.map.broadcastMessage(MobPacket.damageMonster(this.getObjectId(), Integer.MAX_VALUE));
+        } else {
+            this.map.broadcastMessage(MobPacket.damageMonster(this.getObjectId(), hp));
+        }
+
+        this.damage(chr, hp, false);
+    }
+
+    public final void sendBlueDamage(long hp, MapleCharacter chr) {
+        if (hp > 2147483647L) {
+            this.map.broadcastMessage(MobPacket.healMonster(this.getObjectId(), Integer.MAX_VALUE));
+        } else {
+            this.map.broadcastMessage(MobPacket.healMonster(this.getObjectId(), (int)hp));
+        }
+
+        this.damage(chr, hp, false);
+    }
+
+    public final void sendYellowDamage(long hp, boolean trueDamage) {
+        if (hp > 2147483647L) {
+            this.map.broadcastMessage(MobPacket.damageMonster(this.getObjectId(), Integer.MAX_VALUE));
+        } else {
+            this.map.broadcastMessage(MobPacket.damageMonster(this.getObjectId(), hp));
         }
 
         if (trueDamage) {

@@ -150,7 +150,7 @@ public class MonsterComming extends MapleEvent {
                     Thread.sleep(30000L);
                 } catch (Exception var13) {
                     服务端输出信息.println_err("【错误】nextStage 线程休眠错误，错误原因：" + var13);
-                    var13.printStackTrace();
+                   // var13.printStackTrace();
                 }
             }
 
@@ -308,7 +308,7 @@ public class MonsterComming extends MapleEvent {
             }
         } catch (SQLException var24) {
             服务端输出信息.println_err("【错误】怪物攻城loadFromDB错误，错误原因：" + var24);
-            var24.printStackTrace();
+           // var24.printStackTrace();
         }
 
     }
@@ -323,7 +323,7 @@ public class MonsterComming extends MapleEvent {
             this.count = 1;
         } catch (Exception var2) {
             服务端输出信息.println_err("【错误】MonsterComming事件reset错误，错误原因：" + var2);
-            var2.printStackTrace();
+            //var2.printStackTrace();
         }
 
     }

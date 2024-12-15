@@ -57,7 +57,7 @@ public class DumpMobSkills
                 con.close();
             }
             catch (SQLException ex) {
-                ex.printStackTrace();
+                ////Ex.printStackTrace();
                 FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
             }
         }
@@ -71,7 +71,7 @@ public class DumpMobSkills
         con.close();
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            ////Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
     }
@@ -87,7 +87,7 @@ public class DumpMobSkills
             return ret;
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
             return false;
         }

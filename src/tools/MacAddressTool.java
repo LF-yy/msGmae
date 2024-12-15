@@ -67,7 +67,7 @@ public class MacAddressTool {
                 }
             }
         } catch (SocketException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return ipAddress ? localip : macs;
     }

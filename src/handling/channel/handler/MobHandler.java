@@ -1,6 +1,7 @@
 package handling.channel.handler;
 
 import bean.UserAttraction;
+import constants.GameConstants;
 import gui.CongMS;
 import gui.LtMS;
 import gui.服务端输出信息;
@@ -14,6 +15,7 @@ import java.awt.geom.Point2D;
 import client.inventory.MapleInventoryType;
 import server.maps.MapleMap;
 
+import java.util.Iterator;
 import java.util.List;
 import java.awt.Point;
 import java.util.Objects;
@@ -44,18 +46,28 @@ public class MobHandler
         //如开启吸怪直接返回
        UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
 
-
         MapleCharacter chr = c.getPlayer();
+
         if (chr == null || chr.getMap() == null) {
             return;
         }
-        final int objectId = slea.readInt();
-        final MapleMonster monster = chr.getMap().getMonsterByOid(objectId);
+        MapleMap map = chr.getMap();
+        int objectId = slea.readInt();
+        MapleMonster monster = chr.getMap().getMonsterByOid(objectId);
         if (monster == null) {
             chr.addMoveMob(objectId);
             return;
         }
-        final MapleMap map = chr.getMap();
+        if (Objects.nonNull(userAttraction)) {
+            monster.setPosition(userAttraction.getPosition());
+            if(chr.getLastResOld() == null){
+                chr.setLastResOld(chr.getLastRes());
+            }
+            c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, -1, 0, 0, 0, 0, monster.getObjectId(), monster.getPosition(),  monster.getPosition(), chr.getLastResOld()));
+            return;
+        }else{
+            chr.setLastResOld(null);
+        }
 
         final short moveid = slea.readShort();
         final boolean useSkill = slea.readByte() > 0;
@@ -270,27 +282,12 @@ public class MobHandler
         }
         if (res != null) {
             if (slea.available() != 8L) {
-                //System.err.println("slea.available != 8 (movement parsing error)");
-               // System.err.println(slea.toString(true));
                 c.getSession().close();
                 return;
             }
-
-            //=======================================================================
-        if (Objects.nonNull(userAttraction)) {
-            if (Objects.isNull(c.getPlayer().getLastRes())){
-               c.getPlayer().setLastRes(res);
-           }
-            map.broadcastMessage(MobPacket.moveMonster(false, 0, 0, monster.getObjectId(),userAttraction.getPosition(), null, c.getPlayer().getLastRes()));
-            monster.setPosition(userAttraction.getPosition());
-            return;
-        }
-            c.getPlayer().setLastRes(res);
-            //==========================================================================================
                 MovementParse.updatePosition(res, (AnimatedMapleMapObject) monster, -1);
                 map.moveMonster(monster, monster.getPosition());
                 map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int) skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
-//            }
         }
     }
     public static final void MoveMonster2(final LittleEndianAccessor slea, final MapleClient c) {

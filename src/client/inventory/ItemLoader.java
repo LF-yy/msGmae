@@ -7,6 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.util.Iterator;
 import java.sql.SQLException;
+
+import client.MapleCharacter;
+import gui.服务端输出信息;
+import handling.channel.ChannelServer;
 import tools.FileoutputUtil;
 import constants.GameConstants;
 import database.DBConPool;
@@ -47,7 +51,7 @@ public enum ItemLoader
         return this.value;
     }
     
-    public Map<Long, Pair<IItem, MapleInventoryType>> loadItems(final boolean login, final Integer... id) throws SQLException {
+    public Map<Long, Pair<IItem, MapleInventoryType>> loadItems( boolean login, final Integer... id) throws SQLException {
         final List<Integer> lulz = Arrays.asList(id);
         final Map<Long, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap<Long, Pair<IItem, MapleInventoryType>>();
         if (lulz.size() != this.arg.size()) {
@@ -170,7 +174,9 @@ public enum ItemLoader
         }
     }
     
-    public void saveItems(final List<Pair<IItem, MapleInventoryType>> items, Connection con, final Integer... id) throws SQLException {
+    public void saveItems( List<Pair<IItem, MapleInventoryType>> items, Connection con,  Integer... id) throws SQLException {
+        long index = 0;
+        int itemId = 0;
         try {
             final List<Integer> lulz = Arrays.asList(id);
             if (lulz.size() != this.arg.size()) {
@@ -242,9 +248,11 @@ public enum ItemLoader
                 if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
                     try (final ResultSet rs = ps.getGeneratedKeys()) {
                         if (!rs.next()) {
-                            throw new RuntimeException("Inserting item failed.");
+                            throw new RuntimeException("物品数据插入失败");
                         }
                         pse.setLong(1, rs.getLong(1));
+                        index = rs.getLong(1);
+                        itemId = item.getItemId();
                     }
                     final IEquip equip = (IEquip)item;
                     pse.setInt(2, (int)equip.getUpgradeSlots());
@@ -273,6 +281,8 @@ public enum ItemLoader
                     pse.setInt(25, (int)equip.getPotential3());
                     pse.setInt(26, (int)equip.getHpR());
                     pse.setInt(27, (int)equip.getMpR());
+                    pse.setInt(28, (int)equip.getHpRR());
+                    pse.setInt(29, (int)equip.getMpRR());
                     pse.setInt(30, equip.getEquipLevel());
                     pse.setString(31, equip.getDaKongFuMo());
                     pse.setString(32, equip.getPotentials());
@@ -285,6 +295,7 @@ public enum ItemLoader
         catch (SQLException ex) {
             //System.out.println((Object)ex);
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.log("logs/物品保存异常.txt", "错误的编码:"+index+"----"+itemId);
         }
     }
 
@@ -316,7 +327,7 @@ public enum ItemLoader
             ps.executeUpdate();
             ps.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             System.out.println("Error while deleting item");
         }
     }
@@ -448,6 +459,146 @@ public enum ItemLoader
             rs.close();
             ps.close();
             return items;
+        }
+    }
+
+
+    public Map<Long, Pair<IItem, MapleInventoryType>> loadItems(Connection con, boolean login, Integer... id) throws SQLException {
+        List<Integer> lulz = Arrays.asList(id);
+        Map<Long, Pair<IItem, MapleInventoryType>> items = new LinkedHashMap();
+        if (lulz.size() != this.arg.size()) {
+            return items;
+        } else {
+            StringBuilder query = new StringBuilder();
+            query.append("SELECT * FROM `");
+            query.append(this.table);
+            query.append("` LEFT JOIN `");
+            query.append(this.table_equip);
+            query.append("` USING(`inventoryitemid`) WHERE `type` = ?");
+            Iterator var7 = this.arg.iterator();
+
+            while(var7.hasNext()) {
+                String g = (String)var7.next();
+                query.append(" AND `");
+                query.append(g);
+                query.append("` = ?");
+            }
+
+            if (login) {
+                query.append(" AND `inventorytype` = ");
+                query.append(MapleInventoryType.EQUIPPED.getType());
+            }
+
+            try {
+                PreparedStatement ps = con.prepareStatement(query.toString());
+                ps.setInt(1, this.value);
+
+                for(int i = 0; i < lulz.size(); ++i) {
+                    ps.setInt(i + 2, (Integer)lulz.get(i));
+                }
+
+                ResultSet rs = ps.executeQuery();
+
+                while(true) {
+                    while(rs.next()) {
+                        MapleInventoryType mit = MapleInventoryType.getByType(rs.getByte("inventorytype"));
+                        if (!mit.equals(MapleInventoryType.EQUIP) && !mit.equals(MapleInventoryType.EQUIPPED)) {
+                            Item item = new Item(rs.getInt("itemid"), rs.getShort("position"), rs.getShort("quantity"), rs.getByte("flag"));
+                            item.setUniqueId(rs.getInt("uniqueid"));
+                            item.setOwner(rs.getString("owner"));
+                            item.setInventoryId(rs.getLong("inventoryitemid"));
+                            item.setExpiration(rs.getLong("expiredate"));
+                            item.setGMLog(rs.getString("GM_Log"));
+                            item.setGiftFrom(rs.getString("sender"));
+                            if (GameConstants.isPet(item.getItemId())) {
+                                if (item.getUniqueId() > -1) {
+                                    MaplePet pet = MaplePet.loadFromDb(item.getItemId(), item.getUniqueId(), item.getPosition());
+                                    if (pet != null) {
+                                        item.setPet(pet);
+                                    }
+                                } else {
+                                    int new_unique = MapleInventoryIdentifier.getInstance();
+                                    item.setUniqueId(new_unique);
+                                    item.setPet(MaplePet.createPet(item.getItemId(), new_unique));
+                                }
+                            }
+
+                            items.put(rs.getLong("inventoryitemid"), new Pair(item.copy(), mit));
+                        } else {
+                            Equip equip = new Equip(rs.getInt("itemid"), rs.getShort("position"), rs.getInt("uniqueid"), rs.getByte("flag"));
+                            if (!login) {
+                                equip.setQuantity((short) 1);
+                                equip.setInventoryId(rs.getLong("inventoryitemid"));
+                                equip.setOwner(rs.getString("owner"));
+                                equip.setExpiration(rs.getLong("expiredate"));
+                                equip.setUpgradeSlots(rs.getByte("upgradeslots"));
+                                equip.setLevel(rs.getByte("level"));
+                                equip.setStr(rs.getShort("str"));
+                                equip.setDex(rs.getShort("dex"));
+                                equip.setInt(rs.getShort("int"));
+                                equip.setLuk(rs.getShort("luk"));
+                                equip.setHp(rs.getShort("hp"));
+                                equip.setMp(rs.getShort("mp"));
+                                equip.setWatk(rs.getShort("watk"));
+                                equip.setMatk(rs.getShort("matk"));
+                                equip.setWdef(rs.getShort("wdef"));
+                                equip.setMdef(rs.getShort("mdef"));
+                                equip.setAcc(rs.getShort("acc"));
+                                equip.setAvoid(rs.getShort("avoid"));
+                                equip.setHands(rs.getShort("hands"));
+                                equip.setSpeed(rs.getShort("speed"));
+                                equip.setJump(rs.getShort("jump"));
+                                equip.setViciousHammer(rs.getByte("ViciousHammer"));
+                                equip.setItemEXP(rs.getInt("itemEXP"));
+                                equip.setGMLog(rs.getString("GM_Log"));
+                                equip.setDurability(rs.getInt("durability"));
+                                equip.setEnhance(rs.getByte("enhance"));
+                                equip.setPotential1(rs.getShort("potential1"));
+                                equip.setPotential2(rs.getShort("potential2"));
+                                equip.setPotential3(rs.getShort("potential3"));
+                                equip.setHpR(rs.getShort("hpR"));
+                                equip.setMpR(rs.getShort("mpR"));
+                                equip.setHpRR(rs.getShort("hpRR"));
+                                equip.setMpRR(rs.getShort("mpRR"));
+                                equip.setGiftFrom(rs.getString("sender"));
+                                equip.setEquipLevel(rs.getByte("itemlevel"));
+                                equip.setDaKongFuMo(rs.getString("mxmxd_dakong_fumo"));
+                                equip.setPotentials(rs.getString("snail_potentials"));
+                                if (equip.getUniqueId() > -1 && GameConstants.isEffectRing(rs.getInt("itemid"))) {
+                                    MapleRing ring = MapleRing.loadFromDb(equip.getUniqueId(), mit.equals(MapleInventoryType.EQUIPPED));
+                                    if (ring != null) {
+                                        equip.setRing(ring);
+                                    }
+                                }
+                            }
+
+                            items.put(rs.getLong("inventoryitemid"), new Pair(equip.copy(), mit));
+                        }
+                    }
+
+                    rs.close();
+                    ps.close();
+                    Iterator var17 = ChannelServer.getAllInstances().iterator();
+
+                    while(var17.hasNext()) {
+                        ChannelServer cs = (ChannelServer)var17.next();
+                        Iterator var22 = cs.getPlayerStorage().getAllCharacters().iterator();
+
+                        while(var22.hasNext()) {
+                            MapleCharacter chr = (MapleCharacter)var22.next();
+                            if (chr != null) {
+                                chr.刷新防滑状态();
+                            }
+                        }
+                    }
+
+                    return items;
+                }
+            } catch (SQLException var13) {
+                服务端输出信息.println_err("loadItems错误，角色ID：" + id + "，读" + this.table + "错误，" + var13);
+                FileoutputUtil.outError("logs/资料库异常.txt", var13);
+                return null;
+            }
         }
     }
 }

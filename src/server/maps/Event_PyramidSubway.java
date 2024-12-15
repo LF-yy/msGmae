@@ -336,7 +336,7 @@ public class Event_PyramidSubway
         }
         int exp = 0;
         if (rank < 4) {
-            exp = (this.kill * 2 + this.cool * 10 + pt) * c.getClient().getChannelServer().getExpRate();
+            exp = (int)( (this.kill * 2 + this.cool * 10 + pt) * c.getClient().getChannelServer().getExpRate());
             c.gainExp(exp, true, false, false);
         }
         c.getClient().sendPacket(MaplePacketCreator.showEffect("killing/clear"));

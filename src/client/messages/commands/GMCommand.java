@@ -1964,7 +1964,53 @@ public class GMCommand
             return new StringBuilder().append("!重载任务 - 重新载入任务").toString();
         }
     }
-    
+
+
+    public static class 清怪2 extends CommandExecute {
+        public 清怪2() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+                MapleMap map = c.getPlayer().getMap();
+                double range = Double.POSITIVE_INFINITY;
+                boolean drop = true;
+                if (splitted.length > 1) {
+                    int irange = 9999;
+                    if (splitted.length < 2) {
+                        range = (double)(irange * irange);
+                    } else {
+                        try {
+                            map = c.getChannelServer().getMapFactory().getMap(Integer.parseInt(splitted[1]));
+                            range = (double)(Integer.parseInt(splitted[2]) * Integer.parseInt(splitted[2]));
+                        } catch (Exception var11) {
+                        }
+                    }
+
+                    if (splitted.length >= 3) {
+                        drop = splitted[3].equalsIgnoreCase("true");
+                    }
+                }
+
+                int count = 0;
+
+                for(Iterator var9 = map.getMapObjectsInRange(c.getPlayer().getPosition(), range, Arrays.asList(MapleMapObjectType.MONSTER)).iterator(); var9.hasNext(); ++count) {
+                    MapleMapObject monstermo = (MapleMapObject)var9.next();
+                    MapleMonster mob = (MapleMonster)monstermo;
+                    mob.sendYellowDamage(mob.getHp(), false);
+                    map.killMonster(mob, c.getPlayer(), true, false, (byte)1);
+                }
+
+                c.getPlayer().dropMessage(5, "您总共杀了 " + count + " 只怪物");
+                return true;
+
+        }
+
+        public String getMessage() {
+            return "!清怪2 [range] [mapid] - 杀掉所有怪物并爆物";
+        }
+    }
+
+
     public static class 重载副本 extends CommandExecute
     {
         @Override

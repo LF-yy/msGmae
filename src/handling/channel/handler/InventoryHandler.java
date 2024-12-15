@@ -2,9 +2,10 @@ package handling.channel.handler;
 
 import database.DatabaseConnection;
 import gui.LtMS;
+import gui.服务端输出信息;
 import handling.world.MapleParty;
 import server.*;
-import server.bean.Potential;
+import snail.Potential;
 import tools.packet.PlayerShopPacket;
 import server.shops.IMaplePlayerShop;
 
@@ -37,7 +38,6 @@ import tools.packet.PetPacket;
 import tools.packet.MTSCSPacket;
 import tools.FileoutputUtil;
 import constants.ServerConfig;
-import gui.CongMS;
 import client.inventory.ItemFlag;
 import client.MapleStat;
 import server.quest.MapleQuest;
@@ -315,7 +315,59 @@ public class InventoryHandler
         c.sendPacket(MaplePacketCreator.finishedSort((int)pInvType.getType()));
         c.sendPacket(MaplePacketCreator.enableActions());
     }
-    
+    public static final void ItemGatherS(LittleEndianAccessor slea, MapleClient c) {
+        try {
+            if (c == null || c.getPlayer() == null) {
+                return;
+            }
+
+            c.getPlayer().updateTick(slea.readInt());
+            byte mode = slea.readByte();
+            MapleInventoryType invType = MapleInventoryType.getByType(mode);
+            if (invType != null) {
+                MapleInventory Inv = c.getPlayer().getInventory(invType);
+                List<IItem> itemList = new LinkedList();
+
+                int n;
+                for(n = 0; n < Inv.list().size(); n = (short)(n + 1)) {
+                    itemList.add(Inv.getItem((short)(n + 1)));
+                }
+
+                n = itemList.size();
+                if (n <= 1) {
+                    return;
+                }
+
+                for(int i = 0; i < n; ++i) {
+                    boolean flag = false;
+
+                    for(int j = 0; j < n - i - 1; ++j) {
+                        if (itemList.get(j) != null && itemList.get(j + 1) != null) {
+                            int itemId1 = ((IItem)itemList.get(j)).getItemId();
+                            int itemId2 = ((IItem)itemList.get(j + 1)).getItemId();
+                            if (itemId1 > itemId2) {
+                                Collections.swap(itemList, j, j + 1);
+                                MapleInventoryManipulator.move(c, invType, ((IItem)itemList.get(j)).getPosition(), ((IItem)itemList.get(j + 1)).getPosition());
+                                flag = true;
+                            }
+                        }
+                    }
+
+                    if (!flag) {
+                        break;
+                    }
+                }
+
+                c.sendPacket(MaplePacketCreator.finishedGather(mode));
+                c.sendPacket(MaplePacketCreator.enableActions());
+                itemList.clear();
+            }
+        } catch (Exception var12) {
+            服务端输出信息.println_err("【错误】ItemGatherS执行错误，错误名:" + var12 + "；错误原因：" + var12.getCause());
+            var12.printStackTrace();
+        }
+
+    }
     public static void ItemGather(final LittleEndianAccessor slea, final MapleClient c) {
         if (c == null || c.getPlayer() == null) {
             return;
@@ -361,12 +413,21 @@ public class InventoryHandler
         }
         return sortedList;
     }
+
     //自定义箱子，礼包箱子，双击箱子打开NPC
     public static boolean UseRewardItem(final byte slot, final int itemId, final MapleClient c, MapleCharacter chr) {
-        IItem toUse = c.getPlayer().getInventory(GameConstants.getInventoryType(itemId)).getItem((short)slot);
         if(LtMS.ConfigValuesMap.get("开启封包调试") >0){
             System.out.println("使用物品:"+ itemId + "---slot:"+slot);
         }
+        if(LtMS.ConfigValuesMap.get("新版本")>0){
+            c.sendPacket(MaplePacketCreator.enableActions());
+            NPCScriptManager.getInstance().dispose(c);
+            NPCScriptManager.getInstance().startItem(c, 1204033, itemId);
+            return false;
+        }
+
+        IItem toUse = c.getPlayer().getInventory(GameConstants.getInventoryType(itemId)).getItem((short)slot);
+
         if(toUse == null){
             return false;
         }
@@ -606,7 +667,7 @@ public class InventoryHandler
     }
 
     //使用消耗品
-    public static void UseItem(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
+    public static final void UseItem( LittleEndianAccessor slea,  MapleClient c, MapleCharacter chr) {
 
 
         c.getPlayer().updateTick(slea.readInt());
@@ -1864,26 +1925,20 @@ public class InventoryHandler
             }
             case 5570000: {
                 slea.readInt();
-                final Equip item3 = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short) (byte) slea.readInt());
+                final Equip item3 = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)(byte)slea.readInt());
                 if (item3 == null) {
                     break;
                 }
-                if (!GameConstants.canHammer(item3.getItemId()) || item3.getViciousHammer() >= 2) {
-                    c.getPlayer().dropMessage(5, "此道具无法使用金锤子");
-                    return;
+                if (GameConstants.canHammer(item3.getItemId()) && MapleItemInformationProvider.getInstance().getSlots(item3.getItemId()) > 0 && item3.getViciousHammer() <= 2) {
+                    item3.setViciousHammer((byte)(item3.getViciousHammer() + 1));
+                    item3.setUpgradeSlots((byte)(item3.getUpgradeSlots() + 1));
+                    c.getPlayer().forceReAddItem((IItem)item3, MapleInventoryType.EQUIP);
+                    used = true;
+                    cc = true;
+                    break;
                 }
-                 int randomNum = (int) Math.floor(Math.random() * 100.0);
-                if (randomNum <= LtMS.ConfigValuesMap.get("金锤子提升成功率")) {
-                    MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, itemId, 1, true, false);//扣掉金锤子
-                    item3.setViciousHammer((byte) (item3.getViciousHammer() + 1));
-                    item3.setUpgradeSlots((byte) (item3.getUpgradeSlots() + 1));
-                    c.getPlayer().forceReAddItem1(item3, MapleInventoryType.EQUIP);
-                    c.getPlayer().getClient().sendPacket(MaplePacketCreator.sendHammer效果(true, item3.getViciousHammer()));//成功
-                } else {
-                    MapleInventoryManipulator.removeById(c, MapleInventoryType.CASH, itemId, 1, true, false);//扣掉金锤子
-                    c.getPlayer().getClient().sendPacket(MaplePacketCreator.sendHammer效果(false, item3.getViciousHammer()));//失败
-
-                }
+                c.getPlayer().dropMessage(5, "可能不能使用在這個道具上。");
+                cc = true;
                 break;
             }
             case 5610000:
@@ -2799,7 +2854,7 @@ public class InventoryHandler
         }
     }
     
-    public static void PetPickup(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
+    public static void PetPickup( LittleEndianAccessor slea,  MapleClient c, MapleCharacter chr) {
         if (chr == null) {
             return;
         }
@@ -2867,19 +2922,28 @@ public class InventoryHandler
                     chr.gainMeso(mapitem.getMeso(), true);
                 }
                 removeItemPet(chr, mapitem, (int)petz);
-            }
-            else if (MapleItemInformationProvider.getInstance().isPickupBlocked(mapitem.getItemId()) || mapitem.getItemId() / 10000 == 291) {
+            } else if (MapleItemInformationProvider.getInstance().isPickupBlocked(mapitem.getItemId()) || mapitem.getItemId() / 10000 == 291) {
                 c.sendPacket(MaplePacketCreator.enableActions());
-            }
-            else if (useItem(c, mapitem.getItemId())) {
+            } else if (useItem(c, mapitem.getItemId())) {
                 final MapleMapObject obd = chr.getMap().getMapObject(oid, MapleMapObjectType.ITEM);
                 if (obd == null) {
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
                 removeItemPet(chr, mapitem, (int)petz);
-            }
-            else if (MapleInventoryManipulator.checkSpace(c, mapitem.getItemId(), (int)mapitem.getItem().getQuantity(), mapitem.getItem().getOwner())) {
+            }else if (chr.isSellWhenPickUpItem(mapitem.getItemId())) {
+                MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+                int price;
+                if (!GameConstants.isThrowingStar(mapitem.getItemId()) && !GameConstants.isBullet(mapitem.getItemId())) {
+                    price = (int)(ii.getPrice(mapitem.getItemId()) * (double)mapitem.getItem().getQuantity());
+                } else {
+                    price = (int)((float)ii.getWholePrice(mapitem.getItemId()) / (float)ii.getSlotMax(c, mapitem.getItemId()));
+                }
+
+                price = (int)((double)(price * (Integer)LtMS.ConfigValuesMap.get("商店物品卖价百分比")) / 100.0);
+                chr.gainMeso(price, true);
+                removeItemPet(chr, mapitem, petz);
+            }  else if (MapleInventoryManipulator.checkSpace(c, mapitem.getItemId(), (int)mapitem.getItem().getQuantity(), mapitem.getItem().getOwner())) {
                 final MapleMapObject obd = chr.getMap().getMapObject(oid, MapleMapObjectType.ITEM);
                 if (obd == null) {
                     c.sendPacket(MaplePacketCreator.enableActions());
@@ -3199,7 +3263,7 @@ public class InventoryHandler
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
-        final int expGained = ii.getExpCache(itemid) * c.getChannelServer().getExpRate();
+         int expGained = (int)(ii.getExpCache(itemid) * c.getChannelServer().getExpRate());
         c.getPlayer().gainExp(expGained, true, false, false);
         c.sendPacket(MaplePacketCreator.enableActions());
         MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, (short)slot, (short)1, false);

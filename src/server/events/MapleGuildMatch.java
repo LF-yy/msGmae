@@ -85,7 +85,15 @@ public class MapleGuildMatch extends MapleEvent {
         }
 
     }
+    public boolean containMapId(int id) {
+        for(int i = 0; i < this.mapid.length; ++i) {
+            if (this.mapid[i] == id) {
+                return true;
+            }
+        }
 
+        return false;
+    }
     public void startEvent() {
         this.begain = true;
         this.broadcast(MaplePacketCreator.getClock((int)(this.time / 1000L)));

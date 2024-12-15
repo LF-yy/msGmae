@@ -906,7 +906,7 @@ public class CongMS extends JFrame
             return sdf.format(date);
         }
         catch (MalformedURLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         catch (IOException e2) {
             e2.printStackTrace();
@@ -8092,7 +8092,7 @@ public class CongMS extends JFrame
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
         this.读取显示账号();
@@ -11345,7 +11345,7 @@ public class CongMS extends JFrame
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
         }
         this.读取显示账号();
@@ -11564,7 +11564,7 @@ public class CongMS extends JFrame
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, (Throwable)e);
 
         }
@@ -13162,7 +13162,7 @@ public class CongMS extends JFrame
 			//BeautyEyeLNFHelper.translucencyAtFrameInactive = true;
                        // UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());//显示win标题
 		} catch (Exception e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
                 instance = new CongMS();
                 instance.setVisible(true);
@@ -13227,7 +13227,7 @@ public class CongMS extends JFrame
                     if (hour == 0) {}
                 }
                 catch (InterruptedException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         }

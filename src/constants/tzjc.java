@@ -6,6 +6,7 @@ import bean.LttItemAdditionalDamage;
 import bean.SuitSystem;
 import client.MapleCharacter;
 import client.MapleStat;
+import client.PlayerStats;
 import client.inventory.IItem;
 import gui.CongMS;
 import gui.LtMS;
@@ -53,13 +54,22 @@ public class tzjc {
             totDamageToOneMonster = (long) ((double) totDamageToOneMonster + damage);
             if (player.get套装伤害加成() > 0.0) {
                 double jc_damage = totDamageToOneMonster * player.get套装伤害加成();
-//                if(jc_damage>100000000L){
-//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/100000000L) + "亿");
-//                }else if(jc_damage>10000){
-//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage/10000) + "万");
-//                }else{
-//                    player.dropTopMsg("[赋能]:增伤" + Math.ceil(jc_damage)  + "");
-//                }
+                totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
+            }
+            if (player.get最高伤害()>0){
+                totDamageToOneMonster += player.get最高伤害();
+            }
+        } catch (Exception e) {
+            FileoutputUtil.outError("logs/套装伤害异常.txt", e);
+            return totDamageToOneMonster;
+        }
+        return totDamageToOneMonster;
+    }
+    public static long damage2(MapleCharacter player, long totDamageToOneMonster, double damage) {
+        try {
+            totDamageToOneMonster = (long) ((double) totDamageToOneMonster + damage);
+            if (player.get套装伤害加成() > 0.0) {
+                double jc_damage = totDamageToOneMonster * player.get套装伤害加成();
                 totDamageToOneMonster = (long) ((double) totDamageToOneMonster + jc_damage);
             }
             if (player.get最高伤害()>0){
@@ -238,6 +248,7 @@ public class tzjc {
             System.out.println("装备等级附加加载异常");
         }
         Start.enhancedRankMap.put(chr.getId(), new MapleGuildRanking.SponsorRank(chr.getName(), number.get().intValue()*100,chr.getStr(),chr.getDex(),chr.getInt(),chr.getLuk()));
+        计算最大伤害(chr);
         String damage ;
             if(chr.getStat().damage>100000000L){
                   damage = Math.ceil(chr.getStat().damage/100000000.0) + "亿";
@@ -254,6 +265,45 @@ public class tzjc {
         }else{
             dsDamage = Math.ceil(additionalDamage.get())  + "";
         }
+        int package_Watk = chr.package_watk;
+        int package_Matk = chr.package_matk;
+        int package_WatkPercent = chr.package_watk_percent;
+        int package_MatkPercent = chr.package_matk_percent;
+        int package_Wdef = chr.package_wdef;
+        int package_WdefPercent = chr.package_wdef_percent;
+        int package_Mdef = chr.package_mdef;
+        int package_MdefPercent = chr.package_mdef_percent;
+        int package_Acc = chr.package_acc;
+        int package_AccPercent = chr.package_acc_percent;
+        int package_Avoid = chr.package_avoid;
+        int package_AvoidPercent = chr.package_avoid_percent;
+        int package_MaxHp = chr.package_maxhp;
+        int package_MaxHpPercent = chr.package_maxhp_percent;
+        int package_MaxMp = chr.package_maxmp;
+        int package_MaxMpPercent = chr.package_maxmp_percent;
+        int package_Speed = chr.package_speed;
+        int package_Jump = chr.package_jump;
+        short package_normal_damage_percent =  chr.package_normal_damage_percent;
+        short package_boss_damage_percent = chr.package_boss_damage_percent;
+        short package_total_damage_percent = chr.package_total_damage_percent;
+        int pWatk =  chr.getStat().pWatk;
+        int pMatk =  chr.getStat().pMatk;
+        int pWdef =  chr.getStat().pWdef;
+        int pMdef =  chr.getStat().pMdef;
+        int pAcc =  chr.getStat().pAcc;
+        int pAvoid =  chr.getStat().pAvoid;
+        int pMaxHp =  chr.getStat().pMaxHp;
+        int pMaxMp =  chr.getStat().pMaxMp;
+        int pSpeed =  chr.getStat().pSpeed;
+        int pJump =  chr.getStat().pJump;
+        int pWatkPercent =  chr.getStat().pWatkPercent;
+        int pMatkPercent =  chr.getStat().pMatkPercent;
+        int pWdefPercent =  chr.getStat().pWdefPercent;
+        int pMdefPercent =  chr.getStat().pMdefPercent;
+        int pAccPercent =  chr.getStat().pAccPercent;
+        int pAvoidPercent =  chr.getStat().pAvoidPercent;
+        int pMaxHpPercent =  chr.getStat().pMaxHpPercent;
+        int pMaxMpPercent =  chr.getStat().pMaxMpPercent;
         String str = "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
                 "力量：" + chr.getStat().localstr + ">>" +
                 "敏捷：" + chr.getStat().localdex + ">>" +
@@ -265,11 +315,15 @@ public class tzjc {
                 "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
                 "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
                 "最大伤害：" + damage + ">>" +
-                "伤害加成：" + chr.getStat().dam_r + ">>" +
+                "伤害加成：" + (chr.getStat().dam_r+chr.package_total_damage_percent) + ">>" +
                 "段伤加成：" + dsDamage + ">>" +
-                "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%");
-        chr.showInstruction(str,240,10);
+                "BOSS伤害加成：" +( chr.getStat().bossdam_r+chr.package_boss_damage_percent) + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")+">>" +
+                "套装属性加成：魔法"+package_Watk+"+"+package_WatkPercent+"%"+"  魔法"+package_Matk+"+"+package_MatkPercent+"%"+"  物防"+package_Wdef+"+"+package_WdefPercent+"%"+"  魔防"+package_Mdef+"+"+package_MdefPercent+"%"+"  命中"+package_Acc+"+"+package_AccPercent+"%"+"  回避"+package_Avoid+"+"+package_AvoidPercent+"%"+"  最大生命"+package_MaxHp+"+"+package_MaxHpPercent+"%"+"  最大魔力"+package_MaxMp+"+"+package_MaxMpPercent+"%"+"  速度"+package_Speed+"+"+package_Jump+"%"+"  伤害加成"+package_normal_damage_percent+"%"+"  BOSS伤害加成"+package_boss_damage_percent+"%"+"  总伤害加成"+package_total_damage_percent+"%"+ ">>" +
+                "潜能总加成: 攻击" + pWatk + "+" + pWatkPercent + "%" + "  魔法" + pMatk + "+" + pMatkPercent + "%" + "  物防" + pWdef + "+" + pWdefPercent + "%" + "  魔防" + pMdef + "+" + pMdefPercent + "%" + "  命中" + pAcc + "+" + pAccPercent + "%" + "  回避" + pAvoid + "+" + pAvoidPercent + "%" + "  最大生命" + pMaxHp + "+" + pMaxHpPercent + "%" + "  最大魔力" + pMaxMp + "+" + pMaxMpPercent + "%" + "  速度" + pSpeed + "+" + pJump + "%"
+                ;
 
+        chr.showInstruction(str,240,10);
+        chr.getClient().getPlayer().set开启自动回收(chr.getBossLog1("开启自动回收",1)>0 ? true : false) ;
 //        chr.dropMessage(5,
 //                "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
 //                        "力量：" + chr.getStat().localstr + ">>" +
@@ -296,5 +350,84 @@ public class tzjc {
         tzjc.sbMap = new Hashtable<>();
         tzjc.suitSys = new Hashtable<>();
 
+    }
+
+
+    public static void 计算最大伤害(MapleCharacter chra){
+        if(chra==null){
+            return;
+        }
+        switch (chra.getJob()){
+            //战士
+            case 110:
+            case 111:
+            case 112:
+            case 120:
+            case 121:
+            case 122:
+            case 130:
+            case 131:
+            case 132:
+                chra.getClient().getPlayer().getStat().damage = ( (long) ((chra.getClient().getPlayer().getStat().localstr*(LtMS.ConfigValuesMap.get("战士力量系数")/100.00)+chra.getClient().getPlayer().getStat().localdex*0.1+chra.getClient().getPlayer().getStat().localluk*0.1+chra.getClient().getPlayer().getStat().localint_*0.1)*(chra.getClient().getPlayer().getStat().watk*(LtMS.ConfigValuesMap.get("战士物理系数")/100.00)))+1L);
+                break;
+            case 2000:
+            case 2100:
+            case 2110:
+            case 2111:
+            case 2112:
+                chra.getClient().getPlayer().getStat().damage = ( (long) ((chra.getClient().getPlayer().getStat().localstr*(LtMS.ConfigValuesMap.get("战神力量系数")/100.00)+chra.getClient().getPlayer().getStat().localdex*0.1+chra.getClient().getPlayer().getStat().localluk*0.1+chra.getClient().getPlayer().getStat().localint_*0.1)*(chra.getClient().getPlayer().getStat().watk*(LtMS.ConfigValuesMap.get("战神物理系数")/100.00)))+1L);
+                break;
+            //法师
+            case 200:
+            case 210:
+            case 211:
+            case 212:
+            case 220:
+            case 221:
+            case 222:
+            case 230:
+            case 231:
+            case 232:
+                chra.getClient().getPlayer().getStat().damage = ( (long) ((chra.getClient().getPlayer().getStat().localstr*0.1+chra.getClient().getPlayer().getStat().localdex*0.1+chra.getClient().getPlayer().getStat().localluk*0.1+chra.getClient().getPlayer().getStat().localint_*(LtMS.ConfigValuesMap.get("法师智力系数")/100.00))*(chra.getClient().getPlayer().getStat().magic*(LtMS.ConfigValuesMap.get("法师魔力系数")/100.00)))+1L);
+                break;
+            //射手
+            case 300:
+            case 310:
+            case 311:
+            case 312:
+            case 320:
+            case 321:
+            case 322:
+
+                chra.getClient().getPlayer().getStat().damage = ( (long) ((chra.getClient().getPlayer().getStat().localstr*0.1+chra.getClient().getPlayer().getStat().localdex*(LtMS.ConfigValuesMap.get("射手敏捷系数")/100.00)+chra.getClient().getPlayer().getStat().localluk*0.1+chra.getClient().getPlayer().getStat().localint_*0.1)*(chra.getClient().getPlayer().getStat().watk*(LtMS.ConfigValuesMap.get("射手物理系数")/100.00)))+1L);
+                break;
+            //飞侠
+            case 400:
+            case 410:
+            case 411:
+            case 412:
+            case 420:
+            case 421:
+            case 422:
+
+                chra.getClient().getPlayer().getStat().damage = (  (long) ((chra.getClient().getPlayer().getStat().localstr*0.1+chra.getClient().getPlayer().getStat().localdex*0.1+chra.getClient().getPlayer().getStat().localluk*(LtMS.ConfigValuesMap.get("飞侠运气系数")/100.00)+chra.getClient().getPlayer().getStat().localint_*0.1)*(chra.getClient().getPlayer().getStat().watk*(LtMS.ConfigValuesMap.get("飞侠物理系数")/100.00)))+1L);
+                break;
+            //海盗
+            case 500:
+            case 510:
+            case 511:
+            case 512:
+                chra.getClient().getPlayer().getStat().damage = (  (long) ((chra.getClient().getPlayer().getStat().localstr*0.1+chra.getClient().getPlayer().getStat().localdex*(LtMS.ConfigValuesMap.get("拳手敏捷系数")/100.00)+chra.getClient().getPlayer().getStat().localluk*0.1+chra.getClient().getPlayer().getStat().localint_*0.1)*(chra.getClient().getPlayer().getStat().watk*(LtMS.ConfigValuesMap.get("海盗物理系数")/100.00)))+1L);
+                break;
+            case 520:
+            case 521:
+            case 522:
+                chra.getClient().getPlayer().getStat().damage = (  (long) ((chra.getClient().getPlayer().getStat().localstr*0.1+chra.getClient().getPlayer().getStat().localdex*0.1+chra.getClient().getPlayer().getStat().localluk*(LtMS.ConfigValuesMap.get("船长运气系数")/100.00)+chra.getClient().getPlayer().getStat().localint_*0.1)*(chra.getClient().getPlayer().getStat().watk*(LtMS.ConfigValuesMap.get("海盗物理系数")/100.00)))+1L);
+                break;
+            default:
+                chra.getClient().getPlayer().getStat().damage = (  (long) ((chra.getClient().getPlayer().getStat().localstr*0.3+chra.getClient().getPlayer().getStat().localdex*0.3+chra.getClient().getPlayer().getStat().localluk*0.3+chra.getClient().getPlayer().getStat().localint_*0.3)*(chra.getClient().getPlayer().getStat().watk*0.1))+1L);
+                break;
+
+        }
     }
 }

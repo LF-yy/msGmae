@@ -3,8 +3,10 @@ package handling;
 import java.util.*;
 
 
+import abc.Game;
 import constants.ServerConstants;
 import gui.LtMS;
+import gui.服务端输出信息;
 import handling.channel.handler.BeanGame;
 import handling.channel.handler.FamilyHandler;
 import handling.channel.handler.HiredMerchantHandler;
@@ -30,7 +32,6 @@ import handling.channel.handler.ItemMakerHandler;
 import handling.channel.handler.PlayersHandler;
 import handling.channel.handler.PlayerHandler;
 import scripting.NPCScriptManager;
-import server.Start;
 import server.maps.MapleMap;
 import tools.MaplePacketCreator;
 import handling.cashshop.handler.CashShopOperation;
@@ -58,6 +59,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import tools.Pair;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import tools.packet.MTSCSPacket;
 
 public class MapleServerHandler extends ChannelInboundHandlerAdapter
 {
@@ -188,20 +190,18 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 if (recv.NeedsChecking() && !c.isLoggedIn()) {
                     return;
                 }
-                if (c.getPlayer() != null && c.isMonitored() && !MapleServerHandler.blocked.contains((Object)recv)) {
-                    if(LtMS.ConfigValuesMap.get("开启监测") == 1) {
-                        FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object) recv) + " (" + Integer.toHexString((int) header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
-                    }
-               }
+//                if (c.getPlayer() != null && c.isMonitored() && !MapleServerHandler.blocked.contains((Object)recv)) {
+//                    if(LtMS.ConfigValuesMap.get("开启监测") == 1) {
+//                        FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object) recv) + " (" + Integer.toHexString((int) header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
+//                    }
+//               }
                 try {
                     handlePacket(recv, slea, c, this.channel == -10);
                 }catch (Exception e) {
-                    //e.printStackTrace();
-
+                    ////e.printStackTrace();
                     if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
                         c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
                     }
-
                     FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", (Throwable)e, false);
                     FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", (Throwable)e);
                     FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int)header_num + "\r\n" + ctx.name() + ":\r\n" +slea.toString(true));
@@ -364,6 +364,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //特殊举动  英雄的回声
             case SPECIAL_MOVE: {
+                if(c.getPlayer().getId()>10000000){
+                    break;
+                }
                 PlayerHandler.SpecialMove(slea, c, c.getPlayer());
                 break;
             }
@@ -502,8 +505,15 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case ITEM_SORT: {
-                InventoryHandler.ItemSort(slea, c);
-                break;
+                long nowTime = Calendar.getInstance().getTimeInMillis();
+                if (nowTime - c.getPlayer().lastItemSortTime >= 5000L) {
+                    InventoryHandler.ItemSort(slea, c);
+                    c.getPlayer().lastItemSortTime = nowTime;
+                    c.getPlayer().dropMessage(5, "背包整理完成，5秒内再次点击该按钮即可对物品排序。");
+                } else {
+                    InventoryHandler.ItemGatherS(slea, c);
+                    c.getPlayer().lastItemSortTime = 0L;
+                }                break;
             }
             case ITEM_GATHER: {
                 InventoryHandler.ItemGather(slea, c);
@@ -575,7 +585,14 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case REWARD_ITEM: {
+                if (c.getPlayer().getImprison() > 0) {
+                    c.getPlayer().dropMessage(1, "您正在被关禁闭中，无法开启脚本对话。");
+                    c.getSession().writeAndFlush(MaplePacketCreator.enableActions());
+                    return;
+                }
+               // InventoryHandler.UseRewardItem((byte)slea.readShort(), slea.readInt(), c, c.getPlayer());
                 InventoryHandler.UseRewardItem((byte)slea.readShort(), slea.readInt(), c, c.getPlayer());
+
                 break;
             }
             case HYPNOTIZE_DMG: {
@@ -591,11 +608,11 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case MOVE_LIFE: {
-                if (MapleMap.canSpawnForCPU) {
+//                if (MapleMap.canSpawnForCPU) {
                     MobHandler.MoveMonster(slea, c);
-                } else {
-                    MobHandler.MoveMonster2(slea, c);
-                }
+//                } else {
+//                    MobHandler.MoveMonster2(slea, c);
+//                }
                 break;
             }
             case AUTO_AGGRO: {
@@ -633,6 +650,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 NPCHandler.handleNPCAnimation(slea, c);
                 break;
             }
+            //仓库存东西
             case STORAGE: {
                 NPCHandler.Storage(slea, c, c.getPlayer());
                 break;
@@ -711,6 +729,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 UserInterfaceHandler.CygnusSummonNPCRequest(c);
                 break;
             }
+            //将背包物品放入商城
             case CASHSHOP_OPERATION: {
                 CashShopOperation.BuyCashItem(slea, c, c.getPlayer());
                 break;
@@ -849,7 +868,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             case RING_ACTION: {
                 PlayersHandler.RingAction(slea, c);
                 //修复复制
-                c.getPlayer().saveToDB(true, true);
+                //c.getPlayer().saveToDB(true, true);
                 break;
             }
             case ITEM_UNLOCK: {
@@ -988,15 +1007,15 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             //功能集散地
             case STRANGE_DATA:{
                 //回收装备
-                if (c==null){
+                if (Objects.isNull(c) || Objects.isNull(c.getPlayer())){
                     break;
                 }
-                if( System.currentTimeMillis() - c.getPlayer().getSaveTime() < 300000){
-                    c.getPlayer().saveToDB(false, false);
-                    c.getPlayer().setSaveTime(System.currentTimeMillis());
-                }
+//                if( System.currentTimeMillis() - (c.getPlayer().getSaveTime()==0 ? System.currentTimeMillis() : c.getPlayer().getSaveTime()) < 300000){
+//                    c.getPlayer().setSaveTime(System.currentTimeMillis());
+//                    c.getPlayer().saveToDB(false,  false);
+//                }
                 try {
-                    c.getPlayer().recycleEquip(c, c.getPlayer());
+                   // c.getPlayer().recycleEquip(c, c.getPlayer());
                 } catch (Exception e) {
 
                 }
@@ -1010,6 +1029,21 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
              //   System.out.println("CANCEL_DEBUFF"+slea);
                 break;
             }
+            case PLAYER_UPDATE:
+                if (Game.调试2.equals("开")) {
+                    服务端输出信息.println_out("开始执行PLAYER_UPDATE封包，读取/存储角色信息");
+                }
+                break;
+            case VICIOUS_HAMMER:
+                int mod;
+                if (ServerConfig.version == 79) {
+                    mod = slea.readByte();
+                    mod = (byte)(mod + 8);
+                    c.sendPacket(MTSCSPacket.ViciousHammerM((byte)mod, 0));
+                }
+                break;
+            case MOVE_DRAGON:
+                break;
             default:
                 //if(LtMS.ConfigValuesMap.get("开启封包调试") == 1){
                     System.out.println("未知封包封包编码:"+ header );

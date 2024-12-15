@@ -51,7 +51,7 @@ public class FileoutputUtil
                 file.createNewFile();
             }
             catch (IOException ex) {
-                ex.printStackTrace();
+                //Ex.printStackTrace();
             }
         }
         final String filePath = txt;
@@ -64,7 +64,7 @@ public class FileoutputUtil
             }
         }
         catch (FileNotFoundException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         catch (IOException e2) {
             e2.printStackTrace();

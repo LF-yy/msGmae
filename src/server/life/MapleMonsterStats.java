@@ -265,11 +265,14 @@ public class MapleMonsterStats
             this.skills.add(skill);
         }
     }
-    
+    public void addSkill(int skillId, int level) {
+        this.skills.add(new Pair(skillId, level));
+    }
     public List<Pair<Integer, Integer>> getSkills() {
         return Collections.unmodifiableList((List<? extends Pair<Integer, Integer>>)this.skills);
     }
-    
+
+
     public byte getNoSkills() {
         return (byte)this.skills.size();
     }
@@ -350,4 +353,5 @@ public class MapleMonsterStats
     public int getSpawnChrId() {
         return this.SpawnChrId;
 }
+
 }

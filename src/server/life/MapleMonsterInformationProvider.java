@@ -208,14 +208,14 @@ public class MapleMonsterInformationProvider
                 }
             }
             catch (SQLException ignore) {
-                System.out.println("Error getMobByItem" + ignore);
+                //System.out.println("Error getMobByItem" + ignore);
                 FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)ignore);
                 return null;
             }
         }
         catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error getMobByItem" + e);
+            ////e.printStackTrace();
+            //System.out.println("Error getMobByItem" + e);
             FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)e);
             try {
                 if (ps != null) {
@@ -226,7 +226,7 @@ public class MapleMonsterInformationProvider
                 }
             }
             catch (SQLException ignore) {
-                System.out.println("Error getMobByItem" + ignore);
+                //System.out.println("Error getMobByItem" + ignore);
                 FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)ignore);
                 return null;
             }
@@ -241,7 +241,7 @@ public class MapleMonsterInformationProvider
                 }
             }
             catch (SQLException ignore2) {
-                System.out.println("Error getMobByItem" + ignore2);
+               // System.out.println("Error getMobByItem" + ignore2);
                 FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)ignore2);
                 return null;
             }
@@ -263,7 +263,7 @@ public class MapleMonsterInformationProvider
             con.close();
         }
         catch (SQLException e) {
-            System.out.println("Error getDropChance" + e);
+           // System.out.println("Error getDropChance" + e);
             FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)e);
         }
         return chance;
@@ -280,7 +280,7 @@ public class MapleMonsterInformationProvider
             con.close();
         }
         catch (SQLException ex) {
-            System.out.println("Error UpdateDropChance" + ex);
+            //System.out.println("Error UpdateDropChance" + ex);
             FileoutputUtil.outputFileError("logs/更新爆率几率异常.txt", (Throwable)ex);
         }
     }
@@ -297,7 +297,7 @@ public class MapleMonsterInformationProvider
             con.close();
         }
         catch (SQLException ex) {
-            System.out.println("Error AddDropData" + ex);
+           // System.out.println("Error AddDropData" + ex);
             FileoutputUtil.outputFileError("logs/添加爆率异常.txt", (Throwable)ex);
         }
     }

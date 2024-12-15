@@ -18,5 +18,24 @@
     <orderEntry type="library" name="commons-lang-2.3" level="project" />
     <orderEntry type="library" name="jl1.0.1" level="project" />
     <orderEntry type="library" name="fastjson-1.2.7" level="project" />
+    <orderEntry type="library" name="ltMs" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT (2)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT (3)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (2)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (3)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (4)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (5)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (6)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (7)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (8)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (9)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (10)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (11)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (12)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (13)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (14)" level="project" />
+    <orderEntry type="library" name="ltMS-1.0-SNAPSHOT-pg (15)" level="project" />
   </component>
 </module>

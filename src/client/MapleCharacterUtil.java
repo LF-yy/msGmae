@@ -200,7 +200,7 @@ public class MapleCharacterUtil
                     con.close();
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            //Ex.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
         }
     }

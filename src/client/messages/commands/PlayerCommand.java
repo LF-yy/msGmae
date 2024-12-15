@@ -2,16 +2,23 @@ package client.messages.commands;
 
 import client.MapleCharacter;
 import client.inventory.IItem;
+import constants.MapConstants;
 import gui.CongMS;
 import gui.LtMS;
 import handling.channel.ChannelServer;
+import handling.world.MapleParty;
 import handling.world.MaplePartyCharacter;
 import scripting.EventManager;
+import server.ServerProperties;
 import server.Start;
 import server.gashapon.GashaponFactory;
 import client.inventory.MapleInventory;
 import server.MapleInventoryManipulator;
 import client.inventory.MapleInventoryType;
+import server.shops.HiredMerchant;
+import server.shops.IMaplePlayerShop;
+import snail.FakePlayer;
+import snail.Potential;
 import tools.FileoutputUtil;
 import handling.world.World.Broadcast;
 import constants.PiPiConfig;
@@ -33,6 +40,7 @@ import constants.GameConstants;
 import scripting.NPCScriptManager;
 import client.MapleClient;
 import constants.ServerConstants.PlayerGMRank;
+import tools.packet.PlayerShopPacket;
 
 public class PlayerCommand
 {
@@ -293,6 +301,78 @@ public class PlayerCommand
 //        }
 //    }
 
+
+    public static class 复活 extends CommandExecute {
+        public 复活() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+            if (c.getPlayer().getMapId() != 100000203) {
+                if ((Integer)LtMS.ConfigValuesMap.get("免费复活开关") > 0) {
+                    c.getPlayer().setHp(c.getPlayer().getStat().getMaxHp());
+                    c.getPlayer().updateSingleStat(MapleStat.HP, c.getPlayer().getStat().getMaxHp());
+                    c.getPlayer().giveBuff(2438000, (short)30000, (short)0, (short)0, (short)0, (short)30000, (short)30000, (short)0, (short)30000, (short)60, (short)60, 30000, true);
+                    c.getPlayer().dropMessage(5, "复活成功");
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:指令信息 - [玩家:" + c.getPlayer().getName() + "]使用复活功能"));
+                } else {
+                    if (c.getPlayer().getBossLog("今日复活次数") >= (Integer)LtMS.ConfigValuesMap.get("最大复活次数")) {
+                        c.getPlayer().dropMessage(5, "你今天已经复活了" + c.getPlayer().getBossLog("今日复活次数") + "次，达到了最大复活次数，无法继续原地复活。");
+                        return true;
+                    }
+
+                    int need = (Integer)LtMS.ConfigValuesMap.get("复活消耗点券");
+                    if (c.getPlayer().haveItem(5510000, 1)) {
+                        c.getPlayer().setBossLog("今日复活次数");
+                        c.getPlayer().gainItem(5510000, -1);
+                        c.getPlayer().setHp(c.getPlayer().getStat().getMaxHp());
+                        c.getPlayer().updateSingleStat(MapleStat.HP, c.getPlayer().getStat().getMaxHp());
+                        c.getPlayer().giveBuff(2438000, (short)30000, (short)0, (short)0, (short)0, (short)30000, (short)30000, (short)0, (short)30000, (short)60, (short)60, 30000, true);
+                        c.getPlayer().dropMessage(5, "复活成功，检测到你身上持有原地复活术，自动消耗 1 件。");
+                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:指令信息 - [玩家:" + c.getPlayer().getName() + "]使用复活功能"));
+                    } else if (c.getPlayer().getCSPoints(2) >= need) {
+                        c.getPlayer().setBossLog("今日复活次数");
+                        c.getPlayer().modifyCSPoints(2, -need, true);
+                        c.getPlayer().setHp(c.getPlayer().getStat().getMaxHp());
+                        c.getPlayer().updateSingleStat(MapleStat.HP, c.getPlayer().getStat().getMaxHp());
+                        c.getPlayer().giveBuff(2438000, (short)30000, (short)0, (short)0, (short)0, (short)30000, (short)30000, (short)0, (short)30000, (short)60, (short)60, 30000, true);
+                        c.getPlayer().dropMessage(5, "复活成功，消耗 " + need + " 抵用券。");
+                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:指令信息 - [玩家:" + c.getPlayer().getName() + "]使用复活功能"));
+                    } else if (c.getPlayer().getCSPoints(1) >= need) {
+                        c.getPlayer().setBossLog("今日复活次数");
+                        c.getPlayer().modifyCSPoints(1, -need, true);
+                        c.getPlayer().setHp(c.getPlayer().getStat().getMaxHp());
+                        c.getPlayer().updateSingleStat(MapleStat.HP, c.getPlayer().getStat().getMaxHp());
+                        c.getPlayer().giveBuff(2438000, (short)30000, (short)0, (short)0, (short)0, (short)30000, (short)30000, (short)0, (short)30000, (short)60, (short)60, 30000, true);
+                        c.getPlayer().dropMessage(5, "复活成功，消耗 " + need + " 点券。");
+                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(5, "[管理员信息]:指令信息 - [玩家:" + c.getPlayer().getName() + "]使用复活功能"));
+                    } else {
+                        c.getPlayer().dropMessage(5, "你身上没有原地复活术，也没有足够的点券/抵用券，无法复活。");
+                    }
+                    if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0 ) {
+                        c.getPlayer().getStat().recalcLocalStats();
+                        c.getPlayer().givePotentialBuff(Potential.buffItemId, Potential.duration, true);
+                    }
+                }
+            } else {
+                c.getPlayer().dropMessage(5, "该地图无法使用复活。");
+            }
+
+            return true;
+        }
+
+        public String getMessage() {
+            return "@复活";
+        }
+    }
+
+    public static class fh extends 复活 {
+        public fh() {
+        }
+
+        public String getMessage() {
+            return "@复活";
+        }
+    }
     
     public static class ea extends CommandExecute
     {
@@ -323,10 +403,16 @@ public class PlayerCommand
                 int 获得破功 = c.getPlayer().取破攻等级();
                 jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
             }
+            double DROP_RATE = 1.0F;
+        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && c.getPlayer().getMap().getChannel()>= Integer.parseInt(ServerProperties.getProperty("LtMS.Count"))) {
+            DROP_RATE = c.getChannelServer().getDropRate()*2.0F;
+        }else{
+            DROP_RATE = c.getChannelServer().getDropRate();
+        }
             //double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
             DecimalFormat df = new DecimalFormat("#.00");
             String formatExp = df.format(c.getPlayer().getEXPMod()  * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
-            String formatDrop = df.format((jiac+1 )* coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0)  * c.getChannelServer().getDropRate() + (int)(c.getPlayer().getItemDropm()/100) );//
+            String formatDrop = df.format((jiac+1 )+ coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * DROP_RATE + (int)(c.getPlayer().getItemDropm()/100) );//
             String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0)  * c.getChannelServer().getMesoRate());
 
             c.sendPacket(MaplePacketCreator.sendHint(
@@ -338,6 +424,7 @@ public class PlayerCommand
                             + "当前剩余 " + c.getPlayer().getCSPoints(1) + " 点券 " + c.getPlayer().getCSPoints(2) + " 抵用券\r\n"
                             + "当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒\r\n"
                             + "角色坐标 " + "X:"+c.getPlayer().getPosition().x+"-Y:"+c.getPlayer().getPosition().y
+                            + "破功爆率加成: " + jiac+"+4人组队爆率加成"+coefficient+"*爆率卡加成:"+c.getPlayer().getDropMod()+"*系统爆率加成:"+c.getPlayer().getDropm()+"*爆率buff加成:"+(c.getPlayer().getStat().dropBuff / 100.0)+"*频道爆率加:"+DROP_RATE+"+物品爆率加成:"+(c.getPlayer().getItemDropm()/100)
                             + "", 350, 5));
             return true;
         }
@@ -1019,6 +1106,166 @@ public class PlayerCommand
 
         public String getMessage() {
             return "@存档     <保存当前数据>";
+        }
+    }
+
+
+    public static class 我的雇佣 extends CommandExecute {
+        public 我的雇佣() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+            Iterator var3 = ChannelServer.getAllInstances().iterator();
+
+            label44:
+            while(var3.hasNext()) {
+                ChannelServer cs = (ChannelServer)var3.next();
+                Iterator var5 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+
+                while(true) {
+                    MapleMap map;
+                    do {
+                        if (!var5.hasNext()) {
+                            continue label44;
+                        }
+
+                        map = (MapleMap)var5.next();
+                    } while(!MapConstants.isMarket(map.getId()));
+
+                    Iterator var7 = map.getAllMerchant().iterator();
+
+                    while(var7.hasNext()) {
+                        MapleMapObject obj = (MapleMapObject)var7.next();
+                        if (obj instanceof IMaplePlayerShop) {
+                            IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+                            if (obj instanceof HiredMerchant) {
+                                HiredMerchant merchant1 = (HiredMerchant)ips;
+                                if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(c.getPlayer()) && merchant1.isAvailable()) {
+                                    c.getPlayer().dropMessage(1, "你的雇佣商店在 " + cs.getChannel() + " 频道 " + map.getStreetName() + ":" + map.getMapName());
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            c.getPlayer().dropMessage(1, "没有找到你的雇佣商店。");
+            return false;
+        }
+
+        public String getMessage() {
+            return "@我的雇佣 - 查询自己雇佣商店的位置";
+        }
+    }
+
+    public static class 关闭雇佣 extends CommandExecute {
+        public 关闭雇佣() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+            IMaplePlayerShop merchant = c.getPlayer().getPlayerShop();
+            if (merchant != null && merchant.getShopType() == 1 && merchant.isOwner(c.getPlayer()) && merchant.isAvailable()) {
+                c.getPlayer().getClient().sendPacket(PlayerShopPacket.shopErrorMessage(21, 0));
+                c.getPlayer().getClient().sendPacket(MaplePacketCreator.serverNotice(1, "请去找富兰德里领取你的装备和金币"));
+                c.getPlayer().getClient().sendPacket(MaplePacketCreator.enableActions());
+                merchant.removeAllVisitors(-1, -1);
+                c.getPlayer().setPlayerShop((IMaplePlayerShop)null);
+                merchant.closeShop(true, true);
+                c.getPlayer().dropMessage(1, "你的雇佣商店已关闭！");
+                return true;
+            } else {
+                Iterator var4 = ChannelServer.getAllInstances().iterator();
+
+                label54:
+                while(var4.hasNext()) {
+                    ChannelServer cs = (ChannelServer)var4.next();
+                    Iterator var6 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+
+                    while(true) {
+                        MapleMap map;
+                        do {
+                            if (!var6.hasNext()) {
+                                continue label54;
+                            }
+
+                            map = (MapleMap)var6.next();
+                        } while(!MapConstants.isMarket(map.getId()));
+
+                        Iterator var8 = map.getAllMerchant().iterator();
+
+                        while(var8.hasNext()) {
+                            MapleMapObject obj = (MapleMapObject)var8.next();
+                            if (obj instanceof IMaplePlayerShop) {
+                                IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+                                if (obj instanceof HiredMerchant) {
+                                    HiredMerchant merchant1 = (HiredMerchant)ips;
+                                    if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(c.getPlayer()) && merchant1.isAvailable()) {
+                                        merchant1.removeAllVisitors(-1, -1);
+                                        merchant1.closeShop(true, true);
+                                        c.getPlayer().dropMessage(1, "你的雇佣商店已关闭！");
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                c.getPlayer().dropMessage(1, "没有找到你的雇佣商店。");
+                return false;
+            }
+        }
+
+        public String getMessage() {
+            return "@关闭雇佣 - 关闭自己的雇佣商店";
+        }
+    }
+
+    public static class 我的位置 extends CommandExecute {
+        public 我的位置() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+            c.getPlayer().dropMessage(5, "地图: " + c.getPlayer().getMap().getMapName() + " ");
+            if (c.getPlayer().isGM()) {
+                c.getPlayer().dropMessage(5, "代码: " + c.getPlayer().getMap().getId() + " ");
+            }
+
+            c.getPlayer().dropMessage(5, "坐标: " + String.valueOf(c.getPlayer().getPosition().x) + " , " + c.getPlayer().getPosition().y + "");
+            return true;
+        }
+
+        public String getMessage() {
+            return "@我的位置 <查看地图位置>";
+        }
+    }
+
+    public static class wdwz extends 我的位置 {
+        public wdwz() {
+        }
+
+        public String getMessage() {
+            return "@我的位置 <查看地图位置>";
+        }
+    }
+
+
+    public static class 离线挂机 extends CommandExecute {
+        public 离线挂机() {
+        }
+
+        public boolean execute(MapleClient c, String[] splitted) {
+            if (c.getPlayer().getOneTimeLog("离线挂机权限") > 0) {
+                return FakePlayer.copyChr(c.getPlayer());
+            } else {
+                c.getPlayer().dropMessage(1, "您暂未开通离线挂机权限！");
+                return false;
+            }
+        }
+
+        public String getMessage() {
+            return "@离线挂机  - 开始离线挂机";
         }
     }
 

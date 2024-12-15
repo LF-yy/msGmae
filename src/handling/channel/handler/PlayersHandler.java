@@ -88,7 +88,7 @@ public class PlayersHandler
         if (target != null) {
             if (target.getId() == chr.getId()) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + chr.getName() + "(" + chr.getId() + ") 修改名聲封包，使用時封鎖。加自己名聲");
-                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理員永久停權。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理员永久停權。"));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + chr.getName() + "(" + chr.getId() + ") 修改名聲封包，使用時封鎖。加自己名聲"));
                 //chr.ban("修改封包", true, true, false);
                 //chr.getClient().getSession().close();
@@ -96,7 +96,7 @@ public class PlayersHandler
             }
             if (chr.getLevel() < 15) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + chr.getName() + "(" + chr.getId() + ")(等級:" + (int)chr.getLevel() + ") 修改名聲封包，使用時封鎖。十五等以下加名聲");
-                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理員永久停權。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理员永久停權。"));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + chr.getName() + "(" + chr.getId() + ")(等級:" + (int)chr.getLevel() + ") 修改名聲封包，使用時封鎖。十五等以下加名聲"));
                 //chr.ban("修改封包", true, true, false);
                 //chr.getClient().getSession().close();
@@ -152,9 +152,9 @@ public class PlayersHandler
         }
         double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
         DecimalFormat df = new DecimalFormat("#.00");
-        String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
-        String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm());// +  jiac
-        String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate());
+        String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * c.getPlayer().getExpRateChr() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
+        String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * c.getPlayer().getDropRateChr() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm());// +  jiac
+        String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate() * c.getPlayer().getMesoRateChr());
         c.getPlayer().saveToDB(false, false, true);
         NPCScriptManager.getInstance().dispose(c);
         c.getSession().write(MaplePacketCreator.enableActions());

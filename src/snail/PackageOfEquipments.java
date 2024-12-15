@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package server.bean;
+package snail;
 
 import client.MapleCharacter;
 import client.inventory.IItem;
@@ -21,8 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class PackageOfEquipments {
-    private static PackageOfEquipments packageOfEquipments = new PackageOfEquipments();
-    private static List<MyPackage> packageList = Collections.synchronizedList(new ArrayList());
+    private static final PackageOfEquipments packageOfEquipments = new PackageOfEquipments();
+    private static List<MyPackage> packageList = Collections.synchronizedList(new ArrayList<>());
 
     public PackageOfEquipments() {
     }
@@ -31,7 +31,7 @@ public class PackageOfEquipments {
         return packageOfEquipments;
     }
 
-    public boolean loadFromDB() {
+    public void loadFromDB() {
         try {
             Connection con = DBConPool.getConnection();
             Throwable var2 = null;
@@ -41,7 +41,7 @@ public class PackageOfEquipments {
                 PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_package_equipments");
                 ResultSet rs = ps.executeQuery();
                 int count = 0;
-                ArrayList<MyPackage> packageList0 = new ArrayList();
+                ArrayList<MyPackage> packageList0 = new ArrayList<>();
 
                 while(true) {
                     String itemString0;
@@ -51,7 +51,7 @@ public class PackageOfEquipments {
                                 packageList.clear();
                                 packageList = packageList0;
                                 服务端输出信息.println_out("【套装系统】读取完毕，共读取" + count + "组套装。");
-                                return true;
+                                return;
                             }
 
                             itemString0 = rs.getString("itemids");
@@ -94,7 +94,6 @@ public class PackageOfEquipments {
         } catch (SQLException var24) {
             服务端输出信息.println_err("【错误】：loadFromDB错误，错误原因：" + var24);
             var24.printStackTrace();
-            return true;
         }
     }
 
@@ -102,7 +101,7 @@ public class PackageOfEquipments {
         if (itemIdList == null) {
             return null;
         } else {
-            ArrayList<MyPackage> ret = new ArrayList();
+            ArrayList<MyPackage> ret = new ArrayList<>();
             Iterator var3 = packageList.iterator();
 
             while(true) {
@@ -141,22 +140,18 @@ public class PackageOfEquipments {
         if (chr == null) {
             return null;
         } else {
-            ArrayList<IItem> itemList = new ArrayList(chr.getInventory(MapleInventoryType.EQUIPPED).list());
-            ArrayList<Integer> itemIdList = new ArrayList();
-            Iterator var4 = itemList.iterator();
-
-            while(var4.hasNext()) {
-                IItem item = (IItem)var4.next();
-                if (item != null) {
-                    itemIdList.add(item.getItemId());
+            ArrayList<IItem> itemList = new ArrayList<>(chr.getInventory(MapleInventoryType.EQUIPPED).list());
+            ArrayList<Integer> itemIdList = new ArrayList<>();
+            for (IItem iItem : itemList) {
+                if (iItem != null) {
+                    itemIdList.add(iItem.getItemId());
                 }
             }
-
             return this.getPackages(itemIdList);
         }
     }
 
-    public class MyPackage {
+    public static class MyPackage {
         private ArrayList<Integer> itemIdList;
         private short str;
         private short dex;
@@ -191,8 +186,7 @@ public class PackageOfEquipments {
         private short total_damage_percent;
 
         private MyPackage(ArrayList<Integer> itemIdList) {
-            this.itemIdList = new ArrayList();
-            this.itemIdList = new ArrayList(itemIdList);
+            this.itemIdList = new ArrayList<>(itemIdList);
             this.str = 0;
             this.dex = 0;
             this._int = 0;
@@ -227,8 +221,7 @@ public class PackageOfEquipments {
         }
 
         private MyPackage(ArrayList<Integer> itemIdList, short str, short dex, short _int, short luk, short all_ap, short watk, short matk, short wdef, short mdef, short acc, short avoid, short maxhp, short maxmp, short speed, short jump, short str_percent, short dex_percent, short _int_percent, short luk_percent, short all_ap_percent, short watk_percent, short matk_percent, short wdef_percent, short mdef_percent, short acc_percent, short avoid_percent, short maxhp_percent, short maxmp_percent, short normal_damage_percent, short boss_damage_percent, short total_damage_percent) {
-            this.itemIdList = new ArrayList();
-            this.itemIdList = new ArrayList(itemIdList);
+            this.itemIdList = new ArrayList<>(itemIdList);
             this.str = str;
             this.dex = dex;
             this._int = _int;

@@ -79,8 +79,8 @@ public class DumpItems
                     this.dumpItems(psa, psr, ps, pse);
                 }
                 catch (Exception e) {
-                    System.out.println(this.id + " quest.");
-                    e.printStackTrace();
+                    //System.out.println(this.id + " quest.");
+                   // //e.printStackTrace();
                     this.hadError = true;
                 }
                 finally {
@@ -455,7 +455,7 @@ public class DumpItems
         }
         catch (Exception e) {
             hadError = true;
-            e.printStackTrace();
+            //e.printStackTrace();
             System.out.println(currentQuest + " quest.");
         }
         final long endTime = System.currentTimeMillis();

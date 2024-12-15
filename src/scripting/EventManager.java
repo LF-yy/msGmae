@@ -12,11 +12,10 @@ import java.util.*;
 
 import constants.ServerConfig;
 import handling.world.World.Broadcast;
-import server.Start;
-import server.events.DamageManage;
 import server.events.MapleEvent;
 import server.Randomizer;
 import server.events.MapleEventType;
+import snail.DamageManage;
 import tools.MaplePacketCreator;
 import server.life.MapleLifeFactory;
 import server.life.MapleMonster;
@@ -42,11 +41,11 @@ import javax.script.Invocable;
 public class EventManager
 {
     private static int[] eventChannel;
-    private final Invocable iv;
-    private final int channel;
-    private final Map<String, EventInstanceManager> instances = new WeakHashMap<>();
-    private final Properties props = new Properties();
-    private final String name;
+    private Invocable iv;
+    private int channel;
+    private Map<String, EventInstanceManager> instances = new WeakHashMap<>();
+    private Properties props = new Properties();
+    private String name;
     private MapleClient c;
     
     public EventManager(final ChannelServer cserv, final Invocable iv, final String name) {
@@ -54,26 +53,23 @@ public class EventManager
         this.channel = cserv.getChannel();
         this.name = name;
     }
-    
+
     public void cancel() {
         try {
             this.iv.invokeFunction("cancelSchedule", new Object[] { null });
-            Iterator var1 = this.instances.entrySet().iterator();
-
-            while(var1.hasNext()) {
-                Map.Entry<String, EventInstanceManager> entry = (Map.Entry)var1.next();
-                if (entry.getValue() != null) {
-                    ((EventInstanceManager)entry.getValue()).dispose();
+            for (Map.Entry<String, EventInstanceManager> stringEventInstanceManagerEntry : this.instances.entrySet()) {
+                if (stringEventInstanceManagerEntry.getValue() != null) {
+                    ((EventInstanceManager)stringEventInstanceManagerEntry.getValue()).dispose();
                 }
             }
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : cancelSchedule:\n" + ex3);
+            System.err.println("Event name : " + this.name + ", method Name : cancelSchedule:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : cancelSchedule:\n" + (Object)ex3);
         }
     }
     
-    public ScheduledFuture<?> schedule(final String methodName, final long delay) {
+    public ScheduledFuture<?> schedule( String methodName,  long delay) {
         return EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
             public void run() {

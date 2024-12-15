@@ -171,8 +171,11 @@ public enum RecvPacketOpcode implements WritableIntValueHolder
     SPECIAL_ATTACK, 
     PET_IGNORE, 
     BEANS_OPERATION, 
-    LICENSE_REQUEST, 
-    ITEM_SUNZI, 
+    LICENSE_REQUEST,
+    PLAYER_UPDATE,
+    ITEM_SUNZI,
+    VICIOUS_HAMMER,
+    MOVE_DRAGON(202),
     BEANS_UPDATE;
     
     private short code;

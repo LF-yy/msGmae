@@ -15,22 +15,22 @@ import java.io.Serializable;
 
 public class MapleInventory implements Iterable<IItem>, Serializable
 {
-    private Map<Short, IItem> inventory;
-    private byte slotLimit;
-    private MapleInventoryType type;
-    
-    public MapleInventory(final MapleInventoryType type) {
-        this.slotLimit = 0;
-        this.inventory = new LinkedHashMap<Short, IItem>();
+    private final Map<Short, IItem> inventory = new LinkedHashMap<>();
+    private byte slotLimit = 0;
+    private final MapleInventoryType type;
+
+    public MapleInventory(MapleInventoryType type) {
         this.type = type;
     }
-    
-    public void addSlot(final byte slot) {
+
+    public void addSlot(byte slot) {
         this.slotLimit += slot;
         if (this.slotLimit > 96) {
             this.slotLimit = 96;
         }
+
     }
+
     
     public byte getSlotLimit() {
         return this.slotLimit;
@@ -179,6 +179,9 @@ public class MapleInventory implements Iterable<IItem>, Serializable
         if (item == null) {
             return;
         }
+        if(quantity<=0){
+            return;
+        }
         item.setQuantity((short)(item.getQuantity() - quantity));
         if (item.getQuantity() < 0) {
             item.setQuantity((short)0);
@@ -194,6 +197,9 @@ public class MapleInventory implements Iterable<IItem>, Serializable
     public void removeItem( short slot,  long quantity,  boolean allowZero, MapleCharacter chr) {
         final IItem item = (IItem)this.inventory.get((Object)Short.valueOf(slot));
         if (item == null) {
+            return;
+        }
+        if(quantity<=0){
             return;
         }
         item.setQuantity((short)(item.getQuantity() - (short) quantity));

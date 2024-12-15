@@ -294,7 +294,7 @@ public class HiredMerchantHandler
             return pack;
         }
         catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
             return null;
         }

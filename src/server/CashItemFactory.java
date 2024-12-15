@@ -152,7 +152,7 @@ public class CashItemFactory
             }
             catch (Exception e) {
                 FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
         return ret;
@@ -165,8 +165,11 @@ public class CashItemFactory
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM cashshop_modified_items");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                final Integer sn = Integer.valueOf(rs.getInt("serial"));
-                final CashModInfo ret = new CashModInfo((int)sn, rs.getInt("discount_price"), rs.getInt("mark"), rs.getInt("showup") > 0, rs.getInt("itemid"), rs.getInt("priority"), rs.getInt("package") > 0, rs.getInt("period"), rs.getInt("gender"), rs.getInt("count"), rs.getInt("meso"), rs.getInt("unk_1"), rs.getInt("unk_2"), rs.getInt("unk_3"), rs.getInt("extra_flags"), rs.getInt("mod"));
+                Integer sn = rs.getInt("serial");
+                CashItemInfo.CashModInfo ret = new CashItemInfo.CashModInfo(sn, rs.getInt("discount_price"), rs.getInt("mark"), rs.getInt("showup") > 0, rs.getInt("itemid"), rs.getInt("priority"), rs.getInt("package") > 0, rs.getInt("period"), rs.getInt("gender"), rs.getInt("count"), rs.getInt("meso"), rs.getInt("unk_1"), rs.getInt("unk_2"), rs.getInt("unk_3"), rs.getInt("extra_flags"), rs.getInt("mod"));
+                ret.setBuyMode(rs.getByte("buymode"));
+                ret.setStorage(rs.getInt("storage"));
+                ret.setDaily_storage(rs.getInt("daily_storage"));
                 this.itemMods.put(sn, ret);
                 this.itemIdToSn.put(Integer.valueOf(ret.itemid), sn);
             }
@@ -175,7 +178,7 @@ public class CashItemFactory
         }
         catch (Exception e) {
             FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
     

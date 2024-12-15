@@ -1,5 +1,6 @@
 package tools.packet;
 
+import constants.ServerConfig;
 import handling.SendPacketOpcode;
 import server.shops.AbstractPlayerStore;
 import server.shops.IMaplePlayerShop;
@@ -236,52 +237,143 @@ public class PacketHelper
         mplew.writeInt(chr.getMapId());
         mplew.write(chr.getInitialSpawnpoint());
     }
-    
-    public static void addCharLook(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr, final boolean mega) {
+
+    public static final void addCharLook(MaplePacketLittleEndianWriter mplew, MapleCharacter chr, boolean mega) {
         mplew.write(chr.getGender());
         mplew.write(chr.getSkinColor());
         mplew.writeInt(chr.getFace());
-        mplew.write((int)(mega ? 0 : 1));
+        mplew.write(mega ? 0 : 1);
         mplew.writeInt(chr.getHair());
-        final Map<Byte, Integer> myEquip = new LinkedHashMap<Byte, Integer>();
-        final Map<Byte, Integer> maskedEquip = new LinkedHashMap<Byte, Integer>();
-        final MapleInventory equip = chr.getInventory(MapleInventoryType.EQUIPPED);
-        for (final IItem item : equip.list()) {
-            if (item.getPosition() < -128) {
-                continue;
-            }
-            byte pos = (byte)(item.getPosition() * -1);
-            if (pos < 100 && myEquip.get((Object)Byte.valueOf(pos)) == null) {
-                myEquip.put(Byte.valueOf(pos), Integer.valueOf(item.getItemId()));
-            }
-            else if ((pos > 100 || pos == -128) && pos != 111) {
-                pos = (byte)((pos == -128) ? 28 : (pos - 100));
-                if (myEquip.get((Object)Byte.valueOf(pos)) != null) {
-                    maskedEquip.put(Byte.valueOf(pos), myEquip.get((Object)Byte.valueOf(pos)));
+        Map<Byte, Integer> myEquip = new LinkedHashMap();
+        Map<Byte, Integer> maskedEquip = new LinkedHashMap();
+        MapleInventory equip = chr.getInventory(MapleInventoryType.EQUIPPED);
+        Iterator var6 = equip.list().iterator();
+
+        while(true) {
+            while(true) {
+                IItem item;
+                do {
+                    if (!var6.hasNext()) {
+                        var6 = myEquip.entrySet().iterator();
+
+                        Map.Entry entry;
+                        while(var6.hasNext()) {
+                            entry = (Map.Entry)var6.next();
+                            mplew.write((Byte)entry.getKey());
+                            mplew.writeInt((Integer)entry.getValue());
+                        }
+
+                        mplew.write(255);
+                        var6 = maskedEquip.entrySet().iterator();
+
+                        while(var6.hasNext()) {
+                            entry = (Map.Entry)var6.next();
+                            mplew.write((Byte)entry.getKey());
+                            mplew.writeInt((Integer)entry.getValue());
+                        }
+
+                        mplew.write(255);
+                        IItem cWeapon = equip.getItem((short)-111);
+                        mplew.writeInt(cWeapon != null ? cWeapon.getItemId() : 0);
+                            mplew.writeInt(0);
+                            mplew.writeLong(0L);
+
+
+                        return;
+                    }
+
+                    item = (IItem)var6.next();
+                } while(item.getPosition() < -128);
+
+                byte pos = (byte)(item.getPosition() * -1);
+                if (pos < 100 && myEquip.get(pos) == null) {
+                    myEquip.put(pos, item.getItemId());
+                } else if ((pos > 100 || pos == -128) && pos != 111) {
+                    pos = (byte)(pos == -128 ? 28 : pos - 100);
+                    if (myEquip.get(pos) != null) {
+                        maskedEquip.put(pos, myEquip.get(pos));
+                    }
+
+                    myEquip.put(pos, item.getItemId());
+                } else if (myEquip.get(pos) != null) {
+                    maskedEquip.put(pos, item.getItemId());
                 }
-                myEquip.put(Byte.valueOf(pos), Integer.valueOf(item.getItemId()));
             }
-            else {
-                if (myEquip.get((Object)Byte.valueOf(pos)) == null) {
-                    continue;
+        }
+    }
+    public static  void addCharLook(MaplePacketLittleEndianWriter mplew, MapleCharacter chr, boolean mega, boolean showEquip) {
+        mplew.write(chr.getGender());
+        mplew.write(chr.getSkinColor());
+        mplew.writeInt(chr.getFace());
+        mplew.write(mega ? 0 : 1);
+        mplew.writeInt(chr.getHair());
+        Map<Byte, Integer> myEquip = new LinkedHashMap();
+        Map<Byte, Integer> maskedEquip = new LinkedHashMap();
+        MapleInventory equip = chr.getInventory(MapleInventoryType.EQUIPPED);
+        Iterator var7 = equip.list().iterator();
+
+        while(true) {
+            while(true) {
+                IItem item;
+                do {
+                    if (!var7.hasNext()) {
+                        var7 = myEquip.entrySet().iterator();
+
+                        Map.Entry entry;
+                        while(var7.hasNext()) {
+                            entry = (Map.Entry)var7.next();
+                            if (showEquip) {
+                                mplew.write((Byte)entry.getKey());
+                                mplew.writeInt((Integer)entry.getValue());
+                            } else if ((Byte)entry.getKey() == 11) {
+                                mplew.write((Byte)entry.getKey());
+                                mplew.writeInt((Integer)entry.getValue());
+                            }
+                        }
+
+                        mplew.write(255);
+                        var7 = maskedEquip.entrySet().iterator();
+
+                        while(var7.hasNext()) {
+                            entry = (Map.Entry)var7.next();
+                            mplew.write((Byte)entry.getKey());
+                            mplew.writeInt((Integer)entry.getValue());
+                        }
+
+                        mplew.write(255);
+                        if (showEquip) {
+                            IItem cWeapon = equip.getItem((short)-111);
+                            mplew.writeInt(cWeapon != null ? cWeapon.getItemId() : 0);
+                        } else {
+                            mplew.writeInt(0);
+                        }
+
+
+                            mplew.writeInt(0);
+                            mplew.writeLong(0L);
+
+
+                        return;
+                    }
+
+                    item = (IItem)var7.next();
+                } while(item.getPosition() < -128);
+
+                byte pos = (byte)(item.getPosition() * -1);
+                if (pos < 100 && myEquip.get(pos) == null) {
+                    myEquip.put(pos, item.getItemId());
+                } else if ((pos > 100 || pos == -128) && pos != 111) {
+                    pos = (byte)(pos == -128 ? 28 : pos - 100);
+                    if (myEquip.get(pos) != null) {
+                        maskedEquip.put(pos, myEquip.get(pos));
+                    }
+
+                    myEquip.put(pos, item.getItemId());
+                } else if (myEquip.get(pos) != null) {
+                    maskedEquip.put(pos, item.getItemId());
                 }
-                maskedEquip.put(Byte.valueOf(pos), Integer.valueOf(item.getItemId()));
             }
         }
-        for (final Entry<Byte, Integer> entry : myEquip.entrySet()) {
-            mplew.write((byte)Byte.valueOf(entry.getKey()));
-            mplew.writeInt((int)Integer.valueOf(entry.getValue()));
-        }
-        mplew.write(255);
-        for (final Entry<Byte, Integer> entry : maskedEquip.entrySet()) {
-            mplew.write((byte)Byte.valueOf(entry.getKey()));
-            mplew.writeInt((int)Integer.valueOf(entry.getValue()));
-        }
-        mplew.write(255);
-        final IItem cWeapon = equip.getItem((short)(-111));
-        mplew.writeInt((cWeapon != null) ? cWeapon.getItemId() : 0);
-        mplew.writeInt(0);
-        mplew.writeLong(0L);
     }
     
     public static void addExpirationTime(final MaplePacketLittleEndianWriter mplew, final long time) {

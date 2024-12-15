@@ -1,423 +1,468 @@
 package server;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ScheduledFuture;
-
 import client.MapleCharacter;
 import client.MapleClient;
 import handling.channel.ChannelServer;
 import handling.world.World.Find;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 import server.Timer.EtcTimer;
 import server.maps.MapleMap;
 import tools.MaplePacketCreator;
 import tools.Pair;
 
-public class MapleSquad
-{
+public class MapleSquad {
     private WeakReference<MapleCharacter> leader;
     private final String leaderName;
     private final String toSay;
-    private final Map<String, String> members;
-    private final Map<String, String> bannedMembers;
+    private final Map<String, String> members = new LinkedHashMap();
+    private final Map<String, String> bannedMembers = new LinkedHashMap();
     private final int ch;
     private final long startTime;
     private final int expiration;
     private final int beginMapId;
     private final MapleSquadType type;
-    private byte status;
+    private byte status = 0;
     private ScheduledFuture<?> removal;
     private MapleClient c;
-    
-    public MapleSquad(final int ch, final String type, final MapleCharacter leader, final int expiration, final String toSay) {
-        this.members = new LinkedHashMap<String, String>();
-        this.bannedMembers = new LinkedHashMap<String, String>();
-        this.status = 0;
-        this.leader = new WeakReference<MapleCharacter>(leader);
-        this.members.put(leader.getName(), MapleCarnivalChallenge.getJobNameById((int)leader.getJob()));
+
+    public MapleSquad(int ch, String type, MapleCharacter leader, int expiration, String toSay) {
+        this.leader = new WeakReference(leader);
+        this.members.put(leader.getName(), MapleCarnivalChallenge.getJobNameById(leader.getJob()));
         this.leaderName = leader.getName();
         this.ch = ch;
         this.toSay = toSay;
-        this.type = MapleSquadType.valueOf(type.toLowerCase());
+        this.type = MapleSquad.MapleSquadType.valueOf(type.toLowerCase());
         this.status = 1;
         this.beginMapId = leader.getMapId();
         leader.getMap().setSquad(this.type);
-        if (this.type.queue.get((Object)Integer.valueOf(ch)) == null) {
-            this.type.queue.put(Integer.valueOf(ch), new ArrayList<Pair<String, Long>>());
-            this.type.queuedPlayers.put(Integer.valueOf(ch), new ArrayList<Pair<String, String>>());
+        if (this.type.queue.get(ch) == null) {
+            this.type.queue.put(ch, new ArrayList());
+            this.type.queuedPlayers.put(ch, new ArrayList());
         }
+
         this.startTime = System.currentTimeMillis();
         this.expiration = expiration;
     }
-    
+
     public void copy() {
-        while (((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).size() > 0 && ChannelServer.getInstance(this.ch).getMapleSquad(this.type) == null) {
+        while(((ArrayList)this.type.queue.get(this.ch)).size() > 0 && ChannelServer.getInstance(this.ch).getMapleSquad(this.type) == null) {
             int index = 0;
             long lowest = 0L;
-            for (int i = 0; i < ((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).size(); ++i) {
-                if (lowest == 0L || (long)Long.valueOf(((Pair<String, Long>)((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).get(i)).right) < lowest) {
+
+            for(int i = 0; i < ((ArrayList)this.type.queue.get(this.ch)).size(); ++i) {
+                if (lowest == 0L || (Long)((Pair)((ArrayList)this.type.queue.get(this.ch)).get(i)).right < lowest) {
                     index = i;
-                    lowest = (long)Long.valueOf(((Pair<String, Long>)((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).get(i)).right);
+                    lowest = (Long)((Pair)((ArrayList)this.type.queue.get(this.ch)).get(i)).right;
                 }
             }
-            final String nextPlayerId = (String)((Pair<String, Long>)((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).remove(index)).left;
-            final int theirCh = Find.findChannel(nextPlayerId);
-            if (theirCh > 0) {
-                final MapleCharacter lead = ChannelServer.getInstance(theirCh).getPlayerStorage().getCharacterByName(nextPlayerId);
+
+            String nextPlayerId = (String)((Pair)((ArrayList)this.type.queue.get(this.ch)).remove(index)).left;
+            int theirCh = Find.findChannel(nextPlayerId);
+            if (theirCh <= 0) {
+                this.getBeginMap().broadcastMessage(MaplePacketCreator.serverNotice(6, nextPlayerId + "'远征队已经结束了，由于有成员没有在线上"));
+                ((ArrayList)this.type.queuedPlayers.get(this.ch)).add(new Pair(nextPlayerId, "没有上线"));
+            } else {
+                MapleCharacter lead = ChannelServer.getInstance(theirCh).getPlayerStorage().getCharacterByName(nextPlayerId);
                 if (lead != null && lead.getMapId() == this.beginMapId && lead.getClient().getChannel() == this.ch) {
-                    final MapleSquad squad = new MapleSquad(this.ch, this.type.name(), lead, this.expiration, this.toSay);
+                    MapleSquad squad = new MapleSquad(this.ch, this.type.name(), lead, this.expiration, this.toSay);
                     if (ChannelServer.getInstance(this.ch).addMapleSquad(squad, this.type.name())) {
                         this.getBeginMap().broadcastMessage(MaplePacketCreator.getClock(this.expiration / 1000));
                         this.getBeginMap().broadcastMessage(MaplePacketCreator.serverNotice(6, nextPlayerId + this.toSay));
-                        ((ArrayList<Pair<String, String>>)this.type.queuedPlayers.get((Object)Integer.valueOf(this.ch))).add(new Pair<String, String>(nextPlayerId, "成功"));
-                        break;
+                        ((ArrayList)this.type.queuedPlayers.get(this.ch)).add(new Pair(nextPlayerId, "成功"));
+                    } else {
+                        squad.clear();
+                        ((ArrayList)this.type.queuedPlayers.get(this.ch)).add(new Pair(nextPlayerId, "跳过"));
                     }
-                    squad.clear();
-                    ((ArrayList<Pair<String, String>>)this.type.queuedPlayers.get((Object)Integer.valueOf(this.ch))).add(new Pair<String, String>(nextPlayerId, "跳過"));
                     break;
                 }
-                else {
-                    if (lead != null) {
-                        lead.dropMessage(6, "遠征队已經結束了，由於沒有在正確的頻道裡。");
-                    }
-                    this.getBeginMap().broadcastMessage(MaplePacketCreator.serverNotice(6, nextPlayerId + "遠征队已經結束了，由於有成員沒有在地图內"));
-                    ((ArrayList<Pair<String, String>>)this.type.queuedPlayers.get((Object)Integer.valueOf(this.ch))).add(new Pair<String, String>(nextPlayerId, "不在地图內"));
+
+                if (lead != null) {
+                    lead.dropMessage(6, "远征队已经结束了，由于没有在正确的频道里。");
                 }
-            }
-            else {
-                this.getBeginMap().broadcastMessage(MaplePacketCreator.serverNotice(6, nextPlayerId + "'遠征队已經結束了，由於有成員沒有在線上"));
-                ((ArrayList<Pair<String, String>>)this.type.queuedPlayers.get((Object)Integer.valueOf(this.ch))).add(new Pair<String, String>(nextPlayerId, "沒有上線"));
+
+                this.getBeginMap().broadcastMessage(MaplePacketCreator.serverNotice(6, nextPlayerId + "远征队已经结束了，由于有成员没有在地图内"));
+                ((ArrayList)this.type.queuedPlayers.get(this.ch)).add(new Pair(nextPlayerId, "不在地图內"));
             }
         }
+
     }
-    
+
     public MapleMap getBeginMap() {
         return ChannelServer.getInstance(this.ch).getMapFactory().getMap(this.beginMapId);
     }
-    
+
     public void clear() {
         if (this.removal != null) {
             this.getBeginMap().broadcastMessage(MaplePacketCreator.stopClock());
             this.removal.cancel(false);
             this.removal = null;
         }
+
         this.members.clear();
         this.bannedMembers.clear();
         this.leader = null;
         ChannelServer.getInstance(this.ch).removeMapleSquad(this.type);
         this.status = 0;
     }
-    
-    public MapleCharacter getChar(final String name) {
+
+    public MapleCharacter getChar(String name) {
         return ChannelServer.getInstance(this.ch).getPlayerStorage().getCharacterByName(name);
     }
-    
+
     public long getTimeLeft() {
         return (long)this.expiration - (System.currentTimeMillis() - this.startTime);
     }
-    
+
     public void scheduleRemoval() {
-        this.removal = EtcTimer.getInstance().schedule((Runnable)new Runnable() {
-            @Override
+        this.removal = EtcTimer.getInstance().schedule(new Runnable() {
             public void run() {
-                if (status != 0 && leader != null && (MapleSquad.this.getLeader() == null || status == 1)) {
+                if (MapleSquad.this.status != 0 && MapleSquad.this.leader != null && (MapleSquad.this.getLeader() == null || MapleSquad.this.status == 1)) {
                     MapleSquad.this.clear();
                     MapleSquad.this.copy();
                 }
+
             }
         }, (long)this.expiration);
     }
-    
+
     public String getLeaderName() {
         return this.leaderName;
     }
-    
+
     public List<Pair<String, Long>> getAllNextPlayer() {
-        return (ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch));
+        return (List)this.type.queue.get(this.ch);
     }
-    
+
     public String getNextPlayer() {
-        final StringBuilder sb = new StringBuilder("\n排队成員 : ");
-        sb.append("#b").append(((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).size()).append(" #k ").append("與遠征队名單 : \n\r ");
+        StringBuilder sb = new StringBuilder("\n排队成员 : ");
+        sb.append("#b").append(((ArrayList)this.type.queue.get(this.ch)).size()).append(" #k ").append("与远征队名单 : \n\r ");
         int i = 0;
-        for (final Pair<String, Long> chr : (ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))) {
+        Iterator var3 = ((ArrayList)this.type.queue.get(this.ch)).iterator();
+
+        while(var3.hasNext()) {
+            Pair<String, Long> chr = (Pair)var3.next();
             ++i;
             sb.append(i).append(" : ").append((String)chr.left);
             sb.append(" \n\r ");
         }
-        sb.append("你是否想要 #e當下一個#n 在遠征队排队中\u3000或者 #e移除#n 在遠征队? 如果你想的話...");
+
+        sb.append("你是否想要 #e当下一个#n 在远征队排队中　或者 #e移除#n 在远征队? 如果你想的话...");
         return sb.toString();
     }
-    
-    public void setNextPlayer(final String i) {
+
+    public void setNextPlayer(String i) {
         Pair<String, Long> toRemove = null;
-        for (final Pair<String, Long> s : (ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))) {
-            if (((String)s.left).equals((Object)i)) {
+        Iterator var3 = ((ArrayList)this.type.queue.get(this.ch)).iterator();
+
+        while(var3.hasNext()) {
+            Pair<String, Long> s = (Pair)var3.next();
+            if (((String)s.left).equals(i)) {
                 toRemove = s;
                 break;
             }
         }
+
         if (toRemove != null) {
-            ((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).remove((Object)toRemove);
-            return;
-        }
-        for (final ArrayList<Pair<String, Long>> v : this.type.queue.values()) {
-            for (final Pair<String, Long> s2 : v) {
-                if (((String)s2.left).equals((Object)i)) {
-                    return;
+            ((ArrayList)this.type.queue.get(this.ch)).remove(toRemove);
+        } else {
+            var3 = this.type.queue.values().iterator();
+
+            while(var3.hasNext()) {
+                ArrayList<Pair<String, Long>> v = (ArrayList)var3.next();
+                Iterator var5 = v.iterator();
+
+                while(var5.hasNext()) {
+                    Pair<String, Long> s = (Pair)var5.next();
+                    if (((String)s.left).equals(i)) {
+                        return;
+                    }
                 }
             }
+
+            ((ArrayList)this.type.queue.get(this.ch)).add(new Pair(i, System.currentTimeMillis()));
         }
-        ((ArrayList<Pair<String, Long>>)this.type.queue.get((Object)Integer.valueOf(this.ch))).add(new Pair<String, Long>(i, Long.valueOf(System.currentTimeMillis())));
     }
-    
+
     public MapleCharacter getLeader() {
         if (this.leader == null || this.leader.get() == null) {
             if (this.members.size() <= 0 || this.getChar(this.leaderName) == null) {
                 if (this.status != 0) {
                     this.clear();
                 }
+
                 return null;
             }
-            this.leader = new WeakReference<MapleCharacter>(this.getChar(this.leaderName));
+
+            this.leader = new WeakReference(this.getChar(this.leaderName));
         }
+
         return (MapleCharacter)this.leader.get();
     }
-    
-    public boolean containsMember(final MapleCharacter member) {
-        for (final String mmbr : this.members.keySet()) {
-            if (mmbr.equalsIgnoreCase(member.getName())) {
-                return true;
+
+    public boolean containsMember(MapleCharacter member) {
+        Iterator var2 = this.members.keySet().iterator();
+
+        String mmbr;
+        do {
+            if (!var2.hasNext()) {
+                return false;
             }
-        }
-        return false;
+
+            mmbr = (String)var2.next();
+        } while(!mmbr.equalsIgnoreCase(member.getName()));
+
+        return true;
     }
-    
+
     public List<String> getMembers() {
-        return new LinkedList<String>((Collection<? extends String>)this.members.keySet());
+        return new LinkedList(this.members.keySet());
     }
-    
+
     public List<String> getBannedMembers() {
-        return new LinkedList<String>((Collection<? extends String>)this.bannedMembers.keySet());
+        return new LinkedList(this.bannedMembers.keySet());
     }
-    
+
     public int getSquadSize() {
         return this.members.size();
     }
-    
-    public boolean isBanned(final MapleCharacter member) {
-        return this.bannedMembers.containsKey((Object)member.getName());
+
+    public boolean isBanned(MapleCharacter member) {
+        return this.bannedMembers.containsKey(member.getName());
     }
-    
-    public int addMember(final MapleCharacter member, final boolean join) {
+
+    public int addMember(MapleCharacter member, boolean join) {
         if (this.getLeader() == null) {
             return -1;
-        }
-        final String job = MapleCarnivalChallenge.getJobNameById((int)member.getJob());
-        if (join) {
-            if (this.containsMember(member) || this.getAllNextPlayer().contains((Object)member.getName())) {
+        } else {
+            String job = MapleCarnivalChallenge.getJobNameById(member.getJob());
+            if (join) {
+                if (!this.containsMember(member) && !this.getAllNextPlayer().contains(member.getName())) {
+                    if (this.members.size() <= 30) {
+                        this.members.put(member.getName(), job);
+                        this.getLeader().dropMessage(6, member.getName() + " (" + job + ") 加入了远征队!");
+                        return 1;
+                    } else {
+                        return 2;
+                    }
+                } else {
+                    return -1;
+                }
+            } else if (this.containsMember(member)) {
+                this.members.remove(member.getName());
+                this.getLeader().dropMessage(6, member.getName() + " (" + job + ") 离开了远征队.");
+                return 1;
+            } else {
                 return -1;
             }
-            if (this.members.size() <= 30) {
-                this.members.put(member.getName(), job);
-                this.getLeader().dropMessage(6, member.getName() + " (" + job + ") 加入了遠征队!");
-                return 1;
-            }
-            return 2;
-        }
-        else {
-            if (this.containsMember(member)) {
-                this.members.remove((Object)member.getName());
-                this.getLeader().dropMessage(6, member.getName() + " (" + job + ") 離開了遠征队.");
-                return 1;
-            }
-            return -1;
         }
     }
-    
-    public void acceptMember(final int pos) {
-        if (pos < 0 || pos >= this.bannedMembers.size()) {
-            return;
-        }
-        final List<String> membersAsList = this.getBannedMembers();
-        final String toadd = (String)membersAsList.get(pos);
-        if (toadd != null && this.getChar(toadd) != null) {
-            this.members.put(toadd, this.bannedMembers.get((Object)toadd));
-            this.bannedMembers.remove((Object)toadd);
-            this.getChar(toadd).dropMessage(5, this.getLeaderName() + " 允許你重新回來遠征队");
+
+    public void acceptMember(int pos) {
+        if (pos >= 0 && pos < this.bannedMembers.size()) {
+            List<String> membersAsList = this.getBannedMembers();
+            String toadd = (String)membersAsList.get(pos);
+            if (toadd != null && this.getChar(toadd) != null) {
+                this.members.put(toadd, this.bannedMembers.get(toadd));
+                this.bannedMembers.remove(toadd);
+                this.getChar(toadd).dropMessage(5, this.getLeaderName() + " 允许你重新回来远征队");
+            }
+
         }
     }
-    
+
     public void reAddMember(MapleCharacter chr) {
         this.removeMember(chr);
-        this.members.put(chr.getName(), MapleCarnivalChallenge.getJobNameById((int)chr.getJob()));
+        this.members.put(chr.getName(), MapleCarnivalChallenge.getJobNameById(chr.getJob()));
     }
-    
+
     public void removeMember(MapleCharacter chr) {
-        if (this.members.containsKey((Object)chr.getName())) {
-            this.members.remove((Object)chr.getName());
+        if (this.members.containsKey(chr.getName())) {
+            this.members.remove(chr.getName());
+        }
+
+    }
+
+    public void removeMember(String chr) {
+        if (this.members.containsKey(chr)) {
+            this.members.remove(chr);
+        }
+
+    }
+
+    public void banMember(int pos) {
+        if (pos > 0 && pos < this.members.size()) {
+            List<String> membersAsList = this.getMembers();
+            String toban = (String)membersAsList.get(pos);
+            if (toban != null && this.getChar(toban) != null) {
+                this.bannedMembers.put(toban, this.members.get(toban));
+                this.members.remove(toban);
+                this.getChar(toban).dropMessage(5, this.getLeaderName() + " 从远征队中删除您.");
+            }
+
         }
     }
-    
-    public void removeMember(final String chr) {
-        if (this.members.containsKey((Object)chr)) {
-            this.members.remove((Object)chr);
-        }
-    }
-    
-    public void banMember(final int pos) {
-        if (pos <= 0 || pos >= this.members.size()) {
-            return;
-        }
-        final List<String> membersAsList = this.getMembers();
-        final String toban = (String)membersAsList.get(pos);
-        if (toban != null && this.getChar(toban) != null) {
-            this.bannedMembers.put(toban, this.members.get((Object)toban));
-            this.members.remove((Object)toban);
-            this.getChar(toban).dropMessage(5, this.getLeaderName() + " 從遠征队中刪除您.");
-        }
-    }
-    
-    public void setStatus(final byte status) {
+
+    public void setStatus(byte status) {
         this.status = status;
         if (status == 2 && this.removal != null) {
             this.removal.cancel(false);
             this.removal = null;
         }
+
     }
-    
+
     public int getStatus() {
         return this.status;
     }
-    
+
     public int getBannedMemberSize() {
         return this.bannedMembers.size();
     }
-    
-    public String getSquadMemberString(final byte type) {
+
+    public String getSquadMemberString(byte type) {
+        StringBuilder sb;
+        Iterator var4;
+        Map.Entry chr;
+        int i;
+        int selection;
+        Iterator var9;
         switch (type) {
-            case 0: {
-                final StringBuilder sb = new StringBuilder("目前遠征队總人數 : ");
-                sb.append("#b").append(this.members.size()).append(" #k ").append("\r\n遠征队名單 : \n\r ");
-                int i = 0;
-                for (final Entry<String, String> chr : this.members.entrySet()) {
+            case 0:
+                sb = new StringBuilder("目前远征队总人数 : ");
+                sb.append("#b").append(this.members.size()).append(" #k ").append("\r\n远征队名单 : \n\r ");
+                i = 0;
+                var4 = this.members.entrySet().iterator();
+
+                for(; var4.hasNext(); sb.append(" \n\r ")) {
+                    chr = (Map.Entry)var4.next();
                     ++i;
                     sb.append(i).append(" : ").append((String)chr.getKey()).append(" (").append((String)chr.getValue()).append(") ");
                     if (i == 1) {
-                        sb.append("(遠征队領袖)");
+                        sb.append("(远征队领袖)");
                     }
-                    sb.append(" \n\r ");
                 }
-                while (i < 30) {
+
+                while(i < 30) {
                     ++i;
                     sb.append(i).append(" : ").append(" \n\r ");
                 }
+
                 return sb.toString();
-            }
-            case 1: {
-                final StringBuilder sb = new StringBuilder("目前遠征队總人數 : ");
-                sb.append("#b").append(this.members.size()).append(" #k ").append("\r\n遠征队名單 : \n\r ");
-                int i = 0;
-                int selection = 0;
-                for (final Entry<String, String> chr2 : this.members.entrySet()) {
+            case 1:
+                sb = new StringBuilder("目前远征队总人数 : ");
+                sb.append("#b").append(this.members.size()).append(" #k ").append("\r\n远征队名单 : \n\r ");
+                i = 0;
+                selection = 0;
+
+                for(var9 = this.members.entrySet().iterator(); var9.hasNext(); sb.append("#l").append(" \n\r ")) {
+                    chr = (Map.Entry)var9.next();
                     ++i;
                     sb.append("#b#L").append(selection).append("#");
                     ++selection;
-                    sb.append(i).append(" : ").append((String)chr2.getKey()).append(" (").append((String)chr2.getValue()).append(") ");
+                    sb.append(i).append(" : ").append((String)chr.getKey()).append(" (").append((String)chr.getValue()).append(") ");
                     if (i == 1) {
-                        sb.append("(遠征队領袖)");
+                        sb.append("(远征队领袖)");
                     }
-                    sb.append("#l").append(" \n\r ");
                 }
-                while (i < 30) {
+
+                while(i < 30) {
                     ++i;
                     sb.append(i).append(" : ").append(" \n\r ");
                 }
+
                 return sb.toString();
-            }
-            case 2: {
-                final StringBuilder sb = new StringBuilder("目前遠征队總人數 : ");
-                sb.append("#b").append(this.members.size()).append(" #k ").append("\r\n遠征队名單 : \n\r ");
-                int i = 0;
-                int selection = 0;
-                for (final Entry<String, String> chr2 : this.bannedMembers.entrySet()) {
+            case 2:
+                sb = new StringBuilder("目前远征队总人数 : ");
+                sb.append("#b").append(this.members.size()).append(" #k ").append("\r\n远征队名单 : \n\r ");
+                i = 0;
+                selection = 0;
+                var9 = this.bannedMembers.entrySet().iterator();
+
+                while(var9.hasNext()) {
+                    chr = (Map.Entry)var9.next();
                     ++i;
                     sb.append("#b#L").append(selection).append("#");
                     ++selection;
-                    sb.append(i).append(" : ").append((String)chr2.getKey()).append(" (").append((String)chr2.getValue()).append(") ");
+                    sb.append(i).append(" : ").append((String)chr.getKey()).append(" (").append((String)chr.getValue()).append(") ");
                     sb.append("#l").append(" \n\r ");
                 }
-                while (i < 30) {
+
+                while(i < 30) {
                     ++i;
                     sb.append(i).append(" : ").append(" \n\r ");
                 }
+
                 return sb.toString();
-            }
-            case 3: {
-                final StringBuilder sb = new StringBuilder("职业 : ");
-                final Map<String, Integer> jobs = this.getJobs();
-                for (final Entry<String, Integer> chr3 : jobs.entrySet()) {
-                    sb.append("\r\n").append((String)chr3.getKey()).append(" : ").append((Object)chr3.getValue());
+            case 3:
+                sb = new StringBuilder("职业 : ");
+                Map<String, Integer> jobs = this.getJobs();
+                var4 = jobs.entrySet().iterator();
+
+                while(var4.hasNext()) {
+                    chr = (Map.Entry)var4.next();
+                    sb.append("\r\n").append((String)chr.getKey()).append(" : ").append(chr.getValue());
                 }
+
                 return sb.toString();
-            }
-            default: {
+            default:
                 return null;
-            }
         }
     }
-    
+
     public final MapleSquadType getType() {
         return this.type;
     }
-    
+
     public final Map<String, Integer> getJobs() {
-        final Map<String, Integer> jobs = new LinkedHashMap<String, Integer>();
-        for (final Entry<String, String> chr : this.members.entrySet()) {
-            if (jobs.containsKey((Object)chr.getValue())) {
-                jobs.put(chr.getValue(), Integer.valueOf((int)Integer.valueOf(jobs.get((Object)chr.getValue())) + 1));
-            }
-            else {
-                jobs.put(chr.getValue(), Integer.valueOf(1));
+        Map<String, Integer> jobs = new LinkedHashMap();
+        Iterator var2 = this.members.entrySet().iterator();
+
+        while(var2.hasNext()) {
+            Map.Entry<String, String> chr = (Map.Entry)var2.next();
+            if (jobs.containsKey(chr.getValue())) {
+                jobs.put(chr.getValue(), (Integer)jobs.get(chr.getValue()) + 1);
+            } else {
+                jobs.put(chr.getValue(), 1);
             }
         }
+
         return jobs;
     }
-    
-    public enum MapleSquadType
-    {
-        bossbalrog(2), 
-        zak(2), 
-        chaoszak(3), 
-        horntail(2), 
-        chaosht(3), 
-        pinkbean(3), 
-        nmm_squad(2), 
-        vergamot(2), 
-        dunas(2), 
-        nibergen_squad(2), 
-        dunas2(2), 
-        core_blaze(2), 
-        aufheben(2), 
-        cwkpq(10), 
-        vonleon(3), 
-        scartar(2), 
-        cygnus(3);
-        
+
+    public static enum MapleSquadType {
+        bossbalrog(2),
+        zak(2),
+        chaoszak(3),
+        dragon(2),
+        horntail(2),
+        chaosht(3),
+        pinkbean(3),
+        nmm_squad(2),
+        vergamot(2),
+        dunas(2),
+        nibergen_squad(2),
+        dunas2(2),
+        core_blaze(2),
+        aufheben(2),
+        cwkpq(10),
+        vonleon(3),
+        scartar(2),
+        cygnus(3),
+        blackmage(2);
+
         public int i;
-        public HashMap<Integer, ArrayList<Pair<String, String>>> queuedPlayers;
-        public HashMap<Integer, ArrayList<Pair<String, Long>>> queue;
-        
-        private MapleSquadType(final int i) {
-            this.queuedPlayers = new HashMap<Integer, ArrayList<Pair<String, String>>>();
-            this.queue = new HashMap<Integer, ArrayList<Pair<String, Long>>>();
+        public HashMap<Integer, ArrayList<Pair<String, String>>> queuedPlayers = new HashMap();
+        public HashMap<Integer, ArrayList<Pair<String, Long>>> queue = new HashMap();
+
+        private MapleSquadType(int i) {
             this.i = i;
         }
     }

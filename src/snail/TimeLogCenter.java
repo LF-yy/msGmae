@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package server.lt;
+package snail;
 
 import database.DBConPool;
 import gui.服务端输出信息;
@@ -171,7 +171,7 @@ public class TimeLogCenter {
 
     public int getBossLog(int chrId, String bossId) {
         int count = 0;
-        ArrayList<BossLog> bossLogList0 = new ArrayList(bossLogList);
+        ArrayList<BossLog> bossLogList0 = new ArrayList<>(bossLogList);
         Iterator var5 = bossLogList0.iterator();
 
         while(var5.hasNext()) {
@@ -856,18 +856,13 @@ public class TimeLogCenter {
 
     public int getOneTimeLog(int chrId, String logName) {
         int count = 0;
-        ArrayList<OneTimeLog> oneTimeLogList0 = new ArrayList(oneTimeLogList);
-        Iterator var5 = oneTimeLogList0.iterator();
 
-        while(var5.hasNext()) {
-            OneTimeLog oneTimeLog = (OneTimeLog)var5.next();
+        for (OneTimeLog oneTimeLog : oneTimeLogList) {
             if (oneTimeLog != null && oneTimeLog.getChrId() == chrId && oneTimeLog.getLogName().equals(logName)) {
                 count = oneTimeLog.getCount();
                 break;
             }
         }
-
-        oneTimeLogList0.clear();
         return count;
     }
 
@@ -877,10 +872,7 @@ public class TimeLogCenter {
 
     public void setOneTimeLog(final int chrId, final String logName, final int count) {
         boolean find = false;
-        Iterator var5 = oneTimeLogList.iterator();
-
-        while(var5.hasNext()) {
-            OneTimeLog log = (OneTimeLog)var5.next();
+        for (OneTimeLog log : oneTimeLogList) {
             if (log != null && log.getChrId() == chrId && log.getLogName().equals(logName)) {
                 log.setCount(log.getCount() + count);
                 find = true;

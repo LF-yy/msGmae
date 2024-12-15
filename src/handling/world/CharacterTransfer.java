@@ -4,21 +4,21 @@ import java.io.ObjectOutput;
 import java.io.IOException;
 import java.io.ObjectInput;
 import client.inventory.MapleMount;
-import java.util.Iterator;
+
+import java.util.*;
+
 import client.inventory.MaplePet;
 import client.ISkill;
 import client.MapleQuestStatus;
-import server.bean.SkillSkin;
+import snail.MonsterKillQuest;
+import snail.SkillSkin;
 import server.quest.MapleQuest;
 import java.util.Map.Entry;
 import client.MapleCharacter;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import client.SkillEntry;
 import client.BuddyEntry;
-import java.util.List;
 import tools.Pair;
-import java.util.Map;
+
 import java.io.Externalizable;
 
 public class CharacterTransfer implements Externalizable
@@ -115,12 +115,8 @@ public class CharacterTransfer implements Externalizable
     public byte[] petStore;
     public Map<Integer, Integer> mbook;
     public Map<Integer, Pair<Byte, Integer>> keymap;
-    public final List<Integer> finishedAchievements;
-    public final List<Integer> famedcharacters;
-    public final Map<BuddyEntry, Boolean> buddies;
-    public final Map<Integer, Object> Quest;
+
     public Map<Integer, String> InfoQuest;
-    public final Map<Integer, SkillEntry> Skills;
     public boolean 精灵商人购买开关;
     public boolean 玩家私聊开关;
     public boolean 玩家密语开关;
@@ -158,7 +154,38 @@ public class CharacterTransfer implements Externalizable
     public long max_damage;
     public boolean backupInventory;
     public SkillSkin skillSkin;
-    public ArrayList<Integer> dropItemFilterList = new ArrayList();
+    public ArrayList<Integer> dropItemFilterList;
+    public boolean isShowChair;
+    public boolean isShowEquip;
+    public int todayOnlineTime;
+    public int totalOnlineTime;
+    public boolean superTransformation;
+    public int cloneDamagePercentage;
+    public boolean fake;
+    public int fakeOwnerId;
+    public TreeMap<Integer, MonsterKillQuest> monsterKillQuestMap ;
+    public ArrayList<Integer> sellWhenPickUpItemList ;
+    public List<Integer> finishedAchievements;
+    public List<Integer> famedcharacters;
+    public Map<BuddyEntry, Boolean> buddies;
+    public Map<Integer, Object> Quest;
+    public Map<Integer, SkillEntry> Skills;
+    public long exp_reserve;
+    public boolean showSkill ;
+    public boolean dropOnMyFoot ;
+    public boolean dropOnMyBag ;
+    public int mountId ;
+    public int tamingMobId;
+    public int tamingMobItemId ;
+    public byte imprison;
+    public int[] cloneDamageRateList ;
+    public int guildPoints;
+    public int stage;
+    public int breakLevel;
+    public float expRateChr ;
+    public float mesoRateChr ;
+    public float dropRateChr ;
+    public ArrayList<Integer> mountList;
     public CharacterTransfer() {
         this.mbook = new LinkedHashMap<Integer, Integer>();
         this.keymap = new LinkedHashMap<Integer, Pair<Byte, Integer>>();
@@ -283,8 +310,34 @@ public class CharacterTransfer implements Externalizable
         this.PGSXDJ = chr.getPGSXDJ();
         this.backupInventory = chr.getBackupInventory();
         this.max_damage = chr.读取伤害上限值();
+        this.isShowChair = chr.isShowChair();
+        this.isShowEquip = chr.isShowEquip();
         this.skillSkin = chr.getSkillSkin();
         this.dropItemFilterList = chr.getDropItemFilterList();
+        this.superTransformation = chr.getSuperTransformation();
+        this.cloneDamagePercentage = chr.getCloneDamagePercentage();
+        this.exp_reserve = chr.getexpression();
+        this.showSkill = chr.isShowSkill();
+        this.dropOnMyFoot  = chr.isDropOnMyFoot();
+        this.dropOnMyBag  = chr.isDropOnMyBag();
+        this.mountId  = chr.getMountId();
+        this.tamingMobId  = chr.getTamingMobId();
+        this.tamingMobItemId = chr.getTamingMobItemId();
+        this.imprison = chr.getImprison();
+        this.cloneDamageRateList  = chr.getCloneDamageRateList() ;
+        this.guildPoints = chr.getGuildPoints();
+        this.stage = chr.getStage();
+        this.breakLevel = chr.getBreakLevel();
+        this.monsterKillQuestMap = chr.getMonsterKillQuestMap();
+        this.dropItemFilterList = chr.getDropItemFilterList();
+        this.sellWhenPickUpItemList = chr.getSellWhenPickUpItemList();
+        this.expRateChr  = chr.getExpRateChr();
+        this.mesoRateChr  = chr.getMesoRateChr();
+        this.dropRateChr  = chr.getDropRateChr();
+
+
+
+
         boolean uneq = false;
         for (int i = 0; i < this.petStore.length; ++i) {
             final MaplePet pet = chr.getPet(i);
@@ -336,12 +389,14 @@ public class CharacterTransfer implements Externalizable
         this.lastfametime = chr.getLastFameTime();
         this.storage = chr.getStorage();
         this.cs = chr.getCashInventory();
-        final MapleMount mount = chr.getMount();
+         MapleMount mount = chr.getMount();
         this.mount_itemid = mount.getItemId();
         this.mount_Fatigue = mount.getFatigue();
         this.mount_level = mount.getLevel();
         this.mount_exp = mount.getExp();
         this.TranferTime = System.currentTimeMillis();
+
+        this.mountList = chr.getMountList();
     }
 
     @Override
@@ -477,6 +532,14 @@ public class CharacterTransfer implements Externalizable
         this.battleshipHP = in.readInt();
         this.prefix = in.readUTF();
         this.gachexp = in.readInt();
+        this.isShowChair = in.readBoolean();
+        this.isShowEquip = in.readBoolean();
+
+        this.mountId = in.readInt();
+        this.imprison = in.readByte();
+        this.backupInventory = in.readBoolean();
+
+
         for (int mbooksize = in.readShort(), j = 0; j < mbooksize; ++j) {
             this.mbook.put(Integer.valueOf(in.readInt()), Integer.valueOf(in.readInt()));
         }

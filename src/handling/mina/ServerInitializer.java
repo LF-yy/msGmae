@@ -1,6 +1,6 @@
 package handling.mina;
 
-import io.netty.channel.Channel;
+
 import io.netty.channel.ChannelPipeline;
 import handling.MapleServerHandler;
 import io.netty.handler.timeout.IdleStateHandler;

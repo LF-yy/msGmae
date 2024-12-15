@@ -187,7 +187,7 @@ public class 代码查询工具 extends JFrame
             UIManager.setLookAndFeel((LookAndFeel)new SubstanceBusinessBlackSteelLookAndFeel());
         }
         catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         EventQueue.invokeLater((Runnable)new Runnable() {
             @Override

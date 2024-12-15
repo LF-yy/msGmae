@@ -18,6 +18,7 @@ import provider.MapleDataTool;
 import scripting.NPCConversationManager;
 import server.MapleItemInformationProvider;
 import server.Start;
+import tools.MaplePacketCreator;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -3563,6 +3564,9 @@ public class 账号管理工具 extends javax.swing.JFrame {
                 return;
             }
             try {
+                if (Start.gatEwayAccountExists(account)){
+                    Start.addEwayAccount(account);
+                }
                 PreparedStatement ps = con.prepareStatement("INSERT INTO accounts (name, password) VALUES (?,?)");
                 ps.setString(1, account);
                 ps.setString(2, LoginCrypto.hexSha1(password));

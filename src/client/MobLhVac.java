@@ -33,6 +33,11 @@ public class MobLhVac extends Thread{
 
     @Override
     public synchronized void run() {
+
+
+
+
+
        int userId = c.getPlayer().getId();
         final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
         try {

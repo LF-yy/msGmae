@@ -385,10 +385,13 @@ public class ServerConfig
         ServerConfig.BeiShu1 = ServerProperties.getProperty("LtMS.BeiShu1", ServerConfig.BeiShu1);
         ServerConfig.BeiShu2 = ServerProperties.getProperty("LtMS.BeiShu2", ServerConfig.BeiShu2);
         ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
-        ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
         ServerConfig.IP =  ServerProperties.getProperty("LtMS.ip.listen", Game.IP地址);
         ServerConfig.userlimit =  ServerProperties.getProperty("LtMS.userlimit", 2);
-
+       // GameConstants.loadBanChannelList();
+        GameConstants.loadBanMultiMobRateList();
+        //GameConstants.loadMarketGainPointChannelList();
+        GameConstants.loadFishingChannelList();
+      //  GameConstants.loadCharacterExpMapFromDB();
         //ServerConfig.IP =  "101.34.216.55";
     }
     

@@ -14,7 +14,6 @@ import client.inventory.IItem;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import client.MapleCharacter;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
 import constants.ServerConstants;
@@ -768,6 +767,14 @@ public class MTSCSPacket
         mplew.write(type.getType());
         mplew.writeShort(item.getPosition());
         PacketHelper.addItemInfo(mplew, item);
+        return mplew.getPacket();
+    }
+
+    public static byte[] ViciousHammerM(byte a, int b) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(SendPacketOpcode.VICIOUS_HAMMER.getValue());
+        mplew.write(a);
+        mplew.writeInt(b);
         return mplew.getPacket();
     }
 }

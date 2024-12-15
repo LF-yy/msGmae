@@ -46,7 +46,7 @@ public class BossRankManager3
             }
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             try {
                 if (rs != null) {
                     rs.close();
@@ -95,7 +95,7 @@ public class BossRankManager3
             }
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             try {
                 if (rs != null) {
                     rs.close();
@@ -179,7 +179,7 @@ public class BossRankManager3
             ps.close();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             if (ps != null) {
                 try {
                     ps.close();
@@ -217,7 +217,7 @@ public class BossRankManager3
             ps.executeUpdate();
         }
         catch (Exception Ex) {
-            Ex.printStackTrace();
+            //Ex.printStackTrace();
             if (ps != null) {
                 try {
                     ps.close();
@@ -272,7 +272,7 @@ public class BossRankManager3
             }
         }
         catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             try {
                 if (rs != null) {
                     rs.close();

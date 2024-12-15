@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="ltMs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/ltMs.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

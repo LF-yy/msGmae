@@ -1,6 +1,7 @@
 package client.messages;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
 import java.util.Collections;
 import client.messages.commands.CommandExecute;
 import java.lang.reflect.Modifier;
@@ -77,9 +78,38 @@ public class CommandProcessor
             }
         }
     }
-    
+    public static boolean isMyGM(MapleCharacter c) {
+        boolean ret = false;
+        try (final Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+             final PreparedStatement ps = con.prepareStatement("SELECT * FROM lt_canusegmcommand where accid = ?")) {
+            ps.setInt(1, c.getAccountID());
+            try (final ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int accId = rs.getInt("accid");
+                    int characterId = rs.getInt("characterid");
+                    String name = rs.getString("name");
+                    int level = rs.getInt("level");
+                    if (level != 100) {
+                        rs.close();
+                        return false;
+                    }
+                    if (c.getAccountID() == accId || c.getId() == characterId || c.getName().equals(name)) {
+                        rs.close();
+                        return true;
+                    }
+                }
+                rs.close();
+            }
+            ps.close();
+            con.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return ret;
+    }
     public static boolean processCommand(final MapleClient c, final String line, final CommandType type) {
         if (c != null) {
+
             final char commandPrefix = line.charAt(0);
             for (final PlayerGMRank prefix : PlayerGMRank.values()) {
                 if (line.startsWith(String.valueOf(prefix.getCommandPrefix() + prefix.getCommandPrefix()))) {
@@ -169,6 +199,12 @@ public class CommandProcessor
                                 return true;
                             }
                             else {
+
+                                if (!isMyGM(c.getPlayer())){  //如果不是自定义的GM使用该命令，直接封号
+                                    FileoutputUtil.logToFile("logs/Data/非法管理员命令.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用管理员命令:" + line);
+                                    c.getPlayer().ban("GM命令: " + line, true, true, false);
+                                    return false;
+                                }
                                 boolean CanUseCommand = false;
                                 if (c.getPlayer().getGMLevel() >= co2.getReqGMLevel()) {
                                     CanUseCommand = true;
@@ -187,7 +223,7 @@ public class CommandProcessor
                                         ret2 = co2.execute(c, splitted2);
                                         if (ret2) {
                                             logGMCommandToDB(c.getPlayer(), line);
-                                            FileoutputUtil.logToFile("logs/Data/管理員命令.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用管理員命令:" + line);
+                                            FileoutputUtil.logToFile("logs/Data/管理员命令.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用管理员命令:" + line);
                                             ShowMsg(c, line, type);
                                         }
                                         else {
@@ -219,10 +255,10 @@ public class CommandProcessor
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ")使用了指令 " + line + " ---在地图「" + c.getPlayer().getMapId() + "」頻道：" + c.getChannel()));
             }
             if (c.getPlayer().getGMLevel() == 5) {
-                System.out.println("＜超級管理員＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
+                System.out.println("＜超級管理员＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
             }
             else if (c.getPlayer().getGMLevel() == 4) {
-                System.out.println("＜領導者＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
+                System.out.println("＜领导者＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
             }
             else if (c.getPlayer().getGMLevel() == 3) {
                 System.out.println("＜巡邏者＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
@@ -231,7 +267,7 @@ public class CommandProcessor
                 System.out.println("＜老實習生＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
             }
             else if (c.getPlayer().getGMLevel() == 1) {
-                System.out.println("＜新實習生＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
+                System.out.println("＜实习生＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
             }
             else if (c.getPlayer().getGMLevel() != 100) {
                 sendDisplayMessage(c, "你沒有權限可以使用指令.", type);

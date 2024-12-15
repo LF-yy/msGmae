@@ -50,19 +50,19 @@ public class XMLDomMapleData implements MapleData, Serializable
     }
     
     @Override
-    public MapleData getChildByPath(final String path) {
-        final String[] segments = path.split("/");
+    public MapleData getChildByPath( String path) {
+         String[] segments = path.split("/");
         if (segments[0].equals((Object)"..")) {
             return ((MapleData)this.getParent()).getChildByPath(path.substring(path.indexOf("/") + 1));
         }
         Node myNode = this.node;
         for (int x = 0; x < segments.length; ++x) {
-            final NodeList childNodes = myNode.getChildNodes();
+             NodeList childNodes = myNode.getChildNodes();
             boolean foundChild = false;
             if (childNodes != null) {
                 for (int i = 0; i < childNodes.getLength(); ++i) {
                     try {
-                        final Node childNode = childNodes.item(i);
+                         Node childNode = childNodes.item(i);
                         if (childNode != null && childNode.getNodeType() == 1 && childNode.getAttributes().getNamedItem("name").getNodeValue().equals((Object)segments[x])) {
                             myNode = childNode;
                             foundChild = true;
@@ -78,7 +78,7 @@ public class XMLDomMapleData implements MapleData, Serializable
                 return null;
             }
         }
-        final XMLDomMapleData ret = new XMLDomMapleData(myNode);
+         XMLDomMapleData ret = new XMLDomMapleData(myNode);
         ret.imageDataDir = new File(this.imageDataDir, this.getName() + "/" + path).getParentFile();
         return ret;
     }

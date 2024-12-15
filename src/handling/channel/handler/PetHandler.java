@@ -8,7 +8,6 @@ import client.inventory.MaplePet.PetFlag;
 import handling.world.MaplePartyCharacter;
 import java.util.LinkedList;
 import server.maps.MapleMapItem;
-import java.util.Iterator;
 import client.inventory.PetCommand;
 import client.inventory.MaplePet;
 import constants.GameConstants;

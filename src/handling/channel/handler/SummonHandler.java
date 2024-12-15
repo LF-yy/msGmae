@@ -2,6 +2,7 @@ package handling.channel.handler;
 
 import server.MapleStatEffect;
 import client.ISkill;
+import server.Timer;
 import server.life.MapleMonster;
 import client.SummonSkillEntry;
 import server.maps.MapleMap;
@@ -11,6 +12,8 @@ import tools.packet.MobPacket;
 import server.life.MobSkill;
 import client.status.MonsterStatusEffect;
 import client.status.MonsterStatus;
+
+import java.lang.ref.WeakReference;
 import java.util.Map.Entry;
 import java.awt.geom.Point2D;
 import server.life.SummonAttackEntry;
@@ -68,7 +71,7 @@ public class SummonHandler
             }
         }
     }
-    
+    //召唤兽攻击
     public static void SummonAttack(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         if (chr == null || !chr.isAlive()) {
             return;
@@ -94,10 +97,10 @@ public class SummonHandler
         final byte animation = slea.readByte();
         slea.skip(8);
         final byte numAttacked = slea.readByte();
-        if (numAttacked > sse.mobCount) {
-            chr.getCheatTracker().registerOffense(CheatingOffense.SUMMON_HACK_MOBS);
-            return;
-        }
+//        if (numAttacked > sse.mobCount) {
+//            chr.getCheatTracker().registerOffense(CheatingOffense.SUMMON_HACK_MOBS);
+//            return;
+//        }
         final List<SummonAttackEntry> allDamage = new ArrayList<SummonAttackEntry>();
         chr.getCheatTracker().checkSummonAttack();
         for (int i = 0; i < numAttacked; ++i) {
@@ -148,4 +151,6 @@ public class SummonHandler
             chr.cancelEffectFromBuffStat(MapleBuffStat.SUMMON);
         }
     }
+
+
 }

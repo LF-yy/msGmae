@@ -1,5 +1,6 @@
 package server;
 
+import gui.服务端输出信息;
 import tools.MaplePacketCreator;
 import java.util.Comparator;
 import client.MapleClient;
@@ -45,7 +46,56 @@ public class MapleStorage implements Serializable
         this.meso = meso;
         this.accountId = accountId;
     }
-    
+    public static int create(int id, Connection con) throws SQLException {
+        ResultSet rs;
+        try {
+            label100: {
+                PreparedStatement ps = con.prepareStatement("INSERT INTO storages (accountid, slots, meso) VALUES (?, ?, ?)", 1);
+                Throwable var4 = null;
+
+                int var6;
+                try {
+                    ps.setInt(1, id);
+                    ps.setInt(2, 4);
+                    ps.setInt(3, 0);
+                    ps.executeUpdate();
+                    rs = ps.getGeneratedKeys();
+                    if (!rs.next()) {
+                        break label100;
+                    }
+
+                    int storageid = rs.getInt(1);
+                    ps.close();
+                    rs.close();
+                    var6 = storageid;
+                } catch (Throwable var17) {
+                    var4 = var17;
+                    throw var17;
+                } finally {
+                    if (ps != null) {
+                        if (var4 != null) {
+                            try {
+                                ps.close();
+                            } catch (Throwable var16) {
+                                var4.addSuppressed(var16);
+                            }
+                        } else {
+                            ps.close();
+                        }
+                    }
+
+                }
+
+                return var6;
+            }
+        } catch (SQLException var19) {
+            FileoutputUtil.outError("logs/资料库异常.txt", var19);
+            throw new DatabaseException("Inserting char failed.");
+        }
+
+        rs.close();
+        throw new DatabaseException("Inserting char failed.");
+    }
     public static int create(final int id) throws SQLException {
         ResultSet rs;
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
@@ -69,7 +119,38 @@ public class MapleStorage implements Serializable
         rs.close();
         throw new DatabaseException("Inserting char failed.");
     }
-    
+    public static MapleStorage loadStorage(int id, Connection con) {
+        MapleStorage ret = null;
+
+        try {
+            PreparedStatement ps = con.prepareStatement("SELECT * FROM storages WHERE accountid = ?");
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            int storeId;
+            if (rs.next()) {
+                storeId = rs.getInt("storageid");
+                ret = new MapleStorage(storeId, rs.getByte("slots"), rs.getInt("meso"), id);
+                rs.close();
+                ps.close();
+                Iterator var6 = ItemLoader.STORAGE.loadItems(false, new Integer[]{id}).values().iterator();
+
+                while(var6.hasNext()) {
+                    Pair<IItem, MapleInventoryType> mit = (Pair)var6.next();
+                    ret.items.add(mit.getLeft());
+                }
+            } else {
+                storeId = create(id, con);
+                ret = new MapleStorage(storeId, (byte)4, 0, id);
+                rs.close();
+                ps.close();
+            }
+        } catch (SQLException var8) {
+            服务端输出信息.println_err("Error loading storage" + var8);
+            FileoutputUtil.outError("logs/资料库异常.txt", var8);
+        }
+
+        return ret;
+    }
     public static MapleStorage loadStorage(final int id) {
         MapleStorage ret = null;
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
@@ -201,13 +282,13 @@ public class MapleStorage implements Serializable
         }
         c.sendPacket(MaplePacketCreator.getStorage(npcId, this.slots, (Collection<IItem>)this.items, this.meso));
     }
-    
-    public void sendStored(final MapleClient c, final MapleInventoryType type) {
-        c.sendPacket(MaplePacketCreator.storeStorage(this.slots, type, (Collection<IItem>)(List<IItem>)this.typeItems.get((Object)type)));
+
+    public void sendStored(MapleClient c, MapleInventoryType type) {
+        c.sendPacket(MaplePacketCreator.storeStorage(this.slots, type, (Collection)this.typeItems.get(type)));
     }
-    
-    public void sendTakenOut(final MapleClient c, final MapleInventoryType type) {
-        c.sendPacket(MaplePacketCreator.takeOutStorage(this.slots, type, (Collection<IItem>)(List<IItem>)this.typeItems.get((Object)type)));
+
+    public void sendTakenOut(MapleClient c, MapleInventoryType type) {
+        c.sendPacket(MaplePacketCreator.takeOutStorage(this.slots, type, (Collection)this.typeItems.get(type)));
     }
     
     public int getMeso() {

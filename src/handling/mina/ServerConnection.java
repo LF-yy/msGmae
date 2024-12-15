@@ -45,7 +45,7 @@ public class ServerConnection
                 this.channel = this.boot.bind(this.port).sync().channel().closeFuture().channel();
             }
             catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
         catch (Exception e2) {

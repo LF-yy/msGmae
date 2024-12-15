@@ -24,7 +24,7 @@ public class StringTools {
         try {
             return byte2hex(encrypt(password.getBytes(), PASSWORD_CRYPT_KEY.getBytes()));
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return null;
     }
@@ -53,7 +53,7 @@ public class StringTools {
         try {
             return new String(decrypt(hex2byte(data.getBytes()), PASSWORD_CRYPT_KEY.getBytes()));
         } catch (Exception e) {
-          e.printStackTrace();
+          //e.printStackTrace();
         }
         return null;
     }

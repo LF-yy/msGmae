@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package server.bean;
+package snail;
 
 import client.ISkill;
 import client.MapleCharacter;
@@ -389,15 +389,11 @@ public class SkillSkin {
     }
 
     public void setChrSkillTypeAll(int skillType) {
-        Iterator var2 = skillId.iterator();
-
-        while(var2.hasNext()) {
-            int skId = (Integer)var2.next();
-            if (this.chrSkillList.containsKey(skId) && this.containsType(skId, skillType)) {
-                this.chrSkillList.replace(skId, skillType);
+        for (Integer integer : skillId) {
+            if (this.chrSkillList.containsKey(integer) && this.containsType(integer, skillType)) {
+                this.chrSkillList.replace(integer, skillType);
             }
         }
-
     }
 
     public boolean containsType(int skillId, int skillType) {
@@ -407,12 +403,8 @@ public class SkillSkin {
                 if (skillType == 0) {
                     return true;
                 }
-
-                Iterator var4 = effectList.iterator();
-
-                while(var4.hasNext()) {
-                    Pair<Integer, Pair<Integer, Integer>> effPair = (Pair)var4.next();
-                    if ((Integer)effPair.left == skillType) {
+                for (Pair<Integer, Pair<Integer, Integer>> integerPairPair : effectList) {
+                    if ((Integer)integerPairPair.left == skillType) {
                         return true;
                     }
                 }

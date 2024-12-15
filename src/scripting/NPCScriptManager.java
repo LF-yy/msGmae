@@ -18,19 +18,19 @@ import javax.script.ScriptEngine;
 import java.util.WeakHashMap;
 import client.MapleClient;
 import tools.FileoutputUtil;
+import tools.MaplePacketCreator;
 
 import java.util.Map;
 
 public class NPCScriptManager extends AbstractScriptManager {
-    private final Map<MapleClient, NPCConversationManager> cms;
-    private static final NPCScriptManager instance;
+    private final Map<MapleClient, NPCConversationManager> cms = new WeakHashMap<MapleClient, NPCConversationManager>();
+    private static final NPCScriptManager instance = new NPCScriptManager();
 
     public NPCScriptManager() {
-        this.cms = new WeakHashMap<MapleClient, NPCConversationManager>();
     }
 
-    public static NPCScriptManager getInstance() {
-        return NPCScriptManager.instance;
+    public static final NPCScriptManager getInstance() {
+        return instance;
     }
 
     void start(final MapleClient client, final int id, final int wh) {
@@ -40,224 +40,296 @@ public class NPCScriptManager extends AbstractScriptManager {
     public void start(final MapleClient c, final int npc) {
         this.start(c, npc, null);
     }
-
+    public final void startItem(MapleClient c, int npc, int mode) {
+        this.start(c, npc, mode, (String)null);
+    }
     public void start(final MapleClient c, final int npc, final String script) {
         this.start(c, npc, 0, script);
     }
     //脚本开始
     public void start( MapleClient c,  int npc,  int mode,  String script) {
-        final Lock lock = c.getNPCLock();
-        lock.lock();
-        try {
-            if (c.getPlayer().isGM() && (Integer) LtMS.ConfigValuesMap.get("脚本显码开关") > 0) {
-                c.getPlayer().dropMessage("[系统提示]您已经建立与NPC:" + npc + (script == null ? "" : "(" + script + ")") + (mode == 0 ? "" : "型号: " + mode) + "的对话。");
-                PNPC itemjc2 = PNPC.getInstance();
-                String items2 = itemjc2.getPM();
-                if (npc != 2007) {
-                    if (Game2.传送相关(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/传送相关/" + npc + "]");
-                    } else if (Game2.传送相关(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/传送相关/" + npc + "," + mode + "]");
-                    } else if (Game2.英语村(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-英语村/" + npc + "]");
-                    } else if (Game2.英语村(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-英语村/" + npc + "," + mode + "]");
-                    } else if (Game2.废弃都市(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-废弃都市/" + npc + "]");
-                    } else if (Game2.废弃都市(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-废弃都市/" + npc + "," + mode + "]");
-                    } else if (Game2.每日任务(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/每日任务/" + npc + "]");
-                    } else if (Game2.每日任务(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/每日任务/" + npc + "," + mode + "]");
-                    } else if (Game2.玩具塔(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-玩具塔/" + npc + "]");
-                    } else if (Game2.玩具塔(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-玩具塔/" + npc + "," + mode + "]");
-                    } else if (Game2.女神塔(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-女神塔/" + npc + "]");
-                    } else if (Game2.女神塔(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-女神塔/" + npc + "," + mode + "]");
-                    } else if (Game2.月妙(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-月妙/" + npc + "]");
-                    } else if (Game2.月妙(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-月妙/" + npc + "," + mode + "]");
-                    } else if (Game2.海盗船(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-海盗船/" + npc + "]");
-                    } else if (Game2.海盗船(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-海盗船/" + npc + "," + mode + "]");
-                    } else if (Game2.毒雾森林(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-毒雾森林/" + npc + "]");
-                    } else if (Game2.毒雾森林(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-毒雾森林/" + npc + "," + mode + "]");
-                    } else if (Game2.罗密欧与朱丽叶(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-罗密欧与朱丽叶/" + npc + "]");
-                    } else if (Game2.罗密欧与朱丽叶(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-罗密欧与朱丽叶/" + npc + "," + mode + "]");
-                    } else if (Game2.冒险百科(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/冒险百科/" + npc + "]");
-                    } else if (Game2.冒险百科(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/冒险百科/" + npc + "," + mode + "]");
-                    } else if (Game2.礼包NPC(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/礼包相关/" + npc + "]");
-                    } else if (Game2.礼包NPC(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/礼包相关/" + npc + "," + mode + "]");
-                    } else if (Game2.zevms(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/zevms[加密执行文件/" + npc + "]");
-                    } else if (Game2.zevms(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/zevms[加密执行文件/" + npc + "," + mode + "]");
-                    } else if (Game2.飞天猪(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/飞天猪]/" + npc + "]");
-                    } else if (Game2.飞天猪(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/飞天猪]/" + npc + "," + mode + "]");
-                    } else if (Game2.消耗箱子(npc) && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/消耗箱子]/" + npc + "]");
-                    } else if (Game2.消耗箱子(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/消耗箱子]/" + npc + "," + mode + "]");
-                    } else if (Game2.活动相关(npc) && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/活动奖励]/" + npc + "," + mode + "]");
-                    } else if (items2.contains("," + npc + ",") && mode == 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/pnpc]/" + npc + "]");
-                    } else if (items2.contains("," + npc + ",") && mode > 0) {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/pnpc/" + npc + " _ " + mode + "]");
-                    } else if (mode == 0) {
-                        if (script == null) {
-                            c.getPlayer().dropMessage(5, "dialogue:[脚本/npc/" + npc + "]");
-                        } else {
-                            c.getPlayer().dropMessage(5, "dialogue:[脚本/special/" + script + "]");
-                        }
-                    } else {
-                        c.getPlayer().dropMessage(5, "dialogue:[脚本/npc/" + npc + " _ " + mode + "]");
-                    }
-                }
-            }
-
-            if (c.getPlayer().isGM()) {
-                c.getPlayer().dropMessage("[GM提示]您已经连接到脚本:" + npc + ((script == null) ? "" : ("(" + script + ")")) + ((mode == 0) ? "" : ("型号: " + mode)) + "的功能，如需修改此内容可前往服务端。");
-            }
-            if (!this.cms.containsKey((Object) c) && c.canClickNPC()) {
-                Invocable iv;
-                if (script == null) {
+        if(LtMS.ConfigValuesMap.get("新版本")>0) {
+            final Lock lock = c.getNPCLock();
+            lock.lock();
+            try {
+                if (c.getPlayer().isGM() && (Integer) LtMS.ConfigValuesMap.get("脚本显码开关") > 0) {
+                    c.getPlayer().dropMessage("[系统提示]您已经建立与NPC:" + npc + (script == null ? "" : "(" + script + ")") + (mode == 0 ? "" : "型号: " + mode) + "的对话。");
                     PNPC itemjc2 = PNPC.getInstance();
                     String items2 = itemjc2.getPM();
-                    if (Game2.传送相关(npc) && mode == 0) {
-                        iv = this.getInvocable("传送相关/" + npc + ".js", c, true);
-                    } else if (Game2.传送相关(npc) && mode > 0) {
-                        iv = this.getInvocable("传送相关/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.英语村(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-英语村/" + npc + ".js", c, true);
-                    } else if (Game2.英语村(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-英语村/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.废弃都市(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-废弃都市/" + npc + ".js", c, true);
-                    } else if (Game2.废弃都市(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-废弃都市/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.玩具塔(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-玩具塔/" + npc + ".js", c, true);
-                    } else if (Game2.玩具塔(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-玩具塔/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.女神塔(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-女神塔/" + npc + ".js", c, true);
-                    } else if (Game2.女神塔(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-女神塔/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.月妙(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-月妙/" + npc + ".js", c, true);
-                    } else if (Game2.月妙(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-月妙/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.海盗船(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-海盗船/" + npc + ".js", c, true);
-                    } else if (Game2.海盗船(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-海盗船/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.毒雾森林(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-毒雾森林/" + npc + ".js", c, true);
-                    } else if (Game2.毒雾森林(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-毒雾森林/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.罗密欧与朱丽叶(npc) && mode == 0) {
-                        iv = this.getInvocable("副本-罗密欧与朱丽叶/" + npc + ".js", c, true);
-                    } else if (Game2.罗密欧与朱丽叶(npc) && mode > 0) {
-                        iv = this.getInvocable("副本-罗密欧与朱丽叶/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.每日任务(npc) && mode == 0) {
-                        iv = this.getInvocable("每日任务/" + npc + ".js", c, true);
-                    } else if (Game2.每日任务(npc) && mode > 0) {
-                        iv = this.getInvocable("每日任务/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.冒险百科(npc) && mode == 0) {
-                        iv = this.getInvocable("冒险百科/" + npc + ".js", c, true);
-                    } else if (Game2.冒险百科(npc) && mode > 0) {
-                        iv = this.getInvocable("冒险百科/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.礼包NPC(npc) && mode == 0) {
-                        iv = this.getInvocable("礼包相关/" + npc + ".js", c, true);
-                    } else if (Game2.礼包NPC(npc) && mode > 0) {
-                        iv = this.getInvocable("礼包相关/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.zevms(npc) && mode == 0) {
-                        iv = this.getInvocable("zevms/" + npc + ".js", c, true);
-                    } else if (Game2.zevms(npc) && mode > 0) {
-                        iv = this.getInvocable("zevms/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.飞天猪(npc) && mode == 0) {
-                        iv = this.getInvocable("飞天猪/" + npc + ".js", c, true);
-                    } else if (Game2.飞天猪(npc) && mode > 0) {
-                        iv = this.getInvocable("飞天猪/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.消耗箱子(npc) && mode == 0) {
-                        iv = this.getInvocable("消耗箱子/" + npc + ".js", c, true);
-                    } else if (Game2.消耗箱子(npc) && mode > 0) {
-                        if ((double)mode >= 1000000.0 && !c.getPlayer().haveItem(mode)) {
-                            c.getPlayer().dropMessage(5, "你没有该道具！");
+                    if (npc != 2007) {
+                        if (Game2.传送相关(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/传送相关/" + npc + "]");
+                        } else if (Game2.传送相关(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/传送相关/" + npc + "," + mode + "]");
+                        } else if (Game2.英语村(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-英语村/" + npc + "]");
+                        } else if (Game2.英语村(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-英语村/" + npc + "," + mode + "]");
+                        } else if (Game2.废弃都市(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-废弃都市/" + npc + "]");
+                        } else if (Game2.废弃都市(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-废弃都市/" + npc + "," + mode + "]");
+                        } else if (Game2.每日任务(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/每日任务/" + npc + "]");
+                        } else if (Game2.每日任务(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/每日任务/" + npc + "," + mode + "]");
+                        } else if (Game2.玩具塔(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-玩具塔/" + npc + "]");
+                        } else if (Game2.玩具塔(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-玩具塔/" + npc + "," + mode + "]");
+                        } else if (Game2.女神塔(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-女神塔/" + npc + "]");
+                        } else if (Game2.女神塔(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-女神塔/" + npc + "," + mode + "]");
+                        } else if (Game2.月妙(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-月妙/" + npc + "]");
+                        } else if (Game2.月妙(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-月妙/" + npc + "," + mode + "]");
+                        } else if (Game2.海盗船(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-海盗船/" + npc + "]");
+                        } else if (Game2.海盗船(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-海盗船/" + npc + "," + mode + "]");
+                        } else if (Game2.毒雾森林(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-毒雾森林/" + npc + "]");
+                        } else if (Game2.毒雾森林(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-毒雾森林/" + npc + "," + mode + "]");
+                        } else if (Game2.罗密欧与朱丽叶(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-罗密欧与朱丽叶/" + npc + "]");
+                        } else if (Game2.罗密欧与朱丽叶(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/副本-罗密欧与朱丽叶/" + npc + "," + mode + "]");
+                        } else if (Game2.冒险百科(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/冒险百科/" + npc + "]");
+                        } else if (Game2.冒险百科(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/冒险百科/" + npc + "," + mode + "]");
+                        } else if (Game2.礼包NPC(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/礼包相关/" + npc + "]");
+                        } else if (Game2.礼包NPC(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/礼包相关/" + npc + "," + mode + "]");
+                        } else if (Game2.zevms(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/zevms[加密执行文件/" + npc + "]");
+                        } else if (Game2.zevms(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/zevms[加密执行文件/" + npc + "," + mode + "]");
+                        } else if (Game2.飞天猪(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/飞天猪]/" + npc + "]");
+                        } else if (Game2.飞天猪(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/飞天猪]/" + npc + "," + mode + "]");
+                        } else if (Game2.消耗箱子(npc) && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/消耗箱子]/" + npc + "]");
+                        } else if (Game2.消耗箱子(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/消耗箱子]/" + npc + "," + mode + "]");
+                        } else if (Game2.活动相关(npc) && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/活动奖励]/" + npc + "," + mode + "]");
+                        } else if (items2.contains("," + npc + ",") && mode == 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/pnpc]/" + npc + "]");
+                        } else if (items2.contains("," + npc + ",") && mode > 0) {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/pnpc/" + npc + " _ " + mode + "]");
+                        } else if (mode == 0) {
+                            if (script == null) {
+                                c.getPlayer().dropMessage(5, "dialogue:[脚本/npc/" + npc + "]");
+                            } else {
+                                c.getPlayer().dropMessage(5, "dialogue:[脚本/special/" + script + "]");
+                            }
+                        } else {
+                            c.getPlayer().dropMessage(5, "dialogue:[脚本/npc/" + npc + " _ " + mode + "]");
+                        }
+                    }
+                }
+
+                if (c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[GM提示]您已经连接到脚本:" + npc + ((script == null) ? "" : ("(" + script + ")")) + ((mode == 0) ? "" : ("型号: " + mode)) + "的功能，如需修改此内容可前往服务端。");
+                }
+                if (!this.cms.containsKey((Object) c) && c.canClickNPC()) {
+                    Invocable iv;
+                    if (script == null) {
+                        PNPC itemjc2 = PNPC.getInstance();
+                        String items2 = itemjc2.getPM();
+                        if (Game2.传送相关(npc) && mode == 0) {
+                            iv = this.getInvocable("传送相关/" + npc + ".js", c, true);
+                        } else if (Game2.传送相关(npc) && mode > 0) {
+                            iv = this.getInvocable("传送相关/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.英语村(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-英语村/" + npc + ".js", c, true);
+                        } else if (Game2.英语村(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-英语村/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.废弃都市(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-废弃都市/" + npc + ".js", c, true);
+                        } else if (Game2.废弃都市(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-废弃都市/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.玩具塔(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-玩具塔/" + npc + ".js", c, true);
+                        } else if (Game2.玩具塔(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-玩具塔/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.女神塔(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-女神塔/" + npc + ".js", c, true);
+                        } else if (Game2.女神塔(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-女神塔/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.月妙(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-月妙/" + npc + ".js", c, true);
+                        } else if (Game2.月妙(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-月妙/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.海盗船(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-海盗船/" + npc + ".js", c, true);
+                        } else if (Game2.海盗船(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-海盗船/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.毒雾森林(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-毒雾森林/" + npc + ".js", c, true);
+                        } else if (Game2.毒雾森林(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-毒雾森林/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.罗密欧与朱丽叶(npc) && mode == 0) {
+                            iv = this.getInvocable("副本-罗密欧与朱丽叶/" + npc + ".js", c, true);
+                        } else if (Game2.罗密欧与朱丽叶(npc) && mode > 0) {
+                            iv = this.getInvocable("副本-罗密欧与朱丽叶/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.每日任务(npc) && mode == 0) {
+                            iv = this.getInvocable("每日任务/" + npc + ".js", c, true);
+                        } else if (Game2.每日任务(npc) && mode > 0) {
+                            iv = this.getInvocable("每日任务/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.冒险百科(npc) && mode == 0) {
+                            iv = this.getInvocable("冒险百科/" + npc + ".js", c, true);
+                        } else if (Game2.冒险百科(npc) && mode > 0) {
+                            iv = this.getInvocable("冒险百科/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.礼包NPC(npc) && mode == 0) {
+                            iv = this.getInvocable("礼包相关/" + npc + ".js", c, true);
+                        } else if (Game2.礼包NPC(npc) && mode > 0) {
+                            iv = this.getInvocable("礼包相关/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.zevms(npc) && mode == 0) {
+                            iv = this.getInvocable("zevms/" + npc + ".js", c, true);
+                        } else if (Game2.zevms(npc) && mode > 0) {
+                            iv = this.getInvocable("zevms/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.飞天猪(npc) && mode == 0) {
+                            iv = this.getInvocable("飞天猪/" + npc + ".js", c, true);
+                        } else if (Game2.飞天猪(npc) && mode > 0) {
+                            iv = this.getInvocable("飞天猪/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.消耗箱子(npc) && mode == 0) {
+                            iv = this.getInvocable("消耗箱子/" + npc + ".js", c, true);
+                        } else if (Game2.消耗箱子(npc) && mode > 0) {
+                            if ((double) mode >= 1000000.0 && !c.getPlayer().haveItem(mode)) {
+                                c.getPlayer().dropMessage(5, "你没有该道具！");
+                                this.dispose(c);
+                                return;
+                            }
+                            iv = this.getInvocable("消耗箱子/" + npc + "_" + mode + ".js", c, true);
+                        } else if (Game2.活动相关(npc) && mode > 0) {
+                            iv = this.getInvocable("活动奖励/" + npc + "_" + mode + ".js", c, true);
+                        } else if (items2.contains("," + npc + ",") && mode == 0) {
+                            iv = this.getInvocable("pnpc/" + npc + ".js", c, true);
+                        } else if (items2.contains("," + npc + ",") && mode > 0) {
+                            iv = this.getInvocable("pnpc/" + npc + "_" + mode + ".js", c, true);
+                        } else if (mode != 0) {
+                            iv = this.getInvocable("npc/" + npc + "_" + mode + ".js", c, true);
+                        } else {
+                            iv = this.getInvocable("npc/" + npc + ".js", c, true);
+                        }
+                    } else {
+                        iv = this.getInvocable("special/" + script + ".js", c, true);
+                    }
+                    if (iv == null) {
+                        iv = this.getInvocable("special/notcoded.js", c, true);
+                        if (iv == null) {
                             this.dispose(c);
                             return;
                         }
-                        iv = this.getInvocable("消耗箱子/" + npc + "_" + mode + ".js", c, true);
-                    } else if (Game2.活动相关(npc) && mode > 0) {
-                        iv = this.getInvocable("活动奖励/" + npc + "_" + mode + ".js", c, true);
-                    } else if (items2.contains("," + npc + ",") && mode == 0) {
-                        iv = this.getInvocable("pnpc/" + npc + ".js", c, true);
-                    } else if (items2.contains("," + npc + ",") && mode > 0) {
-                        iv = this.getInvocable("pnpc/" + npc + "_" + mode + ".js", c, true);
-                    }else if (mode != 0) {
-                        iv = this.getInvocable("npc/" + npc + "_" + mode + ".js", c, true);
-                    } else {
-                        iv = this.getInvocable("npc/" + npc + ".js", c, true);
                     }
-                } else {
-                    iv = this.getInvocable("special/" + script + ".js", c, true);
-                }
-                if (iv == null) {
-                    iv = this.getInvocable("special/notcoded.js", c, true);
-                    if (iv == null) {
+                    ScriptEngine scriptengine = (ScriptEngine) iv;
+                    NPCConversationManager cm = new NPCConversationManager(c, npc, -1, mode, script, (byte) (-1), iv);
+                    if (getInstance() == null) {
                         this.dispose(c);
                         return;
                     }
-                }
-                 ScriptEngine scriptengine = (ScriptEngine) iv;
-                NPCConversationManager cm = new NPCConversationManager(c, npc, -1, mode, script, (byte) (-1), iv);
-                if (getInstance() == null) {
-                    this.dispose(c);
-                    return;
-                }
-                this.cms.put(c, cm);
-                scriptengine.put("cm", (Object) cm);
-                if (c.getPlayer() != null) {
-                    c.getPlayer().setConversation(1);
-                }
-                c.setClickedNPC();
-                try {
-                    iv.invokeFunction("start", new Object[0]);
+                    this.cms.put(c, cm);
+                    scriptengine.put("cm", (Object) cm);
+                    if (c.getPlayer() != null) {
+                        c.getPlayer().setConversation(1);
+                    }
+                    c.setClickedNPC();
+                    try {
+                        iv.invokeFunction("start", new Object[0]);
 
-                } catch (NoSuchMethodException nsme) {
-                    iv.invokeFunction("action", Byte.valueOf((byte) 1), Byte.valueOf((byte) 0), Integer.valueOf(0));
+                    } catch (NoSuchMethodException nsme) {
+                        iv.invokeFunction("action", Byte.valueOf((byte) 1), Byte.valueOf((byte) 0), Integer.valueOf(0));
+                    }
+                } else if (c.getPlayer() != null) {
+                    c.removeClickedNPC();
+                    NPCScriptManager.getInstance().dispose(c);
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                    c.getPlayer().dropMessage(5, "你现在不能攻击或不能跟npc对话,请在对话框打 @解卡/@ea 来解除异常状态==>start");
                 }
-            } else if (c.getPlayer() != null) {
-                c.removeClickedNPC();
-                NPCScriptManager.getInstance().dispose(c);
-                c.getPlayer().dropMessage(5, "你现在不能攻击或不能跟npc对话,请在对话框打 @解卡/@ea 来解除异常状态==>start");
+            } catch (ScriptException ex) {
+            } catch (NoSuchMethodException e) {
+                if (c.getPlayer() != null && c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[系统提示] NPC " + npc + "脚本错误 " + (Object) e + "");
+                }
+                FilePrinter.printError("NPCScriptManager.txt", "Error executing NPC script, NPC ID : " + npc + "." + (Object) e);
+                this.dispose(c);
+            } finally {
+                lock.unlock();
             }
-        } catch (ScriptException ex) {
-        } catch (NoSuchMethodException e) {
-            if (c.getPlayer() != null && c.getPlayer().isGM()) {
-                c.getPlayer().dropMessage("[系统提示] NPC " + npc + "脚本错误 " + (Object) e + "");
+        }else{
+            //老版本脚本加载
+            final Lock lock = c.getNPCLock();
+            lock.lock();
+            try {
+                if (c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[GM提示]您已经连接到脚本:" + npc + ((script == null) ? "" : ("(" + script + ")")) + ((mode == 0) ? "" : ("型号: " + mode)) + "的功能，如需修改此内容可前往服务端。");
+                }
+                if (!this.cms.containsKey((Object)c) && c.canClickNPC()) {
+
+                    Invocable iv;
+                    if (script == null) {
+                        if (mode != 0) {
+                            iv = this.getInvocable("npc/" + npc + "_" + mode + ".js", c, true);
+                        }else {
+                            iv = this.getInvocable("npc/" + npc + ".js", c, true);
+                        }
+                    }
+                    else {
+                        iv = this.getInvocable("special/" + script + ".js", c, true);
+                    }
+                    if (iv == null) {
+                        iv = this.getInvocable("special/notcoded.js", c, true);
+                        if (iv == null) {
+                            this.dispose(c);
+                            return;
+                        }
+                    }
+                    final ScriptEngine scriptengine = (ScriptEngine)iv;
+                    final NPCConversationManager cm = new NPCConversationManager(c, npc, -1, mode, script, (byte)(-1), iv);
+                    if (getInstance() == null) {
+                        this.dispose(c);
+                        return;
+                    }
+                    this.cms.put(c, cm);
+                    scriptengine.put("cm", (Object)cm);
+                    if (c.getPlayer() != null) {
+                        c.getPlayer().setConversation(1);
+                    }
+                    c.setClickedNPC();
+
+                    try {
+                        iv.invokeFunction("start", new Object[0]);
+                    }
+                    catch (NoSuchMethodException nsme) {
+                        iv.invokeFunction("action", Byte.valueOf((byte)1), Byte.valueOf((byte)0), Integer.valueOf(0));
+                    }
+                }
+                else if (c.getPlayer() != null) {
+                    c.removeClickedNPC();
+                    NPCScriptManager.getInstance().dispose(c);
+                    c.sendPacket(MaplePacketCreator.enableActions());
+                    c.getPlayer().dropMessage(5, "你现在不能攻击或不能跟npc对话,请在对话框打 @解卡/@ea 来解除异常状态");
+                }
             }
-            FilePrinter.printError("NPCScriptManager.txt", "Error executing NPC script, NPC ID : " + npc + "." + (Object) e);
-            this.dispose(c);
-        } finally {
-            lock.unlock();
+            catch (ScriptException ex) {}
+            catch (NoSuchMethodException e) {
+                System.err.println("NPC 脚本错误, 它ID为 : " + npc + "." + (Object)e);
+                if (c.getPlayer() != null && c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[系统提示] NPC " + npc + "脚本错误 " + (Object)e + "");
+                }
+                FilePrinter.printError("NPCScriptManager.txt", "Error executing NPC script, NPC ID : " + npc + "." + (Object)e);
+                this.dispose(c);
+            }
+            finally {
+                lock.unlock();
+            }
         }
     }
 
@@ -274,7 +346,8 @@ public class NPCScriptManager extends AbstractScriptManager {
                     this.dispose(c);
                 } else {
                     c.setClickedNPC();
-                    cm.getIv().invokeFunction("action", Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection));
+//                    cm.getIv().invokeFunction("action", Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection));
+                    cm.getIv().invokeFunction("action", new Object[]{mode, type, selection});
                 }
             } catch (ScriptException ex) {
             } catch (NoSuchMethodException e) {
@@ -383,7 +456,30 @@ public class NPCScriptManager extends AbstractScriptManager {
             lock.unlock();
         }
     }
+    public final void cleanCMS() {
+        List<MapleClient> clients = new ArrayList();
+        Iterator var2 = this.cms.keySet().iterator();
 
+        while(true) {
+            MapleClient c;
+            do {
+                if (!var2.hasNext()) {
+                    var2 = clients.iterator();
+
+                    while(var2.hasNext()) {
+                        c = (MapleClient)var2.next();
+                        this.cms.remove(c);
+                    }
+
+                    return;
+                }
+
+                c = (MapleClient)var2.next();
+            } while(c != null && c.getSession() != null && c.getSession().isActive());
+
+            clients.add(c);
+        }
+    }
     public void endQuest(final MapleClient c, final byte mode, final byte type, final int selection) {
         final Lock lock = c.getNPCLock();
         final NPCConversationManager cm = (NPCConversationManager) this.cms.get((Object) c);
@@ -413,88 +509,105 @@ public class NPCScriptManager extends AbstractScriptManager {
 
     public void dispose(final MapleClient c) {
         final NPCConversationManager npccm = (NPCConversationManager) this.cms.get((Object) c);
-        if (npccm != null) {
-            this.cms.remove(c);
-            if (npccm.getType() == -1) {
-                PNPC itemjc2 = PNPC.getInstance();
-                String items2 = itemjc2.getPM();
-                if (Game2.传送相关(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/传送相关/" + npccm.getNpc() + ".js");
-                } else if (Game2.传送相关(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/传送相关/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.英语村(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-英语村/" + npccm.getNpc() + ".js");
-                } else if (Game2.英语村(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-英语村/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.废弃都市(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-废弃都市/" + npccm.getNpc() + ".js");
-                } else if (Game2.废弃都市(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-废弃都市/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.玩具塔(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-玩具塔/" + npccm.getNpc() + ".js");
-                } else if (Game2.玩具塔(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-玩具塔/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.女神塔(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-女神塔/" + npccm.getNpc() + ".js");
-                } else if (Game2.女神塔(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-女神塔/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.月妙(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-月妙/" + npccm.getNpc() + ".js");
-                } else if (Game2.月妙(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-月妙/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.海盗船(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-海盗船/" + npccm.getNpc() + ".js");
-                } else if (Game2.海盗船(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-海盗船/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.毒雾森林(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-毒雾森林/" + npccm.getNpc() + ".js");
-                } else if (Game2.毒雾森林(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-毒雾森林/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.罗密欧与朱丽叶(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/副本-罗密欧与朱丽叶/" + npccm.getNpc() + ".js");
-                } else if (Game2.罗密欧与朱丽叶(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/副本-罗密欧与朱丽叶/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.每日任务(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/每日任务/" + npccm.getNpc() + ".js");
-                } else if (Game2.每日任务(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/每日任务/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.冒险百科(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/冒险百科/" + npccm.getNpc() + ".js");
-                } else if (Game2.冒险百科(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/冒险百科/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.礼包NPC(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/礼包相关/" + npccm.getNpc() + ".js");
-                } else if (Game2.礼包NPC(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/礼包相关/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.zevms(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/zevms/" + npccm.getNpc() + ".js");
-                } else if (Game2.zevms(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/zevms/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.飞天猪(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/飞天猪/" + npccm.getNpc() + ".js");
-                } else if (Game2.飞天猪(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/飞天猪/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.消耗箱子(npccm.getNpc()) && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/消耗箱子/" + npccm.getNpc() + ".js");
-                } else if (Game2.消耗箱子(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/消耗箱子/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (Game2.活动相关(npccm.getNpc()) && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/活动奖励/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (items2.contains("," + npccm.getNpc() + ",") && npccm.getMode() == 0) {
-                    c.removeScriptEngine("脚本/pnpc/" + npccm.getNpc() + ".js");
-                } else if (items2.contains("," + npccm.getNpc() + ",") && npccm.getMode() > 0) {
-                    c.removeScriptEngine("脚本/pnpc/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
-                } else if (npccm.getMode() == 0) {
-                    if (npccm.getScript() == null) {
-                        c.removeScriptEngine("脚本/npc/" + npccm.getNpc() + ".js");
+        if(LtMS.ConfigValuesMap.get("新版本")>0) {
+            if (npccm != null) {
+                this.cms.remove(c);
+                if (npccm.getType() == -1) {
+                    PNPC itemjc2 = PNPC.getInstance();
+                    String items2 = itemjc2.getPM();
+                    if (Game2.传送相关(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/传送相关/" + npccm.getNpc() + ".js");
+                    } else if (Game2.传送相关(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/传送相关/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.英语村(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-英语村/" + npccm.getNpc() + ".js");
+                    } else if (Game2.英语村(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-英语村/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.废弃都市(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-废弃都市/" + npccm.getNpc() + ".js");
+                    } else if (Game2.废弃都市(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-废弃都市/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.玩具塔(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-玩具塔/" + npccm.getNpc() + ".js");
+                    } else if (Game2.玩具塔(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-玩具塔/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.女神塔(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-女神塔/" + npccm.getNpc() + ".js");
+                    } else if (Game2.女神塔(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-女神塔/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.月妙(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-月妙/" + npccm.getNpc() + ".js");
+                    } else if (Game2.月妙(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-月妙/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.海盗船(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-海盗船/" + npccm.getNpc() + ".js");
+                    } else if (Game2.海盗船(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-海盗船/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.毒雾森林(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-毒雾森林/" + npccm.getNpc() + ".js");
+                    } else if (Game2.毒雾森林(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-毒雾森林/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.罗密欧与朱丽叶(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/副本-罗密欧与朱丽叶/" + npccm.getNpc() + ".js");
+                    } else if (Game2.罗密欧与朱丽叶(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/副本-罗密欧与朱丽叶/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.每日任务(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/每日任务/" + npccm.getNpc() + ".js");
+                    } else if (Game2.每日任务(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/每日任务/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.冒险百科(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/冒险百科/" + npccm.getNpc() + ".js");
+                    } else if (Game2.冒险百科(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/冒险百科/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.礼包NPC(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/礼包相关/" + npccm.getNpc() + ".js");
+                    } else if (Game2.礼包NPC(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/礼包相关/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.zevms(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/zevms/" + npccm.getNpc() + ".js");
+                    } else if (Game2.zevms(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/zevms/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.飞天猪(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/飞天猪/" + npccm.getNpc() + ".js");
+                    } else if (Game2.飞天猪(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/飞天猪/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.消耗箱子(npccm.getNpc()) && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/消耗箱子/" + npccm.getNpc() + ".js");
+                    } else if (Game2.消耗箱子(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/消耗箱子/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (Game2.活动相关(npccm.getNpc()) && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/活动奖励/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (items2.contains("," + npccm.getNpc() + ",") && npccm.getMode() == 0) {
+                        c.removeScriptEngine("脚本/pnpc/" + npccm.getNpc() + ".js");
+                    } else if (items2.contains("," + npccm.getNpc() + ",") && npccm.getMode() > 0) {
+                        c.removeScriptEngine("脚本/pnpc/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    } else if (npccm.getMode() == 0) {
+                        if (npccm.getScript() == null) {
+                            c.removeScriptEngine("脚本/npc/" + npccm.getNpc() + ".js");
+                        } else {
+                            c.removeScriptEngine("脚本/special/" + npccm.getScript() + ".js");
+                        }
                     } else {
-                        c.removeScriptEngine("脚本/special/" + npccm.getScript() + ".js");
+                        c.removeScriptEngine("脚本/npc/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
                     }
                 } else {
-                    c.removeScriptEngine("脚本/npc/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    c.removeScriptEngine("脚本/quest/" + npccm.getQuest() + ".js");
                 }
-            } else {
-                c.removeScriptEngine("脚本/quest/" + npccm.getQuest() + ".js");
+            }
+        }else{
+            if (npccm != null) {
+                this.cms.remove((Object)c);
+                if (npccm.getType() == -1) {
+                    c.removeScriptEngine("脚本/npc/" + npccm.getNpc() + ".js");
+                    if (npccm.getMode() != 0) {
+                        c.removeScriptEngine("脚本/npc/" + npccm.getNpc() + "_" + npccm.getMode() + ".js");
+                    }
+                    c.removeScriptEngine("脚本/special/" + npccm.getScript() + ".js");
+                    c.removeScriptEngine("脚本/special/notcoded.js");
+                }
+                else {
+                    c.removeScriptEngine("脚本/任务/" + npccm.getQuest() + ".js");
+                }
             }
         }
         if (c.getPlayer() != null && c.getPlayer().getConversation() == 1) {
@@ -630,9 +743,6 @@ public class NPCScriptManager extends AbstractScriptManager {
 //        }
 //    }
 
-    static {
-        instance = new NPCScriptManager();
-    }
 }
 
 

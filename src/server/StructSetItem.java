@@ -35,5 +35,6 @@ public class StructSetItem
         public int incSpeed;
         public int incMHP;
         public int incMMP;
+        public int incAvoid;
     }
 }

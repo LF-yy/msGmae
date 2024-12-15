@@ -10,7 +10,7 @@ import constants.ServerConstants.PlayerGMRank;
 import gui.服务端输出信息;
 import handling.channel.ChannelServer;
 import server.Timer;
-import server.bean.SkillSkin;
+import snail.SkillSkin;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
 import server.maps.MapleMapObject;
