@@ -66,7 +66,7 @@ public class MobLhVac extends Thread{
                 Thread.sleep(lastTime);
                 if ( mapleMap.getAllMonstersThreadsafe().size()< (rateByStone/2)) {
                     int index = 0;
-                    for (int i = 0; i < 30; i++) {
+                    for (int i = 0; i < 300; i++) {
                         for (MapleMonster mapleMonster : mapleMap.getAllMonstersThreadsafe()) {
                             if (9900000 == mapleMonster.getId() || 9900001 == mapleMonster.getId() || 9900002 == mapleMonster.getId()) {
                                 continue;
