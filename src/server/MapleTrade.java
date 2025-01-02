@@ -1,6 +1,5 @@
 package server;
 
-import gui.CongMS;
 import client.inventory.MapleInventoryType;
 import gui.LtMS;
 import tools.packet.PlayerShopPacket;
@@ -9,7 +8,6 @@ import constants.ServerConfig;
 import client.messages.CommandProcessor;
 import constants.ServerConstants.CommandType;
 import client.MapleClient;
-import java.util.Iterator;
 import handling.world.World.Broadcast;
 import tools.MaplePacketCreator;
 import tools.FileoutputUtil;

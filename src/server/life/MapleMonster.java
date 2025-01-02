@@ -458,9 +458,38 @@ public class MapleMonster extends AbstractLoadedMapleLife
             this.getSponge().setMp(totalMP);
         }
     }
-
+    public void healLong( long hp, final int mp, final boolean broadcast) {
+        long totalHP = this.getHp() + (long)hp;
+        int totalMP = this.getMp() + mp;
+        totalHP = ((totalHP > this.getMobMaxHp()) ? this.getMobMaxHp() : totalHP);
+        totalMP = ((totalMP > this.getMobMaxMp()) ? this.getMobMaxMp() : totalMP);
+        this.setHp(totalHP);
+        this.setMp(totalMP);
+        if (broadcast) {
+            this.getMap().broadcastMessage(MobPacket.healMonster(this.getObjectId(), hp>Integer.MAX_VALUE?Integer.MAX_VALUE:(int)hp));
+        }
+        if (this.getSponge() != null) {
+            totalHP = this.getSponge().getHp() + (long)hp;
+            totalMP = this.getSponge().getMp() + mp;
+            totalHP = ((totalHP > this.getSponge().getMobMaxHp()) ? this.getSponge().getMobMaxHp() : totalHP);
+            totalMP = ((totalMP > this.getSponge().getMobMaxMp()) ? this.getSponge().getMobMaxMp() : totalMP);
+            this.getSponge().setHp(totalHP);
+            this.getSponge().setMp(totalMP);
+        }
+    }
     //击杀怪物获取经验
     private void giveExpToCharacter(final MapleCharacter attacker, int exp, final boolean highestDamage, final int numExpSharers, final byte pty, final byte classBounsExpPercent, final byte Premium_Bonus_EXP_PERCENT, final int lastskillID) {
+
+        if (LtMS.ConfigValuesMap.get("修正经验") >0 && attacker.getLevel() >= 200) {
+            exp = (int)Math.round(exp * ((double)LtMS.ConfigValuesMap.get("修正经验比例") / 100.0));
+        }
+        if (attacker.totalExpRate>0){
+            exp += (int)Math.round(exp * (attacker.totalExpRate / 100.0));
+        }
+        exp += attacker.totalExpRateCount;
+        if(exp <0 ){
+            exp = 0;
+        }
         if (highestDamage) {
             if (this.eventInstance != null) {
                 this.eventInstance.monsterKilled(attacker, this);
@@ -994,27 +1023,25 @@ public class MapleMonster extends AbstractLoadedMapleLife
             if (this.stati.containsKey((Object)z.getKey())) {
                 this.cancelStatus((MonsterStatus)z.getKey());
             }
-            final MonsterStatusEffect effectz = new MonsterStatusEffect((MonsterStatus)z.getKey(), Integer.valueOf(z.getValue()), 0, skill, true, reflection.size() > 0);
+            final MonsterStatusEffect effectz = new MonsterStatusEffect((MonsterStatus)z.getKey(), z.getValue(), 0, skill, true, reflection.size() > 0);
             effectz.setCancelTask(duration);
             this.stati.put((MonsterStatus)z.getKey(), effectz);
         }
         if (reflection.size() > 0) {
             final List<MonsterStatusEffect> mse = new ArrayList<MonsterStatusEffect>();
             for (final Entry<MonsterStatus, Integer> z2 : effect.entrySet()) {
-                mse.add(new MonsterStatusEffect((MonsterStatus)z2.getKey(), Integer.valueOf(z2.getValue()), 0, skill, true, reflection.size() > 0));
+                mse.add(new MonsterStatusEffect((MonsterStatus)z2.getKey(), z2.getValue(), 0, skill, true, true));
             }
             this.reflectpack = MobPacket.applyMonsterStatus(this, mse);
             if (con != null) {
                 this.map.broadcastMessage(con, this.reflectpack, this.getTruePosition());
                 con.getClient().getSession().writeAndFlush((Object)this.reflectpack);
-            }
-            else {
+            }else {
                 this.map.broadcastMessage(this.reflectpack, this.getTruePosition());
             }
-        }
-        else {
+        } else {
             for (final Entry<MonsterStatus, Integer> z : effect.entrySet()) {
-                final MonsterStatusEffect effectz = new MonsterStatusEffect((MonsterStatus)z.getKey(), Integer.valueOf(z.getValue()), 0, skill, true, reflection.size() > 0);
+                final MonsterStatusEffect effectz = new MonsterStatusEffect((MonsterStatus)z.getKey(), z.getValue(), 0, skill, true, reflection.size() > 0);
                 if (con != null) {
                     this.map.broadcastMessage(con, MobPacket.applyMonsterStatus(this, effectz), this.getTruePosition());
                     con.getClient().getSession().writeAndFlush((Object)MobPacket.applyMonsterStatus(this, effectz));
@@ -1030,121 +1057,121 @@ public class MapleMonster extends AbstractLoadedMapleLife
         if (!this.isAlive()) {
             return;
         }
-//        if ((int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"怪物状态开关")) <= 0 && from.hasGmLevel(5)) {
-//            String 状态 = "";
-//            if (status.getStatus() != null) {
-//                final String name = status.getStati().name();
-//                int n = -1;
-//                switch (name.hashCode()) {
-//                    case 2556090: {
-//                        if (name.equals((Object)"STUN")) {
-//                            n = 0;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case -1929420024: {
-//                        if (name.equals((Object)"POISON")) {
-//                            n = 1;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case 79104039: {
-//                        if (name.equals((Object)"SPEED")) {
-//                            n = 2;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case 2104233: {
-//                        if (name.equals((Object)"DOOM")) {
-//                            n = 3;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case 2541053: {
-//                        if (name.equals((Object)"SEAL")) {
-//                            n = 4;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case -534226027: {
-//                        if (name.equals((Object)"SHADOW_WEB")) {
-//                            n = 5;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case 444279071: {
-//                        if (name.equals((Object)"SHOWDOWN")) {
-//                            n = 6;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case 2361464: {
-//                        if (name.equals((Object)"MDEF")) {
-//                            n = 7;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                    case 2659374: {
-//                        if (name.equals((Object)"WDEF")) {
-//                            n = 8;
-//                            break;
-//                        }
-//                        break;
-//                    }
-//                }
-//                switch (n) {
-//                    case 0: {
-//                        状态 = "怪物无法移动,[昏迷]，[冰冻]";
-//                        break;
-//                    }
-//                    case 1: {
-//                        状态 = "怪物持续掉血,[中毒]，[灼烧]";
-//                        break;
-//                    }
-//                    case 2: {
-//                        状态 = "怪物减少移动速度,[缓速]，[束缚]";
-//                        break;
-//                    }
-//                    case 3: {
-//                        状态 = "怪物改变外观,[巫毒]，[变身]";
-//                        break;
-//                    }
-//                    case 4: {
-//                        状态 = "怪物无法使用技能,[封印]，[沉默]";
-//                        break;
-//                    }
-//                    case 5: {
-//                        状态 = "怪物定身，无法移动,[束缚]，[昏迷]，[定身]";
-//                        break;
-//                    }
-//                    case 6: {
-//                        状态 = "怪物被激怒,[挑衅]，[诱导]";
-//                        break;
-//                    }
-//                    case 7: {
-//                        状态 = "怪物防御发生变化,[魔防]";
-//                        break;
-//                    }
-//                    case 8: {
-//                        状态 = "怪物防御发生变化,[物防]";
-//                        break;
-//                    }
-//                    default: {
-//                        from.dropMessage(5, "怪物状态: " + status.getStati().name() + "");
-//                        break;
-//                    }
-//                }
-//            }
-//            from.dropMessage(5, "怪物状态: " + 状态 + "");
-//        }
+        if ( LtMS.ConfigValuesMap.get((Object)"怪物状态开关") >0 && from.hasGmLevel(5)) {
+            String 状态 = "";
+            if (status.getStatus() != null) {
+                final String name = status.getStati().name();
+                int n = -1;
+                switch (name.hashCode()) {
+                    case 2556090: {
+                        if (name.equals((Object)"STUN")) {
+                            n = 0;
+                            break;
+                        }
+                        break;
+                    }
+                    case -1929420024: {
+                        if (name.equals((Object)"POISON")) {
+                            n = 1;
+                            break;
+                        }
+                        break;
+                    }
+                    case 79104039: {
+                        if (name.equals((Object)"SPEED")) {
+                            n = 2;
+                            break;
+                        }
+                        break;
+                    }
+                    case 2104233: {
+                        if (name.equals((Object)"DOOM")) {
+                            n = 3;
+                            break;
+                        }
+                        break;
+                    }
+                    case 2541053: {
+                        if (name.equals((Object)"SEAL")) {
+                            n = 4;
+                            break;
+                        }
+                        break;
+                    }
+                    case -534226027: {
+                        if (name.equals((Object)"SHADOW_WEB")) {
+                            n = 5;
+                            break;
+                        }
+                        break;
+                    }
+                    case 444279071: {
+                        if (name.equals((Object)"SHOWDOWN")) {
+                            n = 6;
+                            break;
+                        }
+                        break;
+                    }
+                    case 2361464: {
+                        if (name.equals((Object)"MDEF")) {
+                            n = 7;
+                            break;
+                        }
+                        break;
+                    }
+                    case 2659374: {
+                        if (name.equals((Object)"WDEF")) {
+                            n = 8;
+                            break;
+                        }
+                        break;
+                    }
+                }
+                switch (n) {
+                    case 0: {
+                        状态 = "怪物无法移动,[昏迷]，[冰冻]";
+                        break;
+                    }
+                    case 1: {
+                        状态 = "怪物持续掉血,[中毒]，[灼烧]";
+                        break;
+                    }
+                    case 2: {
+                        状态 = "怪物减少移动速度,[缓速]，[束缚]";
+                        break;
+                    }
+                    case 3: {
+                        状态 = "怪物改变外观,[巫毒]，[变身]";
+                        break;
+                    }
+                    case 4: {
+                        状态 = "怪物无法使用技能,[封印]，[沉默]";
+                        break;
+                    }
+                    case 5: {
+                        状态 = "怪物定身，无法移动,[束缚]，[昏迷]，[定身]";
+                        break;
+                    }
+                    case 6: {
+                        状态 = "怪物被激怒,[挑衅]，[诱导]";
+                        break;
+                    }
+                    case 7: {
+                        状态 = "怪物防御发生变化,[魔防]";
+                        break;
+                    }
+                    case 8: {
+                        状态 = "怪物防御发生变化,[物防]";
+                        break;
+                    }
+                    default: {
+                        from.dropMessage(5, "怪物状态: " + status.getStati().name() + "");
+                        break;
+                    }
+                }
+            }
+            from.dropMessage(5, "怪物状态: " + 状态 + "");
+        }
         final ISkill skilz = SkillFactory.getSkill(status.getSkill());
         if (skilz != null) {
             switch (this.stats.getEffectiveness(skilz.getElement())) {
@@ -1164,6 +1191,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         final int statusSkill = status.getSkill();
         Label_0757: {
             switch (statusSkill) {
+                //火毒合击
                 case 2111006: {
                     switch (this.stats.getEffectiveness(Element.POISON)) {
                         case IMMUNE:
@@ -1175,6 +1203,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
                         }
                     }
                 }
+                //冰雷合击
                 case 2211006: {
                     switch (this.stats.getEffectiveness(Element.ICE)) {
                         case IMMUNE:
@@ -1186,6 +1215,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
                         }
                     }
                 }
+               // 武器用毒液
                 case 4120005:
                 case 4220005:
                 case 14110004: {
@@ -1200,18 +1230,15 @@ public class MapleMonster extends AbstractLoadedMapleLife
                 }
             }
         }
-       // System.out.println("毒雾伤害"+duration);
         if (duration >= 2000000000L) {
             duration = 5000L;
         }
         final MonsterStatus stat = status.getStatus();
         if (this.getId() == 5100002 && stat == MonsterStatus.POISON) {
-          //  System.out.println("结束");
 
             return;
         }
         if (this.stats.isNoDoom() && stat == MonsterStatus.DOOM) {
-         //   System.out.println("结束1");
 
             return;
         }
@@ -1224,38 +1251,36 @@ public class MapleMonster extends AbstractLoadedMapleLife
             }
         }
         if (this.stats.isBoss()) {
+            //怪物持续掉血,[中毒]，[灼烧]
             if (stat == MonsterStatus.POISON) {
-              //  System.out.println("结束25");
                 return;
             }
+            //怪物无法移动,[昏迷]，[冰冻]
             if (stat == MonsterStatus.STUN) {
-               // System.out.println("结束24");
                 return;
             }
+            //怪物减少移动速度,[缓速]，[束缚]，怪物被忍者伏击,[忍者伏击]   物理攻击
             if (stat != MonsterStatus.SPEED && stat != MonsterStatus.NINJA_AMBUSH && stat != MonsterStatus.WATK) {
-               // System.out.println("结束23");
                 return;
             }
+            //怪物魔法防御崩坏,[魔防崩坏]
             if (this.getId() == 8850011 && stat == MonsterStatus.MAGIC_CRASH) {
                 return;
             }
+            //怪物被冻结,[冻结]
             if (stat == MonsterStatus.FREEZE) {
-               // System.out.println("结束22");
                 return;
             }
         }
         if ((this.stats.isFriendly() || this.isFake()) && (stat == MonsterStatus.STUN || stat == MonsterStatus.SPEED || stat == MonsterStatus.POISON || stat == MonsterStatus.VENOMOUS_WEAPON)) {
-            //System.out.println("结束2");
 
             return;
         }
         if ((stat == MonsterStatus.VENOMOUS_WEAPON || stat == MonsterStatus.POISON) && eff == null) {
-            //System.out.println("结束3");
 
             return;
         }
         if (this.stati.containsKey((Object)stat)) {
-            //System.out.println("结束4");
 
             return;
         }
@@ -1264,7 +1289,6 @@ public class MapleMonster extends AbstractLoadedMapleLife
             try {
                 for (final MonsterStatusEffect mse : this.poisons) {
                     if (mse != null && (mse.getSkill() == eff.getSourceId() || mse.getSkill() == GameConstants.getLinkedAttackSkill(eff.getSourceId()) || GameConstants.getLinkedAttackSkill(mse.getSkill()) == eff.getSourceId())) {
-                      //  System.out.println("毒雾渲染");
                         return;
                     }
                 }
@@ -1275,11 +1299,9 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
         if (poison && this.getHp() > 1L && eff != null) {
             duration = Math.max(duration, (long)(eff.getDOTTime() * 1000));
-           // System.out.println("毒雾伤害1"+duration);
         }
         final long aniTime;
         duration = (aniTime = duration + (long)(from.getStat().dotTime * 1000));
-       // System.out.println("毒雾伤害2"+duration);
         status.setCancelTask(aniTime);
         if (poison && this.getHp() > 1L) {
             if (status.getchr() != null) {
@@ -1288,13 +1310,13 @@ public class MapleMonster extends AbstractLoadedMapleLife
             status.setDotTime(duration);
             final int dam = (int)Math.min(32767L, (long)((double)this.getMobMaxHp() / (70.0 - (double)from.getSkillLevel(status.getSkill())) + 0.999));
             if (from.hasGmLevel(5)) {
-                //from.dropMessage(6, "[持續伤害] 開始處理效果 - 技能ID：" + eff.getSourceId());
+                from.dropMessage(6, "[持续伤害] 开始处理效果 - 技能ID：" + eff.getSourceId());
             }
             status.setValue(status.getStatus(), Integer.valueOf(dam));
             status.setPoisonDamage(dam, from);
             final int poisonDamage = (int)(aniTime / 1000L * (long)(int)status.getX());
             if (from.hasGmLevel(5)) {
-               // from.dropMessage(6, "[持續伤害] 持續伤害： " + ((this.getHp() > (long)poisonDamage) ? ((long)poisonDamage) : (this.getHp() - 1L)) + " 持續时间：" + aniTime + " 持續掉血：" + (Object)status.getX());
+                from.dropMessage(6, "[持续伤害] 持续伤害： " + (this.getHp() > (long)poisonDamage ? (long)poisonDamage : this.getHp() - 1L) + " 持续时间：" + duration + " 持续掉血：" + status.getX());
             }
         }
         else if (statusSkill == 5211004 && this.getHp() > 1L) {
@@ -1304,24 +1326,24 @@ public class MapleMonster extends AbstractLoadedMapleLife
             status.setDotTime(duration);
             final int dam = (int)Math.min(32767L, (long)((double)this.getMobMaxHp() / (70.0 - (double)from.getSkillLevel(status.getSkill())) + 0.999));
             if (from.isAdmin()) {
-                //from.dropMessage(6, "[持續伤害] 開始處理效果 - 技能ID：" + eff.getSourceId());
+                from.dropMessage(6, "[持续伤害] 开始处理效果 - 技能ID：" + eff.getSourceId());
             }
-            status.setValue(status.getStatus(), Integer.valueOf(dam));
+            status.setValue(status.getStatus(), dam);
             status.setPoisonDamage(dam, from);
             final int poisonDamage = (int)(aniTime / 1000L * (long)(int)status.getX());
             if (from.isAdmin()) {
-               // from.dropMessage(6, "[持續伤害] 持續伤害： " + ((this.getHp() > (long)poisonDamage) ? ((long)poisonDamage) : (this.getHp() - 1L)) + " 持續时间：" + aniTime + " 持續掉血：" + (Object)status.getX());
+                from.dropMessage(6, "[持续伤害] 持续伤害： " + (this.getHp() > (long)poisonDamage ? (long)poisonDamage : this.getHp() - 1L) + " 持续时间：" + duration + " 持续掉血：" + status.getX());
             }
         }
         else if (statusSkill == 4111003 || statusSkill == 14111001) {
-            status.setValue(status.getStatus(), Integer.valueOf((int)((double)this.getMobMaxHp() / 50.0 + 0.999)));
+            status.setValue(status.getStatus(), (int) ((double) this.getMobMaxHp() / 50.0 + 0.999));
             status.setPoisonDamage((int)status.getX(), from);
         }
         else if (statusSkill == 4341003) {
             status.setPoisonDamage((int)((double)((float)eff.getDamage() * from.getStat().getCurrentMaxBaseDamage()) / 100.0), from);
         }
         else if (statusSkill == 4121004 || statusSkill == 4221004) {
-            status.setValue(status.getStatus(), Integer.valueOf(Math.min(32767, (int)((double)((float)eff.getDamage() * from.getStat().getCurrentMaxBaseDamage()) / 100.0))));
+            status.setValue(status.getStatus(), Math.min(32767, (int) ((double) ((float) eff.getDamage() * from.getStat().getCurrentMaxBaseDamage()) / 100.0)));
             int dam = (int)(aniTime / 1000L * (long)(int)status.getX() / 2L);
             status.setPoisonDamage(dam, from);
             if (dam > 0) {
@@ -1336,7 +1358,6 @@ public class MapleMonster extends AbstractLoadedMapleLife
             this.poisonsLock.writeLock().lock();
             try {
                 this.poisons.add(status);
-                //System.out.println("毒雾伤害3"+status.getDotTime());
                 status.scheduledoPoison(this);
             }
             finally {
@@ -1354,7 +1375,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
             this.map.broadcastMessage(MobPacket.applyMonsterStatus(this, status), this.getTruePosition());
         }
         if (from.getDebugMessage()) {
-           // from.dropMessage(6, "開始 => 給予怪物状态: 持續时间[" + aniTime + "] 状态效果[" + status.getStatus().name() + "] 開始时间[" + System.currentTimeMillis() + "]");
+            from.dropMessage(6, "开始 => 給予怪物状态: 持续时间[" + duration + "] 状态效果[" + status.getStatus().name() + "] 开始时间[" + System.currentTimeMillis() + "]");
         }
     }
     
@@ -1527,8 +1548,12 @@ public class MapleMonster extends AbstractLoadedMapleLife
     }
     
     public final long getLastSkillUsed(final int skillId) {
-        if (this.usedSkills.containsKey((Object)Integer.valueOf(skillId))) {
-            return (long)Long.valueOf(this.usedSkills.get((Object)Integer.valueOf(skillId)));
+        if (this.usedSkills ==null){
+            this.usedSkills = new HashMap<Integer, Long>();
+            return 0L;
+        }
+        if (this.usedSkills.containsKey( skillId)) {
+            return this.usedSkills.get(skillId);
         }
         return 0L;
     }
@@ -1536,17 +1561,17 @@ public class MapleMonster extends AbstractLoadedMapleLife
     public void setLastSkillUsed(final int skillId, final long now, final long cooltime) {
         switch (skillId) {
             case 140: {
-                this.usedSkills.put(Integer.valueOf(skillId), Long.valueOf(now + cooltime * 2L));
-                this.usedSkills.put(Integer.valueOf(141), Long.valueOf(now));
+                this.usedSkills.put(skillId, now + cooltime * 2L);
+                this.usedSkills.put(141, now);
                 break;
             }
             case 141: {
-                this.usedSkills.put(Integer.valueOf(skillId), Long.valueOf(now + cooltime * 2L));
-                this.usedSkills.put(Integer.valueOf(140), Long.valueOf(now + cooltime));
+                this.usedSkills.put(skillId, now + cooltime * 2L);
+                this.usedSkills.put(140, now + cooltime);
                 break;
             }
             default: {
-                this.usedSkills.put(Integer.valueOf(skillId), Long.valueOf(now + cooltime));
+                this.usedSkills.put(skillId, now + cooltime);
                 break;
             }
         }
@@ -1932,7 +1957,7 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
         
         @Override
-        public void killedMob(final MapleMap map, final int baseExp, final boolean mostDamage, final int lastSkill) {
+        public void killedMob(final MapleMap map,  int baseExp, final boolean mostDamage, final int lastSkill) {
             MapleCharacter highest = null;
             long highestDamage = 0L;
             final Map<MapleCharacter, ExpMap> expMap = new HashMap<MapleCharacter, ExpMap>(6);
@@ -2250,26 +2275,26 @@ public class MapleMonster extends AbstractLoadedMapleLife
                         }
 
                         map.spawnRevives(mob, this.getObjectId());
-                        if (this.eventInstance == null && !mob.getStats().isBoss() && (this.getMap().haveMonster(9900000) || this.getMap().haveMonster(9900001) && this.getMap().haveMonster(9900002))) {
-                            int rateByStone;
-                            if (this.getMap().getStoneLevel() == 1) {
-                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("1级轮回碑石怪物倍数");
-                            } else if (this.getMap().getStoneLevel() >= 2) {
-                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("2级轮回碑石怪物倍数");
-                            } else {
-                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("轮回碑石怪物倍数");
-                            }
-
-                            for(int j = 0; j < rateByStone; ++j) {
-                                MapleMonster mob2 = MapleLifeFactory.getMonster(i);
-                                mob2.setPosition(this.getPosition());
-                                if (this.dropsDisabled()) {
-                                    mob2.disableDrops();
-                                }
-
-                                map.spawnRevives(mob2, this.getObjectId());
-                            }
-                        }
+//                        if (this.eventInstance == null && !mob.getStats().isBoss() && (this.getMap().haveMonster(9900000) || this.getMap().haveMonster(9900001) && this.getMap().haveMonster(9900002))) {
+//                            int rateByStone;
+//                            if (this.getMap().getStoneLevel() == 1) {
+//                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("1级轮回碑石怪物倍数");
+//                            } else if (this.getMap().getStoneLevel() >= 2) {
+//                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("2级轮回碑石怪物倍数");
+//                            } else {
+//                                rateByStone = (Integer)LtMS.ConfigValuesMap.get("轮回碑石怪物倍数");
+//                            }
+//
+//                            for(int j = 0; j < rateByStone; ++j) {
+//                                MapleMonster mob2 = MapleLifeFactory.getMonster(i);
+//                                mob2.setPosition(this.getPosition());
+//                                if (this.dropsDisabled()) {
+//                                    mob2.disableDrops();
+//                                }
+//
+//                                map.spawnRevives(mob2, this.getObjectId());
+//                            }
+//                        }
 
                         if (mob.getId() == 9300216) {
                             map.broadcastMessage(MaplePacketCreator.environmentChange("Dojang/clear", 4));
@@ -2321,4 +2346,21 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
 
     }
+
+
+    public void sendAttack(MapleCharacter chr, int skill, int damage, int fake, byte direction, int reflect, boolean is_pg, int pos_x, int pos_y, boolean repeatToSource) {
+        chr.getMap().broadcastMessage(chr, MaplePacketCreator.damagePlayer(skill, this.getId(), chr.getId(), damage, fake, direction, reflect, is_pg, this.getObjectId(), pos_x, pos_y), repeatToSource);
+    }
+
+    public void sendSkill(MapleCharacter chr, int skill, int unk2) {
+        chr.getMap().broadcastMessage(chr, MobPacket.moveMonster(true, skill, unk2, this.getObjectId(), this.getPosition(), this.getPosition(), this.getController().getLastRes()), this.getPosition());
+    }
+
+    public void sendSkillResPose(MapleCharacter chr, short moveId, int skillId, int skillLevel, boolean isControllerHasAggro, boolean repeatToSource) {
+        this.getMap().broadcastMessage(chr, MobPacket.moveMonsterResponse(this.getObjectId(), moveId, this.getMp(), isControllerHasAggro, skillId, skillLevel), repeatToSource);
+        this.setControllerHasAggro(true);
+    }
+
+
+
 }

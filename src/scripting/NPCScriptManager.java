@@ -254,6 +254,10 @@ public class NPCScriptManager extends AbstractScriptManager {
                     c.getPlayer().dropMessage(5, "你现在不能攻击或不能跟npc对话,请在对话框打 @解卡/@ea 来解除异常状态==>start");
                 }
             } catch (ScriptException ex) {
+                if (c.getPlayer() != null && c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[系统提示] NPC " + npc + "脚本错误 " + (Object) ex + "");
+                }
+                FilePrinter.printError("ScriptException.txt", "Error executing NPC script, NPC ID : " + npc + "." + (Object) ex);
             } catch (NoSuchMethodException e) {
                 if (c.getPlayer() != null && c.getPlayer().isGM()) {
                     c.getPlayer().dropMessage("[系统提示] NPC " + npc + "脚本错误 " + (Object) e + "");
@@ -318,7 +322,13 @@ public class NPCScriptManager extends AbstractScriptManager {
                     c.getPlayer().dropMessage(5, "你现在不能攻击或不能跟npc对话,请在对话框打 @解卡/@ea 来解除异常状态");
                 }
             }
-            catch (ScriptException ex) {}
+            catch (ScriptException ex) {
+                System.err.println("脚本错误, 它ID为 : " + npc + "." + (Object)ex);
+                if (c.getPlayer() != null && c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[系统提示] NPC " + npc + "脚本错误 " + (Object)ex + "");
+                }
+                FilePrinter.printError("ScriptException.txt", "Error executing NPC script, NPC ID : " + npc + "." + (Object)ex);
+            }
             catch (NoSuchMethodException e) {
                 System.err.println("NPC 脚本错误, 它ID为 : " + npc + "." + (Object)e);
                 if (c.getPlayer() != null && c.getPlayer().isGM()) {
@@ -346,10 +356,14 @@ public class NPCScriptManager extends AbstractScriptManager {
                     this.dispose(c);
                 } else {
                     c.setClickedNPC();
-//                    cm.getIv().invokeFunction("action", Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection));
-                    cm.getIv().invokeFunction("action", new Object[]{mode, type, selection});
+                   cm.getIv().invokeFunction("action", mode, type,selection);
                 }
             } catch (ScriptException ex) {
+                if (c.getPlayer() != null && c.getPlayer().isGM()) {
+                    c.getPlayer().dropMessage("[系统提示] NPC " + cm.getNpc() + "脚本错误 " + (Object) ex + "");
+                }
+                FilePrinter.printError("ScriptException.txt", "Error executing NPC script, NPC ID : " + cm.getNpc() + "." + (Object) ex);
+                this.dispose(c);
             } catch (NoSuchMethodException e) {
                 if (c.getPlayer() != null && c.getPlayer().isGM()) {
                     c.getPlayer().dropMessage("[系统提示] NPC " + cm.getNpc() + "脚本错误 " + (Object) e + "");
@@ -409,7 +423,7 @@ public class NPCScriptManager extends AbstractScriptManager {
                 this.dispose(c);
             } else {
                 c.setClickedNPC();
-                cm.getIv().invokeFunction("start", Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection));
+                cm.getIv().invokeFunction("start", mode, type, selection);
             }
         } catch (ScriptException ex) {
         } catch (NoSuchMethodException e) {
@@ -492,7 +506,7 @@ public class NPCScriptManager extends AbstractScriptManager {
                 this.dispose(c);
             } else {
                 c.setClickedNPC();
-                cm.getIv().invokeFunction("end", Byte.valueOf(mode), Byte.valueOf(type), Integer.valueOf(selection));
+                cm.getIv().invokeFunction("end", mode, type, selection);
             }
         } catch (ScriptException ex) {
         } catch (NoSuchMethodException e) {

@@ -55,6 +55,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -73,10 +74,10 @@ public class LtMS extends JFrame {
     public static List<String> mobmaptable = new ArrayList<>();
     private ImageIcon bgImg = new ImageIcon(this.getClass().getClassLoader().getResource("image/qqq.jpg"));// 图片路径不要写错了
     private JLabel imgLabel = new JLabel(bgImg);
-    public static Map<String, Integer> ConfigValuesMap = new Hashtable<>();
+    public static Map<String, Integer> ConfigValuesMap = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock mutex = new ReentrantReadWriteLock();
     private static LtMS instance = new LtMS();
-    private Map<Windows, JFrame> windows = new Hashtable<>();
+    private Map<Windows, JFrame> windows = new ConcurrentHashMap<>();
     private ScheduledFuture<?> shutdownServer, updateplayer;
     private static long startRunTime = 0;
     private static long starttime = 0;
@@ -4435,7 +4436,7 @@ public class LtMS extends JFrame {
         Start.getDsTableInfo();
         Start.getDropCoefficient();
         Start.getJobDamage();
-        Start.GetSuitSystem();
+        //Start.GetSuitSystem();
         Start.GetfiveTurn();
         Start.setLtMxdPrize();
         Start.setLtZlTask();
@@ -4450,6 +4451,8 @@ public class LtMS extends JFrame {
         Start.setLtSkillWucdTable();
         Start.getLtMobSpawnBoss();
         Start.getMobUnhurt();
+        Start.getAllItemInfo();
+        Start.findLtMonsterSkill();
         //暗黑破坏神玩法词条加载
         Start.setLtDiabloEquipments();
         //pk
@@ -4467,7 +4470,9 @@ public class LtMS extends JFrame {
 //        System.out.println("清理物品表结束");
         GetConfigValues();
         GetMobMapTable();
+        //减伤数据
         DamageParse.readMobRedDam();
+        DamageParse.readMobData();
         tzjc.sr_tz();
         World.registerRespawn();
         String 输出 = "[重载系统] 系统配置重载成功。";
@@ -4476,7 +4481,7 @@ public class LtMS extends JFrame {
 
         MemoryUsage heapMemoryUsage = memoryBean.getHeapMemoryUsage();
         MemoryUsage nonHeapMemoryUsage = memoryBean.getNonHeapMemoryUsage();
-
+        Start.特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("LtMS.吸怪无法使用地图").split(","));
         System.out.println("堆内存使用:");
         System.out.println("  初始内存: " + heapMemoryUsage.getInit() / 1024 + " KB");
         System.out.println("  使用的内存: " + heapMemoryUsage.getUsed() / 1024 + " KB");
@@ -4544,6 +4549,7 @@ public class LtMS extends JFrame {
         try {
             MapleMonsterInformationProvider.getInstance().clearDrops();
             Start.setdrops();
+            Start.setdropsTwo();
             String 输出 = "[重载系统] 爆率重载成功。";
             JOptionPane.showMessageDialog(null, "爆率重载成功。");
             printChatLog(输出);

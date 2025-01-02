@@ -10,7 +10,6 @@ import client.inventory.ItemLoader;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
 import client.MapleCharacter;
-import java.util.Iterator;
 import server.MerchItemPackage;
 import constants.ServerConfig;
 import server.MapleInventoryManipulator;
@@ -25,7 +24,6 @@ import tools.packet.PlayerShopPacket;
 import constants.WorldConstants;
 import handling.world.World;
 import server.maps.MapleMap;
-import gui.CongMS;
 import client.MapleClient;
 import tools.data.LittleEndianAccessor;
 

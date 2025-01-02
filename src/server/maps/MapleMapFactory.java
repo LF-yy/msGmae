@@ -11,8 +11,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import bean.LtMobSpawnBoss;
 import database.DBConPool;
-import gui.CongMS;
-import gui.LtMS;
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
@@ -487,8 +485,7 @@ public class MapleMapFactory
     }
     
     public Collection<MapleMap> getAllMapThreadSafe() {
-        final Collection<MapleMap> ret = new ArrayList<MapleMap>();
-        ret.addAll((Collection<? extends MapleMap>)this.maps.values());
+        final Collection<MapleMap> ret = new ArrayList<MapleMap>((Collection<? extends MapleMap>) this.maps.values());
         return ret;
     }
     

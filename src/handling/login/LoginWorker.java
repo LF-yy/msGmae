@@ -1,6 +1,5 @@
 package handling.login;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import gui.LtMS;
@@ -12,7 +11,6 @@ import constants.WorldConstants;
 import handling.channel.ChannelServer;
 import tools.packet.LoginPacket;
 import tools.MaplePacketCreator;
-import gui.CongMS;
 import client.MapleClient;
 
 public class LoginWorker

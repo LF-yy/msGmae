@@ -2,7 +2,6 @@ package client.inventory;
 
 import java.util.ArrayList;
 
-import gui.CongMS;
 import gui.LtMS;
 import server.movement.StaticLifeMovement;
 import server.movement.LifeMovementFragment;

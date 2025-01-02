@@ -2,7 +2,6 @@ package client.anticheat;
 
 import java.util.*;
 
-import gui.CongMS;
 import gui.LtMS;
 import tools.StringUtil;
 import constants.WorldConstants;

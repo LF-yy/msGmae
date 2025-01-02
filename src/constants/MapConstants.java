@@ -1,6 +1,5 @@
 package constants;
 
-import gui.CongMS;
 import gui.LtMS;
 import handling.world.MapleParty;
 import server.maps.MapleMapObject;

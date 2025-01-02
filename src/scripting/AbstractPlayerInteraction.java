@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import bean.ItemInfo;
 import client.inventory.*;
 import database.DBConPool;
 import database.DatabaseConnection;
@@ -86,6 +87,8 @@ import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
 import client.MapleCharacter;
 import client.MapleClient;
+import util.GetRedisDataUtil;
+import util.ListUtil;
 
 public abstract class AbstractPlayerInteraction
 {
@@ -93,6 +96,9 @@ public abstract class AbstractPlayerInteraction
 
     protected MapleClient c;
 
+    public String getPortalName(){
+       return c.getPlayer().getMap().getPortalName();
+    }
     public AbstractPlayerInteraction(final MapleClient c) {
         this.c = c;
     }
@@ -872,6 +878,22 @@ public abstract class AbstractPlayerInteraction
                     cg.getPlayer().dropMessage(-1, msg);
                     cg.getPlayer().dropMessage(5, msg);
                 }
+                //重构装备属性
+                    Map<Integer, List<ItemInfo>> itemInfo = GetRedisDataUtil.getItemInfo();
+                    if(Objects.nonNull(itemInfo) && ListUtil.isNotEmpty(itemInfo.get(item.getItemId())) ){
+                        ItemInfo itemInfos = itemInfo.get(item.getItemId()).get(0);
+                        item.setStr(itemInfos.getStr());
+                        item.setDex(itemInfos.getDex());
+                        item.setLuk(itemInfos.getLuk());
+                        item.setInt(itemInfos.getIntValue());
+                        item.setHp(itemInfos.getHp());
+                        item.setMp(itemInfos.getMp());
+                        item.setMatk(itemInfos.getMatk());
+                        item.setWatk(itemInfos.getWatk());
+                        item.setWdef(itemInfos.getWdef());
+                        item.setMdef(itemInfos.getMdef());
+                    }
+
                 MapleInventoryManipulator.addbyItem(cg, item.copy());
             }
             else {
@@ -1129,7 +1151,9 @@ public abstract class AbstractPlayerInteraction
             Guild.guildPacket(this.getPlayer().getGuildId(), MaplePacketCreator.serverNotice(type, message));
         }
     }
-
+    public void serverNotice(String Text) {
+        this.getClient().getChannelServer().broadcastPacket(MaplePacketCreator.serverNotice(6, Text));
+    }
     public final MapleGuild getGuild() {
         return this.getGuild(this.getPlayer().getGuildId());
     }
@@ -1318,6 +1342,23 @@ public abstract class AbstractPlayerInteraction
         }
     }
 
+    /**
+     * 查团队是否开启暗黑模式
+     * @return
+     */
+    public boolean getPartyIsOpenEnableDarkMode() {
+        if (this.getPlayer().getParty() == null || this.getPlayer().getParty().getMembers().size() == 1) {
+            return this.getPlayer().isOpenEnableDarkMode();
+        }
+        for (final MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            final MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null && !curChar.isOpenEnableDarkMode()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void givePartyExp( int amount,  List<MapleCharacter> party) {
         for (MapleCharacter chr : party) {
             if(amount * this.getClient().getChannelServer().getExpRate() >= Integer.MAX_VALUE){
@@ -1446,12 +1487,12 @@ public abstract class AbstractPlayerInteraction
     }
 
     public void openNpc(final int id) {
-        NPCScriptManager.getInstance().dispose(this.c);
+       // NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(id, null);
     }
 
     public void openNpc(final int id, final int mode) {
-        NPCScriptManager.getInstance().dispose(this.c);
+      //  NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(this.getClient(), id, mode, null);
     }
 
@@ -1461,7 +1502,7 @@ public abstract class AbstractPlayerInteraction
     }
 
     public void openNpc(final int id, final String script) {
-        NPCScriptManager.getInstance().dispose(this.c);
+       // NPCScriptManager.getInstance().dispose(this.c);
         this.openNpc(this.getClient(), id, script);
     }
 
@@ -1470,6 +1511,7 @@ public abstract class AbstractPlayerInteraction
     }
 
     public void openNpc(final MapleClient cg, final int id, final int mode, final String script) {
+        NPCScriptManager.getInstance().dispose(cg);
         cg.removeClickedNPC();
         NPCScriptManager.getInstance().start(cg, id, mode, script);
     }

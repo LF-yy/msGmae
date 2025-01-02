@@ -117,8 +117,105 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     }
 
 
+    public String getDiabloEquipmentsDisplay(){
+
+        StringBuilder output = new StringBuilder();
+
+        for (LtDiabloEquipments equipment : Start.ltDiabloEquipments) {
+            StringBuilder attributes = new StringBuilder();
+            if (equipment.getStr() > 0) {
+                attributes.append("力量:").append(equipment.getStr()).append(", ");
+            }
+            if (equipment.getDex() > 0) {
+                attributes.append("敏捷:").append(equipment.getDex()).append(", ");
+            }
+            if (equipment.get_int() > 0) {
+                attributes.append("智力:").append(equipment.get_int()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("物理攻击:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            if (equipment.getLuk() > 0) {
+                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+            }
+            // 可以继续添加其他属性的检查
+
+            // 移除最后的逗号和空格
+            if (attributes.length() > 0) {
+                attributes.setLength(attributes.length() - 2); // 删除最后的 ", "
+                output.append("词条名：").append(equipment.getEntryName()).append(" => ").append(attributes.toString()).append("\n");
+            }
+        }
+        return output.toString();
+    }
+
+
+    //召唤兽
+    public void callUserMapleMonster(int mobId) {
+        MapleMonster mainb = MapleLifeFactory.getMonster(mobId);
+        if(mainb != null) {
+            mainb.setPosition(new Point(c.getPlayer().getPosition().x - 200, c.getPlayer().getPosition().y));
+            mainb.setFake(true);
+            mainb.setOwner(c.getPlayer().getId());
+            mainb.setDuration(600000L);
+            c.getPlayer().getMap().spawnFakeMonster(mainb);
+            c.getPlayer().getMap().setHaveStone(true);
+        }
+    }
+
     /**
-     * 屏蔽特效
+     * 开启暗黑模式
+     */
+    public void openTeamDark() {
+        c.getPlayer().setOpenEnableDarkMode(true);
+    }
+    /**
+     * 团队开启暗黑模式
+     */
+    public void TDOpenTeamDark() {
+        if (c.getPlayer().getParty() == null || c.getPlayer().getParty().getMembers().size() == 1) {
+             c.getPlayer().setOpenEnableDarkMode(true);
+             return;
+        }
+        for (final MaplePartyCharacter chr : c.getPlayer().getParty().getMembers()) {
+            final MapleCharacter curChar = c.getPlayer().getMap().getCharacterById(chr.getId());
+            if (curChar != null ) {
+                curChar.setOpenEnableDarkMode(true);
+            }
+        }
+    }
+    /**
+     * 获取套装属性
      */
     public List<MyPackageX> anyList(Integer id) {
         Collection<IItem> hasEquipped = c.getPlayer().getHasEquipped();
@@ -331,8 +428,7 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public void setEventSM(String script) {
         for (ChannelServer instance : ChannelServer.getAllInstances()) {
             if (instance != null) {
-                instance.getEventSM().init(script);
-
+                instance.reloadEvent(script);
             }
         }
         sendOk("事件已刷新");
@@ -1064,19 +1160,19 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         int mapId = player.getMapId();
         for ( MapleMonster monstermo : player.getMap().getAllMonster()) {
             if (monstermo.getPosition() != null && monstermo.getStats().isBoss()) {
-                c.getPlayer().dropMessage(1, "该地图有BOSS不允许开启轮回.");
+               // c.getPlayer().dropMessage(1, "该地图有BOSS不允许开启轮回.");
                 return;
             }
         }
         if (Start.特殊宠物吸物无法使用地图.stream().anyMatch(s-> {return mapId == Integer.parseInt(s);})){
-            c.getPlayer().dropMessage(1, "该地图不允许轮回.");
+            //c.getPlayer().dropMessage(1, "该地图不允许轮回.");
         }else {
 
             boolean b = Start.轮回集合.entrySet().stream().anyMatch(ua -> {
                 return ua.getValue().getPinDao() == c.getChannel() && ua.getValue().getMapId() == player.getMapId();
             });
             if (b) {
-                c.getPlayer().dropMessage(1, "该地图已经有人开启轮回了.");
+               // c.getPlayer().dropMessage(1, "该地图已经有人开启轮回了.");
             } else {
                 //获取身边的怪物
                 List<MapleMonster> list = new ArrayList<>();
@@ -1090,19 +1186,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 Start.轮回怪物.put(player.getId(), list);
                 UserLhAttraction userAttraction = new UserLhAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
-               // System.out.println("开启轮回怪物数量"+mapleMap.getAllMonster().size());
                 userAttraction.setMapMobCount(mapleMap.getAllMonster().size());
-                //清除地图所有怪物
-             //   c.getPlayer().getMap().killAllMonsters(true);
-
                 Start.轮回集合.put(player.getId(), userAttraction);
                 c.getPlayer().startMobLhVac(userAttraction);
                 c.getPlayer().setLastResOld(c.getPlayer().getLastRes());
-
-                //开启吸怪();
             }
         }
-
     }
     public static void gain关闭吸怪(int id){
         Start.吸怪集合.remove(id);
@@ -1116,6 +1205,8 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         try {
             mapleMap.killAllMonsters(true);
             Start.轮回集合.remove(player.getId());
+            mapleMap.setHaveStone(false);
+            mapleMap.setStoneLevel(-1);
             player.stopMobLhVac();
         } catch (Exception e) {
             Start.轮回集合.remove(player.getId());
@@ -1969,6 +2060,8 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             this.c.sendPacket(MaplePacketCreator.showSponsorRanks(this.npc, MapleGuildRanking.getInstance().getSponsorRank()));
         }else if("破功排行榜".equals(type)){
             this.c.sendPacket(MaplePacketCreator.showDefeatRanks(this.npc, MapleGuildRanking.getInstance().getDefeatRank()));
+        }else if("破功排行榜New".equals(type)){
+            this.c.sendPacket(MaplePacketCreator.showDefeatRanks(this.npc, MapleGuildRanking.getInstance().getDefeatRankNew()));
         }else if("黑龙排行榜".equals(type)){
             this.c.sendPacket(MaplePacketCreator.showBossRanks(this.npc, MapleGuildRanking.getInstance().getBossRank()));
         }else if("绯红排行榜".equals(type)) {
@@ -13470,6 +13563,51 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         } catch (SQLException var17) {
         }
 
+    }
+
+    public void openMerchantItemStore1() {
+        MerchItemPackage pack = loadItemFrom_Database(this.c.getPlayer().getId(), this.c.getPlayer().getAccountID());
+        this.c.sendPacket(PlayerShopPacket.merchItemStore_ItemData(pack));
+    }
+
+    private static final MerchItemPackage loadItemFrom_Database(int charid, int accountid) {
+        try {
+            Connection con = DBConPool.getConnection();
+            PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where characterid = ? OR accountid = ?");
+            ps.setInt(1, charid);
+            ps.setInt(2, accountid);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                ps.close();
+                rs.close();
+                return null;
+            } else {
+                int packageid = rs.getInt("PackageId");
+                MerchItemPackage pack = new MerchItemPackage();
+                pack.setPackageid(packageid);
+                pack.setMesos(rs.getInt("Mesos"));
+                pack.setSentTime(rs.getLong("time"));
+                ps.close();
+                rs.close();
+                Map<Long, Pair<IItem, MapleInventoryType>> items = ItemLoader.HIRED_MERCHANT.loadItems(false, new Integer[]{charid});
+                if (items != null) {
+                    List<IItem> iters = new ArrayList();
+                    Iterator var9 = items.values().iterator();
+
+                    while(var9.hasNext()) {
+                        Pair<IItem, MapleInventoryType> z = (Pair)var9.next();
+                        iters.add(z.left);
+                    }
+
+                    pack.setItems(iters);
+                }
+
+                return pack;
+            }
+        } catch (SQLException var11) {
+            服务端输出信息.println_err(var11);
+            return null;
+        }
     }
 
 }

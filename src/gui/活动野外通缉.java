@@ -20,7 +20,7 @@ import static tools.FileoutputUtil.CurrentReadable_Time;
 public class 活动野外通缉
 {
     public static void 随机通缉() {
-        if (gui.CongMS.ConfigValuesMap.get("野外通缉开关") == 1) {
+        if (LtMS.ConfigValuesMap.get("野外通缉开关") == 1) {
             int a = (int) Math.ceil(Math.random() * 25);
             int[][] 通缉 = {
                     {2220000, 104000400},

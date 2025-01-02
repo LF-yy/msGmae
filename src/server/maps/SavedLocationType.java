@@ -18,7 +18,12 @@ public enum SavedLocationType
     PACH(13), 
     ENGLISH(14), 
     SLEEP(15), 
-    TURNEGG(16);
+    TURNEGG(16),
+    BPReturn(17),
+    WEDDING(17),
+    STAR_PLANET(18),
+    CRYSTALGARDEN(19),
+    PQ_OUT1(20);
     
     private int index;
     

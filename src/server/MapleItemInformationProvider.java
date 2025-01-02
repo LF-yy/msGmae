@@ -1,5 +1,6 @@
 package server;
 
+import bean.ItemInfo;
 import client.inventory.*;
 
 import java.sql.Date;
@@ -30,6 +31,7 @@ import tools.Pair;
 
 import provider.MapleData;
 import provider.MapleDataProvider;
+import util.ListUtil;
 
 public class MapleItemInformationProvider
 {

@@ -332,10 +332,7 @@ public class SkillSkin {
         } else {
             Map<Integer, Integer> chrSkillListForJob = new HashMap();
             Map<ISkill, SkillEntry> chrSkills = this.chr.getSkills();
-            Iterator var3 = chrSkills.entrySet().iterator();
-
-            while(var3.hasNext()) {
-                Map.Entry<ISkill, SkillEntry> entry = (Map.Entry)var3.next();
+            for (Map.Entry<ISkill, SkillEntry> entry : chrSkills.entrySet()) {
                 if (SkillConstants.isJobSkill(((ISkill)entry.getKey()).getId(), this.chr.getJob()) && this.chrSkillList.containsKey(((ISkill)entry.getKey()).getId())) {
                     chrSkillListForJob.put(((ISkill)entry.getKey()).getId(), this.chrSkillList.get(((ISkill)entry.getKey()).getId()));
                 }

@@ -33,16 +33,11 @@ public class MobLhVac extends Thread{
 
     @Override
     public synchronized void run() {
-
-
-
-
-
+        int rateByStone = 0;
+        long lastTime = 0 ;
        int userId = c.getPlayer().getId();
         final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
         try {
-           int indexs =  0;
-            Random rand = new Random();
             while (!Thread.interrupted()) {
                 if(c.getPlayer()!=null){
                     if (!c.isLoggedIn()){
@@ -58,34 +53,35 @@ public class MobLhVac extends Thread{
                     break;
                 }
 
-                //召唤怪物
-                boolean b = mapleMap.getAllMonster().stream().anyMatch(mapleMonster -> mapleMonster.getId() == 9300329);
-                if (!b && indexs == 0 ){
-                    mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(9300329), new Point(c.getPlayer().getPosition().x, c.getPlayer().getPosition().y));
-                    indexs++;
+                if (chr.getMap().getStoneLevel() == 1 && rateByStone ==0 && lastTime == 0) {
+                    rateByStone = (Integer)LtMS.ConfigValuesMap.get("1级轮回碑石怪物倍数");
+                    lastTime = LtMS.ConfigValuesMap.get("1级轮回频率");
+                } else if (chr.getMap().getStoneLevel() >= 2 && rateByStone ==0 && lastTime == 0) {
+                    rateByStone = (Integer)LtMS.ConfigValuesMap.get("2级轮回碑石怪物倍数");
+                    lastTime = LtMS.ConfigValuesMap.get("2级轮回频率");
+                } else if ( rateByStone ==0 && lastTime == 0){
+                    rateByStone = (Integer)LtMS.ConfigValuesMap.get("轮回碑石怪物倍数");
+                    lastTime = LtMS.ConfigValuesMap.get("轮回频率");
                 }
-                if ( mapleMap.getAllMonster().size()< object.getMapMobCount()+LtMS.ConfigValuesMap.get("轮回判定怪物數量")) {
+                Thread.sleep(lastTime);
+                if ( mapleMap.getAllMonstersThreadsafe().size()< (rateByStone/2)) {
                     int index = 0;
-                    Thread.sleep(LtMS.ConfigValuesMap.get("轮回频率"));
-                    int i = rand.nextInt(200);
-                    for (MapleMonster mapleMonster : mapleMap.getAllMonster()) {
-                        if (mapleMap.getAllMonster().size() >= object.getMapMobCount()+LtMS.ConfigValuesMap.get("轮回判定怪物數量")){
-                            break;
+                    for (int i = 0; i < 30; i++) {
+                        for (MapleMonster mapleMonster : mapleMap.getAllMonstersThreadsafe()) {
+                            if (9900000 == mapleMonster.getId() || 9900001 == mapleMonster.getId() || 9900002 == mapleMonster.getId()) {
+                                continue;
+                            }
+                            if (mapleMonster.getStats().isBoss()){
+                                continue;
+                            }
+                            if (rateByStone<=index){
+                                break;
+                            }
+                            index++;
+                            mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mapleMonster.getId()), new Point( object.getPosition().x, object.getPosition().y));
                         }
-                        if (mapleMonster.getId() == 9300329){
-                            continue;
-                        }
-                        if (mapleMonster.getStats().isBoss()){
-                            continue;
-                        }
-                        if (LtMS.ConfigValuesMap.get("轮回判定怪物數量") <=index){
-                            break;
-                        }
-                        index++;
-                        mapleMap.spawnMonsterOnGroundBelow(MapleLifeFactory.getMonster(mapleMonster.getId()), new Point(i>100 ? object.getPosition().x + i : c.getPlayer().getPosition().x - i, object.getPosition().y));
                     }
                 }
-                this.wait(2000L);
             }
         }
         catch (Exception e) {

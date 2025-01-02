@@ -25,7 +25,6 @@ import client.MapleCharacter;
 import constants.WorldConstants;
 import handling.channel.ChannelServer;
 import server.ServerProperties;
-import gui.CongMS;
 import handling.login.LoginWorker;
 import tools.KoreanDateUtil;
 import tools.MaplePacketCreator;
@@ -70,13 +69,7 @@ public class CharLoginHandler
     public static void handleLogin(final LittleEndianAccessor slea, final MapleClient c) {
 
         //设置登陆人数
-        if (在线人数()> ServerConfig.userlimit){
-            c.sendPacket(MaplePacketCreator.serverNotice(1, "服务器人数已满."));
-            c.sendPacket(LoginPacket.getLoginFailed(1));
-            c.getSession().close();
-            return;
-        }
-        if (Start.userlimit > 0 && 在线人数()>  Start.userlimit){
+        if (在线人数()> ServerConfig.getUserlimit()){
             c.sendPacket(MaplePacketCreator.serverNotice(1, "服务器人数已满."));
             c.sendPacket(LoginPacket.getLoginFailed(1));
             c.getSession().close();

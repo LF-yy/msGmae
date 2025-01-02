@@ -8,6 +8,7 @@ public class MobInfo {
      private long id    ;//bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
      private int mobId ;//   int(11) NOT NULL   DEFAULT 0 COMMENT '怪物id',
      private String name  ;//  varchar(64) NOT NULL  DEFAULT '怪物' COMMENT '怪物名称',
+     private int boss  ;//  varchar(64) NOT NULL  DEFAULT '怪物' COMMENT '怪物名称',
      private long hp    ;//bigint(20) NOT NULL  DEFAULT 10000 COMMENT '怪物血量',
      private int mp    ;//int(11) DEFAULT 0 COMMENT '蓝量',
      private int level ;//   int(11) DEFAULT 0 COMMENT '等级',
@@ -16,6 +17,14 @@ public class MobInfo {
      private int damage;//    int(11) DEFAULT 0 COMMENT '伤害',
      private int exp   ;// int(11) DEFAULT 0 COMMENT '经验',
      private int pdd   ;// int(11) DEFAULT 0 COMMENT '防御',
+
+    public boolean getBoss() {
+        return boss == 1;
+    }
+
+    public void setBoss(int boss) {
+        this.boss = boss;
+    }
 
     public long getId() {
         return id;

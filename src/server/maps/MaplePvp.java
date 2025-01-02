@@ -739,6 +739,17 @@ public class MaplePvp
                     }
                 }
             }
+
+            if(player.totalDodge>0){
+                Random rand = new Random();
+                if (rand.nextInt(1000) <= player.totalDodge) {
+                    player.sendSkillEffect(4121004, 2);
+                    player.dropMessage(5, "闪避生效，你成功躲避了敌人的伤害。");
+                    pvpDamage = 0;
+                }
+            }
+
+
         }
 
     }

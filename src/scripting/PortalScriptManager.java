@@ -17,6 +17,7 @@ import tools.FilePrinter;
 import java.io.UnsupportedEncodingException;
 import java.io.FileNotFoundException;
 import javax.script.Compilable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.io.Reader;
@@ -32,9 +33,9 @@ import java.util.Map;
 public class PortalScriptManager
 {
     private static final PortalScriptManager instance = new PortalScriptManager();
-    private final Map<String, PortalScript> scripts = new HashMap();
+    private final Map<String, PortalScript> scripts = new ConcurrentHashMap<>();
     private static final ScriptEngineFactory sef = (new ScriptEngineManager()).getEngineByName("nashorn").getFactory();
-    private static Map<String, StringBuilder> scriptCache = new HashMap();
+    private static final Map<String, StringBuilder> scriptCache = new ConcurrentHashMap<>();
 
     public PortalScriptManager() {
     }
@@ -114,12 +115,17 @@ public class PortalScriptManager
         if (c != null && c.getPlayer() != null && c.getPlayer().hasGmLevel(2)) {
             c.getPlayer().dropMessage("您已經建立與傳送門腳本: " + portal.getScriptName() + ".js 的关联。");
         }
-        if (script != null) {
-            try {
-                script.enter(new PortalPlayerInteraction(c, portal));
-            }
-            catch (Exception e) {
-                System.err.println("進入傳送腳本失敗: " + portal.getScriptName() + ":" + (Object)e);
+        if (c != null && c.getPlayer() != null ) {
+            if (!c.canClickPortal()) {
+                c.getPlayer().dropMessage(5, "您的操作过快，请稍后再传送。");
+            } else if (script != null) {
+                try {
+                    c.setClickedPortal();
+                    script.enter(new PortalPlayerInteraction(c, portal));
+                }
+                catch (Exception e) {
+                    System.err.println("進入傳送腳本失敗: " + portal.getScriptName() + ":" + (Object)e);
+                }
             }
         }
         this.clearScripts();
@@ -127,6 +133,7 @@ public class PortalScriptManager
 
     public final void clearScripts() {
         this.scripts.clear();
+        clearScriptCache();
     }
 
     public static void clearScriptCache() {

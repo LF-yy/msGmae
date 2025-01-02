@@ -9,6 +9,8 @@ import client.ISkill;
 import client.MapleCharacter;
 import java.awt.Point;
 import tools.AttackPair;
+
+import java.util.Calendar;
 import java.util.List;
 
 public class AttackInfo
@@ -30,7 +32,8 @@ public class AttackInfo
     public byte slot;
     public byte unk;
     public boolean real;
-    
+
+
     public AttackInfo() {
         this.real = true;
     }
@@ -63,7 +66,6 @@ public class AttackInfo
             return skill_.getEffect(skillLevel);
         }
     }
-
     public int getSkill() {
         return skill;
     }

@@ -429,6 +429,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 PlayerHandler.ChangeKeymap(slea, c.getPlayer());
                 break;
             }
+            //刷新地图
             case CHANGE_MAP: {
                 if (cs) {
                     CashShopOperation.LeaveCashShop(slea, c, c.getPlayer());
@@ -616,7 +617,8 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case AUTO_AGGRO: {
-                MobHandler.handleAutoAggro(slea, c);
+
+                //MobHandler.handleAutoAggro(slea, c);
                 break;
             }
             case FRIENDLY_DAMAGE: {

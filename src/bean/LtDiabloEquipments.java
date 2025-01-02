@@ -1,14 +1,32 @@
 package bean;
 
-import client.MapleCharacter;
+import client.*;
+import client.inventory.Equip;
+import com.alibaba.fastjson.JSONObject;
+import constants.ServerConfig;
+import database.DBConPool;
+import gui.LtMS;
+import server.Randomizer;
+import server.Start;
+import snail.Potential;
+import util.GetRedisDataUtil;
+import util.ListUtil;
+import util.RedisUtil;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class LtDiabloEquipments {
 
     private int id; // 自增ID
     private String entryName; // 词条名
-    private short probability; // 概率
+    private int probabilityMin; // 概率小值
+    private int probabilityMax; // 概率大值
     private short str; // 力量
     private short dex; // 敏捷
     private short _int; // 智力
@@ -25,8 +43,9 @@ public class LtDiabloEquipments {
     private short dexPercent; // 敏捷百分比
     private short intPercent; // 智力百分比
     private short lukPercent; // 运气百分比
-    private short skillId; // 附加技能
+    private int skillId; // 附加技能
     private short skillType; // 技能类型
+    private int keyPosition; // 键位
     private short skillDamage; // 技能伤害
     private short skillDs; // 技能段数
     private short skillSl; // 技能打击数量
@@ -48,12 +67,680 @@ public class LtDiabloEquipments {
     private short mesoRateCount; // 掉落率
 
     /**
-     * 统计转换
-     * @param list
+     * 取消装备转换
      */
-    public static void dataStatistical(List<LtDiabloEquipments> list, MapleCharacter character){
+    public static void dataStatisticalDelete(Equip target, MapleClient c, MapleCharacter character){
+        List<LtDiabloEquipments> list = GetRedisDataUtil.getLtDiabloEquipments();
+        int reqlv,dex,_int,luk,hp,mp,watk,matk,wdef,mdef;
+        // 定义一个容器来存储所有属性的和
+        short totalStr = 0;
+        short totalDex = 0;
+        short totalInt = 0;
+        short totalLuk = 0;
+        short totalWatk = 0;
+        short totalMatk = 0;
+        short totalWdef = 0;
+        short totalMdef = 0;
+        short totalMaxHp = 0;
+        short totalMaxMp = 0;
+        //抗性（可抵抗BOSS释放的debuff技能）
+        short totalResistance = 0;
+        //闪避
+        short totalDodge = 0;
 
+        short totalStrPercent = 0;
+        short totalDexPercent = 0;
+        short totalIntPercent = 0;
+        short totalLukPercent = 0;
+        short totalWatkPercent = 0;
+        short totalMatkPercent = 0;
+        short totalWdefPercent = 0;
+        short totalMdefPercent = 0;
+        short totalMaxHpPercent = 0;
+        short totalMaxMpPercent = 0;
+
+        short totalNormalDamagePercent = 0;
+        short totalBossDamagePercent = 0;
+        short totalDamagePercent = 0;
+
+        short totalDropRate = 0;
+        short totalDropRateCount = 0;
+        short totalExpRate = 0;
+        short totalExpRateCount = 0;
+        short totalMesoRate = 0;
+        short totalMesoRateCount = 0;
+
+        if (target != null) {
+            if ((Integer) LtMS.ConfigValuesMap.get("暗黑破坏神系统开关") > 0) {
+                for (LtDiabloEquipments ltDiabloEquipments : list) {
+                    //判断署名中是否包含当前词条的名称
+                    if(target.getOwner().contains(ltDiabloEquipments.entryName)){
+                        // 累加属性的值
+                        totalStr += ltDiabloEquipments.str;
+                        totalDex += ltDiabloEquipments.dex;
+                        totalInt += ltDiabloEquipments._int; // 注意变量名不能使用关键字，因此使用 _int
+                        totalLuk += ltDiabloEquipments.luk;
+                        totalWatk += ltDiabloEquipments.watk;
+                        totalMatk += ltDiabloEquipments.matk;
+                        totalWdef += ltDiabloEquipments.wdef;
+                        totalMdef += ltDiabloEquipments.mdef;
+                        totalMaxHp += ltDiabloEquipments.maxhp;
+                        totalMaxMp += ltDiabloEquipments.maxmp;
+                        totalResistance += ltDiabloEquipments.resistance;
+                        totalDodge += ltDiabloEquipments.dodge;
+                        totalStrPercent += ltDiabloEquipments.strPercent;
+                        totalDexPercent += ltDiabloEquipments.dexPercent;
+                        totalIntPercent += ltDiabloEquipments.intPercent;
+                        totalLukPercent += ltDiabloEquipments.lukPercent;
+                        totalWatkPercent += ltDiabloEquipments.watkPercent;
+                        totalMatkPercent += ltDiabloEquipments.matkPercent;
+                        totalWdefPercent += ltDiabloEquipments.wdefPercent;
+                        totalMdefPercent += ltDiabloEquipments.mdefPercent;
+                        totalMaxHpPercent += ltDiabloEquipments.maxhpPercent;
+                        totalMaxMpPercent += ltDiabloEquipments.maxmpPercent;
+                        totalNormalDamagePercent += ltDiabloEquipments.normalDamagePercent;
+                        totalBossDamagePercent += ltDiabloEquipments.bossDamagePercent;
+                        totalDamagePercent += ltDiabloEquipments.totalDamagePercent;
+                        totalDropRate += ltDiabloEquipments.dropRate;
+                        totalDropRateCount += ltDiabloEquipments.dropRateCount;
+                        totalExpRate += ltDiabloEquipments.expRate;
+                        totalExpRateCount += ltDiabloEquipments.expRateCount;
+                        totalMesoRate += ltDiabloEquipments.mesoRate;
+                        totalMesoRateCount += ltDiabloEquipments.mesoRateCount;
+                    }
+                }
+                    reqlv = target.getStr() - totalStr;
+                    if (reqlv < 0) {
+                        reqlv = 0;
+                    }
+
+                    target.setStr((short)reqlv);
+                    dex = target.getDex() - totalDex;
+                    if (dex < 0) {
+                        dex = 0;
+                    }
+
+                    target.setDex((short)dex);
+                    _int = target.getInt() - totalInt;
+                    if (_int < 0) {
+                        _int = 0;
+                    }
+
+                    target.setInt((short)_int);
+                    luk = target.getLuk() - totalLuk;
+                    if (luk < 0) {
+                        luk = 0;
+                    }
+
+                    target.setLuk((short)luk);
+                    hp = target.getHp() - totalMaxHp;
+                    if (hp < 0) {
+                        hp = 0;
+                    }
+
+                    target.setHp((short)hp);
+                    mp = target.getMp() - totalMaxMp;
+                    if (mp < 0) {
+                        mp = 0;
+                    }
+
+                    target.setMp((short)mp);
+                    watk = target.getWatk() - totalWatk;
+                    if (watk < 0) {
+                        watk = 0;
+                    }
+
+                    target.setWatk((short)watk);
+                    matk = target.getMatk() - totalMatk;
+                    if (matk < 0) {
+                        matk = 0;
+                    }
+
+                    target.setMatk((short)matk);
+                    wdef = target.getWdef() - totalWdef;
+                    if (wdef < 0) {
+                        wdef = 0;
+                    }
+
+                    target.setWdef((short)wdef);
+                    mdef = target.getMdef() - totalMdef;
+                    if (mdef < 0) {
+                        mdef = 0;
+                    }
+
+                    target.setMdef((short)mdef);
+                //抗性（可抵抗BOSS释放的debuff技能）
+
+                if (totalResistance > 0) {
+                    character.totalResistance-=totalResistance;
+                    if (character.totalResistance < 0){
+                        character.totalResistance = 0;
+                    }
+                }
+                if (totalDodge > 0) {
+                    character.totalDodge-=totalDodge;
+                    if (character.totalDodge < 0){
+                        character.totalDodge = 0;
+                    }
+                }
+                if (totalDropRate > 0) {
+                    character.totalDropRate-=totalDropRate;
+                    if (character.totalDropRate < 0){
+                        character.totalDropRate = 0;
+                    }
+                }
+                if (totalDropRateCount > 0) {
+                    character.totalDropRateCount-=totalDropRateCount;
+                    if (character.totalDropRateCount < 0){
+                        character.totalDropRateCount = 0;
+                    }
+                }
+                }
+                if (totalExpRate > 0) {
+                    character.totalExpRate-=totalExpRate;
+                    if (character.totalExpRate < 0){
+                        character.totalExpRate = 0;
+                    }
+                }
+                if (totalExpRateCount > 0) {
+                    character.totalExpRateCount-=totalExpRateCount;
+                    if (character.totalExpRateCount < 0){
+                        character.totalExpRateCount = 0;
+                    }
+                }
+                if (totalMesoRate > 0) {
+                    character.totalMesoRate-=totalMesoRate;
+                    if (character.totalMesoRate < 0){
+                        character.totalMesoRate = 0;
+                    }
+                }
+                if (totalMesoRateCount > 0) {
+                    character.totalMesoRateCount-=totalMesoRateCount;
+                    if (character.totalMesoRateCount < 0){
+                        character.totalMesoRateCount = 0;
+                    }
+                }
+
+                if (totalNormalDamagePercent > 0) {
+                    character.package_normal_damage_percent-=totalNormalDamagePercent;
+                    if (character.package_normal_damage_percent < 0){
+                        character.package_normal_damage_percent = 0;
+                    }
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，普通怪伤害加成-" + totalStrPercent + "%");
+                    }
+                if (totalBossDamagePercent > 0) {
+                    character.package_boss_damage_percent-=totalBossDamagePercent;
+                    if (character.package_boss_damage_percent < 0){
+                        character.package_boss_damage_percent = 0;
+                    }
+                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，boss伤害加成-" + totalStrPercent + "%");
+                    }
+                if (totalDamagePercent > 0) {
+                    character.package_total_damage_percent-=totalDamagePercent;
+                    if (character.package_total_damage_percent < 0){
+                        character.package_total_damage_percent = 0;
+                    }
+                    c.getPlayer().dropMessage(5, "该装备栏位取消装备，总伤害加成-" + totalStrPercent + "%");
+                    }
+
+                if (totalStrPercent > 0) {
+                        Potential.setPotential(target, (short)14, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，力量-" + totalStrPercent + "%");
+                    }
+
+                    if (totalDexPercent > 0) {
+                        Potential.setPotential(target, (short)15, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，敏捷-" + totalDexPercent + "%");
+                    }
+
+                    if (totalIntPercent > 0) {
+                        Potential.setPotential(target, (short)16, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，智力-" + totalIntPercent + "%");
+                    }
+
+                    if (totalLukPercent > 0) {
+                        Potential.setPotential(target, (short)17, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，运气-" + totalLukPercent + "%");
+                    }
+
+                    if (totalMaxHpPercent > 0) {
+                        Potential.setPotential(target, (short)18, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxHp-" + totalMaxHpPercent + "%");
+                    }
+
+                    if (totalMaxMpPercent > 0) {
+                        Potential.setPotential(target, (short)19, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxMp-" + totalMaxMpPercent + "%");
+                    }
+
+                    if (totalWatkPercent > 0) {
+                        Potential.setPotential(target, (short)20, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，攻击力-" +  totalWatkPercent + "%");
+                    }
+
+                    if (totalMatkPercent > 0) {
+                        Potential.setPotential(target, (short)21, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法力-" + totalMatkPercent + "%");
+                    }
+
+                    if (totalWdefPercent > 0) {
+                        Potential.setPotential(target, (short)22, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，物理防御力-" + totalWdefPercent + "%");
+                    }
+
+                    if (totalMdefPercent > 0) {
+                        Potential.setPotential(target, (short)23, 0, 0);
+                        c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法防御力-" + totalMdefPercent + "%");
+                    }
+                    c.getPlayer().reFreshItem(target);
+            }
+
+//            c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).removeSlot(dst);
+        }
+    /**
+     * 统计转换
+     */
+    public static void dataStatisticalAdd(Equip source, MapleClient c, MapleCharacter character){
+        List<LtDiabloEquipments> list = GetRedisDataUtil.getLtDiabloEquipments();
+        int reqlv,dex,_int,luk,hp,mp,watk,matk,wdef,mdef;
+        // 定义一个容器来存储所有属性的和
+        short totalStr = 0;
+        short totalDex = 0;
+        short totalInt = 0;
+        short totalLuk = 0;
+        short totalWatk = 0;
+        short totalMatk = 0;
+        short totalWdef = 0;
+        short totalMdef = 0;
+        short totalMaxHp = 0;
+        short totalMaxMp = 0;
+        //抗性（可抵抗BOSS释放的debuff技能）
+        short totalResistance = 0;
+        //闪避
+        short totalDodge = 0;
+
+        short totalStrPercent = 0;
+        short totalDexPercent = 0;
+        short totalIntPercent = 0;
+        short totalLukPercent = 0;
+        short totalWatkPercent = 0;
+        short totalMatkPercent = 0;
+        short totalWdefPercent = 0;
+        short totalMdefPercent = 0;
+        short totalMaxHpPercent = 0;
+        short totalMaxMpPercent = 0;
+
+        short totalNormalDamagePercent = 0;
+        short totalBossDamagePercent = 0;
+        short totalDamagePercent = 0;
+
+        short totalDropRate = 0;
+        short totalDropRateCount = 0;
+        short totalExpRate = 0;
+        short totalExpRateCount = 0;
+        short totalMesoRate = 0;
+        short totalMesoRateCount = 0;
+
+        if (source != null) {
+            if ((Integer) LtMS.ConfigValuesMap.get("暗黑破坏神系统开关") > 0) {
+                for (LtDiabloEquipments ltDiabloEquipments : list) {
+                    //判断署名中是否包含当前词条的名称
+                    if(source.getOwner().contains(ltDiabloEquipments.entryName)){
+                        // 累加属性的值
+                        totalStr += ltDiabloEquipments.str;
+                        totalDex += ltDiabloEquipments.dex;
+                        totalInt += ltDiabloEquipments._int; // 注意变量名不能使用关键字，因此使用 _int
+                        totalLuk += ltDiabloEquipments.luk;
+                        totalWatk += ltDiabloEquipments.watk;
+                        totalMatk += ltDiabloEquipments.matk;
+                        totalWdef += ltDiabloEquipments.wdef;
+                        totalMdef += ltDiabloEquipments.mdef;
+                        totalMaxHp += ltDiabloEquipments.maxhp;
+                        totalMaxMp += ltDiabloEquipments.maxmp;
+                        totalResistance += ltDiabloEquipments.resistance;
+                        totalDodge += ltDiabloEquipments.dodge;
+                        totalStrPercent += ltDiabloEquipments.strPercent;
+                        totalDexPercent += ltDiabloEquipments.dexPercent;
+                        totalIntPercent += ltDiabloEquipments.intPercent;
+                        totalLukPercent += ltDiabloEquipments.lukPercent;
+                        totalWatkPercent += ltDiabloEquipments.watkPercent;
+                        totalMatkPercent += ltDiabloEquipments.matkPercent;
+                        totalWdefPercent += ltDiabloEquipments.wdefPercent;
+                        totalMdefPercent += ltDiabloEquipments.mdefPercent;
+                        totalMaxHpPercent += ltDiabloEquipments.maxhpPercent;
+                        totalMaxMpPercent += ltDiabloEquipments.maxmpPercent;
+                        totalNormalDamagePercent += ltDiabloEquipments.normalDamagePercent;
+                        totalBossDamagePercent += ltDiabloEquipments.bossDamagePercent;
+                        totalDamagePercent += ltDiabloEquipments.totalDamagePercent;
+                        totalDropRate += ltDiabloEquipments.dropRate;
+                        totalDropRateCount += ltDiabloEquipments.dropRateCount;
+                        totalExpRate += ltDiabloEquipments.expRate;
+                        totalExpRateCount += ltDiabloEquipments.expRateCount;
+                        totalMesoRate += ltDiabloEquipments.mesoRate;
+                        totalMesoRateCount += ltDiabloEquipments.mesoRateCount;
+                    }
+                }
+                reqlv = source.getStr() + totalStr;
+                if (reqlv > 32767) {
+                    reqlv = 0;
+                }
+
+                source.setStr((short)reqlv);
+                dex = source.getDex() + totalDex;
+                if (dex > 32767) {
+                    dex = 32767;
+                }
+
+                source.setDex((short)dex);
+                _int = source.getInt() + totalInt;
+                if (_int > 32767) {
+                    _int = 32767;
+                }
+
+                source.setInt((short)_int);
+                luk = source.getLuk() + totalLuk;
+                if (luk > 32767) {
+                    luk = 32767;
+                }
+
+                source.setLuk((short)luk);
+                hp = source.getHp() + totalMaxHp;
+                if (hp > 32767) {
+                    hp = 32767;
+                }
+
+                source.setHp((short)hp);
+                mp = source.getMp() + totalMaxMp;
+                if (mp > 32767) {
+                    mp = 32767;
+                }
+
+                source.setMp((short)mp);
+                watk = source.getWatk() + totalWatk;
+                if (watk > 32767) {
+                    watk = 32767;
+                }
+
+                source.setWatk((short)watk);
+                matk = source.getMatk() + totalMatk;
+                if (matk > 32767) {
+                    matk = 32767;
+                }
+
+                source.setMatk((short)matk);
+                wdef = source.getWdef() + totalWdef;
+                if (wdef > 32767) {
+                    wdef = 32767;
+                }
+
+                source.setWdef((short)wdef);
+                mdef = source.getMdef() + totalMdef;
+                if (mdef > 32767) {
+                    mdef = 32767;
+                }
+
+                source.setMdef((short)mdef);
+                //抗性（可抵抗BOSS释放的debuff技能）
+                if (totalResistance > 0) {
+                    character.totalResistance+=totalResistance;
+                }
+                if (totalDodge > 0) {
+                    character.totalDodge+=totalDodge;
+                }
+                if (totalDropRate > 0) {
+                    character.totalDropRate+=totalDropRate;
+                }
+                if (totalDropRateCount > 0) {
+                    character.totalDropRateCount+=totalDropRateCount;
+                }
+            }
+            if (totalExpRate > 0) {
+                character.totalExpRate+=totalExpRate;
+            }
+            if (totalExpRateCount > 0) {
+                character.totalExpRateCount+=totalExpRateCount;
+            }
+            if (totalMesoRate > 0) {
+                character.totalMesoRate+=totalMesoRate;
+            }
+            if (totalMesoRateCount > 0) {
+                character.totalMesoRateCount+=totalMesoRateCount;
+            }
+
+            if (totalNormalDamagePercent > 0) {
+                character.package_normal_damage_percent+=totalNormalDamagePercent;
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，普通怪伤害加成+" + totalStrPercent + "%");
+            }
+            if (totalBossDamagePercent > 0) {
+                character.package_boss_damage_percent+=totalBossDamagePercent;
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，boss伤害加成+" + totalStrPercent + "%");
+            }
+            if (totalDamagePercent > 0) {
+                character.package_total_damage_percent+=totalDamagePercent;
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，总伤害加成+" + totalStrPercent + "%");
+            }
+
+
+            if (totalStrPercent > 0) {
+                Potential.setPotential(source, (short)14, 5, totalStrPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，力量+" + totalStrPercent + "%");
+            }
+
+            if (totalDexPercent > 0) {
+                Potential.setPotential(source, (short)15, 6, totalDexPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，敏捷+" + totalDexPercent + "%");
+            }
+
+            if (totalIntPercent > 0) {
+                Potential.setPotential(source, (short)16, 7, totalIntPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，智力+" + totalIntPercent + "%");
+            }
+
+            if (totalLukPercent > 0) {
+                Potential.setPotential(source, (short)17, 8, totalLukPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，运气-" + totalLukPercent + "%");
+            }
+
+            if (totalMaxHpPercent > 0) {
+                Potential.setPotential(source, (short)18, 24, totalMaxHpPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxHp-" + totalMaxHpPercent + "%");
+            }
+
+            if (totalMaxMpPercent > 0) {
+                Potential.setPotential(source, (short)19, 26, totalMaxMpPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，maxMp-" + totalMaxMpPercent + "%");
+            }
+
+            if (totalWatkPercent > 0) {
+                Potential.setPotential(source, (short)20, 13, totalWatkPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，攻击力-" +  totalWatkPercent + "%");
+            }
+
+            if (totalMatkPercent > 0) {
+                Potential.setPotential(source, (short)21, 14, totalMatkPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法力-" + totalMatkPercent + "%");
+            }
+
+            if (totalWdefPercent > 0) {
+                Potential.setPotential(source, (short)22, 16, totalWdefPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，物理防御力-" + totalWdefPercent + "%");
+            }
+
+            if (totalMdefPercent > 0) {
+                Potential.setPotential(source, (short)23, 18, totalMdefPercent);
+                c.getPlayer().dropMessage(5, "该装备栏位取消装备，魔法防御力-" + totalMdefPercent + "%");
+            }
+
+            c.getPlayer().reFreshItem(source);
+
+        }
+
+//            c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).removeSlot(dst);
     }
+
+
+
+
+    /**
+     * 组装词条
+     */
+    public static String assembleEntry(){
+        List<LtDiabloEquipments> list = GetRedisDataUtil.getLtDiabloEquipments();
+        List<String> matchedEntryNames = new ArrayList<>();
+        if(ListUtil.isEmpty(list)){
+            return null;
+        }
+        for (LtDiabloEquipments ltDiabloEquipments : list) {
+            int randomNum  =  Randomizer.nextInt(1000000);
+                       // 如果满足条件，记录 entryName
+            if ( randomNum >= ltDiabloEquipments.getProbabilityMin() && randomNum <= ltDiabloEquipments.getProbabilityMax()) {
+                matchedEntryNames.add(ltDiabloEquipments.entryName);
+            }
+            // 如果已记录 3 条，跳出循环
+            if (matchedEntryNames.size() >= 3) {
+                break;
+            }
+            }
+        // 拼接 entryName
+        StringBuilder result = new StringBuilder();
+
+        // 根据记录的数量进行拼接
+        if (!matchedEntryNames.isEmpty()) {
+            for (int i = 0; i < matchedEntryNames.size(); i++) {
+                 result.append(matchedEntryNames.get(i));
+            }
+        }
+        return result.length()==0 ? null :result.toString(); // 返回拼接结果
+    }
+
+    /**
+     * 脱下装备
+     * @return
+     */
+    public static void takeOffEquip(Equip target, MapleClient c){
+        List<LtDiabloEquipments> list = GetRedisDataUtil.getLtDiabloEquipments();
+        if (ListUtil.isNotEmpty(list)) {
+            for (LtDiabloEquipments ltDiabloEquipments : list) {
+                //判断署名中是否包含当前词条的名称
+                if (target.getOwner().contains(ltDiabloEquipments.entryName)) {
+                    if (ltDiabloEquipments.getSkillType() == 1 || ltDiabloEquipments.getSkillType() == 3) {
+                        c.getPlayer().changeSkillLevel(SkillFactory.getSkill(ltDiabloEquipments.getSkillId()), (byte) 0, (byte) 0);
+                        c.getPlayer().dropMessage(5, "你遗忘了 “" + ltDiabloEquipments.entryName + "”词条的 技能。");
+                    }else{
+                        c.getPlayer().LtDiabloEquipmentsList.remove(ltDiabloEquipments);
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * 穿上装备
+     * @return
+     */
+    public static void takeOnEquip(Equip target, MapleClient c){
+        List<LtDiabloEquipments> list = GetRedisDataUtil.getLtDiabloEquipments();
+        if (ListUtil.isNotEmpty(list)) {
+            for (LtDiabloEquipments ltDiabloEquipments : list) {
+                //判断署名中是否包含当前词条的名称
+                if (target.getOwner().contains(ltDiabloEquipments.entryName)) {
+                    if (ltDiabloEquipments.getSkillType() == 1 || ltDiabloEquipments.getSkillType() == 3) {
+                        Map<ISkill, SkillEntry> skills = c.getPlayer().getSkills();
+                        if (skills.entrySet().stream().noneMatch(entry -> entry.getKey().getId() == ltDiabloEquipments.getSkillId())) {
+                            c.getPlayer().newOnKeyboard(ltDiabloEquipments.getKeyPosition(), 1, ltDiabloEquipments.getSkillId());
+                            c.getPlayer().dropMessage(5, "你学会了 “" + ltDiabloEquipments.entryName + "”词条的 技能。");
+
+                        }
+                    }else{
+                        c.getPlayer().LtDiabloEquipmentsList.add(ltDiabloEquipments);
+                        //将可是放技能加载到个人数据里
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * 加载词条数据数据到redis中
+     */
+    public static synchronized void setLtDiabloEquipments() {
+        List<LtDiabloEquipments> sss = new ArrayList<>();
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            String query = "SELECT * FROM lt_diablo_equipments";
+            PreparedStatement pstmt = con.prepareStatement(query);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                LtDiabloEquipments equipment = new LtDiabloEquipments();
+                equipment.setId(rs.getInt("id"));
+                equipment.setEntryName(rs.getString("entry_name"));
+                equipment.setProbabilityMin(rs.getInt("probability_min"));
+                equipment.setProbabilityMax(rs.getInt("probability_max"));
+                equipment.setStr(rs.getShort("str"));
+                equipment.setDex(rs.getShort("dex"));
+                equipment.set_int(rs.getShort("_int"));
+                equipment.setLuk(rs.getShort("luk"));
+                equipment.setWatk(rs.getShort("watk"));
+                equipment.setMatk(rs.getShort("matk"));
+                equipment.setWdef(rs.getShort("wdef"));
+                equipment.setMdef(rs.getShort("mdef"));
+                equipment.setMaxhp(rs.getShort("maxhp"));
+                equipment.setMaxmp(rs.getShort("maxmp"));
+                equipment.setResistance(rs.getShort("resistance"));
+                equipment.setDodge(rs.getShort("dodge"));
+                equipment.setStrPercent(rs.getShort("str_percent"));
+                equipment.setDexPercent(rs.getShort("dex_percent"));
+                equipment.setIntPercent(rs.getShort("_int_percent"));
+                equipment.setLukPercent(rs.getShort("luk_percent"));
+                equipment.setSkillId(rs.getInt("skill_id"));
+                equipment.setSkillType(rs.getShort("skill_type"));
+                equipment.setSkillDamage(rs.getShort("skill_damage"));
+                equipment.setSkillDs(rs.getShort("skill_ds"));
+                equipment.setSkillSl(rs.getShort("skill_sl"));
+                equipment.setSkillTx(rs.getString("skill_tx"));
+                equipment.setWatkPercent(rs.getShort("watk_percent"));
+                equipment.setMatkPercent(rs.getShort("matk_percent"));
+                equipment.setWdefPercent(rs.getShort("wdef_percent"));
+                equipment.setMdefPercent(rs.getShort("mdef_percent"));
+                equipment.setMaxhpPercent(rs.getShort("maxhp_percent"));
+                equipment.setMaxmpPercent(rs.getShort("maxmp_percent"));
+                equipment.setNormalDamagePercent(rs.getShort("normal_damage_percent"));
+                equipment.setBossDamagePercent(rs.getShort("boss_damage_percent"));
+                equipment.setTotalDamagePercent(rs.getShort("total_damage_percent"));
+                equipment.setDropRate(rs.getShort("drop_rate"));
+                equipment.setDropRateCount(rs.getShort("drop_rate_count"));
+                equipment.setExpRate(rs.getShort("exp_rate"));
+                equipment.setExpRateCount(rs.getShort("exp_rate_count"));
+                equipment.setMesoRate(rs.getShort("meso_rate"));
+                equipment.setMesoRateCount(rs.getShort("meso_rate_count"));
+
+                sss.add(equipment);
+            }
+            RedisUtil.hdel(RedisUtil.KEYNAMES.SET_LT_DIABLO_EQUIPMENTS.getKeyName(), RedisUtil.KEYNAMES.SET_LT_DIABLO_EQUIPMENTS.getKeyName());
+            RedisUtil.hset(RedisUtil.KEYNAMES.SET_LT_DIABLO_EQUIPMENTS.getKeyName(), RedisUtil.KEYNAMES.SET_LT_DIABLO_EQUIPMENTS.getKeyName(), JSONObject.toJSONString(sss) );
+            Start.ltDiabloEquipments.clear();
+            Start.ltDiabloEquipments.addAll(sss);
+            rs.close();
+            pstmt.close();
+            con.close();
+            System.out.println("暗黑破坏神玩法词条加载数量：" + sss.size());
+        } catch (SQLException ex) {
+            System.out.println("暗黑破坏神玩法词条加载异常：" + ex.getMessage());
+        }
+    }
+
+    public int getKeyPosition() {
+        return keyPosition;
+    }
+
+    public void setKeyPosition(int keyPosition) {
+        this.keyPosition = keyPosition;
+    }
+
     public int getId() {
         return id;
     }
@@ -70,12 +757,20 @@ public class LtDiabloEquipments {
         this.entryName = entryName;
     }
 
-    public short getProbability() {
-        return probability;
+    public int getProbabilityMin() {
+        return probabilityMin;
     }
 
-    public void setProbability(short probability) {
-        this.probability = probability;
+    public void setProbabilityMin(int probability) {
+        this.probabilityMin = probability;
+    }
+
+    public int getProbabilityMax() {
+        return probabilityMax;
+    }
+
+    public void setProbabilityMax(int probabilityMax) {
+        this.probabilityMax = probabilityMax;
     }
 
     public short getStr() {
@@ -206,11 +901,11 @@ public class LtDiabloEquipments {
         this.lukPercent = lukPercent;
     }
 
-    public short getSkillId() {
+    public int getSkillId() {
         return skillId;
     }
 
-    public void setSkillId(short skillId) {
+    public void setSkillId(int skillId) {
         this.skillId = skillId;
     }
 

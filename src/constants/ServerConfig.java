@@ -26,7 +26,7 @@ public class ServerConfig
     public static boolean DISCOUNTED;
     public static boolean 泡点系统;
     public static int 泡点地图;
-    public static int userlimit;
+    private static int userlimit;
     public static int 点卷数量;
     public static int 抵用卷数量;
     public static int 豆豆数量;
@@ -386,7 +386,7 @@ public class ServerConfig
         ServerConfig.BeiShu2 = ServerProperties.getProperty("LtMS.BeiShu2", ServerConfig.BeiShu2);
         ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
         ServerConfig.IP =  ServerProperties.getProperty("LtMS.ip.listen", Game.IP地址);
-        ServerConfig.userlimit =  ServerProperties.getProperty("LtMS.userlimit", 2);
+        ServerConfig.setUserlimit(ServerProperties.getProperty("LtMS.userlimit", 2));
        // GameConstants.loadBanChannelList();
         GameConstants.loadBanMultiMobRateList();
         //GameConstants.loadMarketGainPointChannelList();
@@ -394,7 +394,15 @@ public class ServerConfig
       //  GameConstants.loadCharacterExpMapFromDB();
         //ServerConfig.IP =  "101.34.216.55";
     }
-    
+
+    public static int getUserlimit() {
+        return userlimit;
+    }
+
+    public static void setUserlimit(int userlimit) {
+        ServerConfig.userlimit = userlimit;
+    }
+
     static {
         ServerConfig.pvp = true;
         ServerConfig.pvpch = 1;

@@ -26,7 +26,7 @@ public class MapleMonsterInformationProvider
     private final List<MonsterGlobalDropEntry> globaldrops;
 
     protected MapleMonsterInformationProvider() {
-        this.mobCache = (Map<Integer, String>)new HashMap();
+        this.mobCache = (Map<Integer, String>)new ConcurrentHashMap();
         this.drops = (Map<Integer, ArrayList<MonsterDropEntry>>)new ConcurrentHashMap();
         this.globaldrops = (List<MonsterGlobalDropEntry>)new ArrayList();
         this.retrieveGlobal();
@@ -51,7 +51,7 @@ public class MapleMonsterInformationProvider
         return this.mobCache;
     }
 
-    private void retrieveGlobal() {
+    private void  retrieveGlobal() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try (final Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
@@ -154,7 +154,7 @@ public class MapleMonsterInformationProvider
         return ret;
     }
 
-    public final void clearDrops() {
+    public final synchronized void clearDrops() {
         this.drops.clear();
         this.globaldrops.clear();
         this.retrieveGlobal();

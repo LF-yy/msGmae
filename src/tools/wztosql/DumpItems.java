@@ -1,6 +1,5 @@
 package tools.wztosql;
 
-import gui.CongMS;
 import gui.LtMS;
 import tools.Pair;
 import server.life.Element;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import provider.MapleDataTool;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
-import java.util.Iterator;
 import provider.MapleDataFileEntry;
 import provider.MapleDataDirectoryEntry;
 import java.sql.ResultSet;

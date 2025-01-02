@@ -1,10 +1,7 @@
 package client;
 
 import abc.套装系统完善版;
-import bean.SuitSystem;
-import constants.ItemConstants;
 import fumo.FumoSkill;
-import gui.CongMS;
 import gui.LtMS;
 import gui.服务端输出信息;
 import handling.world.guild.MapleGuild;
@@ -25,7 +22,6 @@ import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import constants.GameConstants;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import client.inventory.Equip;
 
@@ -1550,7 +1546,7 @@ public class PlayerStats implements Serializable
                             }
 
                             ISkill bx = SkillFactory.getSkill(1320006);
-                            if (chra.getSkillLevel(bx) > 0) {
+                            if (chra.getSkillLevel(bx) > 0 && chra.job == 132) {
                                 this.dam_r *= (double)bx.getEffect(chra.getSkillLevel(bx)).getDamage() / 100.0;
                                 this.bossdam_r *= (double)bx.getEffect(chra.getSkillLevel(bx)).getDamage() / 100.0;
                             }
@@ -2222,14 +2218,14 @@ public class PlayerStats implements Serializable
             this.expMod_H = 10;
         }
         //梯级经验设置
-        if (chra.getLevel() >= 1 && chra.getLevel() <= 120) {
-            this.expMod *= ServerConfig.BeiShu1;
+        if (chra.getLevel() >= ServerConfig.BeiShu1Minlevel && chra.getLevel() <= ServerConfig.BeiShu1Maxlevel) {
+            this.expMod *= ServerConfig.BeiShu1/100.0;
         }
-        else if (chra.getLevel() > 120 && chra.getLevel() <= 200) {
-            this.expMod *= ServerConfig.BeiShu2;
+        else if (chra.getLevel() > ServerConfig.BeiShu2Minlevel && chra.getLevel() <= ServerConfig.BeiShu2Maxlevel) {
+            this.expMod *= ServerConfig.BeiShu2/100.0;
         }
-        else if (chra.getLevel() > 200 && chra.getLevel() <= 250) {
-            this.expMod *= ServerConfig.BeiShu3;
+        else if (chra.getLevel() > ServerConfig.BeiShu3Minlevel && chra.getLevel() <= ServerConfig.BeiShu3Maxlevel) {
+            this.expMod *= ServerConfig.BeiShu3/100.0;
         }
         for (final IItem item2 : chra.getInventory(MapleInventoryType.ETC)) {
             switch (item2.getItemId()) {

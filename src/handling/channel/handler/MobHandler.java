@@ -1,43 +1,43 @@
 package handling.channel.handler;
 
+import bean.LtMonsterSkill;
 import bean.UserAttraction;
-import constants.GameConstants;
-import gui.CongMS;
 import gui.LtMS;
 import gui.服务端输出信息;
 import scripting.NPCConversationManager;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
+import server.Start;
 import server.Timer;
+import server.life.MapleLifeFactory;
 import server.maps.MapleNodes.MapleNodeInfo;
 import java.awt.geom.Point2D;
 
 import client.inventory.MapleInventoryType;
 import server.maps.MapleMap;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.awt.Point;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import server.life.MobSkill;
 import server.life.MapleMonster;
 import server.maps.AnimatedMapleMapObject;
+import tools.*;
 import tools.packet.MobPacket;
 import client.MapleCharacter;
 import handling.channel.ChannelServer;
-import tools.StringUtil;
 import handling.world.World.Broadcast;
-import tools.MaplePacketCreator;
 import client.anticheat.CheatingOffense;
 import server.movement.LifeMovement;
 import server.movement.AbstractLifeMovement;
 import server.movement.LifeMovementFragment;
-import tools.FileoutputUtil;
 import server.life.MobSkillFactory;
-import tools.Pair;
 import client.MapleClient;
 import tools.data.LittleEndianAccessor;
+import util.ListUtil;
 
 public class MobHandler
 {
@@ -75,24 +75,30 @@ public class MobHandler
         final int unk2 = slea.readInt();
         int realskill = 0;
         int level = 0;
-        if (useSkill) {
-            final byte size = monster.getNoSkills();
+        //todo 重做 改增益效果
+        if (useSkill && monster.getStats().isBoss()) {
+//            final byte size = monster.getNoSkills();
+            final byte size = (byte) Start.ltMonsterSkillBuffSkill.size();
             boolean used = false;
             if (size > 0) {
-                final Pair<Integer, Integer> skillToUse = (Pair<Integer, Integer>)monster.getSkills().get((int)(byte)Randomizer.nextInt((int)size));
-                realskill = (int)Integer.valueOf(skillToUse.getLeft());
-                level = (int)Integer.valueOf(skillToUse.getRight());
-                final MobSkill mobSkill = MobSkillFactory.getMobSkill(realskill, level);
+                List<LtMonsterSkill> collect = Start.ltMonsterSkillBuffSkill.stream().filter(ltMonsterSkill -> ltMonsterSkill.getMonsterId() == monster.getId()).collect(Collectors.toList());
+//                final Pair<Integer, Integer> skillToUse = (Pair<Integer, Integer>)monster.getSkills().get((int)Randomizer.nextInt((int)size));
+//                realskill = (int)Integer.valueOf(skillToUse.getLeft());
+//                level = (int)Integer.valueOf(skillToUse.getRight());
+//                final Pair<Integer, Integer> skillToUse = (Pair<Integer, Integer>)monster.getSkills().get((int)Randomizer.nextInt((int)size));
+                LtMonsterSkill ltMonsterSkill = Start.ltMonsterSkillBuffSkill.get((int) Randomizer.nextInt((int) size));
+                if (ListUtil.isNotEmpty(collect) && collect.size() > 0) {
+                    ltMonsterSkill = collect.get((int) Randomizer.nextInt((int) size));
+                }
+                realskill = (int) ltMonsterSkill.getSkillId();
+                level = (int) ltMonsterSkill.getLevel();
+                final MobSkill mobSkill = MobSkillFactory.getMobSkill(ltMonsterSkill.getSkillId(), ltMonsterSkill.getLevel());
                 if (mobSkill != null && !mobSkill.checkCurrentBuff(chr, monster)) {
                     final long now = System.currentTimeMillis();
-                    final long ls = monster.getLastSkillUsed(realskill);
-                    if (ls == 0L || (now - ls > mobSkill.getCoolTime() && !mobSkill.onlyOnce())) {
-                        monster.setLastSkillUsed(realskill, now, mobSkill.getCoolTime());
-                        final int reqHp = (int)((float)monster.getHp() / (float)monster.getMobMaxHp() * 100.0f);
-                        if (reqHp <= mobSkill.getHP()) {
-                            used = true;
+                    final long ls = c.getPlayer().getLastSkillUsed(ltMonsterSkill.getSkillId());
+                    if (ls == 0L || (now - ls > ltMonsterSkill.getSkillcd())) {
+                        c.getPlayer().setUsedSkills(ltMonsterSkill.getSkillId(), now, ltMonsterSkill.getSkillcd());
                             mobSkill.applyEffect(chr, monster, true);
-                        }
                     }
                 }
             }
@@ -101,6 +107,7 @@ public class MobHandler
                 level = 0;
             }
         }
+
         slea.readByte();
         final int unk3 = slea.readInt();
         slea.readInt();
@@ -126,146 +133,6 @@ public class MobHandler
 
         final MapleCharacter controller = monster.getController();
 
-        if (chr.getMapId() != 926013100 && chr.getMapId() != 926013200 && chr.getMapId() != 926013300 && chr.getMapId() != 926013400 && chr.getMapId() != 926013500) {
-            try {
-                final boolean fly = monster.getStats().getFly();
-                Point endPos = null;
-                int reduce_x = 0;
-                int reduce_y = 0;
-                for (final LifeMovementFragment move : res) {
-                    if (move instanceof AbstractLifeMovement) {
-                        endPos = ((LifeMovement)move).getPosition();
-                        try {
-                            reduce_x = Math.abs(startPos.x - endPos.x);
-                            reduce_y = Math.abs(startPos.y - endPos.y);
-                        }
-                        catch (Exception ex) {}
-                    }
-                }
-                if (!fly) {
-                    int GeneallyDistance_y = 150;
-                    int GeneallyDistance_x = 200;
-                    int Check_x = 250;
-                    int max_x = 450;
-                    switch (chr.getMapId()) {
-                        case 100040001:
-                        case 926013500: {
-                            GeneallyDistance_y = 200;
-                            break;
-                        }
-                        case 200010300: {
-                            GeneallyDistance_x = 1000;
-                            GeneallyDistance_y = 500;
-                            break;
-                        }
-                        case 220010600:
-                        case 926013300: {
-                            GeneallyDistance_x = 200;
-                            break;
-                        }
-                        case 211040001: {
-                            GeneallyDistance_x = 220;
-                            break;
-                        }
-                        case 101030105: {
-                            GeneallyDistance_x = 250;
-                            break;
-                        }
-                        case 541020500: {
-                            Check_x = 300;
-                            break;
-                        }
-                    }
-                    switch (monster.getId()) {
-                        case 4230100: {
-                            GeneallyDistance_y = 200;
-                            break;
-                        }
-                        case 9410066: {
-                            Check_x = 1000;
-                            break;
-                        }
-                    }
-                    if (GeneallyDistance_x > max_x) {
-                        max_x = GeneallyDistance_x;
-                    }
-                    if(LtMS.ConfigValuesMap.get("启用吸怪") ==0) {
-                        if (((reduce_x > GeneallyDistance_x || reduce_y > GeneallyDistance_y) && reduce_y != 0) || (reduce_x > Check_x && reduce_y == 0) || reduce_x > max_x) {
-                            chr.add吸怪();
-                            if (c.getPlayer().get吸怪() % 50 == 0 || reduce_x > max_x) {
-                                chr.attractValue++;
-                                c.getPlayer().getCheatTracker().registerOffense(CheatingOffense.MOB_VAC, "(地图: " + chr.getMapId() + " 怪物數量:" + chr.get吸怪() + ")");
-                                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + chr.getName() + " (編號: " + chr.getId() + ")使用吸怪(" + chr.get吸怪() + ")! - 地图:" + chr.getMapId() + "(" + chr.getMap().getMapName() + ")"), true);
-                                final StringBuilder sb = new StringBuilder();
-                                sb.append("\r\n");
-                                sb.append(FileoutputUtil.NowTime());
-                                sb.append(" 玩家: ");
-                                sb.append(StringUtil.getRightPaddedStr(c.getPlayer().getName(), ' ', 13));
-                                sb.append("(編號:");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getId()), ' ', 5));
-                                sb.append(" )怪物: ");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getId()), ' ', 7));
-                                sb.append("(");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(monster.getObjectId()), ' ', 6));
-                                sb.append(")");
-                                sb.append(" 地图: ");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(c.getPlayer().getMapId()), ' ', 9));
-                                sb.append(" 初始座標:");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.x), ' ', 4));
-                                sb.append(",");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(startPos.y), ' ', 4));
-                                sb.append(" 移動座標:");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.x), ' ', 4));
-                                sb.append(",");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(endPos.y), ' ', 4));
-                                sb.append(" 相差座標:");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_x), ' ', 4));
-                                sb.append(",");
-                                sb.append(StringUtil.getRightPaddedStr(String.valueOf(reduce_y), ' ', 4));
-                                FileoutputUtil.logToFile("logs/Hack/吸怪.txt", sb.toString());
-                                if (!chr.hasGmLevel(1)) {
-                                    for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
-                                        //获取玩家
-                                        for (MapleCharacter chr_ : cserv.getPlayerStorage().getAllCharactersThreadSafe()) {
-
-                                            if (chr_.getAuto吸怪()) {
-                                                chr_.warpAuto吸怪(chr);
-                                            }
-                                        }
-                                    }
-                                } else {
-//                                c.getPlayer().dropMessage("觸發吸怪 --  x: " + reduce_x + ", y: " + reduce_y);
-                                }
-                                //处理吸怪
-                                if (chr.attractValue>LtMS.ConfigValuesMap.get("吸怪检测次数")) {
-                                    if ((LtMS.ConfigValuesMap.get("开启封锁")) > 0) {
-                                        if ((LtMS.ConfigValuesMap.get("封停账号")) > 0) {
-
-                                            if (chr.getClient() != null) {
-                                                chr.getClient().disconnect(true, false);
-                                                chr.getClient().getPlayer().ban("使用吸怪", true, true, false);
-                                                FileoutputUtil.logToFile("logs/Hack/吸怪封号.txt", sb.toString());
-//                                            chr.getClient().getSession().close();
-                                            }
-                                            chr.noAttractValue = 0;
-                                        }
-                                    }
-                                }
-                            }
-                        }else{
-                            //有吸怪次数归零
-                            if (chr.noAttractValue>LtMS.ConfigValuesMap.get("吸怪误检测次数")){
-                                chr.attractValue=0;
-                            }else{
-                                chr.noAttractValue++;
-                            }
-
-                        }
-                    }
-                }
-            }
-            catch (Exception ex2) {}
-        }
         c.sendPacket(MobPacket.moveMonsterResponse(monster.getObjectId(), moveid, monster.getMp(), monster.isControllerHasAggro(), realskill, level));
         if (controller != c.getPlayer()) {
             if (monster.isAttackedBy(c.getPlayer())) {

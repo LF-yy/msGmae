@@ -1,6 +1,5 @@
 package constants;
 
-import gui.CongMS;
 import gui.LtMS;
 import server.ServerProperties;
 

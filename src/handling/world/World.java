@@ -1,14 +1,11 @@
 package handling.world;
 
-import bean.UserAttraction;
 import client.*;
 import constants.MapConstants;
 import constants.ServerConfig;
 import constants.WorldConstants;
-import gui.CongMS;
 import gui.LtMS;
 import gui.服务端输出信息;
-import scripting.NPCConversationManager;
 import scripting.ReactorScriptManager;
 import server.*;
 import server.life.MapleLifeFactory;
@@ -38,7 +35,6 @@ import java.sql.SQLException;
 import server.maps.MapleMapObject;
 import server.shops.HiredMerchant;
 import server.shops.IMaplePlayerShop;
-import snail.TimeLogCenter;
 import tools.*;
 import database.DBConPool;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1765,7 +1761,7 @@ public class World
 //                    World.handleMap(map, this.numTimes, map.getCharactersSize());
 //                }
 //            }
-            if (this.numTimes % 4800 == 0) {
+            if (this.numTimes % 1800 == 0) {
                 MapleMonsterInformationProvider.getInstance().clearDrops();
                 ReactorScriptManager.getInstance().clearDrops();
             }

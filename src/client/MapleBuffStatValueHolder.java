@@ -22,4 +22,5 @@ public class MapleBuffStatValueHolder
         this.cid = cid;
         this.skillid = skillid;
     }
+
 }

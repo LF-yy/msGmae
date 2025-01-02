@@ -7,14 +7,13 @@ import client.ISkill;
 import client.SkillFactory;
 import constants.GameConstants;
 import gui.LtMS;
+import handling.world.MaplePartyCharacter;
 import server.MapleStatEffect;
-import server.Start;
 import server.maps.MapleMist;
 import client.MapleDisease;
 import server.maps.MapleMapObject;
 import server.maps.MapleMapObjectType;
 import tools.MaplePacketCreator;
-import gui.CongMS;
 import client.status.MonsterStatus;
 import client.MapleCharacter;
 
@@ -125,7 +124,8 @@ public class MobSkill
                 stop = (monster.isBuffed(MonsterStatus.DAMAGE_IMMUNITY) || monster.isBuffed(MonsterStatus.MAGIC_IMMUNITY) || monster.isBuffed(MonsterStatus.WEAPON_IMMUNITY));
                 break;
             }
-            case 200: {
+            case 200:
+            case 201: {
                 stop = (player.getMap().getNumMonsters() >= this.limit);
                 break;
             }
@@ -197,106 +197,74 @@ public class MobSkill
                     case 102:
                     case 112:
                     case 152: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
                         //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [防御增幅]"));
                         break;
                     }
-                    case 131: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
-                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
+                    case 131:
+                    case 180:
+                    case 191:
+                    {
                        // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用无视防御技能 [召唤毒雾]"));
                         break;
                     }
                     case 128: {
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用跳舞技能 [诱导]"));
                         break;
                     }
                     case 103:
                     case 113:
                     case 153: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
-                        //onster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
-                        //onster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
+                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法防御增幅]"));
                         break;
                     }
                     case 110:
+                    case 100:
                     case 150: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
+                     //   monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理攻击增幅]"));
                         break;
                     }
                     case 101:
                     case 111:
                     case 151: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
+                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法攻击增幅]"));
                         break;
                     }
                     case 120: {
                         if (LtMS.ConfigValuesMap.get((Object)"启用封印")==0 ){
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [封印]"));
                         }
                         break;
                     }
                     case 121: {
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [黑暗]"));
                         break;
                     }
                     case 122: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
                         //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [弱化]"));
                         break;
                     }
                     case 124: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
+                      //  monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [诅咒]"));
                         break;
                     }
                     case 114: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
+                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
                         break;
                     }
                     case 140: {
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [物理无效]"));
                         break;
                     }
                     case 141: {
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [魔法无效]"));
-                        break;
-                    }
-                    case 200: {
-                        monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [召唤小弟]"));
                         break;
                     }
                     case 127: {
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [驱散]"));
                         break;
                     }
                     case 129: {
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [乾坤大挪移]"));
                         break;
                     }
                     case 143: {
@@ -312,20 +280,35 @@ public class MobSkill
                         monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 将开启物理魔法反射"));
                         break;
                     }
+                    case 183:
+
+                        player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [灼烧]");
+                        break;
+                    case 186:
+                        player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [变身]");
+                        break;
+                    case 187:
+                        player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [致死]");
+                        break;
+                    case 200:
+                    case 201:
+                        player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [召唤小弟]");
                     default: {
-                        //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用未知技能 " + this.skillId));
+                        if (player.isGM()) {
+                            monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用未知技能 " + this.skillId));
+                        }
                         return;
                     }
                 }
             }
 
-            int targetMapId;
+
             if (this.isCanAvoidSkill(this.skillId) && (player.getSkillLevel(4120002) > 0 || player.getSkillLevel(4220002) > 0)) {
                 ISkill skill0 = SkillFactory.getSkill(4120002);
                 if (skill0 != null) {
                     MapleStatEffect skillEff = skill0.getEffect(player.getSkillLevel(4120002));
                     if (skillEff != null) {
-                        targetMapId = skillEff.getProb();
+                        int targetMapId = skillEff.getProb();
                         Random rand = new Random();
                         if (rand.nextInt(100) <= targetMapId) {
                             player.sendSkillEffect(4120002, 2);
@@ -349,7 +332,32 @@ public class MobSkill
                     }
                 }
             }
+                if (this.isCanAvoidSkill(this.skillId)) {
+                    if (player.totalDodge > 0) {
+                        Random rand = new Random();
+                        if (rand.nextInt(1000) <= player.totalDodge) {
+                            player.sendSkillEffect(4220002, 2);
+                            player.dropMessage(5, "闪避生效，你成功躲避了怪物的技能。");
+                            return;
+                        }
+                    }
+                    if (player.totalResistance > 0) {
+                        Random rand = new Random();
+                        if (rand.nextInt(1000) <= player.totalResistance) {
+                            player.sendSkillEffect(4220002, 2);
+                            player.dropMessage(5, "抗性生效，你成功抵抗了怪物的技能。");
+                            return;
+                        }
+                    }
+                }
 
+            Iterator var14;
+            Integer mobId;
+            Iterator var36;
+            MapleCharacter character;
+            MapleCharacter curChar;
+            MaplePartyCharacter character1;
+            label508:
             switch (this.skillId) {
             case 100:
             case 110:
@@ -394,30 +402,25 @@ public class MobSkill
                 case 114: {
                     if (this.lt != null && this.rb != null && skill && monster != null) {
                         final List<MapleMapObject> objects = this.getObjectsInRange(monster, MapleMapObjectType.MONSTER);
-                        int healHP = this.getHP();
+//                        int healHP = this.getHP();
                         for (final MapleMapObject mons : objects) {
                             long hp = ((MapleMonster)mons).getHp()*LtMS.ConfigValuesMap.get("治愈比例")/100;
-                            if (hp > Integer.MAX_VALUE){
-                                healHP= Integer.MAX_VALUE;
-                            }else{
-                                healHP= (int)hp;
-                            }
-                            ((MapleMonster)mons).heal(healHP, 0, true);
+//                            if (hp > Integer.MAX_VALUE){
+//                                healHP= Integer.MAX_VALUE;
+//                            }else{
+//                                healHP= (int)hp;
+//                            }
+                            ((MapleMonster)mons).healLong(hp, 0, true);
                         }
                         break;
                     }
                     if (monster != null) {
-                        monster.heal(this.getHP(), 0, true);
+                        monster.healLong(this.getHP(), 0, true);
                         break;
                     }
                     break;
                 }
             case 120:{
-                if (System.currentTimeMillis()-player.get被封印时间() < LtMS.ConfigValuesMap.get("封印冷却时间")){
-                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [封印]未生效"));
-                    return;
-                }
-                player.set被封印时间(System.currentTimeMillis());
                 disease = MapleDisease.getByMobSkill(this.skillId);
                 break;
             }
@@ -430,13 +433,7 @@ public class MobSkill
                 disease = MapleDisease.getByMobSkill(this.skillId);
                 break;
             }
-
             case 128:{
-                if (System.currentTimeMillis()-player.get被诱导时间() < LtMS.ConfigValuesMap.get("诱导冷却时间")){
-                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [诱导]未生效"));
-                    return;
-                }
-                player.set被诱导时间(System.currentTimeMillis());
                 disease = MapleDisease.getByMobSkill(this.skillId);
                 break;
             }
@@ -451,20 +448,17 @@ public class MobSkill
                 break;
             }
             case 127: {
-                if (System.currentTimeMillis()-player.get被驱散时间() < LtMS.ConfigValuesMap.get("驱散冷却时间")){
-                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [驱散]未生效"));
-                    return;
-                }
-                player.set被驱散时间(System.currentTimeMillis());
-                if (this.lt != null && this.rb != null && skill && monster != null && player != null) {
-                    for (final MapleCharacter character : this.getPlayersInRange(monster, player)) {
-                        character.dispel();
+                if (player == null || !player.isBuffedValue(1111002) && !player.isBuffedValue(1120003) && !player.isBuffedValue(1121002) && !player.isBuffedValue(1221002) && !player.isBuffedValue(1321002) && !player.isBuffedValue(4111002) && !player.isBuffedValue(4331002) && !player.isBuffedValue(21121003)) {
+                    if (this.lt != null && this.rb != null && skill && monster != null && player != null) {
+                        for (final MapleCharacter cc : this.getPlayersInRange(monster, player)) {
+                            cc.dispel();
+                        }
+                        break;
                     }
-                    break;
-                }
-                if (player != null) {
-                    player.dispel();
-                    break;
+                    if (player != null) {
+                        player.dispel();
+                        break;
+                    }
                 }
                 break;
             }
@@ -491,25 +485,24 @@ public class MobSkill
             case 131: {
                 if (monster != null) {
                     monster.getMap().spawnMist(new MapleMist(this.calculateBoundingBox(monster.getPosition(), true), monster, this), this.x * 10, false);
-                    break;
+                }
+
+                if (this.getSkillLevel() == 13) {
+                    if (this.lt != null && this.rb != null && skill && monster != null && player != null) {
+                        for (MapleCharacter mapleCharacter : this.getPlayersInRange(monster, player)) {
+                            mapleCharacter.burn((short)12, (int)this.getDuration());
+                        }
+                    } else if (player != null) {
+                        player.burn((short)12, (int)this.getDuration());
+                    }
                 }
                 break;
             }
             case 140: {
-                if (System.currentTimeMillis()-player.get物理无效时间() < LtMS.ConfigValuesMap.get("物理无效冷却时间")){
-                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [物理无效]未生效"));
-                    return;
-                }
-                player.set物理无效时间(System.currentTimeMillis());
                 stats.put(MonsterStatus.WEAPON_IMMUNITY, Integer.valueOf(this.x));
                 break;
             }
             case 141: {
-                if (System.currentTimeMillis()-player.get魔法无效时间() < LtMS.ConfigValuesMap.get("魔法无效冷却时间")){
-                    monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 冷却中 [魔法无效]未生效"));
-                    return;
-                }
-                player.set魔法无效时间(System.currentTimeMillis());
                 stats.put(MonsterStatus.MAGIC_IMMUNITY, Integer.valueOf(this.x));
                 break;
             }
@@ -564,92 +557,144 @@ public class MobSkill
                 monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
                 break;
             }
-            case 200: {
-                if (monster == null) {
-                    return;
-                }
-                for (final Integer mobId : this.getSummons()) {
-                    MapleMonster toSpawn;
-                    try {
-                        toSpawn = MapleLifeFactory.getMonster(GameConstants.getCustomSpawnID(monster.getId(), (int)mobId));
-                    }
-                    catch (RuntimeException e) {
-                        continue;
-                    }
-                    if (toSpawn == null) {
-                        continue;
-                    }
-                    toSpawn.setPosition(monster.getPosition());
-                    int ypos = (int)monster.getPosition().getY();
-                    int xpos = (int)monster.getPosition().getX();
-                    switch ((int)mobId) {
-                        case 8500003: {
-                            toSpawn.setFh((int)Math.ceil(Math.random() * 19.0));
-                            ypos = -590;
-                            break;
-                        }
-                        case 8500004: {
-                            xpos = (int)(monster.getPosition().getX() + Math.ceil(Math.random() * 1000.0) - 500.0);
-                            ypos = (int)monster.getPosition().getY();
-                            break;
-                        }
-                        case 8510100: {
-                            if (Math.ceil(Math.random() * 5.0) == 1.0) {
-                                ypos = 78;
-                                xpos = (int)(0.0 + Math.ceil(Math.random() * 5.0)) + ((Math.ceil(Math.random() * 2.0) == 1.0) ? 180 : 0);
-                                break;
+            //灼烧
+                case 183:
+                    if (this.lt != null && this.rb != null && skill && monster != null) {
+                        var36 = this.getPlayersInRange(monster, player).iterator();
+                        while(true) {
+                            if (!var36.hasNext()) {
+                                break label508;
                             }
-                            xpos = (int)(monster.getPosition().getX() + Math.ceil(Math.random() * 1000.0) - 500.0);
-                            break;
+                            ((MapleCharacter)var36.next()).burn((short)12, (int)this.getDuration());
                         }
-                        case 8820007: {
-                            continue;
-                        }
+                    } else {
+                        player.burn((short)12, (int)this.getDuration());
+                        break;
                     }
-                    switch (monster.getMap().getId()) {
-                        case 220080001: {
-                            if (xpos < -890) {
-                                xpos = (int)(-890.0 + Math.ceil(Math.random() * 150.0));
-                                break;
-                            }
-                            if (xpos > 230) {
-                                xpos = (int)(230.0 - Math.ceil(Math.random() * 150.0));
-                                break;
-                            }
-                            break;
-                        }
-                        case 230040420: {
-                            if (xpos < -239) {
-                                xpos = (int)(-239.0 + Math.ceil(Math.random() * 150.0));
-                                break;
-                            }
-                            if (xpos > 371) {
-                                xpos = (int)(371.0 - Math.ceil(Math.random() * 150.0));
-                                break;
-                            }
-                            break;
-                        }
+                    //变身
+                case 186:
+                    int morphId = 0;
+                    var14 = this.getSummons().iterator();
+                    if (var14.hasNext()) {
+                        mobId = (Integer)var14.next();
+                        morphId = mobId;
                     }
-                    monster.getMap().spawnMonsterWithEffect(toSpawn, this.getSpawnEffect(), monster.getMap().calcPointBelow(new Point(xpos, ypos - 1)));
-                }
-                break;
-            }
+
+                    if (this.lt != null && this.rb != null && skill && monster != null) {
+                        var14 = this.getPlayersInRange(monster, player).iterator();
+
+                        while(true) {
+                            if (!var14.hasNext()) {
+                                break label508;
+                            }
+
+                            curChar = (MapleCharacter)var14.next();
+                            if (curChar.getMorphState() == -1) {
+                                curChar.setMorph(2210022, morphId, (int)this.getDuration(), false);
+                            }
+                        }
+                    } else {
+                        if (player.getMorphState() == -1) {
+                            player.setMorph(2210022, morphId, (int)this.getDuration(), false);
+                        }
+                        break;
+                    }
+                    //致死
+                case 187:
+                        player.killSelf();
+                    break;
+                case 200:
+                case 201:
+                    if (monster == null) {
+                        return;
+                    }
+                        var14 = this.getSummons().iterator();
+
+                        label365:
+                        while (true) {
+                            MapleMonster toSpawn;
+                            int ypos;
+                            int xpos;
+                            label363:
+                            while (true) {
+                                do {
+                                    while (true) {
+                                        if (!var14.hasNext()) {
+                                            break label365;
+                                        }
+
+                                        mobId = (Integer) var14.next();
+
+                                        try {
+                                            toSpawn = MapleLifeFactory.getMonster(GameConstants.getCustomSpawnID(monster.getId(), mobId));
+                                            break;
+                                        } catch (RuntimeException var19) {
+                                        }
+                                    }
+                                } while (toSpawn == null);
+
+                                toSpawn.setPosition(monster.getPosition());
+                                ypos = (int) monster.getPosition().getY();
+                                xpos = (int) monster.getPosition().getX();
+                                switch (mobId) {
+                                    case 8500003:
+                                        toSpawn.setFh((int) Math.ceil(Math.random() * 19.0));
+                                        ypos = -590;
+                                        break label363;
+                                    case 8500004:
+                                        xpos = (int) (monster.getPosition().getX() + Math.ceil(Math.random() * 1000.0) - 500.0);
+                                        ypos = (int) monster.getPosition().getY();
+                                        break label363;
+                                    case 8510100:
+                                        if (Math.ceil(Math.random() * 5.0) == 1.0) {
+                                            ypos = 78;
+                                            xpos = (int) (0.0 + Math.ceil(Math.random() * 5.0)) + (Math.ceil(Math.random() * 2.0) == 1.0 ? 180 : 0);
+                                        } else {
+                                            xpos = (int) (monster.getPosition().getX() + Math.ceil(Math.random() * 1000.0) - 500.0);
+                                        }
+                                        break label363;
+                                    case 8820007:
+                                        break;
+                                    default:
+                                        break label363;
+                                }
+                            }
+
+                            switch (monster.getMap().getId()) {
+                                case 220080001:
+                                    if (xpos < -890) {
+                                        xpos = (int) (-890.0 + Math.ceil(Math.random() * 150.0));
+                                    } else if (xpos > 230) {
+                                        xpos = (int) (230.0 - Math.ceil(Math.random() * 150.0));
+                                    }
+                                    break;
+                                case 230040420:
+                                    if (xpos < -239) {
+                                        xpos = (int) (-239.0 + Math.ceil(Math.random() * 150.0));
+                                    } else if (xpos > 371) {
+                                        xpos = (int) (371.0 - Math.ceil(Math.random() * 150.0));
+                                    }
+                            }
+                            //怪物释放技能
+                            monster.getMap().spawnMonsterWithEffect(toSpawn, this.getSpawnEffect(), monster.getMap().calcPointBelow(new Point(xpos, ypos - 1)));
+                        }
             default: {
-                if (disease != null) {}
                 break;
             }
         }
+        //赋予怪物技能
             if (stats.size() > 0 && monster != null) {
                 if (this.lt != null && this.rb != null && skill) {
+                    //群体buff
                     for (final MapleMapObject mons2 : this.getObjectsInRange(monster, MapleMapObjectType.MONSTER)) {
-                        ((MapleMonster)mons2).applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration() > 10 ? LtMS.ConfigValuesMap.get("怪物BUFF持续时间") : this.getDuration(), this, reflection);
+                        ((MapleMonster)mons2).applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration(), this, reflection);
                     }
-                }
-                else {
-                    monster.applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration() > 10 ? LtMS.ConfigValuesMap.get("怪物BUFF持续时间") : this.getDuration(), this, reflection);
+                }else {
+                    //单体buff
+                    monster.applyMonsterBuff(stats, this.getX(), this.getSkillId(), this.getDuration(), this, reflection);
                 }
             }
-            if (disease != null && player != null) {
+            if (disease != null) {
                 if (this.lt != null && this.rb != null && skill && monster != null) {
                     for (MapleCharacter chr2 : this.getPlayersInRange(monster, player)) {
                         chr2.getDiseaseBuff(disease, this);

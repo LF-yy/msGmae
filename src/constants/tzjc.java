@@ -1,22 +1,21 @@
 package constants;
 
-import bean.DsModel;
 import bean.Leveladdharm;
 import bean.LttItemAdditionalDamage;
 import bean.SuitSystem;
 import client.MapleCharacter;
-import client.MapleStat;
-import client.PlayerStats;
 import client.inventory.IItem;
-import gui.CongMS;
 import gui.LtMS;
 import handling.channel.MapleGuildRanking;
 import server.MapleItemInformationProvider;
+import server.MapleSquad;
 import server.Start;
 import server.life.MapleMonster;
 import tools.FileoutputUtil;
-import tools.MaplePacketCreator;
+import tools.Pair;
+import util.GetRedisDataUtil;
 import util.ListUtil;
+import util.RedisUtil;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,7 +124,7 @@ public class tzjc {
             tzMap.putAll(Start.新套装加成表);
         }
         sbMap.putAll(Start.双爆加成);
-        suitSys.putAll(Start.suitSystemsMap);
+       // suitSys.putAll(Start.suitSystemsMap);
     }
 
     public static double check_tz(MapleCharacter chr) {
@@ -134,7 +133,8 @@ public class tzjc {
         //enhancedRankMap  赋能
         //dropRankMap   爆率
         //int id = chr.getClient().getPlayer().getId();
-        //段伤
+        //段伤  .getChannelServer().removeMapleSquad("blackmage");  MapleSquadType.valueOf("blackmage".toLowerCase())
+        chr.getClient().getPlayer().getClient().getChannelServer().removeMapleSquad(MapleSquad.MapleSquadType.valueOf("blackmage".toLowerCase()));
         AtomicLong additionalDamage = new AtomicLong(0L);
         if ( LtMS.ConfigValuesMap.get("段伤开关") > 0) {
             try {
@@ -265,45 +265,45 @@ public class tzjc {
         }else{
             dsDamage = Math.ceil(additionalDamage.get())  + "";
         }
-        int package_Watk = chr.package_watk;
-        int package_Matk = chr.package_matk;
-        int package_WatkPercent = chr.package_watk_percent;
-        int package_MatkPercent = chr.package_matk_percent;
-        int package_Wdef = chr.package_wdef;
-        int package_WdefPercent = chr.package_wdef_percent;
-        int package_Mdef = chr.package_mdef;
-        int package_MdefPercent = chr.package_mdef_percent;
-        int package_Acc = chr.package_acc;
-        int package_AccPercent = chr.package_acc_percent;
-        int package_Avoid = chr.package_avoid;
-        int package_AvoidPercent = chr.package_avoid_percent;
-        int package_MaxHp = chr.package_maxhp;
-        int package_MaxHpPercent = chr.package_maxhp_percent;
-        int package_MaxMp = chr.package_maxmp;
-        int package_MaxMpPercent = chr.package_maxmp_percent;
-        int package_Speed = chr.package_speed;
-        int package_Jump = chr.package_jump;
-        short package_normal_damage_percent =  chr.package_normal_damage_percent;
-        short package_boss_damage_percent = chr.package_boss_damage_percent;
-        short package_total_damage_percent = chr.package_total_damage_percent;
-        int pWatk =  chr.getStat().pWatk;
-        int pMatk =  chr.getStat().pMatk;
-        int pWdef =  chr.getStat().pWdef;
-        int pMdef =  chr.getStat().pMdef;
-        int pAcc =  chr.getStat().pAcc;
-        int pAvoid =  chr.getStat().pAvoid;
-        int pMaxHp =  chr.getStat().pMaxHp;
-        int pMaxMp =  chr.getStat().pMaxMp;
-        int pSpeed =  chr.getStat().pSpeed;
-        int pJump =  chr.getStat().pJump;
-        int pWatkPercent =  chr.getStat().pWatkPercent;
-        int pMatkPercent =  chr.getStat().pMatkPercent;
-        int pWdefPercent =  chr.getStat().pWdefPercent;
-        int pMdefPercent =  chr.getStat().pMdefPercent;
-        int pAccPercent =  chr.getStat().pAccPercent;
-        int pAvoidPercent =  chr.getStat().pAvoidPercent;
-        int pMaxHpPercent =  chr.getStat().pMaxHpPercent;
-        int pMaxMpPercent =  chr.getStat().pMaxMpPercent;
+//        int package_Watk = chr.package_watk;
+//        int package_Matk = chr.package_matk;
+//        int package_WatkPercent = chr.package_watk_percent;
+//        int package_MatkPercent = chr.package_matk_percent;
+//        int package_Wdef = chr.package_wdef;
+//        int package_WdefPercent = chr.package_wdef_percent;
+//        int package_Mdef = chr.package_mdef;
+//        int package_MdefPercent = chr.package_mdef_percent;
+//        int package_Acc = chr.package_acc;
+//        int package_AccPercent = chr.package_acc_percent;
+//        int package_Avoid = chr.package_avoid;
+//        int package_AvoidPercent = chr.package_avoid_percent;
+//        int package_MaxHp = chr.package_maxhp;
+//        int package_MaxHpPercent = chr.package_maxhp_percent;
+//        int package_MaxMp = chr.package_maxmp;
+//        int package_MaxMpPercent = chr.package_maxmp_percent;
+//        int package_Speed = chr.package_speed;
+//        int package_Jump = chr.package_jump;
+//        short package_normal_damage_percent =  chr.package_normal_damage_percent;
+//        short package_boss_damage_percent = chr.package_boss_damage_percent;
+//        short package_total_damage_percent = chr.package_total_damage_percent;
+//        int pWatk =  chr.getStat().pWatk;
+//        int pMatk =  chr.getStat().pMatk;
+//        int pWdef =  chr.getStat().pWdef;
+//        int pMdef =  chr.getStat().pMdef;
+//        int pAcc =  chr.getStat().pAcc;
+//        int pAvoid =  chr.getStat().pAvoid;
+//        int pMaxHp =  chr.getStat().pMaxHp;
+//        int pMaxMp =  chr.getStat().pMaxMp;
+//        int pSpeed =  chr.getStat().pSpeed;
+//        int pJump =  chr.getStat().pJump;
+//        int pWatkPercent =  chr.getStat().pWatkPercent;
+//        int pMatkPercent =  chr.getStat().pMatkPercent;
+//        int pWdefPercent =  chr.getStat().pWdefPercent;
+//        int pMdefPercent =  chr.getStat().pMdefPercent;
+//        int pAccPercent =  chr.getStat().pAccPercent;
+//        int pAvoidPercent =  chr.getStat().pAvoidPercent;
+//        int pMaxHpPercent =  chr.getStat().pMaxHpPercent;
+//        int pMaxMpPercent =  chr.getStat().pMaxMpPercent;
         String str = "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
                 "力量：" + chr.getStat().localstr + ">>" +
                 "敏捷：" + chr.getStat().localdex + ">>" +
@@ -317,9 +317,9 @@ public class tzjc {
                 "最大伤害：" + damage + ">>" +
                 "伤害加成：" + (chr.getStat().dam_r+chr.package_total_damage_percent) + ">>" +
                 "段伤加成：" + dsDamage + ">>" +
-                "BOSS伤害加成：" +( chr.getStat().bossdam_r+chr.package_boss_damage_percent) + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")+">>" +
-                "套装属性加成：魔法"+package_Watk+"+"+package_WatkPercent+"%"+"  魔法"+package_Matk+"+"+package_MatkPercent+"%"+"  物防"+package_Wdef+"+"+package_WdefPercent+"%"+"  魔防"+package_Mdef+"+"+package_MdefPercent+"%"+"  命中"+package_Acc+"+"+package_AccPercent+"%"+"  回避"+package_Avoid+"+"+package_AvoidPercent+"%"+"  最大生命"+package_MaxHp+"+"+package_MaxHpPercent+"%"+"  最大魔力"+package_MaxMp+"+"+package_MaxMpPercent+"%"+"  速度"+package_Speed+"+"+package_Jump+"%"+"  伤害加成"+package_normal_damage_percent+"%"+"  BOSS伤害加成"+package_boss_damage_percent+"%"+"  总伤害加成"+package_total_damage_percent+"%"+ ">>" +
-                "潜能总加成: 攻击" + pWatk + "+" + pWatkPercent + "%" + "  魔法" + pMatk + "+" + pMatkPercent + "%" + "  物防" + pWdef + "+" + pWdefPercent + "%" + "  魔防" + pMdef + "+" + pMdefPercent + "%" + "  命中" + pAcc + "+" + pAccPercent + "%" + "  回避" + pAvoid + "+" + pAvoidPercent + "%" + "  最大生命" + pMaxHp + "+" + pMaxHpPercent + "%" + "  最大魔力" + pMaxMp + "+" + pMaxMpPercent + "%" + "  速度" + pSpeed + "+" + pJump + "%"
+                "BOSS伤害加成：" +( chr.getStat().bossdam_r+chr.package_boss_damage_percent) + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")+">>"
+//                "套装属性加成：魔法"+package_Watk+"+"+package_WatkPercent+"%"+"  魔法"+package_Matk+"+"+package_MatkPercent+"%"+"  物防"+package_Wdef+"+"+package_WdefPercent+"%"+"  魔防"+package_Mdef+"+"+package_MdefPercent+"%"+"  命中"+package_Acc+"+"+package_AccPercent+"%"+"  回避"+package_Avoid+"+"+package_AvoidPercent+"%"+"  最大生命"+package_MaxHp+"+"+package_MaxHpPercent+"%"+"  最大魔力"+package_MaxMp+"+"+package_MaxMpPercent+"%"+"  速度"+package_Speed+"+"+package_Jump+"%"+"  伤害加成"+package_normal_damage_percent+"%"+"  BOSS伤害加成"+package_boss_damage_percent+"%"+"  总伤害加成"+package_total_damage_percent+"%"+ ">>" +
+//                "潜能总加成: 攻击" + pWatk + "+" + pWatkPercent + "%" + "  魔法" + pMatk + "+" + pMatkPercent + "%" + "  物防" + pWdef + "+" + pWdefPercent + "%" + "  魔防" + pMdef + "+" + pMdefPercent + "%" + "  命中" + pAcc + "+" + pAccPercent + "%" + "  回避" + pAvoid + "+" + pAvoidPercent + "%" + "  最大生命" + pMaxHp + "+" + pMaxHpPercent + "%" + "  最大魔力" + pMaxMp + "+" + pMaxMpPercent + "%" + "  速度" + pSpeed + "+" + pJump + "%"
                 ;
 
         chr.showInstruction(str,240,10);

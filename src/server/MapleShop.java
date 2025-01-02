@@ -7,14 +7,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import client.inventory.*;
-import gui.CongMS;
 import gui.LtMS;
 import handling.world.World;
 import tools.FileoutputUtil;
 import java.util.Collection;
 import java.util.ArrayList;
 import database.DBConPool;
-import java.util.Iterator;
 
 import client.SkillFactory;
 import constants.PiPiConfig;

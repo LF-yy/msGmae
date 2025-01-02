@@ -9,12 +9,14 @@ import gui.服务端输出信息;
 import server.Start;
 import tools.FilePrinter;
 
+import java.nio.file.Files;
 import java.util.*;
 import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.File;
+import java.util.concurrent.ConcurrentHashMap;
 
 import client.MapleClient;
 import tools.MaplePacketCreator;
@@ -43,6 +45,7 @@ public abstract class AbstractScriptManager {
                 //System.out.println("脚本缓存"+scriptCache.containsKey(path));
                 if (scriptCache.containsKey(path)) {
                     engine = AbstractScriptManager.sem.getEngineByName("javascript");
+//                    engine = AbstractScriptManager.sem.getEngineByName("javascript");
                     try {
                         if ((Integer)LtMS.ConfigValuesMap.get("脚本缓存开关") > 0 && !path.contains("事件")) {
                             if (compiled == null) {
@@ -72,6 +75,7 @@ public abstract class AbstractScriptManager {
             if (!scriptFile.exists()) {
                 return null;
             }
+//            engine = AbstractScriptManager.sem.getEngineByName("javascript");
             engine = AbstractScriptManager.sem.getEngineByName("javascript");
 
 
@@ -84,7 +88,7 @@ public abstract class AbstractScriptManager {
             boolean 已有status;
             InputStream in = null;
             try {
-                in = new FileInputStream(scriptFile);
+                in = Files.newInputStream(scriptFile.toPath());
 
                  BufferedReader bf = new BufferedReader(new InputStreamReader(in, EncodingDetect.getJavaEncode(scriptFile)));
 
@@ -150,8 +154,8 @@ public abstract class AbstractScriptManager {
   }
 
     public static void reloadScriptCache() {
-        Map<String, StringBuilder> ret = new HashMap(scriptCache);
-        ArrayList<String> pathList = new ArrayList();
+        Map<String, StringBuilder> ret = new ConcurrentHashMap<>(scriptCache);
+        ArrayList<String> pathList = new ArrayList<>();
         for (Map.Entry<String, StringBuilder> entry : ret.entrySet()) {
             String path = (String)entry.getKey();
             String s = null;
@@ -165,7 +169,7 @@ public abstract class AbstractScriptManager {
                     StringBuilder sb = new StringBuilder();
                     boolean 进入start = false;
                     boolean 已有status = false;
-                    fr = new FileInputStream(scriptFile);
+                    fr = Files.newInputStream(scriptFile.toPath());
 
                     for(BufferedReader bf = new BufferedReader(new InputStreamReader(fr, EncodingDetect.getJavaEncode(scriptFile))); (s = bf.readLine()) != null; sb.append(s + "\r\n")) {
                         if (s.contains("start()")) {
@@ -188,6 +192,14 @@ public abstract class AbstractScriptManager {
                     }
                 } catch (Exception var13) {
                     服务端输出信息.println_err("【错误】reloadScriptCache 重载脚本缓存失败，失败原因：" + var13);
+                }finally {
+                    try {
+                        if (fr != null) {
+                            fr.close();
+                        }
+                    } catch (IOException var12) {
+                        服务端输出信息.println_err("【错误】reloadScriptCache 关闭文件流失败，失败原因：" + var12);
+                    }
                 }
             }
 

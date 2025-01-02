@@ -372,7 +372,7 @@ ps.close();
                                     forceLogining = true;
                                     rand = new Random();
                                     try {
-                                        Thread.sleep((long)((Integer)LtMS.ConfigValuesMap.get("顶号等待秒数") * 1000 + rand.nextInt(15000)));
+                                        Thread.sleep((long)((Integer)LtMS.ConfigValuesMap.get("顶号等待秒数") * 1000 ));
                                     } catch (InterruptedException e) {
 
                                     }
@@ -1048,7 +1048,7 @@ ps.close();
     }
     
     public boolean canClickNPC() {
-        return this.lastNpcClick + 500L < System.currentTimeMillis();
+        return this.lastNpcClick + 100L < System.currentTimeMillis();
     }
     
     public void setClickedNPC() {
@@ -1983,7 +1983,10 @@ ps.close();
     }
 
     public boolean canClickPortal() {
-        return this.lastPortalClick + 1000L < System.currentTimeMillis();
+        if(this.lastPortalClick == 0L){
+            return true;
+        }
+        return (this.lastPortalClick + 2000L) < System.currentTimeMillis();
     }
 
 

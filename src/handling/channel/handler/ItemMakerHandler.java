@@ -1,12 +1,17 @@
 package handling.channel.handler;
 
+import bean.ItemInfo;
+import bean.LtDiabloEquipments;
 import client.SkillFactory;
-import java.util.Iterator;
-import java.util.ArrayList;
+
+import java.util.*;
+
+import gui.LtMS;
+import handling.world.World;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.RandomUtils;
 import tools.Pair;
-import java.util.List;
 import server.Randomizer;
-import java.util.Map;
 import server.ItemMakerFactory.ItemMakerCreateEntry;
 import server.ItemMakerFactory.GemCreateEntry;
 import client.inventory.IItem;
@@ -19,6 +24,9 @@ import server.ItemMakerFactory;
 import constants.GameConstants;
 import client.MapleClient;
 import tools.data.LittleEndianAccessor;
+import util.GetRedisDataUtil;
+import util.ListUtil;
+import util.RedisUtil;
 
 public class ItemMakerHandler
 {
@@ -66,6 +74,7 @@ public class ItemMakerHandler
                     if (c.getPlayer().getInventory(GameConstants.getInventoryType(toCreate)).isFull()) {
                         return;
                     }
+                    //制作移除材料物品
                     if (checkRequiredNRemove(c, gem.getReqRecipes()) == 0) {
                         return;
                     }
@@ -105,6 +114,26 @@ public class ItemMakerHandler
                     c.getPlayer().gainMeso(-create.getCost(), false);
                     final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
                     final Equip toGive = (Equip)ii.getEquipById(toCreate);
+
+                    //随机生成属性
+                    Map<Integer, List<ItemInfo>> itemInfo = GetRedisDataUtil.getItemInfo();
+                    if(Objects.nonNull(itemInfo) && ListUtil.isNotEmpty(itemInfo.get(toGive.getItemId())) ){
+                        ItemInfo itemInfos = itemInfo.get(toGive.getItemId()).get(0);
+                        toGive.setStr(itemInfos.getStr());
+                        toGive.setDex(itemInfos.getDex());
+                        toGive.setLuk(itemInfos.getLuk());
+                        toGive.setInt(itemInfos.getIntValue());
+                        toGive.setHp(itemInfos.getHp());
+                        toGive.setMp(itemInfos.getMp());
+                        toGive.setMatk(itemInfos.getMatk());
+                        toGive.setWatk(itemInfos.getWatk());
+                        toGive.setWdef(itemInfos.getWdef());
+                        toGive.setMdef(itemInfos.getMdef());
+                        toGive.setUpgradeSlots((byte) itemInfos.getUpgradeSlots());
+
+                    }
+                    toGive.setUpgradeSlots((byte) (toGive.getUpgradeSlots()+Randomizer.nextInt(10)));
+
                     if (stimulator || numEnchanter > 0) {
                         if (c.getPlayer().haveItem(create.getStimulator(), 1, false, true)) {
                             ii.randomizeStats(toGive);
@@ -121,9 +150,19 @@ public class ItemMakerHandler
                             }
                         }
                     }
+
+                    //暗黑破坏神词条
+                    if(LtMS.ConfigValuesMap.get("暗黑破坏神制作道具")>=1) {
+                        String s = LtDiabloEquipments.assembleEntry();
+                        if (!StringUtils.isEmpty(s)) {
+                            toGive.setOwner(s);
+                            //重构装备属性
+                        }
+                    }
                     MapleInventoryManipulator.addbyItem(c, (IItem)toGive);
                     c.sendPacket(MaplePacketCreator.ItemMaker_Success());
                     c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.ItemMaker_Success_3rdParty(c.getPlayer().getId()), false);
+                    World.Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("【锻造制作】", " : " + "恭喜 " + c.getPlayer().getName() + " 制作出极品装备 恭喜恭喜！",  (byte)14, (IItem)toGive, (byte)1, c.getChannel()));
                     break;
                 }
             }
@@ -322,12 +361,12 @@ public class ItemMakerHandler
     private static int getRandomGem(final List<Pair<Integer, Integer>> rewards) {
         final List<Integer> items = new ArrayList<Integer>();
         for (final Pair p : rewards) {
-            final int itemid = (int)Integer.valueOf((String)p.getLeft());
-            for (int i = 0; i < (int)Integer.valueOf((String)p.getRight()); ++i) {
-                items.add(Integer.valueOf(itemid));
+            final int itemid = Integer.parseInt(p.getLeft().toString());
+            for (int i = 0; i < (int)Integer.parseInt(p.getRight().toString()); ++i) {
+                items.add(itemid);
             }
         }
-        return (int)Integer.valueOf(items.get(Randomizer.nextInt(items.size())));
+        return items.get(Randomizer.nextInt(items.size()));
     }
     
     private static int checkRequiredNRemove(final MapleClient c, final List<Pair<Integer, Integer>> recipe) {

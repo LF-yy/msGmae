@@ -2366,7 +2366,7 @@ public class MapleGuild implements Serializable {
         private int e_mp;
         private String potentials;
         private Map<Integer, Integer> potentialMap = new HashMap();
-        private int percentForce;
+        private long percentForce;
         private long force;
         private long chr_attack;
 
@@ -2519,13 +2519,13 @@ public class MapleGuild implements Serializable {
                         default:
                             break;
                         case 29:
-                            this.percentForce += (Integer)entry.getValue();
+                            this.percentForce += (long)entry.getValue();
                             break;
                         case 30:
-                            this.percentForce = (int)((double)this.percentForce + (double)(Integer)entry.getValue() * 0.5);
+                            this.percentForce = (long)((double)this.percentForce + (double)(long)entry.getValue() * 0.5);
                             break;
                         case 31:
-                            this.percentForce = (int)((double)this.percentForce + (double)(Integer)entry.getValue() * 0.3);
+                            this.percentForce = (long)((double)this.percentForce + (double)(long)entry.getValue() * 0.3);
                     }
                 }
 

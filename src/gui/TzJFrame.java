@@ -1,10 +1,14 @@
 package gui;
 
+import com.alibaba.fastjson.JSONObject;
 import constants.tzjc;
 import database.DBConPool;
 import server.MapleItemInformationProvider;
 import server.Start;
 import tools.FileoutputUtil;
+import tools.Pair;
+import util.GetRedisDataUtil;
+import util.RedisUtil;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -17,6 +21,7 @@ import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 public class TzJFrame extends JFrame
 {
@@ -249,19 +254,21 @@ public class TzJFrame extends JFrame
 
    }
     public void 查询套装列表(int a) {
+        List<Pair<Integer, Pair<String, Pair<String, Integer>>>> redisData = GetRedisDataUtil.getRedisData(RedisUtil.KEYNAMES.SET_BONUS_TABLE.getKeyName());
+
         for (int i = ((DefaultTableModel) (DefaultTableModel) this.套装伤害加成表.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel) (DefaultTableModel) this.套装伤害加成表.getModel()).removeRow(i);
         }
         if (a == 1) {
-            for (int i = 0; i < Start.套装加成表.size(); ++i) {
-                if ((Start.套装加成表.get(i)).getLeft() == Integer.valueOf(this.套装排序输入.getText())) {
-                    ((DefaultTableModel) this.套装伤害加成表.getModel()).insertRow(this.套装伤害加成表.getRowCount(), new Object[]{(((Start.套装加成表.get(i)).getRight()).getRight()).getLeft(), MapleItemInformationProvider.getInstance().getName(Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()), (((Start.套装加成表.get(i)).getRight()).getRight()).getRight(), (Start.套装加成表.get(i)).getLeft(), ((Start.套装加成表.get(i)).getRight()).getLeft()});
+            for (int i = 0; i < redisData.size(); ++i) {
+                if ((redisData.get(i)).getLeft() == Integer.valueOf(this.套装排序输入.getText())) {
+                    ((DefaultTableModel) this.套装伤害加成表.getModel()).insertRow(this.套装伤害加成表.getRowCount(), new Object[]{(((redisData.get(i)).getRight()).getRight()).getLeft(), MapleItemInformationProvider.getInstance().getName(Integer.valueOf((String) (((redisData.get(i)).getRight()).getRight()).getLeft()).intValue()), (((redisData.get(i)).getRight()).getRight()).getRight(), (redisData.get(i)).getLeft(), ((redisData.get(i)).getRight()).getLeft()});
                 }
             }
         } else {
-            for (int i = 0; i < Start.套装加成表.size(); ++i) {
-                if (((String) ((Start.套装加成表.get(i)).getRight()).getLeft()).contains((CharSequence) this.套装名字输入.getText())) {
-                    ((DefaultTableModel) this.套装伤害加成表.getModel()).insertRow(this.套装伤害加成表.getRowCount(), new Object[]{(((Start.套装加成表.get(i)).getRight()).getRight()).getLeft(), MapleItemInformationProvider.getInstance().getName(Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()), (((Start.套装加成表.get(i)).getRight()).getRight()).getRight(), (Start.套装加成表.get(i)).getLeft(), ((Start.套装加成表.get(i)).getRight()).getLeft()});
+            for (int i = 0; i < redisData.size(); ++i) {
+                if (((String) ((redisData.get(i)).getRight()).getLeft()).contains((CharSequence) this.套装名字输入.getText())) {
+                    ((DefaultTableModel) this.套装伤害加成表.getModel()).insertRow(this.套装伤害加成表.getRowCount(), new Object[]{(((redisData.get(i)).getRight()).getRight()).getLeft(), MapleItemInformationProvider.getInstance().getName(Integer.valueOf((String) (((redisData.get(i)).getRight()).getRight()).getLeft()).intValue()), (((redisData.get(i)).getRight()).getRight()).getRight(), (redisData.get(i)).getLeft(), ((redisData.get(i)).getRight()).getLeft()});
                 }
             }
         }
@@ -292,8 +299,10 @@ public class TzJFrame extends JFrame
         for (int i = ((DefaultTableModel) this.套装伤害加成表.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel) this.套装伤害加成表.getModel()).removeRow(i);
         }
-        for (int i = 0; i < Start.套装加成表.size(); ++i) {
-            ((DefaultTableModel) this.套装伤害加成表.getModel()).insertRow(this.套装伤害加成表.getRowCount(), new Object[]{(((Start.套装加成表.get(i)).getRight()).getRight()).getLeft(), MapleItemInformationProvider.getInstance().getName(Integer.valueOf((String) (((Start.套装加成表.get(i)).getRight()).getRight()).getLeft()).intValue()), (((Start.套装加成表.get(i)).getRight()).getRight()).getRight(), (Start.套装加成表.get(i)).getLeft(), ((Start.套装加成表.get(i)).getRight()).getLeft()});
+        List<Pair<Integer, Pair<String, Pair<String, Integer>>>> redisData = GetRedisDataUtil.getRedisData(RedisUtil.KEYNAMES.SET_BONUS_TABLE.getKeyName());
+
+        for (int i = 0; i < redisData.size(); ++i) {
+            ((DefaultTableModel) this.套装伤害加成表.getModel()).insertRow(this.套装伤害加成表.getRowCount(), new Object[]{(((redisData.get(i)).getRight()).getRight()).getLeft(), MapleItemInformationProvider.getInstance().getName(Integer.valueOf((String) (((redisData.get(i)).getRight()).getRight()).getLeft()).intValue()), (((redisData.get(i)).getRight()).getRight()).getRight(), (redisData.get(i)).getLeft(), ((redisData.get(i)).getRight()).getLeft()});
         }
     }
     private void 套装道具增加ActionPerformed(ActionEvent evt) {

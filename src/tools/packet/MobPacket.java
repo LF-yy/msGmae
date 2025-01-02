@@ -5,6 +5,7 @@ import java.util.*;
 import bean.UserAttraction;
 import constants.ServerConfig;
 import scripting.NPCConversationManager;
+import server.Start;
 import tools.MaplePacketCreator;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
@@ -15,6 +16,8 @@ import server.life.MapleMonster;
 import handling.SendPacketOpcode;
 import tools.Pair;
 import tools.data.MaplePacketLittleEndianWriter;
+import util.ListUtil;
+import util.RedisUtil;
 
 public class MobPacket
 {
@@ -214,6 +217,17 @@ public class MobPacket
 //     if (Objects.isNull(userAttraction)) {
 //          userAttraction = NPCConversationManager.getAttractLhList(life.getMap().getChannel(), life.getMap().getId());
 //     }
+        if(ListUtil.isNotEmpty(Start.mobInfoMap.get(life.getId()))){
+            life.setHp(Start.mobInfoMap.get(life.getId()).get(0).getHp());
+            life.setMp(Start.mobInfoMap.get(life.getId()).get(0).getMp());
+            life.getStats().setHp(Start.mobInfoMap.get(life.getId()).get(0).getHp());
+            life.getStats().setMp(Start.mobInfoMap.get(life.getId()).get(0).getMp());
+            life.getStats().setLevel((short)Start.mobInfoMap.get(life.getId()).get(0).getLevel());
+            life.getStats().setBoss(Start.mobInfoMap.get(life.getId()).get(0).getBoss());
+        }
+
+
+
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SPAWN_MONSTER.getValue());
         mplew.writeInt(life.getObjectId());

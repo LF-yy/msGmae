@@ -18,6 +18,7 @@ import client.MapleClient;
 import client.SkillFactory;
 import client.inventory.MaplePet;
 import client.inventory.OnlyID;
+import com.alibaba.fastjson.JSONObject;
 import constants.*;
 import database.DBConPool;
 import database.DatabaseConnection;
@@ -36,11 +37,13 @@ import handling.world.World.Broadcast;
 import handling.world.family.MapleFamilyBuff;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import merchant.merchant_main;
+import org.apache.commons.lang.StringUtils;
 import server.Timer.BuffTimer;
 import server.Timer.CheatTimer;
 import server.Timer.CloneTimer;
@@ -59,17 +62,16 @@ import server.maps.MapleMapFactory;
 import server.quest.MapleQuest;
 import tools.*;
 import tools.packet.UIPacket;
+import util.RedisUtil;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
-
 
 public class Start
 {
     private static ServerSocket srvSocket;
     private static int srvPort;
 
-    public static int userlimit = 0;
     public static long startTime;
     public static Start instance;
     private static int maxUsers;
@@ -93,7 +95,7 @@ public class Start
     private static int Z;
     public static int 福利泡点;
     private static int 回收内存;
-
+    //套装伤害表
     public static List<Pair<Integer, Pair<String, Pair<String, Integer>>>> 套装加成表;
     public static Map<String, Double>   新套装加成表;
     public static Map<Integer, Integer>   初始化技能等级;
@@ -133,13 +135,21 @@ public class Start
     public static List<Integer> mobUnhurtList;
     public static List<MonsterGlobalDropEntry> globaldrops;
     public static List<MonsterDropEntry> drops;
+    public static List<MonsterDropEntry> dropsTwo;
     public static List<LtDiabloEquipments> ltDiabloEquipments;
+    public static Map<Integer,List<ItemInfo>> itemInfo;
+    public static Map<Integer,List<LtMonsterSkill>> ltMonsterSkillAttackSkill;
+    public static List<LtMonsterSkill> ltMonsterSkillBuffSkill;
 
     public static List<LtMxdPrize> ltMxdPrize;
     public static List<LtZlTask> ltZlTask;
     public static Map<Integer, String[]> FuMoInfoMap = new HashMap();
     public static Map<Integer, String[]> potentialListMap = new HashMap();
     public static Map<Integer, List<MonsterDropEntry>> dropsMap;
+    public static Map<Integer, List<MonsterDropEntry>> dropsMapTwo;
+    public static volatile int dropsFalg;
+    public static Map<Integer, Integer> dropsMapCount;
+    public static Map<Integer, Integer> dropsMapCountTwo;
     public static Map<String , File> in ;
     public static Map<String , ScriptEngine> se ;
     public static Map<String , Invocable> iv ;
@@ -192,7 +202,7 @@ public class Start
     public static Map<String, ArrayList> RewardNameMap = new HashMap();
     public static Map<String, ArrayList> RewardAnnouncementMap = new HashMap();
 
-    public static List<String> 授权IP = Arrays.asList("202.189.5.75","106.54.24.67","159.75.177.122","58.220.33.222","27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23");
+    public static List<String> 授权IP = Arrays.asList("1.15.43.65","175.24.182.189","202.189.5.75","106.54.24.67","159.75.177.122","58.220.33.222","27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23");
     public static int 计数器 = 0;
     public static int 删除标记 = 0;
     public static void 刷新抽奖物品() {
@@ -323,7 +333,7 @@ public class Start
                 Start.getDropCoefficient();
                 Start.getJobDamage();
                 Start.getDsTableInfo();
-                Start.GetSuitSystem();
+               // Start.GetSuitSystem();
                 Start.GetfiveTurn();
                 Start.setLtMxdPrize();
                 Start.setLtZlTask();
@@ -338,6 +348,7 @@ public class Start
                 Start.setLtSkillWucdTable();
                 Start.getLtMobSpawnBoss();
                 Start.getMobUnhurt();
+                Start.findLtMonsterSkill();
 
         //系统配置加载
             ServerConfig.loadSetting();
@@ -462,6 +473,8 @@ public class Start
             AutoSaveSkillSkinMap(30);
             tzjc.sr_tz();
             setdrops();
+            setdropsTwo();
+            getAllItemInfo();
             //暗黑破坏神玩法词条加载
             setLtDiabloEquipments();
             //PK
@@ -474,9 +487,10 @@ public class Start
         GameConstants.loadPKDropItemsList();
         GameConstants.loadPKDropItemsList2();
         if (!授权IP.contains(ServerConfig.IP)){
-            Start.userlimit = 5;
+            ServerConfig.setUserlimit(5);
             启动轮播(50);
         }
+
             System.out.println("[所有游戏数据加载完毕] ");
             System.out.println("[LtMs079服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
             System.out.println("[温馨提示]运行中请勿直接关闭本控制台，使用下方关闭服务器按钮来关闭服务端，否则回档自负\r\n");
@@ -739,20 +753,6 @@ public class Start
             } catch (SQLException e) {}
         }
     }
-    public static void 定时重载爆率(final int time) {
-
-        WorldTimer.getInstance().register((Runnable)new Runnable() {
-            @Override
-            public void run() {
-                    if (LtMS.ConfigValuesMap.get("定时重载爆率") == 1) {
-                        MapleMonsterInformationProvider.getInstance().clearDrops();
-                        setdrops();
-                    }
-
-                }
-
-        }, (long)(60000 * time));
-    }
 
     public static void 吸怪检测(final int time) {
 
@@ -923,7 +923,6 @@ public class Start
                             } catch (Exception e) {
 
                             }
-
                             TimeLogCenter.getInstance().deleteBossLogAll();
                             TimeLogCenter.getInstance().deleteBossLogaAll();
 
@@ -939,33 +938,37 @@ public class Start
                     else if (时 == 23) {
                         isClearBossLog = false;
                     }
-                    Start.每日双倍(hour, minute);
-                    Start.每日双爆(hour, minute);
+                    if(LtMS.ConfigValuesMap.get("每日双倍开关") == 1){
+                        Start.每日双倍(hour, minute);
+                    }
+                    if(LtMS.ConfigValuesMap.get("每日双倍开关") == 1){
+                        Start.每日双爆(hour, minute);
+                    }
                     Start.周末双倍(hour, minute);
                     Start.周末双爆(hour, minute);
                     Start.每日低保(hour, minute);
                     if (分 % 5 == 0) {
-                        ServerProperties.loadProperties();
-                        WorldConstants.PET_VAC_RANGE = ServerProperties.getProperty("server.settings.petVac.range", WorldConstants.PET_VAC_RANGE);
-                        ServerProperties.setProperty("server.settings.petVac.range", WorldConstants.PET_VAC_RANGE);
-                     //  WorldConstants.loadWorldList();
-                       // WorldConstants.setWorldList();
-                        ServerProperties.setProperty("server.settings.banBypassLogin", ServerProperties.getProperty("server.settings.banBypassLogin", false));
-                        ItemConstants.loadCanDropedItems();
-                        ItemConstants.setCanDropedItems();
-                        ItemConstants.loadImportantItems();
-                        ItemConstants.setImportantItems();
-                        FakePlayer.loadIpWhiteList();
-                        FakePlayer.setIpWhiteList();
-                        ServerProperties.saveProperties();
-                        GameConstants.loadBanChannelList();
-                        GameConstants.setBanChannelList();
-                        GameConstants.loadBanMultiMobRateList();
-                        GameConstants.setBanMultiMobRateList();
-                        GameConstants.loadFishingChannelList();
-                       //GameConstants.loadMarketGainPointChannelList();
-                      // GameConstants.loadCharacterExpMapFromDB();
-                        World.Guild.save();
+//                        ServerProperties.loadProperties();
+//                        WorldConstants.PET_VAC_RANGE = ServerProperties.getProperty("server.settings.petVac.range", WorldConstants.PET_VAC_RANGE);
+//                        ServerProperties.setProperty("server.settings.petVac.range", WorldConstants.PET_VAC_RANGE);
+//                  //   //  WorldConstants.loadWorldList();
+//                   //    // WorldConstants.setWorldList();
+//                        ServerProperties.setProperty("server.settings.banBypassLogin", ServerProperties.getProperty("server.settings.banBypassLogin", false));
+//                        ItemConstants.loadCanDropedItems();
+//                        ItemConstants.setCanDropedItems();
+//                        ItemConstants.loadImportantItems();
+//                        ItemConstants.setImportantItems();
+//                        FakePlayer.loadIpWhiteList();
+//                        FakePlayer.setIpWhiteList();
+//                       //// ServerProperties.saveProperties();
+//                        GameConstants.loadBanChannelList();
+//                        GameConstants.setBanChannelList();
+//                        GameConstants.loadBanMultiMobRateList();
+//                        GameConstants.setBanMultiMobRateList();
+//                        GameConstants.loadFishingChannelList();
+//                      // //GameConstants.loadMarketGainPointChannelList();
+//                     // // GameConstants.loadCharacterExpMapFromDB();
+//                        World.Guild.save();
                     }
 
                     if (day == 2 && hour == 0 && minute >= 0 && minute < 2) {
@@ -987,14 +990,12 @@ public class Start
                         魔族攻城 = true;
                     }
                     if (分 % 5 == 0) {
-                        ServerProperties.loadProperties();
-
-                        ServerProperties.setProperty("server.settings.banBypassLogin", ServerProperties.getProperty("server.settings.banBypassLogin", false));
-
-                        ServerProperties.saveProperties();
-                        GameConstants.loadBanMultiMobRateList();
-                        GameConstants.setBanMultiMobRateList();
-                        World.Guild.save();
+//                        ServerProperties.loadProperties();
+//                        ServerProperties.setProperty("server.settings.banBypassLogin", ServerProperties.getProperty("server.settings.banBypassLogin", false));
+//                        ServerProperties.saveProperties();
+//                        GameConstants.loadBanMultiMobRateList();
+//                        GameConstants.setBanMultiMobRateList();
+//                        World.Guild.save();
                     }
 
 
@@ -1022,10 +1023,10 @@ public class Start
                             活动神秘商人.召唤神秘商人();
                         }
                     }
-//                    if (LtMS.ConfigValuesMap.get("世界BOSS开关") == 1 && time >= 21 && 世界BOSS刷新记录 != 1) {
-//                        WorldBoss.随机通缉();
-//                            世界BOSS刷新记录 = 1;
-//                    }
+                    if (LtMS.ConfigValuesMap.get("世界BOSS开关") == 1 && time >= 21 && 世界BOSS刷新记录 != 1) {
+                       // WorldBoss.随机通缉();
+                            世界BOSS刷新记录 = 1;
+                    }
                     if (LtMS.ConfigValuesMap.get( "野外通缉开关")== 1) {
                         if (初始通缉令 == 30) {
                             活动野外通缉.随机通缉();
@@ -1419,7 +1420,21 @@ public class Start
             @Override
             public void run() {
                 int ppl = 0;
-               // if(LtMS.ConfigValuesMap.get("自动存档") >0) {
+                if (删除标记 >= 2 ){
+                    Connection con = DatabaseConnection.getConnection();
+                    try {
+                        deleteInventoryequipment(con, "delete from  inventoryequipment where inventoryitemid not in (select aa.inventoryitemid from (\n" +
+                                "                select  b.inventoryitemid as inventoryitemid from  inventoryitems as a\n" +
+                                "                left join inventoryequipment as b on  a.inventoryitemid = b.inventoryitemid where b.inventoryitemid is not null) as aa)");
+                    } catch (SQLException e) {
+                        FilePrinter.printError("Inventoryequipment.txt", (Throwable) e, "[Inventoryequipment]");
+                    }finally {
+                        try {
+                            con.close();
+                        } catch (SQLException e) {}
+                    }
+                    删除标记 = 0;
+                }
                     for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
                         Collection<MapleCharacter> allCharacters = null;
                         try {
@@ -1457,23 +1472,9 @@ public class Start
 
                         }
                     }
-               // }
+
                 删除标记++;
-                if (删除标记 >= 5 ){
-                    Connection con = DatabaseConnection.getConnection();
-                    try {
-                        deleteInventoryequipment(con, "delete from  inventoryequipment where inventoryitemid not in (select aa.inventoryitemid from (\n" +
-                                "                select  b.inventoryitemid as inventoryitemid from  inventoryitems as a\n" +
-                                "                left join inventoryequipment as b on  a.inventoryitemid = b.inventoryitemid where b.inventoryitemid is not null) as aa)");
-                    } catch (SQLException e) {
-                        FilePrinter.printError("Inventoryequipment.txt", (Throwable) e, "[Inventoryequipment]");
-                    }finally {
-                        try {
-                            con.close();
-                        } catch (SQLException e) {}
-                    }
-                    删除标记 = 0;
-                }
+
 //                    PreparedStatement ps = null;
 //                    ResultSet rs = null;
 //                    Connection connection = DatabaseConnection.getConnection();
@@ -1502,13 +1503,35 @@ public class Start
 //                    }
 
 
-
-                if (LtMS.ConfigValuesMap.get("定时重载爆率") == 1) {
-                    MapleMonsterInformationProvider.getInstance().clearDrops();
-                    setdrops();
-                }
+//
+//                if (LtMS.ConfigValuesMap.get("定时重载爆率") == 1 && Start.dropsFalg == 1) {
+//                    MapleMonsterInformationProvider.getInstance().clearDrops();
+//                    setdrops();
+//                    setdropsTwo();
+//                    Start.dropsFalg=0;
+//                }
             }
         }, (long)(60000 * time));
+    }
+    public static void deleteInventoryequipment()   {
+        if(StringUtils.isNotEmpty(RedisUtil.hget(RedisUtil.KEYNAMES.SAVE_DATA.getKeyName(), "deleteInventoryequipment"))) {
+            return ;
+        }
+        RedisUtil.hsetTime(RedisUtil.KEYNAMES.SAVE_DATA.getKeyName(), "deleteInventoryequipment","deleteInventoryequipment" ,20000L);
+
+        Connection con = DatabaseConnection.getConnection();
+        try {
+            deleteInventoryequipment(con, "delete from  inventoryequipment where inventoryitemid not in (select aa.inventoryitemid from (\n" +
+                    "                select  b.inventoryitemid as inventoryitemid from  inventoryitems as a\n" +
+                    "                left join inventoryequipment as b on  a.inventoryitemid = b.inventoryitemid where b.inventoryitemid is not null) as aa)");
+        } catch (SQLException e) {
+            FilePrinter.printError("Inventoryequipment.txt", (Throwable) e, "[Inventoryequipment]");
+        }finally {
+            try {
+                con.close();
+                RedisUtil.del(RedisUtil.KEYNAMES.SAVE_DATA.getKeyName(), "deleteInventoryequipment");
+            } catch (SQLException e) {}
+        }
     }
     public static void deleteInventoryequipment(Connection con, final String sql) throws SQLException {
         deleteInventoryequipmentS(con,sql);
@@ -1833,50 +1856,58 @@ public class Start
     static {
         Start.srvSocket = null;
         Start.srvPort = 6350;
+        Start.dropsFalg = 0;
         Start.startTime = System.currentTimeMillis();
         套装加成表 = (List<Pair<Integer, Pair<String, Pair<String, Integer>>>>) new ArrayList();
         exptable = (List<Pair<String, Integer>>)new ArrayList();
-        新套装加成表 = new HashMap<>();
-        初始化技能等级 = new HashMap<>();
-        fiveTurn = new Hashtable<>();
+        新套装加成表 = new ConcurrentHashMap<>();
+        初始化技能等级 = new ConcurrentHashMap<>();
+        fiveTurn = new ConcurrentHashMap<>();
         suitSystems = new ArrayList<>();
         fieldSkills = new ArrayList<>();
         superSkills = new ArrayList<>();
 
-         accurateRankMap = new Hashtable<>();
-         enhancedRankMap = new Hashtable<>();
-         dropRankMap = new Hashtable<>();
-        additionalDamage = new Hashtable<>();
+         accurateRankMap = new ConcurrentHashMap<>();
+         enhancedRankMap = new ConcurrentHashMap<>();
+         dropRankMap = new ConcurrentHashMap<>();
+        additionalDamage = new ConcurrentHashMap<>();
+        itemInfo = new ConcurrentHashMap<>();
+        ltMonsterSkillAttackSkill = new ConcurrentHashMap<>();
+        ltMonsterSkillBuffSkill = new ArrayList<>();
         globaldrops = new ArrayList<>();
         drops = new ArrayList<>();
+        dropsTwo = new ArrayList<>();
         ltDiabloEquipments = new ArrayList<>();
         ltMxdPrize = new ArrayList<>();
         ltZlTask = new ArrayList<>();
         mobUnhurtList = new ArrayList<>();
         特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("LtMS.吸怪无法使用地图").split(","));
-        dropsMap = new Hashtable<>();
-        in = new Hashtable<>();
-        se = new Hashtable<>();
-        iv = new Hashtable<>();
-        ltSkillWucdTable = new Hashtable<>();
+        dropsMap = new ConcurrentHashMap<>();
+        dropsMapTwo = new ConcurrentHashMap<>();
+        dropsMapCount = new ConcurrentHashMap<>();
+        dropsMapCountTwo = new ConcurrentHashMap<>();
+        in = new ConcurrentHashMap<>();
+        se = new ConcurrentHashMap<>();
+        iv = new ConcurrentHashMap<>();
+        ltSkillWucdTable = new ConcurrentHashMap<>();
         mobInfo = new ArrayList<>();
         NotParticipatingRecycling = new ArrayList<>();
-        breakthroughMechanism = new Hashtable<>();
-        leveladdharm = new Hashtable<>();
-        fieldSkillsMap = new Hashtable<>();
-        superSkillsMap = new Hashtable<>();
-        allAttackInfo = new Hashtable<>();
-        ltMobSpawnBoss = new Hashtable<>();
-        mobInfoMap = new Hashtable<>();
-        dropCoefficientMap = new Hashtable<>();
-        jobDamageMap = new Hashtable<>();
-        双爆加成 = new Hashtable<>();
-        skillProp = new Hashtable<>();
+        breakthroughMechanism = new ConcurrentHashMap<>();
+        leveladdharm = new ConcurrentHashMap<>();
+        fieldSkillsMap = new ConcurrentHashMap<>();
+        superSkillsMap = new ConcurrentHashMap<>();
+        allAttackInfo = new ConcurrentHashMap<>();
+        ltMobSpawnBoss = new ConcurrentHashMap<>();
+        mobInfoMap = new ConcurrentHashMap<>();
+        dropCoefficientMap = new ConcurrentHashMap<>();
+        jobDamageMap = new ConcurrentHashMap<>();
+        双爆加成 = new ConcurrentHashMap<>();
+        skillProp = new ConcurrentHashMap<>();
         instance = new Start();
         Start.maxUsers = 0;
         Start.是否控制台启动 = false;
-        LtMS.ConfigValuesMap = new HashMap<String, Integer>();
-        Start.地图吸怪检测 = new HashMap<String, Integer>();
+        LtMS.ConfigValuesMap = new ConcurrentHashMap<String, Integer>();
+        Start.地图吸怪检测 = new ConcurrentHashMap<String, Integer>();
         Start.记录在线时间 = 0;
         Start.世界BOSS刷新记录 = 0;
         Start.更新时间 =0;
@@ -1907,8 +1938,8 @@ public class Start
         }
     }
 
-    public static void GetSuitDamTable() {
-        //Start.新套装加成表.clear();
+    public static synchronized  void GetSuitDamTable() {
+        //todu 改成清除redis缓存
         Start.套装加成表.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -1969,7 +2000,7 @@ public class Start
         }
     }
 
-    public static void GetSuitDamTableNew() {
+    public static  synchronized void GetSuitDamTableNew() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -1988,7 +2019,7 @@ public class Start
             System.out.println("个人赋能加成表出错：" + ex.getMessage());
         }
     }
-    public static void getDsTableInfo() {
+    public static synchronized  void getDsTableInfo() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2008,7 +2039,7 @@ public class Start
             System.out.println("段伤表加载失败：" + ex.getMessage());
         }
     }
-    public static void getDropCoefficient() {
+    public static  synchronized void getDropCoefficient() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2028,7 +2059,7 @@ public class Start
             System.out.println("地图爆率降值加载失败：" + ex.getMessage());
         }
     }
-    public static void getJobDamage() {
+    public static  synchronized void getJobDamage() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2049,7 +2080,7 @@ public class Start
         }
     }
 
-    public static void GetLtInitializationSkills() {
+    public static synchronized  void GetLtInitializationSkills() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2071,7 +2102,7 @@ public class Start
             System.out.println("加载初始化技能等级表出错：" + ex.getMessage());
         }
     }
-    public static void GetSuitSystem() {
+    public static synchronized  void GetSuitSystem() {
         if (suitSystems.size()>0) {
             suitSystems = new ArrayList<>();
         }
@@ -2103,6 +2134,7 @@ public class Start
                 su.setEffective(false);
                 suitSystems.add(su);
             }
+            suitSystemsMap.clear();
             suitSystemsMap = suitSystems.stream().collect(Collectors.groupingBy(SuitSystem::getEquipList));
             rs.close();
             ps.close();
@@ -2112,7 +2144,7 @@ public class Start
         }
     }
 
-    public static void GetFieldSkills() {
+    public static synchronized  void GetFieldSkills() {
         if (fieldSkills.size()>0) {
             fieldSkills = new ArrayList<>();
         }
@@ -2143,6 +2175,7 @@ public class Start
                 su.setDjSection(rs.getInt("djsection"));
                 fieldSkills.add(su);
             }
+            fieldSkillsMap.clear();
             fieldSkillsMap = fieldSkills.stream().collect(Collectors.groupingBy(FieldSkills::getCharacterid));
             rs.close();
             ps.close();
@@ -2152,7 +2185,7 @@ public class Start
         }
     }
 
-    public static void GetSuperSkills() {
+    public static synchronized  void GetSuperSkills() {
         if (superSkills.size()>0) {
             superSkills = new ArrayList<>();
         }
@@ -2183,6 +2216,7 @@ public class Start
                 su.setHarm(rs.getInt("harm"));
                 superSkills.add(su);
             }
+            superSkillsMap.clear();
             superSkillsMap = superSkills.stream().collect(Collectors.groupingBy(SuperSkills::getCharacterid));
             rs.close();
             ps.close();
@@ -2191,7 +2225,7 @@ public class Start
             System.out.println("超级技能信息加载异常：" + ex.getMessage());
         }
     }
-    public static void GetBreakthroughMechanism() {
+    public static synchronized  void GetBreakthroughMechanism() {
           List<BreakthroughMechanism>  breakthroughMechanismList = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2223,6 +2257,7 @@ public class Start
                 su.setCustomizeSmashRoll(rs.getInt("customize_smash_roll"));
                 breakthroughMechanismList.add(su);
             }
+            breakthroughMechanism.clear();
             breakthroughMechanism = breakthroughMechanismList.stream().collect(Collectors.groupingBy(BreakthroughMechanism::getCharacterid));
             rs.close();
             ps.close();
@@ -2230,7 +2265,7 @@ public class Start
             System.out.println("境界系统加载异常：" + ex.getMessage());
         }
     }
-    public static void getNotParticipatingRecycling(){
+    public static synchronized  void getNotParticipatingRecycling(){
         List<Integer> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2249,7 +2284,7 @@ public class Start
         }
     }
 
-    public static void 清理物品表(){
+    public static synchronized  void 清理物品表(){
         try {
             Connection con = DatabaseConnection.getConnection();
 
@@ -2298,7 +2333,7 @@ public class Start
     }
 
 
-    public static void getleveladdharm(){
+    public static synchronized  void getleveladdharm(){
         List<Leveladdharm> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2312,12 +2347,13 @@ public class Start
             ps.execute();
             ps.close();
             con.close();
+            leveladdharm.clear();
             leveladdharm = list.stream().collect(Collectors.groupingBy(Leveladdharm::getLevel));
         } catch (SQLException ex) {
             System.out.println("getleveladdharm出错：" + ex.getMessage());
         }
     }
-    public static void getAdditionalDamage(){
+    public static synchronized void getAdditionalDamage(){
         List<LttItemAdditionalDamage> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2331,23 +2367,25 @@ public class Start
             ps.execute();
             ps.close();
             con.close();
+            additionalDamage.clear();
             additionalDamage = list.stream().collect(Collectors.groupingBy(LttItemAdditionalDamage::getType));
         } catch (SQLException ex) {
             System.out.println("getleveladdharm出错：" + ex.getMessage());
         }
     }
-    public static void getMobInfo() {
+    public static synchronized  void getMobInfo() {
           List<MobInfo>  mobInfoList = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
-            ps = con.prepareStatement("SELECT id, mobId, name, hp, mp, level, speed, eva, damage, exp, pdd from lt_mob_heavy_load");
+            ps = con.prepareStatement("SELECT id, mobId,boss,name, hp, mp, level, speed, eva, damage, exp, pdd from lt_mob_heavy_load");
             rs = ps.executeQuery();
             while (rs.next()) {
                 MobInfo su = new MobInfo();
                 su.setId(rs.getLong("id"));
                 su.setMobId(rs.getInt("mobId"));
+                su.setBoss(rs.getInt("boss"));
                 su.setName(rs.getString("name"));
                 su.setHp(rs.getLong("hp"));
                 su.setMp(rs.getInt("mp"));
@@ -2359,6 +2397,7 @@ public class Start
                 su.setPdd(rs.getInt("pdd"));
                 mobInfoList.add(su);
             }
+            mobInfoMap.clear();
             mobInfoMap = mobInfoList.stream().collect(Collectors.groupingBy(MobInfo::getMobId));
             rs.close();
             ps.close();
@@ -2369,7 +2408,7 @@ public class Start
     }
 
 
-    public static void getMobUnhurt() {
+    public static synchronized  void getMobUnhurt() {
         mobUnhurtList.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2391,7 +2430,7 @@ public class Start
     /**
      * 全局爆率
      */
-    public static void setGlobaldrops() {
+    public static synchronized  void setGlobaldrops() {
         globaldrops.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2427,68 +2466,8 @@ public class Start
      *   `questid` int(11) NOT NULL DEFAULT '0',
      *   `chance` int(11) NOT NULL DEFAULT '0',
      */
-    public static void setLtDiabloEquipments() {
-        ltDiabloEquipments.clear();
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
-            String query = "SELECT * FROM lt_diablo_equipments";
-            PreparedStatement pstmt = con.prepareStatement(query);
-             rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                LtDiabloEquipments equipment = new LtDiabloEquipments();
-                equipment.setId(rs.getInt("id"));
-                equipment.setEntryName(rs.getString("entry_name"));
-                equipment.setProbability(rs.getShort("probability"));
-                equipment.setStr(rs.getShort("str"));
-                equipment.setDex(rs.getShort("dex"));
-                equipment.set_int(rs.getShort("_int"));
-                equipment.setLuk(rs.getShort("luk"));
-                equipment.setWatk(rs.getShort("watk"));
-                equipment.setMatk(rs.getShort("matk"));
-                equipment.setWdef(rs.getShort("wdef"));
-                equipment.setMdef(rs.getShort("mdef"));
-                equipment.setMaxhp(rs.getShort("maxhp"));
-                equipment.setMaxmp(rs.getShort("maxmp"));
-                equipment.setResistance(rs.getShort("resistance"));
-                equipment.setDodge(rs.getShort("dodge"));
-                equipment.setStrPercent(rs.getShort("str_percent"));
-                equipment.setDexPercent(rs.getShort("dex_percent"));
-                equipment.setIntPercent(rs.getShort("_int_percent"));
-                equipment.setLukPercent(rs.getShort("luk_percent"));
-                equipment.setSkillId(rs.getShort("skill_id"));
-                equipment.setSkillType(rs.getShort("skill_type"));
-                equipment.setSkillDamage(rs.getShort("skill_damage"));
-                equipment.setSkillDs(rs.getShort("skill_ds"));
-                equipment.setSkillSl(rs.getShort("skill_sl"));
-                equipment.setSkillTx(rs.getString("skill_tx"));
-                equipment.setWatkPercent(rs.getShort("watk_percent"));
-                equipment.setMatkPercent(rs.getShort("matk_percent"));
-                equipment.setWdefPercent(rs.getShort("wdef_percent"));
-                equipment.setMdefPercent(rs.getShort("mdef_percent"));
-                equipment.setMaxhpPercent(rs.getShort("maxhp_percent"));
-                equipment.setMaxmpPercent(rs.getShort("maxmp_percent"));
-                equipment.setNormalDamagePercent(rs.getShort("normal_damage_percent"));
-                equipment.setBossDamagePercent(rs.getShort("boss_damage_percent"));
-                equipment.setTotalDamagePercent(rs.getShort("total_damage_percent"));
-                equipment.setDropRate(rs.getShort("drop_rate"));
-                equipment.setDropRateCount(rs.getShort("drop_rate_count"));
-                equipment.setExpRate(rs.getShort("exp_rate"));
-                equipment.setExpRateCount(rs.getShort("exp_rate_count"));
-                equipment.setMesoRate(rs.getShort("meso_rate"));
-                equipment.setMesoRateCount(rs.getShort("meso_rate_count"));
-
-                ltDiabloEquipments.add(equipment);
-            }
-            rs.close();
-            pstmt.close();
-            con.close();
-            System.out.println("暗黑破坏神玩法词条加载数量：" + ltDiabloEquipments.size());
-        } catch (SQLException ex) {
-            System.out.println("怪物独立爆率加载异常：" + ex.getMessage());
-        }
+    public static synchronized void setLtDiabloEquipments() {
+        LtDiabloEquipments.setLtDiabloEquipments();
     }
     /**
      * 怪物独立爆率  `dropperid` int(11) NOT NULL,
@@ -2500,7 +2479,7 @@ public class Start
      *   `questid` int(11) NOT NULL DEFAULT '0',
      *   `chance` int(11) NOT NULL DEFAULT '0',
      */
-    public static void setdrops() {
+    public static synchronized void setdrops() {
         drops.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2519,18 +2498,107 @@ public class Start
             rs.close();
             ps.close();
             con.close();
+            dropsMap.clear();
             dropsMap = drops.stream().collect(Collectors.groupingBy(MonsterDropEntry::getDropperid));
-            System.out.println("怪物独立爆率加载成功,加载的怪物数量：" + drops.size());
-
+            dropsMapCount.clear();
+            for (MonsterDropEntry drop : drops) {
+                dropsMapCount.put(drop.getDropperid(), dropsMap.get(drop.getDropperid()).size());
+            }
+            System.out.println("怪物掉落加载成功,加载的怪物数量：" + drops.size());
         } catch (SQLException ex) {
             System.out.println("怪物独立爆率加载异常：" + ex.getMessage());
         }
     }
     /**
+     * 怪物独立爆率  `dropperid` int(11) NOT NULL,
+     *   `droppername` varchar(255) NOT NULL,
+     *   `itemid` int(11) NOT NULL DEFAULT '0',
+     *   `itemname` varchar(255) NOT NULL,
+     *   `minimum_quantity` int(11) NOT NULL DEFAULT '1',
+     *   `maximum_quantity` int(11) NOT NULL DEFAULT '1',
+     *   `questid` int(11) NOT NULL DEFAULT '0',
+     *   `chance` int(11) NOT NULL DEFAULT '0',
+     */
+    public static synchronized void setdropsTwo() {
+        dropsTwo.clear();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+            ps = con.prepareStatement("SELECT * FROM drop_data_two WHERE chance > 0");
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                dropsTwo.add(new MonsterDropEntry(rs.getShort("questid"),
+                        rs.getInt("dropperid"),
+                        rs.getInt("itemid"),
+                        rs.getInt("chance"),
+                        rs.getInt("minimum_quantity"),
+                        rs.getInt("maximum_quantity")));
+            }
+            rs.close();
+            ps.close();
+            con.close();
+            dropsMap.clear();
+            dropsMapTwo = dropsTwo.stream().collect(Collectors.groupingBy(MonsterDropEntry::getDropperid));
+            dropsMapCountTwo.clear();
+            for (MonsterDropEntry drop : dropsTwo) {
+                dropsMapCountTwo.put(drop.getDropperid(), dropsMapTwo.get(drop.getDropperid()).size());
+            }
+            System.out.println("怪物掉落加载成功,加载的怪物数量：" + dropsTwo.size());
+        } catch (SQLException ex) {
+            System.out.println("怪物爆率加载异常：" + ex.getMessage());
+        }
+    }
+
+        /**
+         * 查询所有物品信息
+         *
+         * @return ItemInfo 列表
+         */
+        public static void getAllItemInfo() {
+            List<ItemInfo> itemInfos = new ArrayList<>();
+            String sql = "SELECT * FROM lt_item_info";
+            PreparedStatement ps = null;
+            ResultSet resultSet = null;
+            try {
+                Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+                ps = con.prepareStatement(sql);
+                resultSet = ps.executeQuery();
+                while (resultSet.next()) {
+                    ItemInfo itemInfo = new ItemInfo();
+                    itemInfo.setId(resultSet.getLong("id"));
+                    itemInfo.setItemId(resultSet.getInt("item_id"));
+                    itemInfo.setUpgradeSlots(resultSet.getByte("upgradeslots"));
+                    itemInfo.setStr(resultSet.getShort("str"));
+                    itemInfo.setDex(resultSet.getShort("dex"));
+                    itemInfo.setIntValue(resultSet.getShort("int"));
+                    itemInfo.setLuk(resultSet.getShort("luk"));
+                    itemInfo.setHp(resultSet.getShort("hp"));
+                    itemInfo.setMp(resultSet.getShort("mp"));
+                    itemInfo.setWatk(resultSet.getShort("watk"));
+                    itemInfo.setMatk(resultSet.getShort("matk"));
+                    itemInfo.setWdef(resultSet.getShort("wdef"));
+                    itemInfo.setMdef(resultSet.getShort("mdef"));
+
+                    itemInfos.add(itemInfo);
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            if (itemInfos.size() > 0) {
+                RedisUtil.del(RedisUtil.KEYNAMES.ITEM_INFO.getKeyName(), RedisUtil.KEYNAMES.ITEM_INFO.getKeyName());
+                RedisUtil.hset(RedisUtil.KEYNAMES.ITEM_INFO.getKeyName(), RedisUtil.KEYNAMES.ITEM_INFO.getKeyName(),JSONObject.toJSONString(itemInfos.stream().collect(Collectors.groupingBy(ItemInfo::getItemId))));
+                Start.itemInfo.clear();
+                Start.itemInfo = itemInfos.stream().collect(Collectors.groupingBy(ItemInfo::getItemId));
+            }
+        }
+
+    /**
      *
      * 获取抽奖物品配置
      */
-    public static void setLtMxdPrize() {
+    public static synchronized  void setLtMxdPrize() {
         ltMxdPrize.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2562,7 +2630,7 @@ public class Start
     /**
      * 获取战令列表
      */
-    public static void setLtZlTask() {
+    public static synchronized  void setLtZlTask() {
         ltZlTask.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2593,7 +2661,7 @@ public class Start
     /**
      * 查账户是否存在
      */
-    public static boolean gatEwayAccountExists(String account) {
+    public static  synchronized boolean gatEwayAccountExists(String account) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try (Connection  con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
@@ -2614,7 +2682,7 @@ public class Start
     /**
      * 添加QQ账户
      */
-    public static void addEwayAccount(String account) {
+    public static synchronized  void addEwayAccount(String account) {
         PreparedStatement ps = null;
         try (Connection  con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
             ps = con.prepareStatement("INSERT INTO qq_membersinfo (qq) VALUES (?)");
@@ -2629,7 +2697,7 @@ public class Start
     /**
      * 全局爆率
      */
-    public static void setLtSkillWucdTable() {
+    public static synchronized  void setLtSkillWucdTable() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2647,7 +2715,7 @@ public class Start
             System.out.println("无CD技能加载异常：" + ex.getMessage());
         }
     }
-    public static void GetFuMoInfo() {
+    public static synchronized  void GetFuMoInfo() {
         FuMoInfoMap.clear();
         服务端输出信息.println_out("○ 开始加载镶嵌装备效果");
 
@@ -2729,7 +2797,7 @@ public class Start
 
     }
 
-    public static void loadPotentialMap() {
+    public static synchronized  void loadPotentialMap() {
         potentialListMap.clear();
         服务端输出信息.println_out("○ 开始加载潜能列表");
 
@@ -2811,7 +2879,7 @@ public class Start
 
     }
 
-    public static void GetfiveTurn() {
+    public static synchronized  void GetfiveTurn() {
      List<FiveTurn> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2826,6 +2894,7 @@ public class Start
                 su.setOccupationName(rs.getString("occupation_name"));
                 list.add(su);
             }
+            fiveTurn.clear();
             fiveTurn = list.stream().collect(Collectors.groupingBy(FiveTurn::getCharactersid));
             rs.close();
             ps.close();
@@ -2835,12 +2904,12 @@ public class Start
         }
     }
 
-    public static void saveAttackInfo(AttackInfo info) {
+    public static synchronized  void saveAttackInfo(AttackInfo info) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
-            ps = con.prepareStatement("insert into lt_attack_info_skills (charge,skill,lastAttackTickCount,hits,targets,tbyte,display,animation,speed,csstar,AOE,slot,unk) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps = con.prepareStatement("insert into lt_attack_info_skills (charge,skill,lastAttackTickCount,hits,targets,tbyte,display,animation,speed,csstar,AOE,slot,unk,allDamage,position,positionxy) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             ps.setInt(1, info.getCharge());
             ps.setInt(2, info.skill);
             ps.setInt(3, info.lastAttackTickCount);
@@ -2854,6 +2923,11 @@ public class Start
             ps.setInt(11,info.AOE);
             ps.setInt(12,info.slot);
             ps.setInt(13,info.unk);
+            ps.setString(14,JSONObject.toJSONString(info.allDamage));
+            ps.setString(15,JSONObject.toJSONString(info.position));
+            ps.setString(16,JSONObject.toJSONString(info.positionxy));
+
+
             ps.execute();
             ps.close();
             con.close();
@@ -2861,8 +2935,39 @@ public class Start
             System.out.println("技能封包保存异常：" + ex.getMessage());
         }
     }
+    // 查询所有 LtMonsterSkill 记录
+    public synchronized static void findLtMonsterSkill() {
+        List<LtMonsterSkill> skillList = new ArrayList<>();
+        String sql = "SELECT id, type, monsterid, skillid, level, attackid ,skillcd FROM lt_monster_skill";
 
-    public static void getAttackInfo( ) {
+        try (Connection con = DBConPool.getInstance().getDataSource().getConnection();
+             PreparedStatement pstmt = con.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                LtMonsterSkill skill = new LtMonsterSkill();
+                skill.setId(rs.getLong("id"));
+                skill.setType(rs.getInt("type"));
+                skill.setMonsterId(rs.getInt("monsterid"));
+                skill.setSkillId(rs.getInt("skillid"));
+                skill.setLevel(rs.getInt("level"));
+                skill.setAttackId(rs.getInt("attackid"));
+                skill.setSkillcd(rs.getLong("skillcd"));
+                skillList.add(skill);
+            }
+
+            ltMonsterSkillBuffSkill.clear();
+            ltMonsterSkillBuffSkill = skillList.stream().filter(s -> s.getType() == 1).collect(Collectors.toList());
+            ltMonsterSkillAttackSkill.clear();
+            ltMonsterSkillAttackSkill = skillList.stream().filter(s -> s.getType() == 2).collect(Collectors.groupingBy(LtMonsterSkill::getMonsterId));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("怪物技能加载异常");
+        }
+
+    }
+
+    public static synchronized  void getAttackInfo( ) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<AttackInfo> list = new ArrayList<>();
@@ -2887,6 +2992,7 @@ public class Start
                 su.setUnk((byte) rs.getInt("unk"));
                 list.add(su);
             }
+            allAttackInfo.clear();
             allAttackInfo = list.stream().collect(Collectors.groupingBy(AttackInfo::getSkill));
             rs.close();
             ps.close();
@@ -2895,7 +3001,7 @@ public class Start
             System.out.println("技能封包保存异常：" + ex.getMessage());
         }
     }
-    public static void getLtMobSpawnBoss( ) {
+    public static synchronized  void getLtMobSpawnBoss( ) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<LtMobSpawnBoss> list = new ArrayList<>();

@@ -12,7 +12,10 @@ public class Pair<E, F> implements Serializable
         this.left = left;
         this.right = right;
     }
-    
+
+    public Pair() {
+    }
+
     public E getLeft() {
         return this.left;
     }

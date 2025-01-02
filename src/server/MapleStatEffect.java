@@ -25,7 +25,6 @@ import client.inventory.MapleInventoryType;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import constants.GameConstants;
-import gui.CongMS;
 import gui.LtMS;
 import handling.channel.ChannelServer;
 import provider.MapleData;
@@ -1075,7 +1074,8 @@ public class MapleStatEffect implements Serializable
     private boolean isSoulStone() {
         return this.skill && this.sourceid == 22181003;
     }
-    
+
+    //给玩家BUFF
     private void applyBuff(final MapleCharacter applyfrom, final int newDuration) {
         if (this.isSoulStone()) {
             if (applyfrom.getParty() != null) {
@@ -1124,7 +1124,8 @@ public class MapleStatEffect implements Serializable
             }
         }
     }
-    
+
+    //给怪物BUFF
     public void applyMonsterBuff(final MapleCharacter applyfrom) {
         final Rectangle bounds = this.calculateBoundingBox(applyfrom.getTruePosition(), applyfrom.isFacingLeft());
         final MapleMapObjectType objType = MapleMapObjectType.MONSTER;
@@ -1205,9 +1206,10 @@ public class MapleStatEffect implements Serializable
             }
         }
     }
-    
+
+    //战神连击BUFF
     public void applyComboBuff(final MapleCharacter applyto, final int combo) {
-        final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ARAN_COMBO, Integer.valueOf(combo)));
+        final List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<MapleBuffStat, Integer>(MapleBuffStat.ARAN_COMBO, combo));
         applyto.getClient().sendPacket(MaplePacketCreator.giveBuff(this.sourceid, 99999, stat, this));
         final long starttime = System.currentTimeMillis();
         applyto.registerEffect(this, starttime, null, applyto.getId());

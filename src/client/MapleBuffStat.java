@@ -37,7 +37,8 @@ public enum MapleBuffStat implements Serializable
     MESOGUARD(29), 
     WEAKEN(30), 
     CURSE(31), 
-    SLOW(32), 
+    SLOW(32),
+    //变形
     MORPH(33), 
     RECOVERY(34), 
     HP_LOSS_GUARD(34), 

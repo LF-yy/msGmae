@@ -66,6 +66,7 @@ public class MapleGuildRanking
 
     private List<SponsorRank> sponsorRank;
     private List<SponsorRank> privDefeatRank;
+    private List<SponsorRank> privDefeatRankNew;
     private List<SponsorRank> privBossRank;
     private List<SponsorRank> privRedRank;
     private List<SponsorRank> privAccurateRank;
@@ -75,6 +76,7 @@ public class MapleGuildRanking
         this.职业排行显示 = 10;
         this.sponsorRank = new LinkedList<SponsorRank>();
         this.privDefeatRank = new LinkedList<SponsorRank>();
+        this.privDefeatRankNew = new LinkedList<SponsorRank>();
         this.privBossRank = new LinkedList<SponsorRank>();
         this.privRedRank = new LinkedList<SponsorRank>();
         this.privAccurateRank = new LinkedList<SponsorRank>();
@@ -131,7 +133,7 @@ public class MapleGuildRanking
         return this.ranks剑客;
     }
     
-    private void 剑客职业排行() {
+    public void 剑客职业排行() {
         this.ranks剑客.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -156,7 +158,7 @@ public class MapleGuildRanking
         return this.ranks勇士;
     }
     
-    private void 勇士职业排行() {
+    public void 勇士职业排行() {
         this.ranks勇士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -181,7 +183,7 @@ public class MapleGuildRanking
         return this.ranks英雄;
     }
     
-    private void 英雄职业排行() {
+    public void 英雄职业排行() {
         this.ranks英雄.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -206,7 +208,7 @@ public class MapleGuildRanking
         return this.ranks枪战士;
     }
     
-    private void 枪战士职业排行() {
+    public void 枪战士职业排行() {
         this.ranks枪战士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -231,7 +233,7 @@ public class MapleGuildRanking
         return this.ranks龙骑士;
     }
     
-    private void 龙骑士职业排行() {
+    public void 龙骑士职业排行() {
         this.ranks龙骑士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -256,7 +258,7 @@ public class MapleGuildRanking
         return this.ranks黑骑士;
     }
     
-    private void 黑骑士职业排行() {
+    public void 黑骑士职业排行() {
         this.ranks黑骑士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -281,7 +283,7 @@ public class MapleGuildRanking
         return this.ranks准骑士;
     }
     
-    private void 准骑士职业排行() {
+    public void 准骑士职业排行() {
         this.ranks准骑士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -306,7 +308,7 @@ public class MapleGuildRanking
         return this.ranks骑士;
     }
     
-    private void 骑士职业排行() {
+    public void 骑士职业排行() {
         this.ranks骑士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -331,7 +333,7 @@ public class MapleGuildRanking
         return this.ranks圣骑士;
     }
     
-    private void 圣骑士职业排行() {
+    public void 圣骑士职业排行() {
         this.ranks圣骑士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -356,7 +358,7 @@ public class MapleGuildRanking
         return this.ranks火毒法师;
     }
     
-    private void 火毒法师职业排行() {
+    public void 火毒法师职业排行() {
         this.ranks火毒法师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -381,7 +383,7 @@ public class MapleGuildRanking
         return this.ranks火毒巫师;
     }
     
-    private void 火毒巫师职业排行() {
+    public void 火毒巫师职业排行() {
         this.ranks火毒巫师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -406,7 +408,7 @@ public class MapleGuildRanking
         return this.ranks火毒魔导师;
     }
     
-    private void 火毒魔导师职业排行() {
+    public void 火毒魔导师职业排行() {
         this.ranks火毒魔导师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -431,7 +433,7 @@ public class MapleGuildRanking
         return this.ranks冰雷法师;
     }
     
-    private void 冰雷法师职业排行() {
+    public void 冰雷法师职业排行() {
         this.ranks冰雷法师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -456,7 +458,7 @@ public class MapleGuildRanking
         return this.ranks冰雷巫师;
     }
     
-    private void 冰雷巫师职业排行() {
+    public void 冰雷巫师职业排行() {
         this.ranks冰雷巫师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -481,7 +483,7 @@ public class MapleGuildRanking
         return this.ranks冰雷魔导师;
     }
     
-    private void 冰雷魔导师职业排行() {
+    public void 冰雷魔导师职业排行() {
         this.ranks冰雷魔导师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -506,7 +508,7 @@ public class MapleGuildRanking
         return this.ranks牧师;
     }
     
-    private void 牧师职业排行() {
+    public void 牧师职业排行() {
         this.ranks牧师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -531,7 +533,7 @@ public class MapleGuildRanking
         return this.ranks祭师;
     }
     
-    private void 祭师职业排行() {
+    public void 祭师职业排行() {
         this.ranks祭师.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -556,7 +558,7 @@ public class MapleGuildRanking
         return this.ranks主教;
     }
     
-    private void 主教职业排行() {
+    public void 主教职业排行() {
         this.ranks主教.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -581,7 +583,7 @@ public class MapleGuildRanking
         return this.ranks猎人;
     }
     
-    private void 猎人职业排行() {
+    public void 猎人职业排行() {
         this.ranks猎人.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -606,7 +608,7 @@ public class MapleGuildRanking
         return this.ranks射手;
     }
     
-    private void 射手职业排行() {
+    public void 射手职业排行() {
         this.ranks射手.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -631,7 +633,7 @@ public class MapleGuildRanking
         return this.ranks神射手;
     }
     
-    private void 神射手职业排行() {
+    public void 神射手职业排行() {
         this.ranks神射手.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -656,7 +658,7 @@ public class MapleGuildRanking
         return this.ranks弩弓手;
     }
     
-    private void 弩弓手职业排行() {
+    public void 弩弓手职业排行() {
         this.ranks弩弓手.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -681,7 +683,7 @@ public class MapleGuildRanking
         return this.ranks游侠;
     }
     
-    private void 游侠职业排行() {
+    public void 游侠职业排行() {
         this.ranks游侠.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -706,7 +708,7 @@ public class MapleGuildRanking
         return this.ranks箭神;
     }
     
-    private void 箭神职业排行() {
+    public void 箭神职业排行() {
         this.ranks箭神.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -731,7 +733,7 @@ public class MapleGuildRanking
         return this.ranks刺客;
     }
     
-    private void 刺客职业排行() {
+    public void 刺客职业排行() {
         this.ranks刺客.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -756,7 +758,7 @@ public class MapleGuildRanking
         return this.ranks无影人;
     }
     
-    private void 无影人职业排行() {
+    public void 无影人职业排行() {
         this.ranks无影人.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -781,7 +783,7 @@ public class MapleGuildRanking
         return this.ranks隐士;
     }
     
-    private void 隐士职业排行() {
+    public void 隐士职业排行() {
         this.ranks隐士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -806,7 +808,7 @@ public class MapleGuildRanking
         return this.ranks侠客;
     }
     
-    private void 侠客职业排行() {
+    public void 侠客职业排行() {
         this.ranks侠客.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -831,7 +833,7 @@ public class MapleGuildRanking
         return this.ranks独行客;
     }
     
-    private void 独行客职业排行() {
+    public void 独行客职业排行() {
         this.ranks独行客.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -856,7 +858,7 @@ public class MapleGuildRanking
         return this.ranks侠盗;
     }
     
-    private void 侠盗职业排行() {
+    public void 侠盗职业排行() {
         this.ranks侠盗.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -881,7 +883,7 @@ public class MapleGuildRanking
         return this.ranks拳手;
     }
     
-    private void 拳手职业排行() {
+    public void 拳手职业排行() {
         this.ranks拳手.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -906,7 +908,7 @@ public class MapleGuildRanking
         return this.ranks斗士;
     }
     
-    private void 斗士职业排行() {
+    public void 斗士职业排行() {
         this.ranks斗士.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -931,7 +933,7 @@ public class MapleGuildRanking
         return this.ranks冲锋队长;
     }
     
-    private void 冲锋队长职业排行() {
+    public void 冲锋队长职业排行() {
         this.ranks冲锋队长.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -956,7 +958,7 @@ public class MapleGuildRanking
         return this.ranks火枪手;
     }
     
-    private void 火枪手职业排行() {
+    public void 火枪手职业排行() {
         this.ranks火枪手.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -981,7 +983,7 @@ public class MapleGuildRanking
         return this.ranks大副;
     }
     
-    private void 大副职业排行() {
+    public void 大副职业排行() {
         this.ranks大副.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -1006,7 +1008,7 @@ public class MapleGuildRanking
         return this.ranks船长;
     }
     
-    private void 船长职业排行() {
+    public void 船长职业排行() {
         this.ranks船长.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -1027,13 +1029,13 @@ public class MapleGuildRanking
     /**
      * 赞助排行榜
      */
-    private void querySponsorRank() {
+    public void querySponsorRank() {
         this.sponsorRank.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
-            final PreparedStatement ps = con.prepareStatement("select  a.name,b.moneyc,a.level,a.str,a.dex,a.int,a.luk from  characters as a\n" +
-                    "left join accounts as b on a.accountid = b.id\n" +
-                    "where b.moneyc!= 0\n" +
+            final PreparedStatement ps = con.prepareStatement("select  a.name,b.moneyc,a.level,a.str,a.dex,a.int,a.luk from  characters as a " +
+                    "left join accounts as b on a.accountid = b.id " +
+                    "where b.moneyc!= 0 " +
                     "order by b.moneyc desc limit 10 ");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -1050,13 +1052,13 @@ public class MapleGuildRanking
     /**
      * 破功排行榜
      */
-    private void queryDefeatRank() {
+    public void queryDefeatRank() {
         this.privDefeatRank.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
-            final PreparedStatement ps = con.prepareStatement("select  name,CONVERT(PGSXDJ, UNSIGNED INTEGER) as PGSXDJ,level,str,dex,int,luk  from  characters " +
-                    "where PGSXDJ is not null " +
-                    "order by PGSXDJ desc limit 10 ");
+            final PreparedStatement ps = con.prepareStatement("select  aa.name,CONVERT(aa.PGSXDJ, UNSIGNED INTEGER) as PGSXDJ,aa.level,aa.str,aa.dex,aa.int,aa.luk   from  characters as aa" +
+                    " where aa.PGSXDJ is not null " +
+                    " order by aa.PGSXDJ desc limit 10 ");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 final SponsorRank rank1 = new SponsorRank(rs.getString("name"), rs.getInt("PGSXDJ"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
@@ -1069,17 +1071,39 @@ public class MapleGuildRanking
             System.err.println("queryDefeatRank错误");
         }
     }
+    /**
+     * 破功排行榜
+     */
+    public void queryDefeatRankNew() {
+        this.privDefeatRankNew.clear();
+        try {
+            Connection con = DatabaseConnection.getConnection();
+            final PreparedStatement ps = con.prepareStatement("select  aa.name,CONVERT(aa.max_damage, UNSIGNED LONG) as PGSXDJ,aa.level,aa.str,aa.dex,aa.int,aa.luk  from  characters as aa" +
+                    " where aa.max_damage is not null " +
+                    " order by aa.max_damage desc limit 10 ");
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                final SponsorRank rank1 = new SponsorRank(rs.getString("name"), rs.getInt("max_damage"), rs.getInt("str"), rs.getInt("dex"), rs.getInt("int"), rs.getInt("luk"));
+                this.privDefeatRankNew.add(rank1);
+            }
+            ps.close();
+            rs.close();
+        }
+        catch (SQLException e) {
+            System.err.println("queryDefeatRank错误");
+        }
+    }
 
     /**
      * 黑龙排行榜
      */
-    private void queryBossRank() {
+    public void queryBossRank() {
         this.privBossRank.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
-            final PreparedStatement ps = con.prepareStatement("select  c.name,a.count,c.level,c.str,c.dex,c.int,c.luk  from  bosslog2  as a\n" +
-                    "left join characters as c on  a.characterid = c.id\n" +
-                    "where a.bossid = '击杀黑龙' and a.type = 1\n" +
+            final PreparedStatement ps = con.prepareStatement("select  c.name,a.count,c.level,c.str,c.dex,c.int,c.luk  from  bosslog2  as a " +
+                    "left join characters as c on  a.characterid = c.id " +
+                    "where a.bossid = '击杀黑龙' and a.type = 1 " +
                     "order by a.count desc limit 10 ");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -1096,7 +1120,7 @@ public class MapleGuildRanking
     /**
      * 绯红排行榜 绯红四人帮
      */
-    private void queryRedRank() {
+    public void queryRedRank() {
         this.privRedRank.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -1119,7 +1143,7 @@ public class MapleGuildRanking
     /**
      * 段伤排行榜
      */
-    private void queryAccurateRank() {
+    public void queryAccurateRank() {
         try {
             this.privAccurateRank.clear();
             for (Map.Entry<Integer, SponsorRank> integerSponsorRankEntry : Start.accurateRankMap.entrySet()) {
@@ -1134,7 +1158,7 @@ public class MapleGuildRanking
     /**
      * 赋能排行榜
      */
-    private void queryEnhancedRank() {
+    public void queryEnhancedRank() {
         try {
             this.privEnhancedRank.clear();
             for (Map.Entry<Integer, SponsorRank> integerSponsorRankEntry : Start.enhancedRankMap.entrySet()) {
@@ -1149,7 +1173,7 @@ public class MapleGuildRanking
     /**
      * 爆率排行榜
      */
-    private void queryDropRank() {
+    public void queryDropRank() {
         try {
             this.privDropRank.clear();
             for (Map.Entry<Integer, SponsorRank> integerSponsorRankEntry : Start.dropRankMap.entrySet()) {
@@ -1207,6 +1231,12 @@ public class MapleGuildRanking
         }
         return this.privDefeatRank;
     }
+    public List<SponsorRank> getDefeatRankNew() {
+        if (this.privDefeatRankNew.isEmpty()) {
+            this.queryDefeatRankNew();
+        }
+        return this.privDefeatRankNew;
+    }
     public List<SponsorRank> getBossRank() {
         if (this.privBossRank.isEmpty()) {
             this.queryBossRank();
@@ -1245,7 +1275,7 @@ public class MapleGuildRanking
         return this.ranks2;
     }
     
-    private void reload() {
+    public void reload() {
         this.ranks.clear();
         Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM guilds ORDER BY `GP` DESC LIMIT 10")) {
@@ -1261,7 +1291,7 @@ public class MapleGuildRanking
         }
     }
     
-    private void showLevelRank() {
+    public void showLevelRank() {
         this.ranks1.clear();
         try {
             Connection con = DatabaseConnection.getConnection();
@@ -1279,7 +1309,7 @@ public class MapleGuildRanking
         }
     }
     
-    private void showMesoRank() {
+    public void showMesoRank() {
         this.ranks2.clear();
         Connection con = DatabaseConnection.getConnection();
         try (final PreparedStatement ps = con.prepareStatement("SELECT *, ( chr.meso + s.meso ) as money FROM `characters` as chr , `storages` as s WHERE chr.gm < 1  AND s.accountid = chr.accountid ORDER BY money DESC LIMIT 10")) {
@@ -1302,7 +1332,7 @@ public class MapleGuildRanking
         return (List<JobRankingInfo>)this.JobRanks.get((Object)Integer.valueOf(type));
     }
     
-    private void loadJobRank(final int type) {
+    public void loadJobRank(final int type) {
         if (this.JobRanks.get((Object)Integer.valueOf(type)) != null) {
             ((List<JobRankingInfo>)this.JobRanks.get((Object)Integer.valueOf(type))).clear();
         }
@@ -1595,7 +1625,7 @@ public class MapleGuildRanking
             return this.meso;
         }
     }
-    private void showJzRank(int mapid) {
+    public void showJzRank(int mapid) {
         this.ranks3.clear();
 
         try {

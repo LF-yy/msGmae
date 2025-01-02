@@ -2,9 +2,6 @@ package handling.channel.handler;
 
 import java.util.*;
 
-import gui.CongMS;
-import gui.LtMS;
-import scripting.NPCConversationManager;
 import server.movement.LifeMovement;
 import server.maps.AnimatedMapleMapObject;
 import server.movement.StaticLifeMovement;

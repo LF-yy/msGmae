@@ -17,10 +17,10 @@ import tools.FilePrinter;
 import javax.script.ScriptEngine;
 import server.maps.MapleReactor;
 import client.MapleClient;
-import java.util.HashMap;
 import server.maps.ReactorDropEntry;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ReactorScriptManager extends AbstractScriptManager
 {
@@ -28,7 +28,7 @@ public class ReactorScriptManager extends AbstractScriptManager
     private final Map<Integer, List<ReactorDropEntry>> drops;
 
     public ReactorScriptManager() {
-        this.drops = new HashMap<Integer, List<ReactorDropEntry>>();
+        this.drops = new ConcurrentHashMap<>();
     }
 
     public static ReactorScriptManager getInstance() {
@@ -110,7 +110,7 @@ public class ReactorScriptManager extends AbstractScriptManager
         return ret;
     }
 
-    public void clearDrops() {
+    public synchronized void clearDrops() {
         this.drops.clear();
     }
 

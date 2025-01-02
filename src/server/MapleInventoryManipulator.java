@@ -1,6 +1,8 @@
 package server;
 
 import abc.Game;
+import bean.ItemInfo;
+import bean.LtDiabloEquipments;
 import client.*;
 import constants.ServerConfig;
 import constants.tzjc;
@@ -12,15 +14,13 @@ import server.maps.MapleMapObject;
 import java.awt.Point;
 import constants.WorldConstants;
 
-import java.util.Collections;
+import java.util.*;
+
 import handling.world.World.Broadcast;
 import tools.FileoutputUtil;
 
-import java.util.ArrayList;
 import client.inventory.Equip;
 import client.inventory.ItemFlag;
-import java.util.Iterator;
-import java.util.List;
 import client.inventory.InventoryException;
 import client.inventory.Item;
 import client.inventory.MapleInventoryIdentifier;
@@ -31,6 +31,8 @@ import tools.MaplePacketCreator;
 import constants.GameConstants;
 import client.inventory.IItem;
 import tools.packet.MTSCSPacket;
+import util.GetRedisDataUtil;
+import util.ListUtil;
 
 public class MapleInventoryManipulator
 {
@@ -903,11 +905,11 @@ public class MapleInventoryManipulator
                             c.getPlayer().setOneTimeLog("轮回等级", -c.getPlayer().getOneTimeLog("轮回等级") + 2);
                     }
 
-                    if (ServerConfig.version == 85) {
-                        c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1025), (byte)1, (byte)1);
-                    } else {
+//                    if (ServerConfig.version == 85) {
+//                        c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1025), (byte)1, (byte)1);
+//                    } else {
                         c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1013), (byte)1, (byte)1);
-                    }
+//                    }
 
                     c.getPlayer().dropMessage(5, "你学会了 “轮回” 技能。");
                 }
@@ -1150,9 +1152,15 @@ public class MapleInventoryManipulator
                             Potential.setPotential(source, (short)38, 44, equipField.getConsumeRecover());
                             c.getPlayer().dropMessage(5, "该装备栏位激活了药灵+" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
                         }
-
+                        //暗黑破坏神装备添加属性
+                        if(LtMS.ConfigValuesMap.get("暗黑破坏神之冒险之神")>=1 ) {
+                            LtDiabloEquipments.dataStatisticalAdd(source, c,  c.getPlayer());
+                            //检测词条技能
+                            LtDiabloEquipments.takeOnEquip(source, c);
+                        }
                         c.getPlayer().reFreshItem(source);
                     }
+
                 }
 
                 boolean itemChanged = false;
@@ -1460,6 +1468,11 @@ public class MapleInventoryManipulator
                                     Potential.setPotential(target, (short)38, 0, 0);
                                     c.getPlayer().dropMessage(5, "该装备栏位取消装备，药灵-" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
                                 }
+                                //暗黑破坏神装备取消效果
+                                if(LtMS.ConfigValuesMap.get("暗黑破坏神之冒险之神")>=1 ) {
+                                    LtDiabloEquipments.dataStatisticalDelete(target, c, c.getPlayer());
+                                    LtDiabloEquipments.takeOffEquip(target,c);
+                                }
 
                                 c.getPlayer().reFreshItem(target);
                             }
@@ -1527,20 +1540,17 @@ public class MapleInventoryManipulator
         return itemId >= 1302000 && itemId < 1492024;
     }
 
+    //脱下装备
     public static void unequip(final MapleClient c, final short src, final short dst) {
         Equip source = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).getItem(src);
         Equip target = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem(dst);
         c.getPlayer().脱装备防滑检测(source);
         if (source.getItemId() == 1602008 || source.getItemId() == 1602009 || source.getItemId() == 1602010) {
-            if (ServerConfig.version == 85) {
-                c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1025), (byte)0, (byte)0);
-            } else {
-                c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1013), (byte)0, (byte)0);
-            }
-
+            c.getPlayer().changeSkillLevel(SkillFactory.getSkill(1013), (byte)0, (byte)0);
             c.getPlayer().deleteOneTimeLog("轮回等级");
             c.getPlayer().dropMessage(5, "你遗忘了 “轮回” 技能。");
         }
+
 
         if (dst >= 0) {
             if (source != null) {
@@ -1781,7 +1791,11 @@ public class MapleInventoryManipulator
                                 Potential.setPotential(source, (short)38, 0, 0);
                                 c.getPlayer().dropMessage(5, "该装备栏位取消装备，药灵-" + equipField.getConsumeRecover() + "%（恢复类药水的恢复值增加）");
                             }
-
+                            if(LtMS.ConfigValuesMap.get("暗黑破坏神之冒险之神")>=1 ) {
+                                LtDiabloEquipments.dataStatisticalDelete(source, c, c.getPlayer());
+                                //检测词条装
+                                LtDiabloEquipments.takeOffEquip(source, c);
+                            }
                             c.getPlayer().reFreshItem(source);
                         }
                     }
