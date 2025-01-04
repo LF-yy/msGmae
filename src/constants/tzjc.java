@@ -134,7 +134,7 @@ public class tzjc {
         //dropRankMap   爆率
         //int id = chr.getClient().getPlayer().getId();
         //段伤  .getChannelServer().removeMapleSquad("blackmage");  MapleSquadType.valueOf("blackmage".toLowerCase())
-        chr.getClient().getPlayer().getClient().getChannelServer().removeMapleSquad(MapleSquad.MapleSquadType.valueOf("blackmage".toLowerCase()));
+//        chr.getClient().getPlayer().getClient().getChannelServer().removeMapleSquad(MapleSquad.MapleSquadType.valueOf("blackmage".toLowerCase()));
         AtomicLong additionalDamage = new AtomicLong(0L);
         if ( LtMS.ConfigValuesMap.get("段伤开关") > 0) {
             try {

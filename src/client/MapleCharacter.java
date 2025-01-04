@@ -17994,6 +17994,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     }
     public void burn(final short damagePercent, final int duration) {
+        int index = Math.min(duration / 1000, 30);
         if (!this.isburnd) {
             if (!this.isHidden()) {
                 ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
@@ -18004,13 +18005,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                                 return;
                             }
 
-                            MapleCharacter.this.dropMessage(6, "你被灼烧了，接下来 " + duration / 1000 + " 秒将持续进入掉血掉蓝状态。");
-                            MapleCharacter.this.isburnd = true;
-                            int count = duration / 1000;
                             int damageHp = MapleCharacter.this.stats.getCurrentMaxHp() * damagePercent / 100;
                             int damageMp = MapleCharacter.this.stats.getCurrentMaxMp() * damagePercent / 100;
+                            MapleCharacter.this.dropMessage(6, "你被灼烧了，接下来 " + index + " 秒将持续进入掉血掉蓝状态。每秒灼烧HP:"+damageHp+" MP:"+damageMp);
+                            MapleCharacter.this.isburnd = true;
 
-                            for(int i = 0; i < count && MapleCharacter.this.getHp() != 0; ++i) {
+                            for(int i = 0; i < index && MapleCharacter.this.getHp() != 0; ++i) {
                                 int newHp = MapleCharacter.this.getHp() - damageHp;
                                 int newMp = MapleCharacter.this.getMp() - damageMp;
                                 if (newHp <= 0) {
@@ -18027,10 +18027,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                                 hpmpupdate.put(MapleStat.MP, newMp);
                                 hpmpupdate.put(MapleStat.HP, newHp);
                                 MapleCharacter.this.getClient().sendPacket(MaplePacketCreator.updatePlayerStats(hpmpupdate, true, MapleCharacter.this));
+                                MapleCharacter.this.dropMessage(6, "灼烧剩余时间"+ (index - i) + "秒。");
+                                client.sendPacket(UIPacket.ShowWZEffect("Effect/BasicEff.img/TombUpgrade"));
                                 Thread.sleep(1000L);
                                 if (Game.主城(MapleCharacter.this.getMapId()) && i >10) {
                                     return;
                                 }
+
                             }
 
                             MapleCharacter.this.dropMessage(6, "随着时间的流逝，你身上的火焰逐渐减弱并消失了。");

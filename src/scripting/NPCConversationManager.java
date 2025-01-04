@@ -120,110 +120,110 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     public String getDiabloEquipmentsDisplay(){
 
         StringBuilder output = new StringBuilder();
-
+        output.append("词条：").append("\\r\\n");
         for (LtDiabloEquipments equipment : Start.ltDiabloEquipments) {
             StringBuilder attributes = new StringBuilder();
             if (equipment.getStr() > 0) {
-                attributes.append("力量:").append(equipment.getStr()).append(", ");
+                attributes.append("力量:").append(equipment.getStr()).append("点, ");
             }
             if (equipment.getDex() > 0) {
-                attributes.append("敏捷:").append(equipment.getDex()).append(", ");
+                attributes.append("敏捷:").append(equipment.getDex()).append("点, ");
             }
             if (equipment.get_int() > 0) {
-                attributes.append("智力:").append(equipment.get_int()).append(", ");
+                attributes.append("智力:").append(equipment.get_int()).append("点, ");
             }
             if (equipment.getLuk() > 0) {
-                attributes.append("运气:").append(equipment.getLuk()).append(", ");
+                attributes.append("运气:").append(equipment.getLuk()).append("点, ");
             }
             if (equipment.getWatk() > 0) {
-                attributes.append("物理攻击:").append(equipment.getWatk()).append(", ");
+                attributes.append("物理攻击:").append(equipment.getWatk()).append("点, ");
             }
             if (equipment.getMatk() > 0) {
-                attributes.append("魔法攻击:").append(equipment.getMatk()).append(", ");
+                attributes.append("魔法攻击:").append(equipment.getMatk()).append("点, ");
             }
             if (equipment.getWdef() > 0) {
-                attributes.append("物理防御:").append(equipment.getWdef()).append(", ");
+                attributes.append("物理防御:").append(equipment.getWdef()).append("点, ");
             }
             if (equipment.getMdef() > 0) {
-                attributes.append("魔法防御:").append(equipment.getMdef()).append(", ");
+                attributes.append("魔法防御:").append(equipment.getMdef()).append("点, ");
             }
             if (equipment.getMaxhp() > 0) {
-                attributes.append("血量:").append(equipment.getMaxhp()).append(", ");
+                attributes.append("血量:").append(equipment.getMaxhp()).append("点, ");
             }
             if (equipment.getMaxmp() > 0) {
-                attributes.append("蓝量:").append(equipment.getMaxmp()).append(", ");
+                attributes.append("蓝量:").append(equipment.getMaxmp()).append("点, ");
             }
             if (equipment.getResistance() > 0) {
-                attributes.append("抗性:").append(equipment.getResistance()).append(", ");
+                attributes.append("抗性:").append(equipment.getResistance()).append("点, ");
             }
             if (equipment.getDodge() > 0) {
-                attributes.append("闪避:").append(equipment.getDodge()).append(", ");
+                attributes.append("闪避:").append(equipment.getDodge()).append("点, ");
             }
             if (equipment.getStrPercent() > 0) {
-                attributes.append("力量百分比:").append(equipment.getStrPercent()).append(", ");
+                attributes.append("力量百分比:").append(equipment.getStrPercent()).append("%, ");
             }
             if (equipment.getDexPercent() > 0) {
-                attributes.append("敏捷百分比:").append(equipment.getDexPercent()).append(", ");
+                attributes.append("敏捷百分比:").append(equipment.getDexPercent()).append("%, ");
             }
             if (equipment.getIntPercent() > 0) {
-                attributes.append("智力百分比:").append(equipment.getIntPercent()).append(", ");
+                attributes.append("智力百分比:").append(equipment.getIntPercent()).append("%, ");
             }
             if (equipment.getLukPercent() > 0) {
-                attributes.append("运气百分比:").append(equipment.getLukPercent()).append(", ");
+                attributes.append("运气百分比:").append(equipment.getLukPercent()).append("%, ");
             }
             if (equipment.getSkillId() > 0) {
                 //技能类型(1为伤害技能 ,2 为服务端触发式高频打击伤害技能 ,3 为状态技能)  技能伤害 技能段数  技能打击数量
-                attributes.append("附加技能:").append(equipment.getSkillId()).append(", ");
+                attributes.append("附加技能:").append(equipment.getSkillId()).append(", ").append(", ");
             }
             if (equipment.getWatkPercent() > 0) {
-                attributes.append("物理攻击百分比:").append(equipment.getWatkPercent()).append(", ");
+                attributes.append("物理攻击百分比:").append(equipment.getWatkPercent()).append("%, ");
             }
             if (equipment.getMatkPercent() > 0) {
-                attributes.append("魔法攻击百分比:").append(equipment.getMatkPercent()).append(", ");
+                attributes.append("魔法攻击百分比:").append(equipment.getMatkPercent()).append("%, ");
             }
             if (equipment.getWdefPercent() > 0) {
-                attributes.append("物理防御百分比:").append(equipment.getWdefPercent()).append(", ");
+                attributes.append("物理防御百分比:").append(equipment.getWdefPercent()).append("%, ");
             }
             if (equipment.getMdefPercent() > 0) {
-                attributes.append("魔法防御百分比:").append(equipment.getMdefPercent()).append(", ");
+                attributes.append("魔法防御百分比:").append(equipment.getMdefPercent()).append("%, ");
             }
             if (equipment.getMaxhpPercent() > 0) {
-                attributes.append("血量百分比:").append(equipment.getMaxhpPercent()).append(", ");
+                attributes.append("血量百分比:").append(equipment.getMaxhpPercent()).append("%, ");
             }
             if (equipment.getMaxmpPercent() > 0) {
-                attributes.append("蓝量百分比:").append(equipment.getMaxmpPercent()).append(", ");
+                attributes.append("蓝量百分比:").append(equipment.getMaxmpPercent()).append("%, ");
             }
             if (equipment.getNormalDamagePercent() > 0) {
-                attributes.append("普通怪物伤害加成:").append(equipment.getNormalDamagePercent()).append(", ");
+                attributes.append("普通怪物伤害加成:").append(equipment.getNormalDamagePercent()).append("%, ");
             }
             if (equipment.getBossDamagePercent() > 0) {
-                attributes.append("boss伤害加成:").append(equipment.getBossDamagePercent()).append(", ");
+                attributes.append("boss伤害加成:").append(equipment.getBossDamagePercent()).append("%, ");
             }
             if (equipment.getTotalDamagePercent() > 0) {
-                attributes.append("总伤害加成:").append(equipment.getTotalDamagePercent()).append(", ");
+                attributes.append("总伤害加成:").append(equipment.getTotalDamagePercent()).append("%, ");
             }
             if (equipment.getDropRate() > 0) {
-                attributes.append("物品掉落率:").append(equipment.getLuk()).append(", ");
+                attributes.append("物品掉落率:").append(equipment.getDropRate()).append("%, ");
             }
             if (equipment.getDropRateCount() > 0) {
-                attributes.append("掉落数量:").append(equipment.getLuk()).append(", ");
+                attributes.append("掉落数量:").append(equipment.getDropRateCount()).append("个, ");
             }
             if (equipment.getExpRate() > 0) {
-                attributes.append("经验倍率:").append(equipment.getExpRate()).append(", ");
+                attributes.append("经验倍率:").append(equipment.getExpRate()).append("%, ");
             }
             if (equipment.getExpRateCount() > 0) {
-                attributes.append("额外经验:").append(equipment.getExpRateCount()).append(", ");
+                attributes.append("额外经验:").append(equipment.getExpRateCount()).append("点, ");
             }
             if (equipment.getMesoRate() > 0) {
-                attributes.append("金币掉落率:").append(equipment.getMesoRate()).append(", ");
+                attributes.append("金币掉落率:").append(equipment.getMesoRate()).append("%, ");
             }
             if (equipment.getMesoRateCount() > 0) {
-                attributes.append("金币掉落率数量:").append(equipment.getMesoRateCount()).append(", ");
+                attributes.append("金币掉落率数量:").append(equipment.getMesoRateCount()).append("个, ");
             }
             // 移除最后的逗号和空格
             if (attributes.length() > 0) {
                 attributes.setLength(attributes.length() - 2); // 删除最后的 ", "
-                output.append("词条名：").append(equipment.getEntryName()).append(" => ").append(attributes.toString()).append("\n");
+                output.append(equipment.getEntryName()).append(" => ").append(attributes.toString()).append("\\r\\n");
             }
         }
         return output.toString();

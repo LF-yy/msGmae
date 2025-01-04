@@ -1,3 +1,5 @@
+
+
 package server;
 
 import client.MapleCharacter;
@@ -22,8 +24,8 @@ public class MapleSquad {
     private WeakReference<MapleCharacter> leader;
     private final String leaderName;
     private final String toSay;
-    private final Map<String, String> members = new LinkedHashMap<>();
-    private final Map<String, String> bannedMembers = new LinkedHashMap<>();
+    private final Map<String, String> members = new LinkedHashMap();
+    private final Map<String, String> bannedMembers = new LinkedHashMap();
     private final int ch;
     private final long startTime;
     private final int expiration;
@@ -44,8 +46,8 @@ public class MapleSquad {
         this.beginMapId = leader.getMapId();
         leader.getMap().setSquad(this.type);
         if (this.type.queue.get(ch) == null) {
-            this.type.queue.put(ch, new ArrayList<>());
-            this.type.queuedPlayers.put(ch, new ArrayList<>());
+            this.type.queue.put(ch, new ArrayList());
+            this.type.queuedPlayers.put(ch, new ArrayList());
         }
 
         this.startTime = System.currentTimeMillis();

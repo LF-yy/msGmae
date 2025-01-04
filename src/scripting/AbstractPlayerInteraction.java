@@ -3701,7 +3701,88 @@ public abstract class AbstractPlayerInteraction
         catch (SQLException ex) {}
         return ret;
     }
+    public void GainPiot(String Name, int Channale, int Piot) {
+        int ret = this.GetPiot(Name, Channale);
+        if (ret == -1) {
+            ret = 0;
+            PreparedStatement ps = null;
 
+            try {
+                Connection con = DBConPool.getConnection();
+                Throwable var7 = null;
+
+                try {
+                    ps = con.prepareStatement("INSERT INTO FullPoint (channel, Name,Point) VALUES (?, ?, ?)");
+                    ps.setInt(1, Channale);
+                    ps.setString(2, Name);
+                    ps.setInt(3, ret);
+                    ps.execute();
+                } catch (Throwable var57) {
+                    var7 = var57;
+                    throw var57;
+                } finally {
+                    if (con != null) {
+                        if (var7 != null) {
+                            try {
+                                con.close();
+                            } catch (Throwable var56) {
+                                var7.addSuppressed(var56);
+                            }
+                        } else {
+                            con.close();
+                        }
+                    }
+
+                }
+            } catch (SQLException var61) {
+                服务端输出信息.println_out("xxxxxxxx:" + var61);
+            } finally {
+                try {
+                    if (ps != null) {
+                        ps.close();
+                    }
+                } catch (SQLException var53) {
+                    服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var53);
+                }
+
+            }
+        }
+
+        ret += Piot;
+
+        try {
+            Connection con1 = DBConPool.getConnection();
+            Throwable var64 = null;
+
+            try {
+                PreparedStatement ps = con1.prepareStatement("UPDATE FullPoint SET `Point` = ? WHERE Name = ? and channel = ?");
+                ps.setInt(1, ret);
+                ps.setString(2, Name);
+                ps.setInt(3, Channale);
+                ps.execute();
+                ps.close();
+            } catch (Throwable var55) {
+                var64 = var55;
+                throw var55;
+            } finally {
+                if (con1 != null) {
+                    if (var64 != null) {
+                        try {
+                            con1.close();
+                        } catch (Throwable var54) {
+                            var64.addSuppressed(var54);
+                        }
+                    } else {
+                        con1.close();
+                    }
+                }
+
+            }
+        } catch (SQLException var59) {
+            服务端输出信息.println_err("获取错误!!55" + var59);
+        }
+
+    }
     public int Getsaiji(final String Name, final int Channale) {
         int ret = -1;
         try {
