@@ -3,12 +3,14 @@ package server.life;
 import java.awt.Rectangle;
 import java.util.*;
 
+import bean.HideAttribute;
 import client.ISkill;
 import client.SkillFactory;
 import constants.GameConstants;
 import gui.LtMS;
 import handling.world.MaplePartyCharacter;
 import server.MapleStatEffect;
+import server.Start;
 import server.maps.MapleMist;
 import client.MapleDisease;
 import server.maps.MapleMapObject;
@@ -248,7 +250,7 @@ public class MobSkill
                         break;
                     }
                     case 114: {
-                       // monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
+                       //monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("" + monster.stats.getName() + " 使用技能 [治愈]"));
                         break;
                     }
                     case 140: {
@@ -281,8 +283,9 @@ public class MobSkill
                         break;
                     }
                     case 183:
-
-                        player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [灼烧]");
+                        if( monster.getLevel()>=160) {
+                            player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [灼烧]");
+                        }
                         break;
                     case 186:
                         player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [变身]");
@@ -332,18 +335,20 @@ public class MobSkill
                     }
                 }
             }
-                if (this.isCanAvoidSkill(this.skillId)) {
-                    if (player.totalDodge > 0) {
+            HideAttribute hideAttribute = Start.hideAttributeMap.get(player.getId());
+
+            if (this.isCanAvoidSkill(this.skillId)) {
+                    if (hideAttribute.totalDodge > 0) {
                         Random rand = new Random();
-                        if (rand.nextInt(1000) <= player.totalDodge) {
+                        if (rand.nextInt(10000) <= hideAttribute.totalDodge) {
                             player.sendSkillEffect(4220002, 2);
                             player.dropMessage(5, "闪避生效，你成功躲避了怪物的技能。");
                             return;
                         }
                     }
-                    if (player.totalResistance > 0) {
+                    if (hideAttribute.totalResistance > 0) {
                         Random rand = new Random();
-                        if (rand.nextInt(1000) <= player.totalResistance) {
+                        if (rand.nextInt(1000) <= hideAttribute.totalResistance) {
                             player.sendSkillEffect(4220002, 2);
                             player.dropMessage(5, "抗性生效，你成功抵抗了怪物的技能。");
                             return;
@@ -559,7 +564,7 @@ public class MobSkill
             }
             //灼烧
                 case 183:
-                    if (this.lt != null && this.rb != null && skill && monster != null) {
+                    if (this.lt != null && this.rb != null && skill && monster != null && monster.getLevel()>=160) {
                         var36 = this.getPlayersInRange(monster, player).iterator();
                         while(true) {
                             if (!var36.hasNext()) {

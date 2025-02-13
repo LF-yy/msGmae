@@ -3,7 +3,7 @@ package handling.channel.handler;
 import bean.LtMonsterSkill;
 import bean.UserAttraction;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import scripting.NPCConversationManager;
 import server.MapleInventoryManipulator;
 import server.Randomizer;
@@ -72,6 +72,7 @@ public class MobHandler
         final short moveid = slea.readShort();
         final boolean useSkill = slea.readByte() > 0;
         final byte skill = slea.readByte();
+        //System.out.println("skill : " + skill);
         final int unk2 = slea.readInt();
         int realskill = 0;
         int level = 0;
@@ -154,7 +155,7 @@ public class MobHandler
             }
                 MovementParse.updatePosition(res, (AnimatedMapleMapObject) monster, -1);
                 map.moveMonster(monster, monster.getPosition());
-                map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, (int) skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
+                map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, Objects.nonNull(LtMS.ConfigValuesMap.get("怪物技能ID")) && LtMS.ConfigValuesMap.get("怪物技能ID")>0 ? LtMS.ConfigValuesMap.get("怪物技能ID") : (int)skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
         }
     }
     public static final void MoveMonster2(final LittleEndianAccessor slea, final MapleClient c) {
@@ -222,8 +223,8 @@ public class MobHandler
 
                     if (res != null) {
                         if (slea.available() != 8L) {
-                            服务端输出信息.println_err("slea.available != 8 (movement parsing error)");
-                            服务端输出信息.println_err(slea.toString(true));
+                            //服务端输出信息.println_err("slea.available != 8 (movement parsing error)");
+                            //服务端输出信息.println_err(slea.toString(true));
                             return;
                         }
 
@@ -232,7 +233,7 @@ public class MobHandler
                         map.broadcastMessage(chr, MobPacket.moveMonster(useSkill, skill, unk2, monster.getObjectId(), startPos, monster.getPosition(), res), monster.getPosition());
                     }
                 } catch (Exception var16) {
-                    服务端输出信息.println_err("【错误】MoveMonster错误，错误原因：" + var16);
+                    //服务端输出信息.println_err("【错误】MoveMonster错误，错误原因：" + var16);
                     var16.printStackTrace();
                 }
 
@@ -403,18 +404,21 @@ public class MobHandler
             return;
         }
         MapleCharacter chr = c.getPlayer();
+        //通过怪物id获取发包的怪物
         final MapleMonster monster = chr.getMap().getMonsterByOid(slea.readInt());
-        if (monster != null && chr.getPosition().distanceSq((Point2D)monster.getPosition()) < 200000.0) {
-            if (monster.getController() != null) {
-                if (chr.getMap().getCharacterById(monster.getController().getId()) == null) {
+        if (monster != null && monster.getOwner() == c.getPlayer().getId()) {
+
+        }else {
+            if (monster != null && chr.getPosition().distanceSq((Point2D) monster.getPosition()) < 200000.0) {
+                if (monster.getController() != null) {
+                    if (chr.getMap().getCharacterById(monster.getController().getId()) == null) {
+                        monster.switchController(chr, true);
+                    } else {
+                        monster.switchController(monster.getController(), true);
+                    }
+                } else {
                     monster.switchController(chr, true);
                 }
-                else {
-                    monster.switchController(monster.getController(), true);
-                }
-            }
-            else {
-                monster.switchController(chr, true);
             }
         }
     }
@@ -425,11 +429,14 @@ public class MobHandler
         slea.skip(4);
         final int to = slea.readInt();
         slea.skip(1);
-        final int damage = slea.readInt();
+         int damage = slea.readInt();
         final MapleMonster mob_to = chr.getMap().getMonsterByOid(to);
         if (mob_from != null && mob_to != null && mob_to.getStats().isFriendly()) {
             if (damage > 30000) {
                 return;
+            }
+            if (mob_to.getStats().isFriendly()) {
+                damage += c.getPlayer().最高伤害;
             }
             mob_to.damage(chr, (long)damage, true);
             checkShammos(chr, mob_to, chr.getMap());

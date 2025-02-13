@@ -135,11 +135,11 @@ public class CheatTracker
                 }else {
                     ((MapleCharacter)this.chr.get()).dropMessage("触发攻击速度封锁");
                 }
-                //FileoutputUtil.logToFile("logs/Hack/Ban/攻击速度.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + " 技能: " + skillId + " check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
+                FileoutputUtil.logToFile("logs/Hack/Ban/攻击速度.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + " 技能: " + skillId + " check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
                 return 1;
             }
             if (tickcount - this.lastAttackTickCount >0  &&  GameConstants.getWuYanChi(skillId)) {
-                //FileoutputUtil.logToFile("logs/Hack/攻击速度异常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + "\u3000技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ") check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
+                FileoutputUtil.logToFile("logs/Hack/攻击速度异常.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + ((MapleCharacter)this.chr.get()).getName() + " 职业:" + (int)((MapleCharacter)this.chr.get()).getJob() + "\u3000技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ") check: " + (tickcount - this.lastAttackTickCount) + " AtkDelay: " + (int)AtkDelay);
                 if (WorldConstants.WUYANCHI) {
                     Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语开加速]  ID " + ((MapleCharacter)this.chr.get()).getId() + " " + ((MapleCharacter)this.chr.get()).getName() + " 攻击速度异常,速度:"+AtkDelay+"，技能: " + skillId + "(" + SkillFactory.getSkillName(skillId) + ")"));
                     this.noError = 0;

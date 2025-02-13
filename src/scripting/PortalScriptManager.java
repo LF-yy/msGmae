@@ -3,7 +3,7 @@ package scripting;
 import javax.script.ScriptEngineManager;
 import client.MapleClient;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import server.MaplePortal;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;

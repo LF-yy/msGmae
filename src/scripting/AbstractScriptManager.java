@@ -5,7 +5,7 @@ import javax.script.*;
 import java.io.IOException;
 
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import server.Start;
 import tools.FilePrinter;
 
@@ -191,14 +191,14 @@ public abstract class AbstractScriptManager {
                         changed = true;
                     }
                 } catch (Exception var13) {
-                    服务端输出信息.println_err("【错误】reloadScriptCache 重载脚本缓存失败，失败原因：" + var13);
+                    //服务端输出信息.println_err("【错误】reloadScriptCache 重载脚本缓存失败，失败原因：" + var13);
                 }finally {
                     try {
                         if (fr != null) {
                             fr.close();
                         }
                     } catch (IOException var12) {
-                        服务端输出信息.println_err("【错误】reloadScriptCache 关闭文件流失败，失败原因：" + var12);
+                        //服务端输出信息.println_err("【错误】reloadScriptCache 关闭文件流失败，失败原因：" + var12);
                     }
                 }
             }

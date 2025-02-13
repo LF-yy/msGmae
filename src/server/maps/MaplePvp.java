@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+import bean.HideAttribute;
 import client.*;
 import client.inventory.Equip;
 import client.inventory.IItem;
@@ -15,7 +17,7 @@ import constants.GameConstants;
 import constants.SkillConstants;
 import database.DBConPool;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import server.MapleStatEffect;
@@ -602,12 +604,10 @@ public class MaplePvp
                                             isDropedItem = true;
                                             break;
                                         }
-
                                         source = (Equip)attackedPlayers.getInventory(MapleInventoryType.EQUIP).getItem(i);
                                         if (source != null && GameConstants.isPKDropItem2(source.getItemId()) && source.getFlag() != ItemFlag.LOCK.getValue() && source.getFlag() != ItemFlag.UNTRADEABLE.getValue() && !MapleItemInformationProvider.getInstance().isCash(source.getItemId()) && (source.getExpiration() < 0L || (double)source.getExpiration() >= 4.7E12)) {
                                             existDropEquipList.add(i);
                                         }
-
                                         ++i;
                                     }
                                 }
@@ -645,7 +645,6 @@ public class MaplePvp
                                 }
                             }
                         }
-
                     }
                 }
             }
@@ -657,31 +656,52 @@ public class MaplePvp
     public static void doPvP(MapleCharacter player, MapleMap map, AttackInfo attack) {
         DamageBalancer(player, attack);
         getDirection(attack);
-        Iterator var3 = player.getMap().getNearestPvpChar(player.getPosition(), (double)maxDis, (double)maxHeight, player.getMap().getCharacters()).iterator();
+//        Iterator var3 = player.getMap().getNearestPvpChar(player.getPosition(), (double)maxDis, (double)maxHeight, player.getMap().getCharacters()).iterator();
+//
+//        while(true) {
+//            while(true) {
+//                MapleCharacter attackedPlayers;
+//                do {
+//                    do {
+//                        do {
+//                            if (!var3.hasNext()) {
+//                                return;
+//                            }
+//
+//                            attackedPlayers = (MapleCharacter)var3.next();
+//                        } while(attackedPlayers.getLevel() < 30);
+//                    } while(!attackedPlayers.isAlive());
+//                } while(player.getParty() != null && player.getParty() == attackedPlayers.getParty());
+//
+//                MapleGuildMatch guildEvent = (MapleGuildMatch)player.getClient().getChannelServer().getEvent(MapleEventType.家族对抗赛);
+//                if (guildEvent != null && guildEvent.isBegain() && guildEvent.getTimeLeft() > 0L && guildEvent.containMapId(player.getMapId())) {
+//                    if (player.getGuildId() != attackedPlayers.getGuildId()) {
+//                        monsterBomb(player, attackedPlayers, map, attack);
+//                    }
+//                } else {
+//                    monsterBomb(player, attackedPlayers, map, attack);
+//                }
+//            }
+//        }
+        // 获取玩家周围符合条件的PVP角色列表
+        List<MapleCharacter> nearestPvpChars = (List<MapleCharacter>) player.getMap().getNearestPvpChar(player.getPosition(), (double)maxDis, (double)maxHeight, player.getMap().getCharacters());
+        // 遍历这些角色，对符合条件的角色进行攻击
+        for (MapleCharacter attackedPlayers : nearestPvpChars) {
+            if (attackedPlayers.getLevel() < 30 || !attackedPlayers.isAlive()) {
+                continue;
+            }
 
-        while(true) {
-            while(true) {
-                MapleCharacter attackedPlayers;
-                do {
-                    do {
-                        do {
-                            if (!var3.hasNext()) {
-                                return;
-                            }
+            if (player.getParty() != null && player.getParty().equals(attackedPlayers.getParty())) {
+                continue;
+            }
 
-                            attackedPlayers = (MapleCharacter)var3.next();
-                        } while(attackedPlayers.getLevel() < 30);
-                    } while(!attackedPlayers.isAlive());
-                } while(player.getParty() != null && player.getParty() == attackedPlayers.getParty());
-
-                MapleGuildMatch guildEvent = (MapleGuildMatch)player.getClient().getChannelServer().getEvent(MapleEventType.家族对抗赛);
-                if (guildEvent != null && guildEvent.isBegain() && guildEvent.getTimeLeft() > 0L && guildEvent.containMapId(player.getMapId())) {
-                    if (player.getGuildId() != attackedPlayers.getGuildId()) {
-                        monsterBomb(player, attackedPlayers, map, attack);
-                    }
-                } else {
+            MapleGuildMatch guildEvent = (MapleGuildMatch) player.getClient().getChannelServer().getEvent(MapleEventType.家族对抗赛);
+            if (guildEvent != null && guildEvent.isBegain() && guildEvent.getTimeLeft() > 0L && guildEvent.containMapId(player.getMapId())) {
+                if (player.getGuildId() != attackedPlayers.getGuildId()) {
                     monsterBomb(player, attackedPlayers, map, attack);
                 }
+            } else {
+                monsterBomb(player, attackedPlayers, map, attack);
             }
         }
     }
@@ -739,10 +759,11 @@ public class MaplePvp
                     }
                 }
             }
+            HideAttribute hideAttribute = Start.hideAttributeMap.get(attackedPlayer.getId());
 
-            if(player.totalDodge>0){
+            if(hideAttribute.totalDodge>0){
                 Random rand = new Random();
-                if (rand.nextInt(1000) <= player.totalDodge) {
+                if (rand.nextInt(1000) <= hideAttribute.totalDodge) {
                     player.sendSkillEffect(4121004, 2);
                     player.dropMessage(5, "闪避生效，你成功躲避了敌人的伤害。");
                     pvpDamage = 0;
@@ -754,48 +775,26 @@ public class MaplePvp
 
     }
 
-    public static Map<Integer, Integer> jobBalanceMap = new HashMap();
-    public static boolean loadJobBalanceMapFromDB() {
-        jobBalanceMap.clear();
+     public static Map<Integer, Integer> jobBalanceMap = new ConcurrentHashMap<>();
+        private static final String QUERY = "SELECT * FROM snail_pk_job_balance";
 
-        try {
-            Connection con = DBConPool.getConnection();
-            Throwable var1 = null;
+        public static boolean loadJobBalanceMapFromDB() {
+            jobBalanceMap.clear();
 
-            try {
-                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_pk_job_balance");
-                ResultSet rs = ps.executeQuery();
+            try (Connection con = DBConPool.getConnection();
+                 PreparedStatement ps = con.prepareStatement(QUERY);
+                 ResultSet rs = ps.executeQuery()) {
 
-                while(rs.next()) {
+                while (rs.next()) {
                     jobBalanceMap.put(rs.getInt("jobid"), rs.getInt("ratio"));
                 }
-
-                ps.close();
-                rs.close();
                 return true;
-            } catch (Throwable var12) {
-                var1 = var12;
-                throw var12;
-            } finally {
-                if (con != null) {
-                    if (var1 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var11) {
-                            var1.addSuppressed(var11);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
 
+            } catch (SQLException e) {
+                return false;
             }
-        } catch (SQLException var14) {
-            服务端输出信息.println_err("【错误】loadJobBalanceMapFromDB错误，错误原因：" + var14);
-            var14.printStackTrace();
-            return false;
         }
-    }
+
     public static int getBalanceRatio(int jobId) {
         if (jobBalanceMap.size() == 0) {
             loadJobBalanceMapFromDB();

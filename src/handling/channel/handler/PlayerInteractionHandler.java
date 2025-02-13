@@ -78,7 +78,7 @@ public class PlayerInteractionHandler
             return;
         }
         if (chr.getAntiMacro().inProgress()) {
-            chr.dropMessage(5, "被使用測謊儀時無法操作。");
+            chr.dropMessage(5, "被使用测谎仪时无法使用。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -101,7 +101,7 @@ public class PlayerInteractionHandler
                 if (createType != 1 && createType != 2 && createType != 4 && createType != 5) {
                     break;
                 }
-                if (!chr.getMap().getMapObjectsInRange(chr.getPosition(), 20000.0, Arrays.asList(MapleMapObjectType.SHOP, MapleMapObjectType.HIRED_MERCHANT)).isEmpty()) {
+                if (!chr.getMap().getMapObjectsInRange(chr.getPosition(), 40000.0, Arrays.asList(MapleMapObjectType.SHOP, MapleMapObjectType.HIRED_MERCHANT)).isEmpty()) {
                     chr.dropMessage(1, "此处无法建立商店");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
@@ -130,8 +130,7 @@ public class PlayerInteractionHandler
                     game.send(c);
                     chr.getMap().addMapObject((MapleMapObject)game);
                     game.update();
-                }
-                else {
+                }else {
                     final IItem shop = c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((short)(byte)slea.readShort());
                     if (shop == null || shop.getQuantity() <= 0 || shop.getItemId() != slea.readInt() || c.getPlayer().getMapId() < 910000001 || c.getPlayer().getMapId() > 910000022) {
                         return;

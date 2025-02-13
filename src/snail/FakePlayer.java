@@ -167,7 +167,7 @@ public class FakePlayer {
 
                 if (myMileage > 0) {
                     owner.增加积分_数据库(myMileage);
-                    msg = msg + "#r里程x#b" + myMileage + " #k";
+                    msg = msg + "#r积分x#b" + myMileage + " #k";
                     canReward = true;
                 }
 
@@ -205,22 +205,31 @@ public class FakePlayer {
 
     public static void loadIpWhiteList() {
         ipWhiteList.clear();
-        ipWhiteListString = ServerProperties.getProperty("server.settings.ipWhiteList", "");
-        String list = ipWhiteListString;
-        list = list.replace(" ", "");
-        list = list.replace(".", "").replace("/", "");
-        String[] var1 = list.split(",");
-        int var2 = var1.length;
 
-        for(int var3 = 0; var3 < var2; ++var3) {
-            String str = var1[var3];
-            ipWhiteList.add(Long.parseLong(str));
+        try {
+            ipWhiteListString = ServerProperties.getProperty("server.settings.ipWhiteList", "");
+            String list = ipWhiteListString;
+            list = list.replace(" ", "");
+            list = list.replace(".", "").replace("/", "");
+            String[] var1 = list.split(",");
+            int var2 = var1.length;
+
+            for(int var3 = 0; var3 < var2; ++var3) {
+                String str = var1[var3];
+                ipWhiteList.add(Long.parseLong(str));
+            }
+        } catch (NumberFormatException e) {
+
         }
 
     }
 
     public static void setIpWhiteList() {
-        ServerProperties.setProperty("server.settings.ipWhiteList", ipWhiteListString);
+        try {
+            ServerProperties.setProperty("server.settings.ipWhiteList", ipWhiteListString);
+        } catch (Exception e) {
+
+        }
     }
 
     public static ArrayList<Long> getIpWhiteList() {

@@ -5,7 +5,7 @@
 
 package tools;
 
-import gui.服务端输出信息;
+
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -76,10 +76,10 @@ public class TimeUtil {
             nowTime = date.getTime();
             return nowTime;
         } catch (MalformedURLException var8) {
-            服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var8);
+            //服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var8);
             var8.printStackTrace();
         } catch (IOException var9) {
-            服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var9);
+            //服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var9);
             var9.printStackTrace();
         }
 
@@ -102,11 +102,11 @@ public class TimeUtil {
                 return nowTime;
             }
         } catch (MalformedURLException var8) {
-            服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var8);
+            //服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var8);
             var8.printStackTrace();
             return -1L;
         } catch (IOException var9) {
-            服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var9);
+            //服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var9);
             var9.printStackTrace();
             return -1L;
         }
@@ -125,7 +125,7 @@ public class TimeUtil {
 
             return nowTime;
         } catch (Exception var3) {
-            服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var3);
+            //服务端输出信息.println_err("【错误】获取时间错误，错误原因：" + var3);
             var3.printStackTrace();
             return -1L;
         }

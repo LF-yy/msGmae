@@ -60,7 +60,7 @@ public class SkillFactory
     
     public static ISkill getSkill(final int id) {
         if (!SkillFactory.skills.isEmpty()) {
-            return (ISkill)SkillFactory.skills.get((Object)Integer.valueOf(id));
+            return (ISkill)SkillFactory.skills.get(id);
         }
         return null;
     }

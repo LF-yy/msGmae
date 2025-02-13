@@ -1,7 +1,7 @@
 package server.events;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 import handling.world.World.Broadcast;
 import server.Timer.EventTimer;
 import tools.MaplePacketCreator;
@@ -297,7 +297,7 @@ public abstract class MapleEvent
 
             }
         } catch (SQLException var19) {
-            服务端输出信息.println_err("【错误】loadRewards读取数据库错误，错误原因：" + var19);
+            //服务端输出信息.println_err("【错误】loadRewards读取数据库错误，错误原因：" + var19);
             var19.printStackTrace();
         }
 
@@ -346,7 +346,7 @@ public abstract class MapleEvent
                 }
             }
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】givePrizeS错误，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】givePrizeS错误，错误原因：" + var6);
             var6.printStackTrace();
         }
 

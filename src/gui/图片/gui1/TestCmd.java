@@ -5,7 +5,7 @@
 
 package gui.图片.gui1;
 
-import gui.服务端输出信息;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
@@ -32,14 +32,14 @@ public class TestCmd {
 
                 s = baos.toString();
                 if (s.indexOf("exe") >= 0) {
-                    服务端输出信息.println_out("已经运行YY");
+                    //服务端输出信息.println_out("已经运行YY");
                     flag = true;
                 } else {
-                    服务端输出信息.println_out("未运行YY");
+                    //服务端输出信息.println_out("未运行YY");
                     flag = false;
                 }
             } catch (Exception var10) {
-                服务端输出信息.println_err(var10);
+                //服务端输出信息.println_err(var10);
             }
 
             return flag;
@@ -50,6 +50,6 @@ public class TestCmd {
 
     public static void main(String[] args) {
         (new TestCmd()).getProcess();
-        服务端输出信息.println_out("Hello World!");
+        //服务端输出信息.println_out("Hello World!");
     }
 }

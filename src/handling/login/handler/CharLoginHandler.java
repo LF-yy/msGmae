@@ -401,11 +401,11 @@ public class CharLoginHandler
             c.sendPacket(LoginPacket.getLoginFailed(1));
             return;
         }
-        final short db = 0;
+//        final short db = 0;
         final int face = slea.readInt();
         final int hair = slea.readInt();
-        final int hairColor = 0;
-        final byte skinColor = 0;
+//        final int hairColor = 0;
+//        final byte skinColor = 0;
         final int top = slea.readInt();
         final int bottom = slea.readInt();
         final int shoes = slea.readInt();
@@ -497,6 +497,7 @@ public class CharLoginHandler
             }
         }
         final MapleCharacter newchar = MapleCharacter.getDefault(c, JobType);
+        //背包扩充
         newchar.setWorld((byte)(c.getWorld() - 1));
         newchar.setFace(face);
         newchar.setHair(hair + 0);
@@ -518,7 +519,7 @@ public class CharLoginHandler
         //武器的位置是-11
         item.setPosition((short)(-11));
         equip.addFromDB(item);
-        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        //final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         switch (JobType) {
             case 0: {
                 newchar.setQuestAdd(MapleQuest.getInstance(20022), (byte)1, "1");

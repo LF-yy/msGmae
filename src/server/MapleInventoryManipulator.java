@@ -7,7 +7,7 @@ import client.*;
 import constants.ServerConfig;
 import constants.tzjc;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import snail.EquipFieldEnhancement;
 import snail.Potential;
 import server.maps.MapleMapObject;
@@ -112,7 +112,9 @@ public class MapleInventoryManipulator
     public static boolean addById( MapleClient c,int itemId,short quantity,  String owner,  MaplePet pet,  long period) {
         return addId(c, itemId, quantity, owner, pet, period) >= 0;
     }
-
+    public static boolean addByIdxians( MapleClient c,int itemId,short quantity,  String owner,  MaplePet pet,  long period) {
+        return addIdxians(c, itemId, quantity, owner, pet, period) >= 0;
+    }
     public static byte addId(final MapleClient c, final int itemId, short quantity, final String owner, final MaplePet pet, final long period) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         if (ii.isPickupRestricted(itemId) && c.getPlayer().haveItem(itemId, 1, true, false)) {
@@ -213,7 +215,106 @@ public class MapleInventoryManipulator
         c.getPlayer().havePartyQuest(itemId);
         return (byte)newSlot;
     }
-    
+    public static byte addIdxians(final MapleClient c, final int itemId, short quantity, final String owner, final MaplePet pet, final long period) {
+        final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+        if (ii.isPickupRestricted(itemId) && c.getPlayer().haveItem(itemId, 1, true, false)) {
+            c.sendPacket(MaplePacketCreator.getInventoryFull());
+            c.sendPacket(MaplePacketCreator.showItemUnavailable());
+            return -1;
+        }
+        final MapleInventoryType type = GameConstants.getInventoryType(itemId);
+        final int uniqueid = getUniqueId(itemId, pet);
+        short newSlot = -1;
+        if (!type.equals((Object)MapleInventoryType.EQUIP)) {
+            final short slotMax = ii.getSlotMax(c, itemId);
+            final List<IItem> existing = c.getPlayer().getInventory(type).listById(itemId);
+            if (!GameConstants.isRechargable(itemId)) {
+                if (existing.size() > 0) {
+                    final Iterator<IItem> i = existing.iterator();
+                    while (quantity > 0 && i.hasNext()) {
+                        final Item eItem = (Item)i.next();
+                        final short oldQ = eItem.getQuantity();
+                        if (oldQ < slotMax && (eItem.getOwner().equals((Object)owner) || owner == null) && eItem.getExpiration() == -1L) {
+                            final short newQ = (short)Math.min(oldQ + quantity, (int)slotMax);
+                            quantity -= (short)(newQ - oldQ);
+                            eItem.setQuantity(newQ);
+                            c.sendPacket(MaplePacketCreator.modifyInventory(false, new ModifyInventory(1, (IItem)eItem)));
+                        }
+                    }
+                }
+                while (quantity > 0) {
+                    final short newQ2 = (short)Math.min((int)quantity, (int)slotMax);
+                    if (newQ2 == 0) {
+                        c.getPlayer().havePartyQuest(itemId);
+                        c.sendPacket(MaplePacketCreator.enableActions());
+                        return (byte)newSlot;
+                    }
+                    quantity -= newQ2;
+                    final Item nItem = new Item(itemId, (short)0, newQ2, (byte)0, uniqueid);
+                    newSlot = c.getPlayer().getInventory(type).addItem((IItem)nItem);
+                    if (newSlot == -1) {
+                        c.sendPacket(MaplePacketCreator.getInventoryFull());
+                        c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                        return -1;
+                    }
+                    if (owner != null) {
+                        nItem.setOwner(owner);
+                    }
+                    if (period > 0L) {
+                        nItem.setExpiration(System.currentTimeMillis() + period * 60L * 60L * 1000L);
+                    }
+                    if (pet != null) {
+                        nItem.setPet(pet);
+                        pet.setInventoryPosition(newSlot);
+                        c.getPlayer().addPet(pet);
+                    }
+                    c.sendPacket(MaplePacketCreator.modifyInventory(false, new ModifyInventory(0, (IItem)nItem)));
+                    if (GameConstants.isRechargable(itemId) && quantity == 0) {
+                        break;
+                    }
+                }
+            }
+            else {
+                final Item nItem = new Item(itemId, (short)0, quantity, (byte)0, uniqueid);
+                newSlot = c.getPlayer().getInventory(type).addItem((IItem)nItem);
+                if (newSlot == -1) {
+                    c.sendPacket(MaplePacketCreator.getInventoryFull());
+                    c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                    return -1;
+                }
+                if (period > 0L) {
+                    nItem.setExpiration(System.currentTimeMillis() + period * 60L * 60L * 1000L);
+                }
+                c.sendPacket(MaplePacketCreator.modifyInventory(false, new ModifyInventory(0, (IItem)nItem)));
+                c.sendPacket(MaplePacketCreator.enableActions());
+            }
+        }
+        else {
+            if (quantity != 1) {
+                throw new InventoryException("Trying to create equip with non-one quantity");
+            }
+            final IItem nEquip = ii.getEquipById(itemId);
+            if (owner != null) {
+                nEquip.setOwner(owner);
+            }
+            nEquip.setUniqueId(uniqueid);
+            if (period > 0L) {
+                nEquip.setExpiration(System.currentTimeMillis() + period * 60L * 60L * 1000L);
+            }
+            if (nEquip.hasSetOnlyId()) {
+                nEquip.setEquipOnlyId(MapleEquipOnlyId.getInstance().getNextEquipOnlyId());
+            }
+            newSlot = c.getPlayer().getInventory(type).addItem(nEquip);
+            if (newSlot == -1) {
+                c.sendPacket(MaplePacketCreator.getInventoryFull());
+                c.sendPacket(MaplePacketCreator.getShowInventoryFull());
+                return -1;
+            }
+            c.sendPacket(MaplePacketCreator.modifyInventory(false, new ModifyInventory(0, nEquip)));
+        }
+        c.getPlayer().havePartyQuest(itemId);
+        return (byte)newSlot;
+    }
     public static boolean addById(final MapleClient c, final int itemId, final short quantity, final byte Flag) {
         return addById(c, itemId, quantity, null, null, 0L, Flag);
     }
@@ -1874,7 +1975,7 @@ public class MapleInventoryManipulator
                 c.getPlayer().脱装备防滑检测(source);
             }
         } catch (Exception e) {
-            服务端输出信息.println_err("【错误】丢出道具异常，原因：" + e);
+            //服务端输出信息.println_err("【错误】丢出道具异常，原因：" + e);
 
         }
 
@@ -1883,6 +1984,10 @@ public class MapleInventoryManipulator
                 type = MapleInventoryType.EQUIPPED;
             }
             if (c.getPlayer() == null) {
+                return false;
+            }
+            if (source == null || ii == null){
+                c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
             }
             if (!cs && ii.isCash(source.getItemId())) {

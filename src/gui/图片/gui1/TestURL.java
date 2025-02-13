@@ -5,7 +5,7 @@
 
 package gui.图片.gui1;
 
-import gui.服务端输出信息;
+
 import javazoom.jl.player.Player;
 
 import java.io.BufferedInputStream;
@@ -31,7 +31,7 @@ public class TestURL {
 
         int c;
         while((c = reader.read()) != -1) {
-            服务端输出信息.println_out("" + (char)c);
+            //服务端输出信息.println_out("" + (char)c);
         }
 
         reader.close();
@@ -48,7 +48,7 @@ public class TestURL {
         } catch (Exception var4) {
         }
 
-        服务端输出信息.println_out(obj.getClass().getName());
+        //服务端输出信息.println_out(obj.getClass().getName());
     }
 
     public static void test3() throws IOException {

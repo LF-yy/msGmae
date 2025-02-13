@@ -2,7 +2,8 @@ package scripting;
 
 import database.DBConPool;
 import gui.LtMS;
-import gui.服务端输出信息;
+
+import handling.world.MaplePartyCharacter;
 import handling.world.World;
 import server.MapleItemInformationProvider;
 
@@ -33,6 +34,7 @@ import javax.script.ScriptException;
 import tools.FilePrinter;
 import handling.channel.ChannelServer;
 import client.MapleClient;
+import util.ListUtil;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,7 +79,7 @@ public class EventManager
                     iv.invokeFunction(methodName, new Object[] { null });
                 }
                 catch (ScriptException | NoSuchMethodException ex3) {
-                    服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
+                    //服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FilePrinter.printError("EventManager.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                 }
             }
@@ -92,7 +94,7 @@ public class EventManager
                     iv.invokeFunction(methodName, eim);
                 }
                 catch (ScriptException | NoSuchMethodException ex3) {
-                    服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
+                    //服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FilePrinter.printError("EventManager.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FileoutputUtil.log("logs\\Log_Script_Except.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                 }
@@ -108,7 +110,7 @@ public class EventManager
                     iv.invokeFunction(methodName, new Object[] { null });
                 }
                 catch (ScriptException | NoSuchMethodException ex3) {
-                    服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
+                    //服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FilePrinter.printError("EventManager.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FileoutputUtil.log("logs\\Log_Script_Except.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                 }
@@ -183,7 +185,7 @@ public class EventManager
             this.iv.invokeFunction("setup", new Object[] { null });
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
         }
     }
@@ -191,11 +193,12 @@ public class EventManager
     public void startInstance(final String mapid, MapleCharacter chr) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)this.iv.invokeFunction("setup", mapid);
+            eim.setDisposed(false);
             eim.registerCarnivalParty(chr, chr.getMap(), (byte)0);
             FilePrinter.printError("Event记录.txt", "Event name : " + this.name + ", method Name :"+chr.getName()+"开启事件,地图编码"+chr.getMapId() );
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
         }
     }
@@ -203,10 +206,11 @@ public class EventManager
     public void startInstance_Party(final String mapid, MapleCharacter chr) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)this.iv.invokeFunction("setup", mapid);
+            eim.setDisposed(false);
             eim.registerParty(chr.getParty(), chr.getMap());
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
         }
     }
@@ -214,13 +218,14 @@ public class EventManager
     public void startInstance(final MapleCharacter character, final String leader) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)(EventInstanceManager)this.iv.invokeFunction("setup", new Object[] { null });
+            eim.setDisposed(false);
             eim.registerPlayer(character);
             eim.setProperty("leader", leader);
             eim.setProperty("guildid", String.valueOf(character.getGuildId()));
             this.setProperty("guildid", String.valueOf(character.getGuildId()));
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-Guild:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-Guild:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-Guild:\n" + (Object)ex3);
         }
     }
@@ -228,10 +233,11 @@ public class EventManager
     public void startInstance_CharID(final MapleCharacter character) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)(EventInstanceManager)this.iv.invokeFunction("setup", Integer.valueOf(character.getId()));
+            eim.setDisposed(false);
             eim.registerPlayer(character);
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-CharID:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-CharID:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-CharID:\n" + (Object)ex3);
         }
     }
@@ -239,10 +245,11 @@ public class EventManager
     public void startInstance(final MapleCharacter character) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)(EventInstanceManager)this.iv.invokeFunction("setup", new Object[] { null });
+            eim.setDisposed(false);
             eim.registerPlayer(character);
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-character:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-character:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-character:\n" + (Object)ex3);
         }
     }
@@ -250,10 +257,11 @@ public class EventManager
     public void startInstance(final MapleParty party, final MapleMap map) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)(EventInstanceManager)this.iv.invokeFunction("setup", Integer.valueOf(party.getId()));
+            eim.setDisposed(false);
             eim.registerParty(party, map);
         }
         catch (ScriptException ex) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-partyid:\n" + (Object)ex);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-partyid:\n" + (Object)ex);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-partyid:\n" + (Object)ex);
         }
         catch (NoSuchMethodException ex2) {
@@ -268,10 +276,11 @@ public class EventManager
     public void startInstance_NoID(final MapleParty party, final MapleMap map, final Exception old) {
         try {
             final EventInstanceManager eim = (EventInstanceManager)(EventInstanceManager)this.iv.invokeFunction("setup", new Object[] { null });
+            eim.setDisposed(false);
             eim.registerParty(party, map);
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-party:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-party:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-party:\n" + (Object)ex3 + "\n" + (Object)((old == null) ? "no old exception" : old));
         }
     }
@@ -282,7 +291,7 @@ public class EventManager
             eim.setProperty("leader", leader);
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-leader:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-leader:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-leader:\n" + (Object)ex3);
         }
     }
@@ -317,7 +326,7 @@ public class EventManager
             eim.registerSquad(squad, map, questID);
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
         }
     }
@@ -431,7 +440,8 @@ public class EventManager
             Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(type, message));
         } else {
             Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(type, 1, message, true));
-        }    }
+        }
+    }
     public final void worldMapEffectMessage(String msg, int itemId, int duration) {
         Iterator var4 = ChannelServer.getAllInstances().iterator();
 
@@ -459,7 +469,7 @@ public class EventManager
                 try {
                     EventManager.this.iv.invokeFunction(methodName, new Object[]{eim});
                 } catch (Exception var2) {
-                    服务端输出信息.println_out("Event name : " + EventManager.this.name + ", method Name : " + methodName + ":\n" + var2);
+                    //服务端输出信息.println_out("Event name : " + EventManager.this.name + ", method Name : " + methodName + ":\n" + var2);
                     FileoutputUtil.log("logs\\Log_Script_Except.txt", "Event name : " + EventManager.this.name + ", method Name : " + methodName + ":\n" + var2);
                 }
 
@@ -517,7 +527,7 @@ public class EventManager
             eim.registerPlayer(character);
         }
         catch (ScriptException | NoSuchMethodException ex3) {
-            服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
+            //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
             FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
         }
     }
@@ -542,7 +552,7 @@ public class EventManager
                 EventInstanceManager eim = (EventInstanceManager)this.iv.invokeFunction("setup", new Object[]{squad.getLeaderName()});
                 eim.registerSquad(squad, map, Integer.parseInt(bossid));
             } catch (Exception var9) {
-                服务端输出信息.println_out("Event name : " + this.name + ", method Name : setup-squad:\n" + var9);
+                //服务端输出信息.println_out("Event name : " + this.name + ", method Name : setup-squad:\n" + var9);
                 FileoutputUtil.log("log\\Script_Except.log", "Event name : " + this.name + ", method Name : setup-squad:\n" + var9);
             }
 
@@ -677,14 +687,14 @@ public class EventManager
                     ps.setInt(3, ret);
                     ps.execute();
                 } catch (SQLException var16) {
-                    服务端输出信息.println_out("xxxxxxxx:" + var16);
+                    //服务端输出信息.println_out("xxxxxxxx:" + var16);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException var15) {
-                        服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
+                        //服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
                     }
 
                 }
@@ -699,7 +709,7 @@ public class EventManager
             ps.execute();
             ps.close();
         } catch (SQLException var18) {
-            服务端输出信息.println_err("获取错误!!55" + var18);
+            //服务端输出信息.println_err("获取错误!!55" + var18);
         }
 
     }
@@ -738,14 +748,14 @@ public class EventManager
                     ps.setInt(3, ret);
                     ps.execute();
                 } catch (SQLException var16) {
-                    服务端输出信息.println_out("xxxxxxxx:" + var16);
+                    //服务端输出信息.println_out("xxxxxxxx:" + var16);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException var15) {
-                        服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
+                        //服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
                     }
 
                 }
@@ -760,7 +770,7 @@ public class EventManager
             ps.execute();
             ps.close();
         } catch (SQLException var18) {
-            服务端输出信息.println_err("获取错误!!55" + var18);
+            //服务端输出信息.println_err("获取错误!!55" + var18);
         }
 
     }
@@ -799,7 +809,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var16) {
-            服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
+            //服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
         }
 
         return data;
@@ -840,7 +850,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("获取家族名称出错 - 数据库查询失败：" + var17);
+            //服务端输出信息.println_err("获取家族名称出错 - 数据库查询失败：" + var17);
         }
 
         return String.format("%s", name);
@@ -879,7 +889,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var16) {
-            服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
+            //服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
         }
 
         return data;
@@ -920,7 +930,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("获取家族名称出错 - 数据库查询失败：" + var17);
+            //服务端输出信息.println_err("获取家族名称出错 - 数据库查询失败：" + var17);
         }
 
         return String.format("%s", name);
@@ -959,7 +969,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var16) {
-            服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
+            //服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
         }
 
         return data;
@@ -1000,7 +1010,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("获取家族名称出错 - 数据库查询失败：" + var17);
+            //服务端输出信息.println_err("获取家族名称出错 - 数据库查询失败：" + var17);
         }
 
         return String.format("%s", name);
@@ -1039,7 +1049,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var16) {
-            服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
+            //服务端输出信息.println_err("获取最高玩家等级出错 - 数据库查询失败：" + var16);
         }
 
         return data;
@@ -1080,7 +1090,7 @@ public class EventManager
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("获取最高在线玩家名字 - 数据库查询失败：" + var17);
+            //服务端输出信息.println_err("获取最高在线玩家名字 - 数据库查询失败：" + var17);
         }
 
         return String.format("%s", name);
@@ -1207,11 +1217,11 @@ public class EventManager
 
             }
         } catch (SQLException var29) {
-            服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var29);
+            //服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var29);
             var29.printStackTrace();
             return false;
         } catch (Exception var30) {
-            服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var30);
+            //服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var30);
             var30.printStackTrace();
             return false;
         }
@@ -1325,7 +1335,7 @@ public class EventManager
             rs.close();
             return ret;
         } catch (SQLException var11) {
-            服务端输出信息.println_err("【错误】sqlSelect错误，原因：" + var11);
+            //服务端输出信息.println_err("【错误】sqlSelect错误，原因：" + var11);
             var11.printStackTrace();
             return null;
         }
@@ -1334,6 +1344,5 @@ public class EventManager
     public Object[] sqlSelect(String text) {
         return this.sqlSelect(text, (Object[])null);
     }
-
 
 }

@@ -7,10 +7,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import bean.ItemInfo;
+import bean.LtCopyMap;
+import bean.LtCopyMapMonster;
+import bean.LtMonsterPosition;
 import client.inventory.*;
 import database.DBConPool;
 import database.DatabaseConnection;
-import gui.服务端输出信息;
+
 import handling.SendPacketOpcode;
 import handling.world.World;
 import server.*;
@@ -1118,6 +1121,70 @@ public abstract class AbstractPlayerInteraction
         cg.sendPacket(MaplePacketCreator.getShowItemGain(id, quantity, true));
     }
 
+    public void 给限时道具(final int id, final short quantity,long period) {
+        this.给限时道具1(id, quantity, false, period>0?period:0L, -1, "",this.c);
+    }
+    public void 给限时道具1(final int id, final short quantity, final boolean randomStats, final long period, final int slots, final String owner, final MapleClient cg) {
+        if (quantity >= 0) {
+            final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+            final MapleInventoryType type = GameConstants.getInventoryType(id);
+            if (!MapleInventoryManipulator.checkSpace(cg, id, (int)quantity, "")) {
+                return;
+            }
+            if (type.equals((Object)MapleInventoryType.EQUIP) && !GameConstants.isThrowingStar(id) && !GameConstants.isBullet(id)) {
+                final Equip item = (Equip)(Equip)(randomStats ? ii.randomizeStats((Equip)ii.getEquipById(id)) : ii.getEquipById(id));
+                if (period > 0L) {
+                    item.setExpiration(System.currentTimeMillis() + period * 60L * 60L * 1000L);
+                }
+                if (slots > 0) {
+                    item.setUpgradeSlots((byte)(item.getUpgradeSlots() + slots));
+                }
+                if (owner != null) {
+                    item.setOwner(owner);
+                }
+                item.setStr((short)1);
+                item.setDex((short)1);
+                item.setInt((short)1);
+                item.setLuk((short)1);
+                final String name = ii.getName(id);
+                if (id / 10000 == 114 && name != null && name.length() > 0) {
+                    final String msg = "你已获得称号 <" + name + ">";
+                    cg.getPlayer().dropMessage(-1, msg);
+                    cg.getPlayer().dropMessage(5, msg);
+                }
+                //重构装备属性
+                Map<Integer, List<ItemInfo>> itemInfo = GetRedisDataUtil.getItemInfo();
+                if(Objects.nonNull(itemInfo) && ListUtil.isNotEmpty(itemInfo.get(item.getItemId())) ){
+                    ItemInfo itemInfos = itemInfo.get(item.getItemId()).get(0);
+                    item.setStr(itemInfos.getStr());
+                    item.setDex(itemInfos.getDex());
+                    item.setLuk(itemInfos.getLuk());
+                    item.setInt(itemInfos.getIntValue());
+                    item.setHp(itemInfos.getHp());
+                    item.setMp(itemInfos.getMp());
+                    item.setMatk(itemInfos.getMatk());
+                    item.setWatk(itemInfos.getWatk());
+                    item.setWdef(itemInfos.getWdef());
+                    item.setMdef(itemInfos.getMdef());
+                }
+                MapleInventoryManipulator.addbyItem(cg, item.copy());
+            }
+            else {
+                MaplePet pet;
+                if (類型.寵物(id)) {
+                    pet = MaplePet.createPet(id, MapleInventoryIdentifier.getInstance());
+                }
+                else {
+                    pet = null;
+                }
+                MapleInventoryManipulator.addByIdxians(cg, id, quantity, (owner == null) ? "" : owner, pet, period);
+            }
+        }
+        else {
+            MapleInventoryManipulator.removeById(cg, GameConstants.getInventoryType(id), id, -quantity, true, false);
+        }
+        cg.sendPacket(MaplePacketCreator.getShowItemGain(id, quantity, true));
+    }
     public void changeMusic(final String songName) {
         this.getPlayer().getMap().broadcastMessage(MaplePacketCreator.musicChange(songName));
     }
@@ -1341,7 +1408,24 @@ public abstract class AbstractPlayerInteraction
             }
         }
     }
+    public void giveDarkMapList(int mapId,String eventStr,int channelId) {
+        Start.giveDarkMapList(mapId,eventStr,channelId);
+    }
+    public void deleteDarkMapList(String eventStr,int channelId) {
+        Start.deleteDarkMapList(eventStr,channelId);
+    }
 
+    public int giveDarkMap(int mapId,String eventStr,int channelId) {
+        List<Integer> integers = Start.darkMap.get(channelId).get(eventStr);
+        if (ListUtil.isNotEmpty(integers)){
+            for (int i = 0; i < integers.size(); i++) {
+                if (integers.get(i) == mapId && (i+1)<integers.size()){
+                    return integers.get(i+1);
+                }
+            }
+        }
+        return 910000000;
+    }
     /**
      * 查团队是否开启暗黑模式
      * @return
@@ -3735,14 +3819,14 @@ public abstract class AbstractPlayerInteraction
 
                 }
             } catch (SQLException var61) {
-                服务端输出信息.println_out("xxxxxxxx:" + var61);
+                //服务端输出信息.println_out("xxxxxxxx:" + var61);
             } finally {
                 try {
                     if (ps != null) {
                         ps.close();
                     }
                 } catch (SQLException var53) {
-                    服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var53);
+                    //服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var53);
                 }
 
             }
@@ -3779,7 +3863,7 @@ public abstract class AbstractPlayerInteraction
 
             }
         } catch (SQLException var59) {
-            服务端输出信息.println_err("获取错误!!55" + var59);
+            //服务端输出信息.println_err("获取错误!!55" + var59);
         }
 
     }
@@ -4377,14 +4461,14 @@ public abstract class AbstractPlayerInteraction
                     ps.setInt(3, ret);
                     ps.execute();
                 } catch (SQLException var15) {
-                    服务端输出信息.println_out("雇佣写入1:" + var15);
+                    //服务端输出信息.println_out("雇佣写入1:" + var15);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException var14) {
-                        服务端输出信息.println_out("雇佣写入2:" + var14);
+                        //服务端输出信息.println_out("雇佣写入2:" + var14);
                     }
 
                 }
@@ -4399,7 +4483,7 @@ public abstract class AbstractPlayerInteraction
             ps.execute();
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("雇佣写入3" + var17);
+            //服务端输出信息.println_err("雇佣写入3" + var17);
         }
 
     }
@@ -4529,7 +4613,7 @@ public abstract class AbstractPlayerInteraction
             ps.close();
             rs.close();
         } catch (SQLException var5) {
-            服务端输出信息.println_err("获得积分，读取数据库错误，错误原因：" + var5);
+            //服务端输出信息.println_err("获得积分，读取数据库错误，错误原因：" + var5);
             var5.printStackTrace();
         }
 
@@ -4680,6 +4764,30 @@ public abstract class AbstractPlayerInteraction
         return a;
     }
 
+    public boolean 判断团队每日y(String bossid, int cou) {
+        for (MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                int c = curChar.getBossLog1(bossid, 1);
+                if (c >= cou) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    public boolean 给团队每日y(String bossid, int cou) {
+        boolean falg = false;
+        for (MaplePartyCharacter chr : this.getPlayer().getParty().getMembers()) {
+            MapleCharacter curChar = this.getMap().getCharacterById(chr.getId());
+            if (curChar != null) {
+                falg = false;
+                falg= curChar.setBossLog1y(bossid, 1,cou);
+            }
+        }
+        return falg;
+    }
+
     public final void 当前地图召唤怪物(int id, int qty, int x, int y) {
         this.spawnMob(id, qty, new Point(x, y));
     }
@@ -4700,7 +4808,7 @@ public abstract class AbstractPlayerInteraction
             try {
                 MapleInventoryManipulator.addById(this.c, id, (short) 1, "", MaplePet.createPet(id, name, 1, 1, 1, MapleInventoryIdentifier.getInstance(), id == 5000054 ? (int)period : 0, MapleItemInformationProvider.getInstance().getPetFlagInfo(id)), period);
             } catch (NullPointerException var6) {
-                服务端输出信息.println_err(var6);
+                //服务端输出信息.println_err(var6);
             }
         }
 
@@ -5219,6 +5327,39 @@ public abstract class AbstractPlayerInteraction
 
     }
 
+    /**
+     * 获取当前阶段地图信息
+     * @return
+     */
+    public final List<LtCopyMap> getMapInfo(int index) {
+        try {
+            return Start.ltCopyMap.get(index);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    /**
+     * 获取地图可刷新怪物信息
+     * @return 获取可以刷新的怪物集合信息
+     */
+    public final List<LtCopyMapMonster> getMapMonsterInfo(int index) {
+        try {
+            return Start.ltCopyMapMonster.get(index);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-
+    /**
+     * 获取怪物位置
+     * @param index
+     * @return
+     */
+    public final List<LtMonsterPosition> getMonsterPosition(int index) {
+        try {
+            return Start.ltMonsterPosition.get(index);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

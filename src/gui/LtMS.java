@@ -377,6 +377,7 @@ public class LtMS extends JFrame {
                     public void run() {
                        Map<Integer,String> map = new HashMap<>();
                         playerTable.removeAll();
+
                         int cloumn = 0;
                         try {
                             for (ChannelServer cs : ChannelServer.getAllInstances()) {
@@ -4436,6 +4437,8 @@ public class LtMS extends JFrame {
         Start.getDsTableInfo();
         Start.getDropCoefficient();
         Start.getJobDamage();
+        Start.getCharactersHphd();
+        Start.getMobDamage();
         //Start.GetSuitSystem();
         Start.GetfiveTurn();
         Start.setLtMxdPrize();
@@ -4450,11 +4453,23 @@ public class LtMS extends JFrame {
         Start.getMobInfo();
         Start.setLtSkillWucdTable();
         Start.getLtMobSpawnBoss();
+        Start.getLtCopyMap();
+        Start.getLtMonsterPosition();
+        Start.getASkill();
         Start.getMobUnhurt();
+        Start.getLtFlyingUpMaterialScience();
+        Start.getltMonstervalue();
+        Start.ltMonsterCustomizeDamageAddition();
+        Start.ltMonsterLevelDamageAddition();
         Start.getAllItemInfo();
         Start.findLtMonsterSkill();
+        Start.getLtPeakLevel();
+        Start.师傅增伤();
+
         //暗黑破坏神玩法词条加载
         Start.setLtDiabloEquipments();
+        //巅峰等级
+        //Start.getLtPeakLevel();
         //pk
         GameConstants.loadPKChannelList();
         GameConstants.loadPKGuildChannelList();
@@ -4482,6 +4497,7 @@ public class LtMS extends JFrame {
         MemoryUsage heapMemoryUsage = memoryBean.getHeapMemoryUsage();
         MemoryUsage nonHeapMemoryUsage = memoryBean.getNonHeapMemoryUsage();
         Start.特殊宠物吸物无法使用地图 =  Arrays.asList(ServerProperties.getProperty("LtMS.吸怪无法使用地图").split(","));
+        Start.轮回地图 =  Arrays.asList(ServerProperties.getProperty("LtMS.轮回地图").split(","));
         System.out.println("堆内存使用:");
         System.out.println("  初始内存: " + heapMemoryUsage.getInit() / 1024 + " KB");
         System.out.println("  使用的内存: " + heapMemoryUsage.getUsed() / 1024 + " KB");

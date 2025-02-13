@@ -248,7 +248,7 @@ public class MapleStatEffect implements Serializable
         ret.x = MapleDataTool.getInt("x", source, 0);
         ret.y = MapleDataTool.getInt("y", source, 0);
         ret.z = MapleDataTool.getInt("z", source, 0);
-        ret.damage = (short)MapleDataTool.getIntConvert("damage", source, 100);//伤害
+        ret.damage = (short)MapleDataTool.getIntConvert("damage", source, MapleDataTool.getIntConvert("mad", source, 100));//伤害
         ret.attackCount = (byte)MapleDataTool.getIntConvert("attackCount", source, 1);//段数
         ret.bulletCount = (byte)MapleDataTool.getIntConvert("bulletCount", source, 1);//打击个数
         ret.bulletConsume = MapleDataTool.getIntConvert("bulletConsume", source, 0);
@@ -814,6 +814,22 @@ public class MapleStatEffect implements Serializable
 
     //释放BUFF
     public final boolean applyTo(final MapleCharacter applyfrom, final MapleCharacter applyto, final boolean primary, final Point pos, final int newDuration, final boolean dc) {
+
+         if (this.getSuperSkillsStatus(applyfrom.getId(),this.sourceid) || applyfrom.triggeredEquipmentsList.stream().anyMatch(f -> f.getSkillId() == sourceid)) {
+            //超级技能处理
+            List<SuperSkills> superSkills = Start.superSkillsMap.get(applyfrom.getId());
+            if (ListUtil.isEmpty(superSkills)){
+                superSkills = Start.diabloEquipmentsSkillsMap.get(sourceid);
+            }
+            SuperSkills superSkills1 = superSkills.get(0);
+            int addx = 0;
+           Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(superSkills1.getSkillLX(), superSkills1.getSkillLY()), new Point(superSkills1.getSkillRX(), superSkills1.getSkillRY()), superSkills1.getRange());
+                 //System.out.println("释放随身光环");
+            applyfrom.getMap().spawnSkill(applyfrom,applyfrom.isFacingLeft(),this,bounds,superSkills1);
+        }
+
+
+
         if (this.isHeal() && (applyfrom.getMapId() == 749040100 || applyto.getMapId() == 749040100)) {
             return false;
         }
@@ -940,7 +956,6 @@ public class MapleStatEffect implements Serializable
 
         }
 
-        //if (this.skill) {}
         if (primary) {
             if ((this.overTime || this.isHeal()) && !this.isEnergyCharge()) {
                 this.applyBuff(applyfrom, newDuration);
@@ -984,15 +999,6 @@ public class MapleStatEffect implements Serializable
             else {
                 applyto.dropMessage(5, "無法使用時空門，村莊不可容納。");
             }
-        }else if (this.getSuperSkillsStatus(applyfrom.getId(),this.sourceid)) {
-            //超级技能处理
-            List<SuperSkills> superSkills = Start.superSkillsMap.get(applyfrom.getId());
-            SuperSkills superSkills1 = superSkills.get(0);
-            int addx = 0;
-            final Rectangle bounds = this.calculateBoundingBox((pos != null) ? pos : applyfrom.getPosition(), applyfrom.isFacingLeft(), addx);
-            // final Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(superSkills1.getSkillLX(),superSkills1.getSkillLY()), new Point(superSkills1.getSkillRX(),superSkills1.getSkillRY()),superSkills1.getRange() );
-            //System.out.println("释放超级技能");
-            applyfrom.getMap().spawnSkill(applyfrom,applyfrom.isFacingLeft(),this,bounds,superSkills1);
         }else if (this.getFieldSkillsStatus(applyfrom.getId(),this.sourceid)) {
             //光环处理
             List<FieldSkills> fieldSkills = Start.fieldSkillsMap.get(applyfrom.getId());

@@ -8,7 +8,7 @@ package server.events;
 import client.MapleCharacter;
 import client.MapleStat;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import handling.world.World;
 import handling.world.World.Guild;
@@ -183,7 +183,7 @@ public class MapleGuildOutsideBoss extends MapleEvent {
             this.spawnedMapList.clear();
             this.count = 1;
         } catch (Exception var4) {
-            服务端输出信息.println_err("【错误】MapleGuildOutsideBoss事件reset错误，错误原因：" + var4);
+            //服务端输出信息.println_err("【错误】MapleGuildOutsideBoss事件reset错误，错误原因：" + var4);
             //var4.printStackTrace();
         }
 
@@ -496,7 +496,7 @@ public class MapleGuildOutsideBoss extends MapleEvent {
     }
 
     private void distributeRewards() {
-        服务端输出信息.println_out("[家族野外BOSS争夺赛] 玩家奖励发放中。。。");
+        //服务端输出信息.println_out("[家族野外BOSS争夺赛] 玩家奖励发放中。。。");
         this.guildPointsMap = sortTool.sortDescend(this.guildPointsMap);
         Map<Integer, Integer> guildRewardsTypeMap = new HashMap();
         int i = 1;
@@ -528,8 +528,8 @@ public class MapleGuildOutsideBoss extends MapleEvent {
 
         guildRewardsTypeMap.clear();
         guildRewardsTypeMap = null;
-        服务端输出信息.println_out("[家族野外BOSS争夺赛] 奖励玩家发放完毕。共完成" + count + "个玩家的奖励发放。");
-        服务端输出信息.println_out("[家族野外BOSS争夺赛] 家族GP点数发放中。。。");
+        //服务端输出信息.println_out("[家族野外BOSS争夺赛] 奖励玩家发放完毕。共完成" + count + "个玩家的奖励发放。");
+        //服务端输出信息.println_out("[家族野外BOSS争夺赛] 家族GP点数发放中。。。");
         int gp = 0;
         Iterator var12 = this.guildPointsMap.entrySet().iterator();
 
@@ -546,7 +546,7 @@ public class MapleGuildOutsideBoss extends MapleEvent {
             }
         }
 
-        服务端输出信息.println_out("[家族野外BOSS争夺赛] 家族GP点数发放完成，共计发放 " + gp + " 点GP值。");
+        //服务端输出信息.println_out("[家族野外BOSS争夺赛] 家族GP点数发放完成，共计发放 " + gp + " 点GP值。");
     }
 
     private void TimeOut() {

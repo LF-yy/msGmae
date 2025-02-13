@@ -139,6 +139,11 @@ public class MapleLifeFactory
                     stats.setPhysicalDefense((short)MapleDataTool.getIntConvert("PDDamage", monsterInfoData, 0));
                     stats.setMagicDefense((short)MapleDataTool.getIntConvert("MDDamage", monsterInfoData, 0));
                 }
+//                if (mobInfos.getPdd()>0) {
+//                    stats.setFixedDamage(mobInfos.getPdd());//设置固定伤害
+//                }else{
+//                    stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));//设置固定伤害
+//                }
             }else{
                 stats.setHp((long)MapleDataTool.getIntConvert("maxHP", monsterInfoData));
                 stats.setMp(MapleDataTool.getIntConvert("maxMP", monsterInfoData, 0));
@@ -146,12 +151,12 @@ public class MapleLifeFactory
                 stats.setLevel((short)MapleDataTool.getIntConvert("level", monsterInfoData));
                 stats.setPhysicalDefense((short)MapleDataTool.getIntConvert("PDDamage", monsterInfoData, 0));
                 stats.setMagicDefense((short)MapleDataTool.getIntConvert("MDDamage", monsterInfoData, 0));
+                stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));//设置固定伤害
             }
 
             stats.setEva((short)MapleDataTool.getIntConvert("eva", monsterInfoData, 0));
             stats.setRemoveAfter(MapleDataTool.getIntConvert("removeAfter", monsterInfoData, 0));
             stats.setrareItemDropLevel((byte)MapleDataTool.getIntConvert("rareItemDropLevel", monsterInfoData, 0));//稀有物品掉落级别
-            stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));//设置固定伤害
             stats.setOnlyNormalAttack(MapleDataTool.getIntConvert("onlyNormalAttack", monsterInfoData, 0) > 0);
             stats.setBoss(MapleDataTool.getIntConvert("boss", monsterInfoData, 0) > 0 || mid == 8810018 || mid == 9410066 || (mid >= 8810118 && mid <= 8810122));
             stats.setExplosiveReward(MapleDataTool.getIntConvert("explosiveReward", monsterInfoData, 0) > 0);//是否爆炸性奖励(爆物飞出)
@@ -159,6 +164,7 @@ public class MapleLifeFactory
             stats.setUndead(MapleDataTool.getIntConvert("undead", monsterInfoData, 0) > 0 || mid == 9700004 || mid == 9700009 || mid == 9700010);
             stats.setName(MapleDataTool.getString(mid + "/name", MapleLifeFactory.mobStringData, "MISSINGNO"));
             stats.setBuffToGive(MapleDataTool.getIntConvert("buff", monsterInfoData, -1));
+            stats.setFixedDamage(MapleDataTool.getIntConvert("fixedDamage", monsterInfoData, -1));//设置固定伤害
             stats.setFriendly(MapleDataTool.getIntConvert("damagedByMob", monsterInfoData, 0) > 0);//友军怪物
             stats.setNoDoom(MapleDataTool.getIntConvert("noDoom", monsterInfoData, 0) > 0);
             stats.setCP((byte)MapleDataTool.getIntConvert("getCP", monsterInfoData, 0));

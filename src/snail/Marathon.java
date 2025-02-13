@@ -12,7 +12,7 @@ import constants.GameConstants;
 import constants.ItemConstants;
 import constants.MapConstants;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import server.Timer.WorldTimer;
 import server.maps.MapleMap;
@@ -315,7 +315,7 @@ public class Marathon {
                 chr.changeSkillLevel(SkillFactory.getSkill(skillId), (byte)0, chr.getMasterLevel(skillId));
             }
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】banSkill错误，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】banSkill错误，错误原因：" + var6);
             var6.printStackTrace();
         }
 
@@ -375,7 +375,7 @@ public class Marathon {
                 return false;
             }
         } catch (Exception var7) {
-            服务端输出信息.println_err("【错误】arrive错误，错误原因：" + var7);
+            //服务端输出信息.println_err("【错误】arrive错误，错误原因：" + var7);
             var7.printStackTrace();
             return false;
         }

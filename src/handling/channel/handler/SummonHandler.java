@@ -133,7 +133,7 @@ public class SummonHandler
                 }
             }
             if (chr.isGM() || toDamage <= pgsx) {
-                mob2.damage(chr, (long)toDamage, true);
+                mob2.damage(chr, (long)(toDamage)+chr.最高伤害, true);
                 chr.checkMonsterAggro(mob2);
                 if (mob2.isAlive()) {
                     continue;

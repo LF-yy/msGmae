@@ -1,11 +1,14 @@
 package constants;
 
 import bean.Leveladdharm;
+import bean.LtDiabloEquipments;
 import bean.LttItemAdditionalDamage;
 import bean.SuitSystem;
 import client.MapleCharacter;
 import client.inventory.IItem;
+import database.DBConPool;
 import gui.LtMS;
+
 import handling.channel.MapleGuildRanking;
 import server.MapleItemInformationProvider;
 import server.MapleSquad;
@@ -17,17 +20,22 @@ import util.GetRedisDataUtil;
 import util.ListUtil;
 import util.RedisUtil;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class tzjc {
     private static List<tz_model> tz_list;
-    public static Map<Integer, Long> dsMap;
-    public static Map<String,Double> tzMap;
-    public static Map<Integer, Map<String, Integer>> sbMap;
-    public static Map<String, List<SuitSystem>> suitSys;//套装列表
+    public static ConcurrentHashMap<Integer, Long> dsMap;
+    public static ConcurrentHashMap<String,Double> tzMap;
+    public static ConcurrentHashMap<Integer, Map<String, Integer>> sbMap;
+    public static ConcurrentHashMap<String, List<SuitSystem>> suitSys;//套装列表
     public long star_damage(MapleCharacter player, long totDamageToOneMonster, MapleMonster monster) {
         try {
             if (player.get套装伤害加成() > 0.0) {
@@ -135,6 +143,20 @@ public class tzjc {
         //int id = chr.getClient().getPlayer().getId();
         //段伤  .getChannelServer().removeMapleSquad("blackmage");  MapleSquadType.valueOf("blackmage".toLowerCase())
 //        chr.getClient().getPlayer().getClient().getChannelServer().removeMapleSquad(MapleSquad.MapleSquadType.valueOf("blackmage".toLowerCase()));
+        //加载护盾
+        if (chr.getMapId() == 910000000 && Objects.nonNull(LtMS.ConfigValuesMap.get("护盾开关")) && LtMS.ConfigValuesMap.get("护盾开关") > 0){
+            if(Start.ltCharactersHphd.get(chr.getId())!=null && Start.ltCharactersHphd.get(chr.getId()) != chr.getStat().getMaxHphd()){
+                chr.getStat().setMaxHphd(Start.ltCharactersHphd.get(chr.getId()));
+            }
+        }else{
+            if (chr.getStat().getMaxHphd()==0 && Objects.nonNull(LtMS.ConfigValuesMap.get("护盾开关")) && LtMS.ConfigValuesMap.get("护盾开关") > 0){
+                if(Start.ltCharactersHphd.get(chr.getId())!=null && Start.ltCharactersHphd.get(chr.getId()) != chr.getStat().getMaxHphd()){
+                    chr.getStat().setMaxHphd(Start.ltCharactersHphd.get(chr.getId()));
+                }
+            }
+        }
+        //装备隐藏属性装载
+        LtDiabloEquipments.dataStatisticalAdd(chr);
         AtomicLong additionalDamage = new AtomicLong(0L);
         if ( LtMS.ConfigValuesMap.get("段伤开关") > 0) {
             try {
@@ -265,45 +287,6 @@ public class tzjc {
         }else{
             dsDamage = Math.ceil(additionalDamage.get())  + "";
         }
-//        int package_Watk = chr.package_watk;
-//        int package_Matk = chr.package_matk;
-//        int package_WatkPercent = chr.package_watk_percent;
-//        int package_MatkPercent = chr.package_matk_percent;
-//        int package_Wdef = chr.package_wdef;
-//        int package_WdefPercent = chr.package_wdef_percent;
-//        int package_Mdef = chr.package_mdef;
-//        int package_MdefPercent = chr.package_mdef_percent;
-//        int package_Acc = chr.package_acc;
-//        int package_AccPercent = chr.package_acc_percent;
-//        int package_Avoid = chr.package_avoid;
-//        int package_AvoidPercent = chr.package_avoid_percent;
-//        int package_MaxHp = chr.package_maxhp;
-//        int package_MaxHpPercent = chr.package_maxhp_percent;
-//        int package_MaxMp = chr.package_maxmp;
-//        int package_MaxMpPercent = chr.package_maxmp_percent;
-//        int package_Speed = chr.package_speed;
-//        int package_Jump = chr.package_jump;
-//        short package_normal_damage_percent =  chr.package_normal_damage_percent;
-//        short package_boss_damage_percent = chr.package_boss_damage_percent;
-//        short package_total_damage_percent = chr.package_total_damage_percent;
-//        int pWatk =  chr.getStat().pWatk;
-//        int pMatk =  chr.getStat().pMatk;
-//        int pWdef =  chr.getStat().pWdef;
-//        int pMdef =  chr.getStat().pMdef;
-//        int pAcc =  chr.getStat().pAcc;
-//        int pAvoid =  chr.getStat().pAvoid;
-//        int pMaxHp =  chr.getStat().pMaxHp;
-//        int pMaxMp =  chr.getStat().pMaxMp;
-//        int pSpeed =  chr.getStat().pSpeed;
-//        int pJump =  chr.getStat().pJump;
-//        int pWatkPercent =  chr.getStat().pWatkPercent;
-//        int pMatkPercent =  chr.getStat().pMatkPercent;
-//        int pWdefPercent =  chr.getStat().pWdefPercent;
-//        int pMdefPercent =  chr.getStat().pMdefPercent;
-//        int pAccPercent =  chr.getStat().pAccPercent;
-//        int pAvoidPercent =  chr.getStat().pAvoidPercent;
-//        int pMaxHpPercent =  chr.getStat().pMaxHpPercent;
-//        int pMaxMpPercent =  chr.getStat().pMaxMpPercent;
         String str = "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
                 "力量：" + chr.getStat().localstr + ">>" +
                 "敏捷：" + chr.getStat().localdex + ">>" +
@@ -315,43 +298,74 @@ public class tzjc {
                 "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
                 "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
                 "最大伤害：" + damage + ">>" +
-                "伤害加成：" + (chr.getStat().dam_r+chr.package_total_damage_percent) + ">>" +
+                "伤害加成：" + (chr.getStat().dam_r+chr.package_total_damage_percent+(Start.masterApprenticeGain.get(chr.getId()) !=null ? Start.masterApprenticeGain.get(chr.getId()) : 0)) + ">>" +
                 "段伤加成：" + dsDamage + ">>" +
-                "BOSS伤害加成：" +( chr.getStat().bossdam_r+chr.package_boss_damage_percent) + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")+">>"
-//                "套装属性加成：魔法"+package_Watk+"+"+package_WatkPercent+"%"+"  魔法"+package_Matk+"+"+package_MatkPercent+"%"+"  物防"+package_Wdef+"+"+package_WdefPercent+"%"+"  魔防"+package_Mdef+"+"+package_MdefPercent+"%"+"  命中"+package_Acc+"+"+package_AccPercent+"%"+"  回避"+package_Avoid+"+"+package_AvoidPercent+"%"+"  最大生命"+package_MaxHp+"+"+package_MaxHpPercent+"%"+"  最大魔力"+package_MaxMp+"+"+package_MaxMpPercent+"%"+"  速度"+package_Speed+"+"+package_Jump+"%"+"  伤害加成"+package_normal_damage_percent+"%"+"  BOSS伤害加成"+package_boss_damage_percent+"%"+"  总伤害加成"+package_total_damage_percent+"%"+ ">>" +
-//                "潜能总加成: 攻击" + pWatk + "+" + pWatkPercent + "%" + "  魔法" + pMatk + "+" + pMatkPercent + "%" + "  物防" + pWdef + "+" + pWdefPercent + "%" + "  魔防" + pMdef + "+" + pMdefPercent + "%" + "  命中" + pAcc + "+" + pAccPercent + "%" + "  回避" + pAvoid + "+" + pAvoidPercent + "%" + "  最大生命" + pMaxHp + "+" + pMaxHpPercent + "%" + "  最大魔力" + pMaxMp + "+" + pMaxMpPercent + "%" + "  速度" + pSpeed + "+" + pJump + "%"
-                ;
-
+                "BOSS伤害加成：" +(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)) + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")+">>";
+        upsertBossDamageRanking(chr.id,chr.getName(),(int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(number.get()*100)));
         chr.showInstruction(str,240,10);
         chr.getClient().getPlayer().set开启自动回收(chr.getBossLog1("开启自动回收",1)>0 ? true : false) ;
-//        chr.dropMessage(5,
-//                "角色姓名：" + chr.getClient().getPlayer().getName() + ">>"+
-//                        "力量：" + chr.getStat().localstr + ">>" +
-//                        "敏捷：" + chr.getStat().localdex + ">>" +
-//                        "运气：" + chr.getStat().localluk + ">>" +
-//                        "智力：" + chr.getStat().localint_ + ">>" +
-//                        "物攻：" + chr.getStat().watk + ">>" +
-//                        "魔攻：" + chr.getStat().magic + ">>" +
-//                        "武器熟练度：" + chr.getStat().passive_mastery + ">>" +
-//                        "爆击概率：" + chr.getStat().passive_sharpeye_rate + ">>" +
-//                        "爆击最大伤害倍率：" + chr.getStat().passive_sharpeye_percent + ">>" +
-//                        "最大攻击力：" + chr.getStat().localmaxbasedamage + ">>" +
-//                        "伤害加成：" + chr.getStat().dam_r + ">>" +
-//                        "段伤加成：" + additionalDamage.get() + ">>" +
-//                        "BOSS伤害加成：" + chr.getStat().bossdam_r + ">>" + (number.get() >0 ? "赋能/套装伤害加成总计：" + number.get() * 100 + "%" : "赋能/套装伤害加成总计：0%")
-        //);
+
         return number.get();
     }
 
     static {
         tz_list = (List<tz_model>) new LinkedList();
-        dsMap = new Hashtable<>();
-        tzjc.tzMap = new Hashtable<>();
-        tzjc.sbMap = new Hashtable<>();
-        tzjc.suitSys = new Hashtable<>();
+        dsMap = new ConcurrentHashMap<>();
+        tzjc.tzMap = new ConcurrentHashMap<>();
+        tzjc.sbMap = new ConcurrentHashMap<>();
+        tzjc.suitSys = new ConcurrentHashMap<>();
 
     }
 
+    public static void upsertBossDamageRanking(int charactersid, String charactersname, int bossdamage) {
+        Connection conn = null;
+        PreparedStatement selectStmt = null;
+        PreparedStatement updateStmt = null;
+        PreparedStatement insertStmt = null;
+        ResultSet rs = null;
+
+        try {
+            // 获取数据库连接
+             conn = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+
+            // 查询记录
+            String selectQuery = "SELECT id FROM lt_boss_damage_ranking WHERE charactersid = ?";
+            selectStmt = conn.prepareStatement(selectQuery);
+            selectStmt.setInt(1, charactersid);
+            rs = selectStmt.executeQuery();
+
+            if (rs.next()) {
+                // 如果存在记录则更新
+                String updateQuery = "UPDATE lt_boss_damage_ranking SET charactersname = ?, bossdamage = ? WHERE charactersid = ?";
+                updateStmt = conn.prepareStatement(updateQuery);
+                updateStmt.setString(1, charactersname);
+                updateStmt.setInt(2, bossdamage);
+                updateStmt.setInt(3, charactersid);
+                updateStmt.executeUpdate();
+            } else {
+                // 如果不存在记录则插入
+                String insertQuery = "INSERT INTO lt_boss_damage_ranking (charactersid, charactersname, bossdamage) VALUES (?, ?, ?)";
+                insertStmt = conn.prepareStatement(insertQuery);
+                insertStmt.setInt(1, charactersid);
+                insertStmt.setString(2, charactersname);
+                insertStmt.setInt(3, bossdamage);
+                insertStmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭资源
+            try {
+                if (rs != null) rs.close();
+                if (selectStmt != null) selectStmt.close();
+                if (updateStmt != null) updateStmt.close();
+                if (insertStmt != null) insertStmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public static void 计算最大伤害(MapleCharacter chra){
         if(chra==null){
@@ -428,6 +442,17 @@ public class tzjc {
                 chra.getClient().getPlayer().getStat().damage = (  (long) ((chra.getClient().getPlayer().getStat().localstr*0.3+chra.getClient().getPlayer().getStat().localdex*0.3+chra.getClient().getPlayer().getStat().localluk*0.3+chra.getClient().getPlayer().getStat().localint_*0.3)*(chra.getClient().getPlayer().getStat().watk*0.1))+1L);
                 break;
 
+        }
+    }
+
+    public static void selectBuffIfNotExists(MapleCharacter chra) {
+        try{
+                chra.buffs.clear();
+                chra.buffs.addAll(chra.getBuffsByCharacterId(chra.id));
+
+        } catch (Exception e) {
+            //服务端输出信息.println_err("insertBuffIfNotExists 出错：" + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

@@ -2,7 +2,7 @@ package constants;
 
 import database.DBConPool;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.login.LoginServer;
 
 import java.sql.Connection;
@@ -75,7 +75,11 @@ public class GameConstants
 
     private static String banMultiMobRateListString = "";
     public static void setBanMultiMobRateList() {
-        ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", banMultiMobRateListString);
+        try {
+            ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", banMultiMobRateListString);
+        } catch (Exception e) {
+
+        }
     }
 
     private static ArrayList<Integer> banChannelList = new ArrayList<>();
@@ -85,20 +89,27 @@ public class GameConstants
         return banChannelList;
     }
     public static void setBanChannelList() {
-        ServerProperties.setProperty("server.settings.banChannelList", banChannelListString);
+        try {
+            ServerProperties.setProperty("server.settings.banChannelList", banChannelListString);
+        } catch (Exception e) {
+        }
     }
     public static void loadBanChannelList() {
         banChannelList.clear();
-        banChannelListString = ServerProperties.getProperty("server.settings.banChannelList", "-1, -1");
-        String list = banChannelListString;
-        list = list.replace(" ", "");
-        list = list.replace(".", "").replace("/", "");
-        String[] var1 = list.split(",");
-        int var2 = var1.length;
+        try {
+            banChannelListString = ServerProperties.getProperty("server.settings.banChannelList", "-1, -1");
+            String list = banChannelListString;
+            list = list.replace(" ", "");
+            list = list.replace(".", "").replace("/", "");
+            String[] var1 = list.split(",");
+            int var2 = var1.length;
 
-        for(int var3 = 0; var3 < var2; ++var3) {
-            String str = var1[var3];
-            banChannelList.add(Integer.parseInt(str));
+            for(int var3 = 0; var3 < var2; ++var3) {
+                String str = var1[var3];
+                banChannelList.add(Integer.parseInt(str));
+            }
+        } catch (NumberFormatException e) {
+
         }
 
     }
@@ -3489,26 +3500,30 @@ public class GameConstants
     }
     public static void loadBanMultiMobRateList() {
         banMultiMobRateMapIdList.clear();
-        banMultiMobRateListString = ServerProperties.getProperty("server.settings.banMultiMobRateMapIdList", "-1");
-        String list = banMultiMobRateListString;
-        if (list.equals("-1")) {
-            list = "|910000000|910000088|";
-            ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", list);
-        }
+        try {
+            banMultiMobRateListString = ServerProperties.getProperty("server.settings.banMultiMobRateMapIdList", "-1");
+            String list = banMultiMobRateListString;
+            if (list.equals("-1")) {
+                list = "|910000000|910000088|";
+                ServerProperties.setProperty("server.settings.banMultiMobRateMapIdList", list);
+            }
 
-        list = list.replace(" ", "");
-        list = list.replace(".", "").replace("/", "");
-        String[] var1 = list.split("\\|");
-        int var2 = var1.length;
+            list = list.replace(" ", "");
+            list = list.replace(".", "").replace("/", "");
+            String[] var1 = list.split("\\|");
+            int var2 = var1.length;
 
-        for(int var3 = 0; var3 < var2; ++var3) {
-            String str = var1[var3];
-            if (!str.equals("")) {
-                int a = Integer.parseInt(str);
-                if (a > 0) {
-                    banMultiMobRateMapIdList.add(a);
+            for(int var3 = 0; var3 < var2; ++var3) {
+                String str = var1[var3];
+                if (!str.equals("")) {
+                    int a = Integer.parseInt(str);
+                    if (a > 0) {
+                        banMultiMobRateMapIdList.add(a);
+                    }
                 }
             }
+        } catch (NumberFormatException e) {
+
         }
 
     }
@@ -3800,7 +3815,7 @@ public class GameConstants
 
             }
         } catch (SQLException var14) {
-            服务端输出信息.println_err("【错误】loadChrStageMapFromDB错误，原因：" + var14);
+            //服务端输出信息.println_err("【错误】loadChrStageMapFromDB错误，原因：" + var14);
             var14.printStackTrace();
         }
 
@@ -3911,7 +3926,7 @@ public class GameConstants
 
             }
         } catch (SQLException var21) {
-            服务端输出信息.println_err("【错误】LoadFishingChannelList错误，原因：" + var21);
+            //服务端输出信息.println_err("【错误】LoadFishingChannelList错误，原因：" + var21);
             var21.printStackTrace();
         }
 

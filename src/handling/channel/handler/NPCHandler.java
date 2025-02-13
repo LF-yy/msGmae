@@ -315,6 +315,14 @@ public class NPCHandler
 //                FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作拿出物品:" + item.getItemId() + " 数量：" + (int)item.getQuantity());
 //                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作拿出物品:" + item.getItemId() + " 数量：" + (int)item.getQuantity()));
 //                break;
+                if (chr.getInventory(MapleInventoryType.USE).isFull(2)
+                        || chr.getInventory(MapleInventoryType.EQUIP).isFull(2)
+                        || chr.getInventory(MapleInventoryType.SETUP).isFull(2)
+                        || chr.getInventory(MapleInventoryType.ETC).isFull(2)
+                        || chr.getInventory(MapleInventoryType.CASH).isFull(2)) {
+                    chr.dropMessage(1, "你的背包空间不够2格 。");
+                    return;
+                }
                 byte slot = storage.getSlot(MapleInventoryType.getByType(slea.readByte()), slea.readByte());
                 IItem item = storage.takeOut(slot);
                 if (c.getPlayer().CanStorage()) {

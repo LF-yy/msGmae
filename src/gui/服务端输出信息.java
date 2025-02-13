@@ -83,13 +83,13 @@ public class 服务端输出信息 extends JFrame {
                 }
             }
         } catch (ClassNotFoundException var5) {
-            Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var5);
+            //Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var5);
         } catch (InstantiationException var6) {
-            Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var6);
+            //Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var6);
         } catch (IllegalAccessException var7) {
-            Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var7);
+            //Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var7);
         } catch (UnsupportedLookAndFeelException var8) {
-            Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var8);
+            //Logger.getLogger(服务端输出信息.class.getName()).log(Level.SEVERE, (String)null, var8);
         }
 
         EventQueue.invokeLater(new Runnable() {

@@ -40,6 +40,13 @@ public class Equip extends Item implements IEquip, Serializable
     private int mpRR = 0;
     private byte itemLevel;
 
+    public byte getItemLevel() {
+        return itemLevel;
+    }
+
+    public void setItemLevel(byte itemLevel) {
+        this.itemLevel = itemLevel;
+    }
 
     public void setEquipLevel(byte gf) {
         this.itemLevel = gf;

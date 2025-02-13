@@ -1,7 +1,7 @@
 package handling.channel;
 
 import client.MapleClient;
-import gui.服务端输出信息;
+
 import server.Start;
 import tools.FileoutputUtil;
 import database.DBConPool;
@@ -1207,71 +1207,71 @@ public class MapleGuildRanking
     }
     
     public List<GuildRankingInfo> getGuildRank() {
-        if (this.ranks.isEmpty()) {
+        //if (this.ranks.isEmpty()) {
             this.reload();
-        }
+       // }
         return this.ranks;
     }
     
     public List<levelRankingInfo> getLevelRank() {
-        if (this.ranks1.isEmpty()) {
+       // if (this.ranks1.isEmpty()) {
             this.showLevelRank();
-        }
+      //  }
         return this.ranks1;
     }
     public List<SponsorRank> getSponsorRank() {
-        if (this.sponsorRank.isEmpty()) {
+        //if (this.sponsorRank.isEmpty()) {
             this.querySponsorRank();
-        }
+        //}
         return this.sponsorRank;
     }
     public List<SponsorRank> getDefeatRank() {
-        if (this.privDefeatRank.isEmpty()) {
+       // if (this.privDefeatRank.isEmpty()) {
             this.queryDefeatRank();
-        }
+        //}
         return this.privDefeatRank;
     }
     public List<SponsorRank> getDefeatRankNew() {
-        if (this.privDefeatRankNew.isEmpty()) {
+        //if (this.privDefeatRankNew.isEmpty()) {
             this.queryDefeatRankNew();
-        }
+       // }
         return this.privDefeatRankNew;
     }
     public List<SponsorRank> getBossRank() {
-        if (this.privBossRank.isEmpty()) {
+       // if (this.privBossRank.isEmpty()) {
             this.queryBossRank();
-        }
+        //}
         return this.privBossRank;
     }
     public List<SponsorRank> getRedRank() {
-        if (this.privRedRank.isEmpty()) {
+        //if (this.privRedRank.isEmpty()) {
             this.queryRedRank();
-        }
+        //}
         return this.privRedRank;
     }
     public List<SponsorRank> getAccurateRank() {
-        if (this.privAccurateRank.isEmpty()) {
+       // if (this.privAccurateRank.isEmpty()) {
             this.queryAccurateRank();
-        }
+      //  }
         return this.privAccurateRank;
     }
     public List<SponsorRank> getEnhancedRank() {
-        if (this.privEnhancedRank.isEmpty()) {
+        //if (this.privEnhancedRank.isEmpty()) {
             this.queryEnhancedRank();
-        }
+       // }
         return this.privEnhancedRank;
     }
     public List<SponsorRank> getDropRank() {
-        if (this.privDropRank.isEmpty()) {
+//        if (this.privDropRank.isEmpty()) {
             this.queryDropRank();
-        }
+//        }
             return this.privDropRank;
     }
     
     public List<mesoRankingInfo> getMesoRank() {
-        if (this.ranks2.isEmpty()) {
+//        if (this.ranks2.isEmpty()) {
             this.showMesoRank();
-        }
+//        }
         return this.ranks2;
     }
     
@@ -1680,7 +1680,7 @@ public class MapleGuildRanking
 
             }
         } catch (SQLException var35) {
-            服务端输出信息.println_err("未能捐赠排行");
+            //服务端输出信息.println_err("未能捐赠排行");
             FileoutputUtil.outError("logs/资料库异常.txt", var35);
         }
 
@@ -1778,7 +1778,7 @@ public class MapleGuildRanking
 
             }
         } catch (Exception var45) {
-            服务端输出信息.println_err("未能显示财产排行," + var45);
+            //服务端输出信息.println_err("未能显示财产排行," + var45);
             FileoutputUtil.outError("logs/资料库异常.txt", var45);
         }
     }
@@ -1825,7 +1825,7 @@ public class MapleGuildRanking
 
             }
         } catch (SQLException var15) {
-            服务端输出信息.println_err("未能显示等级排行");
+            //服务端输出信息.println_err("未能显示等级排行");
             FileoutputUtil.outError("logs/资料库异常.txt", var15);
         }
 
@@ -1840,7 +1840,7 @@ public class MapleGuildRanking
             ps.close();
             rs.close();
         } catch (Exception var5) {
-            服务端输出信息.println_out("failed to display guild ranks." + var5);
+            //服务端输出信息.println_out("failed to display guild ranks." + var5);
         }
 
     }
@@ -1854,7 +1854,7 @@ public class MapleGuildRanking
             ps.close();
             rs.close();
         } catch (Exception var5) {
-            服务端输出信息.println_out("failed to display guild ranks." + var5);
+            //服务端输出信息.println_out("failed to display guild ranks." + var5);
         }
 
     }

@@ -5,7 +5,7 @@
 
 package gui.控制台;
 
-import gui.服务端输出信息;
+
 import org.jvnet.substance.skin.SubstanceBusinessBlackSteelLookAndFeel;
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import org.netbeans.lib.awtextra.AbsoluteLayout;
@@ -59,7 +59,7 @@ public class 聊天记录显示 extends JFrame {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
             UIManager.setLookAndFeel(new SubstanceBusinessBlackSteelLookAndFeel());
         } catch (Exception var2) {
-            服务端输出信息.println_err(var2);
+            //服务端输出信息.println_err(var2);
         }
 
         EventQueue.invokeLater(new Runnable() {

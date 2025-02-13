@@ -5,7 +5,7 @@
 
 package gui.图片.xiazai;
 
-import gui.服务端输出信息;
+
 import java.awt.LayoutManager;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
@@ -42,9 +42,9 @@ public class DownloadFrame implements ActionListener {
                 this.sourceFile = this.textField.getText();
                 this.path = this.textField_1.getText();
                 this.name = this.textField_2.getText();
-                服务端输出信息.println_out(this.textField.getText().substring(0, 3));
+                //服务端输出信息.println_out(this.textField.getText().substring(0, 3));
                 if (this.textField.getText().substring(0, 3).equals("htt")) {
-                    服务端输出信息.println_out(this.textField.getText().substring(0, 3));
+                    //服务端输出信息.println_out(this.textField.getText().substring(0, 3));
                     StartDownload sd = new StartDownload(this.jps, this.jls, this.sourceFile, this.name, this.path, this.label_3);
                     sd.start();
                     this.jbutton.setText("暂停\t");
@@ -63,7 +63,7 @@ public class DownloadFrame implements ActionListener {
                 jfc.showDialog(new JLabel(), "选择");
                 File file = jfc.getSelectedFile();
                 if (file.isDirectory()) {
-                    服务端输出信息.println_out("文件夹:" + file.getAbsolutePath());
+                    //服务端输出信息.println_out("文件夹:" + file.getAbsolutePath());
                     String m = file.getAbsolutePath();
                     this.textField_1.setText(m);
                 } else if (file.isFile()) {

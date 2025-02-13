@@ -1,7 +1,6 @@
 package handling.mina;
 
 import tools.FileoutputUtil;
-import io.netty.channel.ChannelHandler;
 import constants.WorldConstants;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.nio.NioServerSocketChannel;

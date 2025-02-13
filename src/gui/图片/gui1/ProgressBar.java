@@ -5,7 +5,7 @@
 
 package gui.图片.gui1;
 
-import gui.服务端输出信息;
+
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -34,7 +34,7 @@ public class ProgressBar extends Thread implements ActionListener {
             try {
                 Thread.sleep(50L);
             } catch (Exception var4) {
-                服务端输出信息.println_err(var4);
+                //服务端输出信息.println_err(var4);
             }
         }
 

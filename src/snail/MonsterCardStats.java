@@ -6,7 +6,7 @@
 package snail;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,7 +27,7 @@ public class MonsterCardStats {
     }
 
     public boolean loadMonsterCardStatFromDB() {
-        服务端输出信息.println_out("【怪物卡片附加属性】开始加载...");
+        //服务端输出信息.println_out("【怪物卡片附加属性】开始加载...");
         Map<Integer, MonsterCard> monsterCardMap1 = new HashMap();
 
         try {
@@ -46,7 +46,7 @@ public class MonsterCardStats {
                 rs.close();
                 this.monsterCardMap.clear();
                 this.monsterCardMap = monsterCardMap1;
-                服务端输出信息.println_out("【怪物卡片附加属性】加载完毕！");
+                //服务端输出信息.println_out("【怪物卡片附加属性】加载完毕！");
                 boolean var6 = true;
                 return var6;
             } catch (Throwable var16) {
@@ -67,7 +67,7 @@ public class MonsterCardStats {
 
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("【错误】loadMonsterCardStatFromDB执行错误，原因：" + var18);
+            //服务端输出信息.println_err("【错误】loadMonsterCardStatFromDB执行错误，原因：" + var18);
             var18.printStackTrace();
             return false;
         }

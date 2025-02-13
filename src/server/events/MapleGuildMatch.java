@@ -9,12 +9,11 @@ import client.MapleCharacter;
 import client.MapleStat;
 import client.inventory.MaplePet;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import handling.world.World.Guild;
 import handling.world.guild.MapleGuild;
 import server.MaplePortal;
-import server.Start;
 import server.Timer.EventTimer;
 import server.Timer.WorldTimer;
 import server.maps.MapleMap;
@@ -466,7 +465,7 @@ public class MapleGuildMatch extends MapleEvent {
     }
 
     private void distributeRewards() {
-        服务端输出信息.println_out("[家族对抗赛] 玩家奖励发放中。。。");
+        //服务端输出信息.println_out("[家族对抗赛] 玩家奖励发放中。。。");
         this.guildPointsMap = sortTool.sortDescend(this.guildPointsMap);
         Map<Integer, Integer> guildRewardsTypeMap = new HashMap();
         int i = 1;
@@ -498,8 +497,8 @@ public class MapleGuildMatch extends MapleEvent {
 
         guildRewardsTypeMap.clear();
         guildRewardsTypeMap = null;
-        服务端输出信息.println_out("[家族对抗赛] 奖励玩家发放完毕。共完成" + count + "个玩家的奖励发放。");
-        服务端输出信息.println_out("[家族对抗赛] 家族GP点数发放中。。。");
+        //服务端输出信息.println_out("[家族对抗赛] 奖励玩家发放完毕。共完成" + count + "个玩家的奖励发放。");
+        //服务端输出信息.println_out("[家族对抗赛] 家族GP点数发放中。。。");
         int gp = 0;
         int rate = (Integer)LtMS.ConfigValuesMap.get("家族对抗赛_比赛积分除以家族积分的倍数");
         Iterator var6 = this.guildPointsMap.entrySet().iterator();
@@ -517,7 +516,7 @@ public class MapleGuildMatch extends MapleEvent {
             }
         }
 
-        服务端输出信息.println_out("[家族对抗赛] 家族GP点数发放完成，共计发放 " + gp + " 点GP值。");
+        //服务端输出信息.println_out("[家族对抗赛] 家族GP点数发放完成，共计发放 " + gp + " 点GP值。");
     }
 
     private void TimeOut() {

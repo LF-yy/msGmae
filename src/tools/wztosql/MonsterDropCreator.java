@@ -1,5 +1,8 @@
 package tools.wztosql;
 
+import bean.LtMonsterPosition;
+import server.Start;
+import tools.FileoutputUtil;
 import tools.StringUtil;
 import provider.MapleDataProvider;
 import java.util.Collection;
@@ -839,6 +842,29 @@ public class MonsterDropCreator
             catch (Exception ex) {}
         }
         MonsterDropCreator.mobCache.addAll((Collection<? extends Pair<Integer, MobInfo>>)itemPairs);
+    }
+    public static void getAllMobs入库() {
+        List<LtMonsterPosition> list = new ArrayList<>();
+        final MapleDataProvider data = MapleDataProviderFactory.getDataProvider("String.wz");
+        final MapleDataProvider mobData = MapleDataProviderFactory.getDataProvider("Mob.wz");
+        final MapleData mob = data.getData("Mob.img");
+        for (final MapleData itemFolder : mob.getChildren()) {
+            final int id = Integer.parseInt(itemFolder.getName());
+            try {
+                final MapleData monsterData = mobData.getData(StringUtil.getLeftPaddedStr(Integer.toString(id) + ".img", '0', 11));
+                final int boss = (id == 8810018) ? 1 : MapleDataTool.getIntConvert("boss", monsterData.getChildByPath("info"), 0);
+                if (boss > 0) {
+                    FileoutputUtil.print("logs/怪物坐标处理结果.txt", "地图：" + MapleDataTool.getString("name", itemFolder, "NO-NAME")+ "," + 1 + "," + 1 + "," + 2 + "\r\n");
+                    list.add(new LtMonsterPosition(1, id,MapleDataTool.getString("name", itemFolder, "NO-NAME"), 1, 2, 1, MapleDataTool.getIntConvert("level", monsterData.getChildByPath("info"))));
+
+                }else{
+                    FileoutputUtil.print("logs/怪物坐标处理结果.txt", "地图：" + MapleDataTool.getString("name", itemFolder, "NO-NAME") + "," + 1 + "," + 1 + "," + 2 + "\r\n");
+                    list.add(new LtMonsterPosition(1, id,MapleDataTool.getString("name", itemFolder, "NO-NAME"), 1, 2, 0, MapleDataTool.getIntConvert("level", monsterData.getChildByPath("info"))));
+                }
+            }
+            catch (Exception ex) {}
+        }
+        Start.setLtMonsterPositionAll(list);
     }
     
     static {

@@ -3,7 +3,7 @@ package scripting;
 import java.util.Iterator;
 
 import com.alibaba.fastjson.JSONObject;
-import gui.服务端输出信息;
+
 import org.apache.commons.lang.StringUtils;
 import tools.FilePrinter;
 import javax.script.ScriptEngine;
@@ -46,7 +46,6 @@ public class EventScriptManager extends AbstractScriptManager {
         for (final EventEntry entry : this.events.values()) {
             try {
                 ((ScriptEngine)entry.iv).put("em", (Object)entry.em);
-                ((ScriptEngine)entry.iv).put("ecm", (Object)entry.em);
                 entry.iv.invokeFunction("init", new Object[] { null });
             }
             catch (Exception ex) {
@@ -61,14 +60,13 @@ public class EventScriptManager extends AbstractScriptManager {
             EventEntry entry = (EventEntry)this.events.get(script);
             if (entry != null) {
                 ((ScriptEngine)entry.iv).put("em", entry.em);
-                ((ScriptEngine)entry.iv).put("ecm", entry.em);
                 entry.iv.invokeFunction("init", (Object) null);
                 return true;
             } else {
                 return false;
             }
         } catch (Exception var3) {
-            服务端输出信息.println_err("Error initiating event: " + script + ":" + var3);
+            //服务端输出信息.println_err("Error initiating event: " + script + ":" + var3);
             FilePrinter.printError("EventScriptManager.txt", "Error initiating event: " + script + ":" + var3);
             return false;
         }
@@ -91,7 +89,7 @@ public class EventScriptManager extends AbstractScriptManager {
                 return false;
             }
         } catch (Exception var4) {
-            服务端输出信息.println_err("【错误】loadEntry错误，错误原因：" + var4);
+            //服务端输出信息.println_err("【错误】loadEntry错误，错误原因：" + var4);
             var4.printStackTrace();
             return false;
         }
@@ -108,7 +106,7 @@ public class EventScriptManager extends AbstractScriptManager {
                     return entry;
                 }
             } catch (Exception var5) {
-                服务端输出信息.println_err("Error getEntry event: " + entry.script + ":" + var5);
+                //服务端输出信息.println_err("Error getEntry event: " + entry.script + ":" + var5);
                 FilePrinter.printError("EventScriptManager.txt", "Error getEntry event: " + entry.script + ":" + var5);
             }
         }

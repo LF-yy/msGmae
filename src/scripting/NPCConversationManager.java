@@ -8,7 +8,7 @@ import com.alibaba.druid.util.StringUtils;
 import constants.tzjc;
 import fumo.FumoSkill;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.channel.handler.*;
 import merchant.merchant_main;
 
@@ -115,13 +115,151 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.iv = iv;
         this.wh = wh;
     }
+    public int 获取师徒增伤(){
+      return Start.masterApprenticeGain.get(c.getPlayer().getId())!=null ? Start.masterApprenticeGain.get(c.getPlayer().getId()) : 0;
+    }
+    public void 技能数据入库(){
+        List<ASkill> list  =  new ArrayList<>();
+        SkillFactory.getAllSkills().forEach(skill -> {
+            int id = skill.getId();
+            String name = skill.getName();
+            byte maxLevel = skill.getMaxLevel();
+            MapleStatEffect effect = skill.getEffect(maxLevel);
+            Point lt = effect.getLt();
+            Point rb = effect.getRb();
+            int range = effect.getRange();
+            short damage = effect.getDamage();
+            int duration = effect.getDuration();
+            int attackCount = effect.getAttackCount();
+            int mobCount = effect.getMobCount();
+            if(lt!=null && rb!=null) {
+                list.add(new ASkill(id, name, maxLevel, lt.x, lt.y, rb.x, rb.y, range, damage, duration, attackCount, mobCount));
+            }else{
+                list.add(new ASkill(id, name, maxLevel, -400,-400, 400, 400, 800, damage, duration, attackCount, mobCount));
+            }
+        });
+        Start.setASkill(list);
+    }
+    public void 获取地图刷怪坐标(){
+        List<LtMonsterPosition> list = new ArrayList<>();
+        for (Entry<Integer, List<LtCopyMap>> integerListEntry : Start.ltCopyMap.entrySet()) {
+            for (LtCopyMap ltCopyMap : integerListEntry.getValue()) {
+                MapleMap map = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(ltCopyMap.getMapId());
+                for (Spawns spawns : map.getMonsterSpawn()) {
+                    FileoutputUtil.print("logs/怪物坐标处理结果.txt", "地图：" + ltCopyMap.getMapName()+ ","+ ltCopyMap.getMapId() +","+ spawns.getMonster().getPosition().x+","+spawns.getMonster().getPosition().y +"\r\n");
+                    list.add(new LtMonsterPosition( ltCopyMap.getMapId(),spawns.getMonster().getId(),ltCopyMap.getMapName(),spawns.getPosition().x,spawns.getPosition().y)) ;
+                }
+            }
+        }
+        Start.setLtMonsterPosition(list);
+    }
 
+    public static void 获取所有地图刷怪信息() {
+        List<LtMonsterPosition> list = new ArrayList<>();
+        ChannelServer.getAllInstances().forEach(cserv -> {
+            Collection<MapleMap> maps = cserv.getMapFactory().getAllMapThreadSafe();
+            for (MapleMap map : maps) {
+                for (Spawns spawns : map.getMonsterSpawn()) {
+                    FileoutputUtil.print("logs/怪物坐标处理结果.txt", "地图：" + spawns.getMonster().getName() + "," + map.getId() + "," + spawns.getMonster().getPosition().x + "," + spawns.getMonster().getPosition().y + "\r\n");
+                    list.add(new LtMonsterPosition(map.getId(), spawns.getMonster().getId(),spawns.getMonster().getName(), spawns.getPosition().x, spawns.getPosition().y, spawns.getMonster().getStats().isBoss() ? 1 : 0,spawns.getMonster().getLevel()));
+                }
+            }
+        });
+        Start.setLtMonsterPositionAll(list);
+    }
+    public void 增加护盾(int hphd){
+        if(Objects.nonNull(LtMS.ConfigValuesMap.get("护盾开关")) && LtMS.ConfigValuesMap.get("护盾开关")>0) {
+            Start.updateOrInsertShield(c.getPlayer().getId(), c.getPlayer().getLevel());
+            c.getPlayer().getStat().setMaxHphd(c.getPlayer().getStat().getMaxHphd() + hphd);
+        }
+    }
 
-    public String getDiabloEquipmentsDisplay(){
+    public List<Integer> getUserSkills(){
+       return c.getPlayer().getSkills().keySet().stream().filter(skill ->
+               {
+                   ISkill skill1 = SkillFactory.getSkill(skill.getId());
+                   if(skill1!=null){
+                      return skill1.getEffect(skill.getMaxLevel()).getDuration()>0 && skill1.getEffect(skill.getMaxLevel()).getDuration() <=86400;
+                   }else{
+                       return false;
+                   }
+               }
+       ).map(ISkill::getId).collect(Collectors.toList());
+    }
+
+    public boolean deleteBuffIfExists(int charactersid, int buff_id) {
+        String selectSQL = "SELECT 1 FROM lt_user_aotu_buff WHERE charactersid = ? AND buff_id = ?";
+        String deleteSQL = "DELETE FROM lt_user_aotu_buff WHERE charactersid = ? AND buff_id = ?";
+
+        try (Connection con = DBConPool.getConnection()) {
+            // 检查是否已经存在
+            try (PreparedStatement selectPs = con.prepareStatement(selectSQL)) {
+                selectPs.setInt(1, charactersid);
+                selectPs.setInt(2, buff_id);
+                ResultSet rs = selectPs.executeQuery();
+                if (!rs.next()) {
+                    return false; // 不存在
+                }
+            }
+            // 如果存在，则删除数据
+            try (PreparedStatement deletePs = con.prepareStatement(deleteSQL)) {
+                deletePs.setInt(1, charactersid);
+                deletePs.setInt(2, buff_id);
+                int rowsAffected = deletePs.executeUpdate();
+                if (rowsAffected > 0) {
+                    //重载自动buff
+                    c.getPlayer().buffs.clear();
+                    c.getPlayer().buffs.addAll(c.getPlayer().getBuffsByCharacterId(c.getPlayer().id));
+                    return true; // 删除成功
+                }
+            }
+            return false; // 删除失败
+
+        } catch (SQLException e) {
+            //服务端输出信息.println_err("deleteBuffIfExists 出错：" + e.getMessage());
+            e.printStackTrace();
+            return false; // 发生异常，返回 false
+        }
+    }
+    public boolean insertBuffIfNotExists(int charactersid, int buff_id) {
+        String selectSQL = "SELECT 1 FROM lt_user_aotu_buff WHERE charactersid = ? AND buff_id = ?";
+        String insertSQL = "INSERT INTO lt_user_aotu_buff (charactersid, buff_id) VALUES (?, ?)";
+
+        try (Connection con = DBConPool.getConnection()) {
+            // 检查是否已经存在
+            try (PreparedStatement selectPs = con.prepareStatement(selectSQL)) {
+                selectPs.setInt(1, charactersid);
+                selectPs.setInt(2, buff_id);
+                ResultSet rs = selectPs.executeQuery();
+
+                if (rs.next()) {
+                    return false; // 已经存在
+                }
+            }
+
+            // 如果不存在，则插入数据
+            try (PreparedStatement insertPs = con.prepareStatement(insertSQL)) {
+                insertPs.setInt(1, charactersid);
+                insertPs.setInt(2, buff_id);
+                insertPs.executeUpdate();
+            }
+            //重载自动buff
+            c.getPlayer().buffs.clear();
+            c.getPlayer().buffs.addAll(c.getPlayer().getBuffsByCharacterId(c.getPlayer().id));
+
+            return true; // 插入成功
+
+        } catch (SQLException e) {
+            //服务端输出信息.println_err("insertBuffIfNotExists 出错：" + e.getMessage());
+            e.printStackTrace();
+            return false; // 发生异常，返回 false
+        }
+    }
+    public String getDiabloEquipmentsDisplay(int type){
 
         StringBuilder output = new StringBuilder();
         output.append("词条：").append("\\r\\n");
-        for (LtDiabloEquipments equipment : Start.ltDiabloEquipments) {
+        for (LtDiabloEquipments equipment : Start.ltDiabloEquipments.stream().filter(equipment -> equipment.getType() == type).collect(Collectors.toList())) {
             StringBuilder attributes = new StringBuilder();
             if (equipment.getStr() > 0) {
                 attributes.append("力量:").append(equipment.getStr()).append("点, ");
@@ -172,8 +310,20 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                 attributes.append("运气百分比:").append(equipment.getLukPercent()).append("%, ");
             }
             if (equipment.getSkillId() > 0) {
+                if(equipment.getSkillType() == 1){
+                    attributes.append("伤害技能:").append(equipment.getSkillName()).append(", ");
+                }else if(equipment.getSkillType() == 2){
+                    attributes.append("被动增伤:").append(equipment.getSkillName()).append(", ");
+                }else if(equipment.getSkillType() == 3){
+                    attributes.append("状态技能:").append(equipment.getSkillName()).append(", ");
+                }else if(equipment.getSkillType() == 4){
+                    attributes.append("高频打击伤害技能:").append(equipment.getSkillName()).append(", ");
+                }else if(equipment.getSkillType() == 5){
+                    attributes.append("技能增幅(主体增幅有且只有一个装备生效):").append(equipment.getSkillName()).append(", ");
+                }else if(equipment.getSkillType() == 6){
+                    attributes.append("护盾增益技:").append(equipment.getSkillName()).append(", ");
+                }
                 //技能类型(1为伤害技能 ,2 为服务端触发式高频打击伤害技能 ,3 为状态技能)  技能伤害 技能段数  技能打击数量
-                attributes.append("附加技能:").append(equipment.getSkillId()).append(", ").append(", ");
             }
             if (equipment.getWatkPercent() > 0) {
                 attributes.append("物理攻击百分比:").append(equipment.getWatkPercent()).append("%, ");
@@ -1206,40 +1356,74 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
     }
 
-    public  void gain开启轮回(final MapleCharacter player){
+    public void gain开启轮回(final MapleCharacter player) {
         int mapId = player.getMapId();
-        for ( MapleMonster monstermo : player.getMap().getAllMonster()) {
+        for (MapleMonster monstermo : player.getMap().getAllMonster()) {
             if (monstermo.getPosition() != null && monstermo.getStats().isBoss()) {
-               // c.getPlayer().dropMessage(1, "该地图有BOSS不允许开启轮回.");
+                // c.getPlayer().dropMessage(1, "该地图有BOSS不允许开启轮回.");
                 return;
             }
         }
-        if (Start.特殊宠物吸物无法使用地图.stream().anyMatch(s-> {return mapId == Integer.parseInt(s);})){
-            //c.getPlayer().dropMessage(1, "该地图不允许轮回.");
-        }else {
+        if(ListUtil.isNotEmpty(Start.轮回地图) && Start.轮回地图.size()>0 && org.apache.commons.lang.StringUtils.isNotEmpty(Start.轮回地图.get(0))){
+            if (Start.轮回地图.stream().anyMatch(s -> {
+                return mapId == Integer.parseInt(s);
+            })) {
 
-            boolean b = Start.轮回集合.entrySet().stream().anyMatch(ua -> {
-                return ua.getValue().getPinDao() == c.getChannel() && ua.getValue().getMapId() == player.getMapId();
-            });
-            if (b) {
-               // c.getPlayer().dropMessage(1, "该地图已经有人开启轮回了.");
-            } else {
-                //获取身边的怪物
-                List<MapleMonster> list = new ArrayList<>();
-                final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
+                boolean b = Start.轮回集合.entrySet().stream().anyMatch(ua -> {
+                    return ua.getValue().getPinDao() == c.getChannel() && ua.getValue().getMapId() == player.getMapId();
+                });
+                if (b) {
+                    // c.getPlayer().dropMessage(1, "该地图已经有人开启轮回了.");
+                } else {
+                    //获取身边的怪物
+                    List<MapleMonster> list = new ArrayList<>();
+                    final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
 
-                for (final MapleMonster monstermo : mapleMap.getAllMonster()) {
-                    if (monstermo.isAlive() && !monstermo.getStats().isBoss()) {
-                        list.add(monstermo);
+                    for (final MapleMonster monstermo : mapleMap.getAllMonster()) {
+                        if (monstermo.isAlive() && !monstermo.getStats().isBoss()) {
+                            list.add(monstermo);
+                        }
                     }
-                }
 
-                Start.轮回怪物.put(player.getId(), list);
-                UserLhAttraction userAttraction = new UserLhAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
-                userAttraction.setMapMobCount(mapleMap.getAllMonster().size());
-                Start.轮回集合.put(player.getId(), userAttraction);
-                c.getPlayer().startMobLhVac(userAttraction);
-                c.getPlayer().setLastResOld(c.getPlayer().getLastRes());
+                    Start.轮回怪物.put(player.getId(), list);
+                    UserLhAttraction userAttraction = new UserLhAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
+                    userAttraction.setMapMobCount(mapleMap.getAllMonster().size());
+                    Start.轮回集合.put(player.getId(), userAttraction);
+                    c.getPlayer().startMobLhVac(userAttraction);
+                    c.getPlayer().setLastResOld(c.getPlayer().getLastRes());
+                }
+            }
+        } else {
+            if(ListUtil.isNotEmpty(Start.特殊宠物吸物无法使用地图) && Start.特殊宠物吸物无法使用地图.size() >0  && org.apache.commons.lang.StringUtils.isNotEmpty(Start.特殊宠物吸物无法使用地图.get(0))) {
+                if (Start.特殊宠物吸物无法使用地图.stream().anyMatch(s -> {
+                    return c.getPlayer().getMapId() == Integer.parseInt(s);
+                })) {
+                    c.getPlayer().dropMessage(1, "该地图不能使用轮回！");
+                    return;
+                }
+                boolean b = Start.轮回集合.entrySet().stream().anyMatch(ua -> {
+                    return ua.getValue().getPinDao() == this.getClient().getChannel() && ua.getValue().getMapId() == this.getMapId();
+                });
+                if (b) {
+                    // this.dropMessage(1, "该地图已经有人开启轮回了.");
+                } else {
+                    //获取身边的怪物
+                    List<MapleMonster> list = new ArrayList<>();
+                    final MapleMap mapleMap = ChannelServer.getInstance(this.getClient().getChannel()).getMapFactory().getMap(this.getMapId());
+
+                    for (final MapleMonster monstermo : mapleMap.getAllMonster()) {
+                        if (monstermo.isAlive() && !monstermo.getStats().isBoss()) {
+                            list.add(monstermo);
+                        }
+                    }
+
+                    Start.轮回怪物.put(player.getId(), list);
+                    UserLhAttraction userAttraction = new UserLhAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
+                    userAttraction.setMapMobCount(mapleMap.getAllMonster().size());
+                    Start.轮回集合.put(player.getId(), userAttraction);
+                    c.getPlayer().startMobLhVac(userAttraction);
+                    c.getPlayer().setLastResOld(c.getPlayer().getLastRes());
+                }
             }
         }
     }
@@ -1844,7 +2028,12 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void gainAp(final int amount) {
         this.c.getPlayer().gainAp((short)amount);
     }
-    
+
+    /**
+     * 修改背包格子
+     * @param type
+     * @param amt
+     */
     public void expandInventory(final byte type, final int amt) {
         this.c.getPlayer().expandInventory(type, amt);
     }
@@ -2125,7 +2314,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
 
     }
-
+    public final MapleInventory getInventory(int type) {
+        return this.c.getPlayer().getInventory(MapleInventoryType.getByType((byte)type));
+    }
     public void showlvl() {
         this.c.sendPacket(MaplePacketCreator.showlevelRanks(this.npc, MapleGuildRanking.getInstance().getLevelRank()));
     }
@@ -2398,10 +2589,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         catch (Exception ex) {}
     }
-    
-    public final MapleInventory getInventory(final int type) {
-        return this.c.getPlayer().getInventory(MapleInventoryType.getByType((byte)type));
-    }
+
     
     public final MapleCarnivalParty getCarnivalParty() {
         return this.c.getPlayer().getCarnivalParty();
@@ -3127,7 +3315,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("【错误】findMobByDrop错误，错误原因： " + var18);
+            //服务端输出信息.println_err("【错误】findMobByDrop错误，错误原因： " + var18);
             var18.printStackTrace();
         }
 
@@ -6241,7 +6429,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 }
             }
         } catch (Exception var6) {
-            服务端输出信息.println_err(var6);
+            //服务端输出信息.println_err(var6);
             return -1;
         }
     }
@@ -7093,7 +7281,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var37) {
-            服务端输出信息.println_err("取副本通关时间最快 - 数据库查询失败：" + var37);
+            //服务端输出信息.println_err("取副本通关时间最快 - 数据库查询失败：" + var37);
         }
 
         return data;
@@ -7152,7 +7340,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var36) {
-            服务端输出信息.println_err("取副本通关时间最快 - 数据库查询失败：" + var36);
+            //服务端输出信息.println_err("取副本通关时间最快 - 数据库查询失败：" + var36);
         }
 
         return data;
@@ -7211,7 +7399,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var36) {
-            服务端输出信息.println_err("取副本通关时间最快 - 数据库查询失败：" + var36);
+            //服务端输出信息.println_err("取副本通关时间最快 - 数据库查询失败：" + var36);
         }
 
         return data;
@@ -7270,7 +7458,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var37) {
-            服务端输出信息.println_err("取副本通关时间 - 数据库查询失败：" + var37);
+            //服务端输出信息.println_err("取副本通关时间 - 数据库查询失败：" + var37);
         }
 
         return data;
@@ -7660,7 +7848,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 ps.close();
             } catch (SQLException var19) {
-                服务端输出信息.println_err("打孔：查询查询装备的打孔数据出错：" + var19.getMessage());
+                //服务端输出信息.println_err("打孔：查询查询装备的打孔数据出错：" + var19.getMessage());
                 return 0;
             }
 
@@ -7820,7 +8008,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 ps.close();
             } catch (SQLException var19) {
-                服务端输出信息.println_err("打孔：查询查询装备的打孔数据出错：" + var19.getMessage());
+                //服务端输出信息.println_err("打孔：查询查询装备的打孔数据出错：" + var19.getMessage());
                 return 0;
             }
 
@@ -7887,7 +8075,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 ps.close();
             } catch (SQLException var21) {
-                服务端输出信息.println_err("镶嵌：查询装备的打孔镶嵌数据出错：" + var21.getMessage());
+                //服务端输出信息.println_err("镶嵌：查询装备的打孔镶嵌数据出错：" + var21.getMessage());
                 return 0;
             }
 
@@ -8267,7 +8455,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 ps.close();
             } catch (SQLException var19) {
-                服务端输出信息.println_err("查询身上装备已打孔数：查询装备的打孔数据出错：" + var19.getMessage());
+                //服务端输出信息.println_err("查询身上装备已打孔数：查询装备的打孔数据出错：" + var19.getMessage());
                 return 0;
             }
 
@@ -8318,7 +8506,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 ps.close();
             } catch (SQLException var19) {
-                服务端输出信息.println_err("查询身上装备可镶嵌数：查询装备的打孔镶嵌数据出错：" + var19.getMessage());
+                //服务端输出信息.println_err("查询身上装备可镶嵌数：查询装备的打孔镶嵌数据出错：" + var19.getMessage());
                 return 0;
             }
 
@@ -8380,14 +8568,14 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                     ps.setInt(3, ret);
                     ps.execute();
                 } catch (SQLException var16) {
-                    服务端输出信息.println_out("xxxxxxxx:" + var16);
+                    //服务端输出信息.println_out("xxxxxxxx:" + var16);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException var15) {
-                        服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
+                        //服务端输出信息.println_out("xxxxxxxxzzzzzzz:" + var15);
                     }
 
                 }
@@ -8402,7 +8590,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.execute();
             ps.close();
         } catch (SQLException var18) {
-            服务端输出信息.println_err("Getrobot!!55" + var18);
+            //服务端输出信息.println_err("Getrobot!!55" + var18);
         }
 
     }
@@ -8492,7 +8680,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var37) {
-            服务端输出信息.println_err("出错：" + var37.getMessage());
+            //服务端输出信息.println_err("出错：" + var37.getMessage());
         }
 
         try {
@@ -8529,7 +8717,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var34) {
-            服务端输出信息.println_err("玩具塔副本奖励2、出错");
+            //服务端输出信息.println_err("玩具塔副本奖励2、出错");
         }
 
     }
@@ -8891,7 +9079,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("取装备代码、出错");
+            //服务端输出信息.println_err("取装备代码、出错");
         }
 
         return data;
@@ -8931,7 +9119,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("取装备代码、出错");
+            //服务端输出信息.println_err("取装备代码、出错");
         }
 
         return data;
@@ -9308,14 +9496,14 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                     ps.setInt(3, x);
                     ps.execute();
                 } catch (SQLException var16) {
-                    服务端输出信息.println_out("设置传送点x1:" + var16);
+                    //服务端输出信息.println_out("设置传送点x1:" + var16);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException var15) {
-                        服务端输出信息.println_out("设置传送点x2:" + var15);
+                        //服务端输出信息.println_out("设置传送点x2:" + var15);
                     }
 
                 }
@@ -9329,7 +9517,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 ps.close();
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("设置传送点x3" + var18);
+            //服务端输出信息.println_err("设置传送点x3" + var18);
         }
 
     }
@@ -9348,14 +9536,14 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                     ps.setInt(3, y);
                     ps.execute();
                 } catch (SQLException var16) {
-                    服务端输出信息.println_out("设置传送点y1:" + var16);
+                    //服务端输出信息.println_out("设置传送点y1:" + var16);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException var15) {
-                        服务端输出信息.println_out("设置传送点y2:" + var15);
+                        //服务端输出信息.println_out("设置传送点y2:" + var15);
                     }
 
                 }
@@ -9369,7 +9557,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 ps.close();
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("设置传送点y3" + var18);
+            //服务端输出信息.println_err("设置传送点y3" + var18);
         }
 
     }
@@ -10414,7 +10602,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.execute();
             ps.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("录入手册!!55" + var6);
+            //服务端输出信息.println_err("录入手册!!55" + var6);
         }
 
     }
@@ -10494,7 +10682,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("手册道具代码、出错");
+            //服务端输出信息.println_err("手册道具代码、出错");
         }
 
         return data;
@@ -10534,7 +10722,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("手册道具数量、出错");
+            //服务端输出信息.println_err("手册道具数量、出错");
         }
 
         return data;
@@ -11118,7 +11306,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var18) {
-            服务端输出信息.println_err("角色名字取账号ID、出错");
+            //服务端输出信息.println_err("角色名字取账号ID、出错");
         }
 
         return data;
@@ -11370,7 +11558,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("账号ID取账号、出错");
+            //服务端输出信息.println_err("账号ID取账号、出错");
         }
 
         return data;
@@ -11446,7 +11634,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             FileoutputUtil.logToFile("logs/Data/赞助记录.txt", text);
             return true;
         } else {
-            服务端输出信息.println_err("【错误】NPCConversationManager.java中的“增加赞助余额”不能为负数！");
+            //服务端输出信息.println_err("【错误】NPCConversationManager.java中的“增加赞助余额”不能为负数！");
             return false;
         }
     }
@@ -11462,11 +11650,11 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 FileoutputUtil.logToFile("logs/Data/赞助记录.txt", text);
                 return true;
             } else {
-                服务端输出信息.println_err("【错误】NPCConversationManager.java中的“减少赞助余额” 账号ID：" + this.c.getPlayer().getAccountID() + "余额减少数量大于剩余数量！");
+                //服务端输出信息.println_err("【错误】NPCConversationManager.java中的“减少赞助余额” 账号ID：" + this.c.getPlayer().getAccountID() + "余额减少数量大于剩余数量！");
                 return false;
             }
         } else {
-            服务端输出信息.println_err("【错误】NPCConversationManager.java中的“减少赞助余额”不能为负数！");
+            //服务端输出信息.println_err("【错误】NPCConversationManager.java中的“减少赞助余额”不能为负数！");
             return false;
         }
     }
@@ -11479,7 +11667,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             FileoutputUtil.logToFile("logs/Data/赞助记录.txt", text);
             return true;
         } else {
-            服务端输出信息.println_err("【错误】NPCConversationManager.java中的“增加累计赞助”不能为负数！");
+            //服务端输出信息.println_err("【错误】NPCConversationManager.java中的“增加累计赞助”不能为负数！");
             return false;
         }
     }
@@ -11980,7 +12168,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 ps1.close();
                 return true;
             } catch (SQLException var6) {
-                服务端输出信息.println_err("【错误】执行 单人强行出轨() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
+                //服务端输出信息.println_err("【错误】执行 单人强行出轨() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
                 return false;
             }
         }
@@ -12012,7 +12200,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps0.close();
             result = true;
         } catch (SQLException var8) {
-            服务端输出信息.println_err("【错误】执行 收徒() 命令失败，代码位置：NPCConversationManager，错误原因：" + var8);
+            //服务端输出信息.println_err("【错误】执行 收徒() 命令失败，代码位置：NPCConversationManager，错误原因：" + var8);
         }
 
         return result;
@@ -12046,7 +12234,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 return result;
             }
         } catch (SQLException var10) {
-            服务端输出信息.println_err("【错误】执行 拜师() 命令失败，代码位置：NPCConversationManager，错误原因：" + var10);
+            //服务端输出信息.println_err("【错误】执行 拜师() 命令失败，代码位置：NPCConversationManager，错误原因：" + var10);
             return result;
         }
     }
@@ -12060,13 +12248,16 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.setInt(1, chrId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
+                ps.close();
+                con.close();
                 return true;
             } else {
                 ps.close();
+                con.close();
                 return false;
             }
         } catch (SQLException var5) {
-            服务端输出信息.println_err("【错误】执行 是否为徒弟() 命令失败，代码位置：NPCConversationManager，错误原因：" + var5);
+            //服务端输出信息.println_err("【错误】执行 是否为徒弟() 命令失败，代码位置：NPCConversationManager，错误原因：" + var5);
             return false;
         }
     }
@@ -12107,10 +12298,19 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 ps.close();
                 result = true;
             }
+            int bili = LtMS.ConfigValuesMap.get("师徒增伤比例")!=null ? LtMS.ConfigValuesMap.get("师徒增伤比例") : 1;
+            Integer integer = Start.masterApprenticeGain.get(chrid);
+                if(integer != null) {
+                    bili = integer+integer;
+                 Start.masterApprenticeGain.put(chrid,bili);
+            }else{
+                    Start.masterApprenticeGain.put(chrid,bili);
+                }
 
             ps0.close();
+            con.close();
         } catch (SQLException var10) {
-            服务端输出信息.println_err("【错误】执行 出师() 命令失败，代码位置：NPCConversationManager，错误原因：" + var10);
+            //服务端输出信息.println_err("【错误】执行 出师() 命令失败，代码位置：NPCConversationManager，错误原因：" + var10);
         }
 
         return result;
@@ -12146,7 +12346,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps0.close();
         } catch (SQLException var9) {
-            服务端输出信息.println_err("【错误】执行 出师() 命令失败，代码位置：NPCConversationManager，错误原因：" + var9);
+            //服务端输出信息.println_err("【错误】执行 出师() 命令失败，代码位置：NPCConversationManager，错误原因：" + var9);
         }
 
         return result;
@@ -12178,7 +12378,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("【错误】执行 获得未毕业徒弟数量() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】执行 获得未毕业徒弟数量() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
         }
 
         return mount;
@@ -12210,7 +12410,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("【错误】执行 获得毕业徒弟数量() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】执行 获得毕业徒弟数量() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
         }
 
         return mount;
@@ -12237,7 +12437,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("【错误】执行 获得总徒弟数量() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】执行 获得总徒弟数量() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
         }
 
         return mount;
@@ -12282,7 +12482,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
             rs.close();
         } catch (SQLException var9) {
-            服务端输出信息.println_err("【错误】执行 获得所有师傅id() 命令失败，代码位置：NPCConversationManager，错误原因：" + var9);
+            //服务端输出信息.println_err("【错误】执行 获得所有师傅id() 命令失败，代码位置：NPCConversationManager，错误原因：" + var9);
         }
 
         if (((Map)countMap).size() > 0) {
@@ -12317,7 +12517,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("【错误】执行 获得所有徒弟id() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】执行 获得所有徒弟id() 命令失败，代码位置：NPCConversationManager，错误原因：" + var6);
         }
 
         return ids;
@@ -12335,7 +12535,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.executeUpdate();
             ps.close();
         } catch (Exception var7) {
-            服务端输出信息.println_err("changeNameWhereCharacterId出错，错误原因：" + var7);
+            //服务端输出信息.println_err("changeNameWhereCharacterId出错，错误原因：" + var7);
         }
 
     }
@@ -12363,7 +12563,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
             rs.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("查询曾用名出错，错误原因：" + var6);
+            //服务端输出信息.println_err("查询曾用名出错，错误原因：" + var6);
         }
 
         return names;
@@ -12388,7 +12588,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
             rs.close();
         } catch (SQLException var7) {
-            服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var7);
+            //服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var7);
         }
 
         return count;
@@ -12409,7 +12609,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
             rs.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var6);
+            //服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var6);
         }
 
         return chrid;
@@ -12430,7 +12630,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
             rs.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var6);
+            //服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var6);
         }
 
         return ap;
@@ -12473,7 +12673,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             return false;
         } catch (SQLException var9) {
-            服务端输出信息.println_err("给予Link 出错，错误原因：" + var9);
+            //服务端输出信息.println_err("给予Link 出错，错误原因：" + var9);
             return false;
         }
     }
@@ -12502,7 +12702,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
             rs.close();
         } catch (SQLException var6) {
-            服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var6);
+            //服务端输出信息.println_err("查询角色骑士团职业数量 出错，错误原因：" + var6);
         }
 
         return ap;
@@ -12620,11 +12820,11 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
 
     public void saveChrSkillMapToDB() {
-        服务端输出信息.println_out("【脚本命令】开始保存技能皮肤至数据库");
+        //服务端输出信息.println_out("【脚本命令】开始保存技能皮肤至数据库");
         long time = Calendar.getInstance().getTimeInMillis();
         int count = SkillSkin.saveChrSkillMapToDB();
         time = Calendar.getInstance().getTimeInMillis() - time;
-        服务端输出信息.println_out("【脚本命令】技能皮肤保存完毕，共保存" + count + "个玩家的技能皮肤，耗时 " + time + "毫秒。");
+        //服务端输出信息.println_out("【脚本命令】技能皮肤保存完毕，共保存" + count + "个玩家的技能皮肤，耗时 " + time + "毫秒。");
     }
 
     public boolean 批量添加抽奖物品(String type, int[] items, float[] weight, int[] announcement) {
@@ -12665,7 +12865,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                 }
             } catch (SQLException var19) {
-                服务端输出信息.println_err(var19);
+                //服务端输出信息.println_err(var19);
                 FileoutputUtil.outError("logs/资料库异常.txt", var19);
                 return false;
             }
@@ -13044,7 +13244,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                                         }
                                     }
                                 } catch (Exception var4) {
-                                    服务端输出信息.println_err("【错误】吸怪命令子线程错误，错误原因：" + var4);
+                                    //服务端输出信息.println_err("【错误】吸怪命令子线程错误，错误原因：" + var4);
                                 }
 
                             }
@@ -13210,11 +13410,11 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var29) {
-            服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var29);
+            //服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var29);
             var29.printStackTrace();
             return false;
         } catch (Exception var30) {
-            服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var30);
+            //服务端输出信息.println_err("【错误】sqlUpdate错误，原因：" + var30);
             var30.printStackTrace();
             return false;
         }
@@ -13329,9 +13529,10 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             ps.close();
             rs.close();
+            con.close();
             return ret;
         } catch (SQLException var11) {
-            服务端输出信息.println_err("【错误】sqlSelect错误，原因：" + var11);
+            //服务端输出信息.println_err("【错误】sqlSelect错误，原因：" + var11);
             var11.printStackTrace();
             return null;
         }
@@ -13448,7 +13649,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var36) {
-            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+            //服务端输出信息.println_err("判断兑换卡是否存在、出错");
         }
 
         return data;
@@ -13489,7 +13690,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var17) {
-            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+            //服务端输出信息.println_err("判断兑换卡是否存在、出错");
         }
 
         return item;
@@ -13530,7 +13731,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var17) {
-            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+            //服务端输出信息.println_err("判断兑换卡是否存在、出错");
         }
 
         return item;
@@ -13571,7 +13772,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
             }
         } catch (SQLException var17) {
-            服务端输出信息.println_err("判断兑换卡是否存在、出错");
+            //服务端输出信息.println_err("判断兑换卡是否存在、出错");
         }
 
         return item;
@@ -13621,8 +13822,9 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     }
 
     private static final MerchItemPackage loadItemFrom_Database(int charid, int accountid) {
+        Connection con  = null;
         try {
-            Connection con = DBConPool.getConnection();
+            con = DBConPool.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where characterid = ? OR accountid = ?");
             ps.setInt(1, charid);
             ps.setInt(2, accountid);
@@ -13630,6 +13832,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             if (!rs.next()) {
                 ps.close();
                 rs.close();
+                con.close();
                 return null;
             } else {
                 int packageid = rs.getInt("PackageId");
@@ -13651,13 +13854,46 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 
                     pack.setItems(iters);
                 }
-
+                con.close();
                 return pack;
             }
         } catch (SQLException var11) {
-            服务端输出信息.println_err(var11);
+            //服务端输出信息.println_err(var11);
+            if(con!=null){
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                }
+            }
             return null;
         }
     }
+    public void giveDarkMapList(int mapId,String eventStr,int channelId) {
+        Start.giveDarkMapList(mapId,eventStr,channelId);
+    }
+    public void deleteDarkMapList(String eventStr,int channelId) {
+        Start.deleteDarkMapList(eventStr,channelId);
+    }
 
+    public int giveDarkMap(int mapId, String eventStr, int channelId) {
+        if (!Start.darkMap.containsKey(channelId)) {
+            // 处理 channelId 不存在的情况
+            return 910000000; // 或者抛出异常，或者返回一个默认值
+        }
+        Map<String, List<Integer>> eventMap = Start.darkMap.get(channelId);
+        if (!eventMap.containsKey(eventStr)) {
+            // 处理 eventStr 不存在的情况
+            return 910000000; // 或者抛出异常，或者返回一个默认值
+        }
+        List<Integer> integers = eventMap.get(eventStr);
+        if (ListUtil.isNotEmpty(integers)) {
+            for (int i = 0; i < integers.size(); i++) {
+                if (integers.get(i) == mapId && (i + 1) < integers.size()) {
+                    return integers.get(i + 1);
+                }
+            }
+        }
+        // 如果没有找到合适的 mapId，返回默认值
+        return 910000000; // 或者抛出异常，或者返回一个明确的错误码
+    }
 }

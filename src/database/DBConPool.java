@@ -5,7 +5,7 @@ import java.io.Reader;
 import java.io.FileReader;
 
 import com.alibaba.druid.pool.DruidPooledConnection;
-import gui.服务端输出信息;
+
 import server.ServerProperties;
 
 import java.sql.Connection;
@@ -51,7 +51,7 @@ public class DBConPool
             try {
                 pstmt.close();
             } catch (SQLException var2) {
-                服务端输出信息.println_err(var2);
+                //服务端输出信息.println_err(var2);
             }
         }
 
@@ -108,7 +108,7 @@ public class DBConPool
         try {
             con = getInstance().getDataSource().getConnection();
         } catch (SQLException var1) {
-            服务端输出信息.println_err("【错误】初始化连接数据库失败，代码位置：DBConPool.InitConnections()，原因：" + var1);
+            //服务端输出信息.println_err("【错误】初始化连接数据库失败，代码位置：DBConPool.InitConnections()，原因：" + var1);
             return null;
         }
 
@@ -153,7 +153,7 @@ public class DBConPool
                 }
             }
         } catch (SQLException var9) {
-            服务端输出信息.println_err("【错误】关闭数据库连接失败，代码位置：DBConPool.close()，原因：" + var9);
+            //服务端输出信息.println_err("【错误】关闭数据库连接失败，代码位置：DBConPool.close()，原因：" + var9);
         }
 
     }
@@ -198,7 +198,7 @@ public class DBConPool
             try {
                 con = getInstance().getDataSource().getConnection();
             } catch (SQLException var5) {
-                服务端输出信息.println_err("【错误】getNewConnection失败，代码位置：DBConPool.getConnection()，原因：" + var5);
+                //服务端输出信息.println_err("【错误】getNewConnection失败，代码位置：DBConPool.getConnection()，原因：" + var5);
                 var5.printStackTrace();
                 con = null;
             }
@@ -210,7 +210,7 @@ public class DBConPool
             try {
                 con = getInstance().getDataSource().getConnection();
             } catch (SQLException var6) {
-                服务端输出信息.println_err("【错误】getNewConnection失败，代码位置：DBConPool.getConnection()，原因：" + var6);
+                //服务端输出信息.println_err("【错误】getNewConnection失败，代码位置：DBConPool.getConnection()，原因：" + var6);
                 var6.printStackTrace();
                 con = null;
             }
@@ -229,7 +229,7 @@ public class DBConPool
             try {
                 con = getInstance().getDataSource().getConnection();
             } catch (SQLException var8) {
-                服务端输出信息.println_err("【错误】连接数据库失败，代码位置：DBConPool.getConnection()，原因：" + var8);
+                //服务端输出信息.println_err("【错误】连接数据库失败，代码位置：DBConPool.getConnection()，原因：" + var8);
                 con = null;
             }
 
@@ -258,7 +258,7 @@ public class DBConPool
                         --i;
                     }
                 } catch (SQLException var9) {
-                    服务端输出信息.println_err("【错误】判断连接是否关闭失败，代码位置：DBConPool.getConnection()，原因：" + var9);
+                    //服务端输出信息.println_err("【错误】判断连接是否关闭失败，代码位置：DBConPool.getConnection()，原因：" + var9);
                 }
             }
 
@@ -269,7 +269,7 @@ public class DBConPool
                     con = getInstance().getDataSource().getConnection();
                     con_list.add(con);
                 } catch (SQLException var7) {
-                    服务端输出信息.println_err("【错误】连接数据库失败，代码位置：DBConPool.getConnection()，原因：" + var7);
+                    //服务端输出信息.println_err("【错误】连接数据库失败，代码位置：DBConPool.getConnection()，原因：" + var7);
                     con = null;
                 }
 

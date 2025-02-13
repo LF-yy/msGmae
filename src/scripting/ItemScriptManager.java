@@ -8,7 +8,7 @@ package scripting;
 import client.MapleClient;
 import client.inventory.IItem;
 import client.inventory.Item;
-import gui.服务端输出信息;
+
 import tools.FilePrinter;
 
 import javax.script.Invocable;
@@ -59,7 +59,7 @@ public class ItemScriptManager extends AbstractScriptManager {
                 iv.invokeFunction("action", new Object[]{1, 0, 0});
             }
         } catch (NoSuchMethodException | ScriptException var9) {
-            服务端输出信息.println_err("执行道具脚本失败 道具ID: (" + item.getItemId() + ")..NPCID: " + npc + ":" + var9);
+            //服务端输出信息.println_err("执行道具脚本失败 道具ID: (" + item.getItemId() + ")..NPCID: " + npc + ":" + var9);
             FilePrinter.printError("AbstractScriptManager.txt", var9);
             this.dispose(c);
             this.notice(c, item.getItemId());
@@ -84,7 +84,7 @@ public class ItemScriptManager extends AbstractScriptManager {
             } catch (NoSuchMethodException | ScriptException var9) {
                 int npcId = im.getNpc();
                 int itemId = im.getItemId();
-                服务端输出信息.println_err("执行NPC脚本出错 NPC ID : " + npcId + " 道具ID: " + itemId + " 错误信息: " + var9);
+                //服务端输出信息.println_err("执行NPC脚本出错 NPC ID : " + npcId + " 道具ID: " + itemId + " 错误信息: " + var9);
                 FilePrinter.printError("AbstractScriptManager.txt", var9);
                 this.dispose(c);
                 this.notice(c, itemId);

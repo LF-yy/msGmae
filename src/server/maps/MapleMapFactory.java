@@ -42,6 +42,11 @@ public class MapleMapFactory
     private static boolean changed;
     private static Map<Integer, ArrayList<Integer>> mobInMapId = new HashMap();
     private static Map<Integer, String> mapnames = new HashMap();
+
+    public Map<Integer, MapleMap> getMaps() {
+        return maps;
+    }
+
     private String getMapRealName(int mapid) {
         String mapRealName = (String)mapnames.get(mapid);
         return mapRealName;
@@ -135,8 +140,11 @@ public class MapleMapFactory
             }
         }
     }
-    public final MapleMap getMap(final int mapid, final boolean respawns, final boolean npcs, final boolean reactors) {
-        final Integer omapid = Integer.valueOf(mapid);
+    public final MapleMap getMap( int mapid, final boolean respawns, final boolean npcs, final boolean reactors) {
+        if (mapid == 98){
+            mapid = 910000000;
+        }
+        final Integer omapid = mapid;
         MapleMap map = (MapleMap)this.maps.get((Object)omapid);
         if (map == null) {
             this.lock.lock();
@@ -460,7 +468,7 @@ public class MapleMapFactory
         map.setRecoveryRate(MapleDataTool.getFloat(mapData.getChildByPath("info/recovery"), 1.0f));
         map.setFixedMob(MapleDataTool.getInt(mapData.getChildByPath("info/fixedMobCapacity"), 0));
         map.setConsumeItemCoolTime(MapleDataTool.getInt(mapData.getChildByPath("info/consumeItemCoolTime"), 0));
-        this.instanceMap.put(Integer.valueOf(instanceid), map);
+        this.instanceMap.put(instanceid, map);
         return map;
     }
     
@@ -469,11 +477,11 @@ public class MapleMapFactory
     }
     
     public boolean isMapLoaded(final int mapId) {
-        return this.maps.containsKey((Object)Integer.valueOf(mapId));
+        return this.maps.containsKey((Object) mapId);
     }
     
     public boolean isInstanceMapLoaded(final int instanceid) {
-        return this.instanceMap.containsKey((Object)Integer.valueOf(instanceid));
+        return this.instanceMap.containsKey((Object) instanceid);
     }
     
     public void clearLoadedMap() {
@@ -485,8 +493,7 @@ public class MapleMapFactory
     }
     
     public Collection<MapleMap> getAllMapThreadSafe() {
-        final Collection<MapleMap> ret = new ArrayList<MapleMap>((Collection<? extends MapleMap>) this.maps.values());
-        return ret;
+        return new ArrayList<MapleMap>((Collection<? extends MapleMap>) this.maps.values());
     }
     
     public Collection<MapleMap> getAllInstanceMaps() {

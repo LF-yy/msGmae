@@ -3,7 +3,7 @@ package client;
 import abc.套装系统完善版;
 import fumo.FumoSkill;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.world.guild.MapleGuild;
 import server.*;
 import tools.data.MaplePacketLittleEndianWriter;
@@ -49,6 +49,8 @@ public class PlayerStats implements Serializable
     public short maxhp;
     public short mp;
     public short maxmp;
+    public int hphd;
+    public int maxhphd;
     public transient short passive_sharpeye_percent; //爆击最大伤害倍率
     public transient short localmaxhp;//血量
     public transient short localmaxmp;//蓝量
@@ -217,7 +219,17 @@ public class PlayerStats implements Serializable
     public final boolean setHp(final int newhp) {
         return this.setHp(newhp, false);
     }
-    
+    public final synchronized void setHphd(final int newhp) {
+        int thp = newhp;
+        if (thp < 0) {
+            thp = 0;
+        }
+        if (thp > this.maxhphd) {
+            thp = this.maxhphd;
+        }
+        this.hphd = thp;
+    }
+
     public final boolean setHp(final int newhp, final boolean silent) {
         final short oldHp = this.hp;
         int thp = newhp;
@@ -257,6 +269,10 @@ public class PlayerStats implements Serializable
         this.maxhp = hp;
         this.recalcLocalStats();
     }
+    public void setMaxHphd(final int hp) {
+        this.maxhphd = hp;
+        this.recalcLocalStats();
+    }
     
     public void setMaxMp(final short mp) {
         this.maxmp = mp;
@@ -265,12 +281,17 @@ public class PlayerStats implements Serializable
     
     public final short getHp() {
         return this.hp;
+    }    public final int getHphd() {
+        return this.hphd;
     }
     
     public final short getMaxHp() {
         return this.maxhp;
     }
-    
+    public final int getMaxHphd() {
+        return this.maxhphd;
+    }
+
     public final short getMp() {
         return this.mp;
     }
@@ -959,7 +980,14 @@ public class PlayerStats implements Serializable
                                     chra.dropMessage(5, "【潜能系统】：狩猎经验增加" + pGainExpPercent + "%。");
                                 }
                             }
-
+                            //梯级经验设置
+                            if (chra.getLevel() >= ServerConfig.BeiShu1Minlevel && chra.getLevel() <= ServerConfig.BeiShu1Maxlevel) {
+                                this.expMod *= ServerConfig.BeiShu1;
+                            }else if (chra.getLevel() > ServerConfig.BeiShu2Minlevel && chra.getLevel() <= ServerConfig.BeiShu2Maxlevel) {
+                                this.expMod *= ServerConfig.BeiShu2;
+                            }else if (chra.getLevel() > ServerConfig.BeiShu3Minlevel && chra.getLevel() <= ServerConfig.BeiShu3Maxlevel) {
+                                this.expMod *= ServerConfig.BeiShu3;
+                            }
                             int pGainMesoPercent = chra.getPotential(40);
                             if (pGainMesoPercent > 0 && first_login && (Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
                                 chra.dropMessage(5, "【潜能系统】：狩猎金币掉落率增加" + pGainMesoPercent + "%。");
@@ -1606,7 +1634,7 @@ public class PlayerStats implements Serializable
                                         this.speedMod = 1.8F;
                                         break;
                                     default:
-                                        服务端输出信息.println_err("Unhandeled monster riding level, Speedmod = " + this.speedMod + "");
+                                        //服务端输出信息.println_err("Unhandeled monster riding level, Speedmod = " + this.speedMod + "");
                                 }
                             }
 

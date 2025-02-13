@@ -10,7 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import tools.FileoutputUtil;
 import database.DBConPool;
 import client.inventory.MaplePet.PetFlag;
@@ -297,7 +297,7 @@ public class MapleItemInformationProvider
         return itemPairs;
     }
     public static boolean loadTimeLimitListFromDB() {
-        服务端输出信息.println_out("加载自定义限时道具列表...");
+        //服务端输出信息.println_out("加载自定义限时道具列表...");
         timeLimitList.clear();
 
         try {
@@ -314,7 +314,7 @@ public class MapleItemInformationProvider
 
                 ps.close();
                 rs.close();
-                服务端输出信息.println_out("加载成功");
+                //服务端输出信息.println_out("加载成功");
                 boolean var4 = true;
                 return var4;
             } catch (Throwable var14) {
@@ -335,7 +335,7 @@ public class MapleItemInformationProvider
 
             }
         } catch (SQLException var16) {
-            服务端输出信息.println_err("loadTimeLimitListFromDB错误，原因：" + var16);
+            //服务端输出信息.println_err("loadTimeLimitListFromDB错误，原因：" + var16);
             var16.printStackTrace();
             return false;
         }
