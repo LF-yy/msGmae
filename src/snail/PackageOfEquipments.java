@@ -9,7 +9,7 @@ import client.MapleCharacter;
 import client.inventory.IItem;
 import client.inventory.MapleInventoryType;
 import database.DBConPool;
-import gui.服务端输出信息;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,7 +37,7 @@ public class PackageOfEquipments {
             Throwable var2 = null;
 
             try {
-                服务端输出信息.println_out("【套装系统】开始从数据库读取套装信息...");
+                //服务端输出信息.println_out("【套装系统】开始从数据库读取套装信息...");
                 PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_package_equipments");
                 ResultSet rs = ps.executeQuery();
                 int count = 0;
@@ -50,7 +50,7 @@ public class PackageOfEquipments {
                             if (!rs.next()) {
                                 packageList.clear();
                                 packageList = packageList0;
-                                服务端输出信息.println_out("【套装系统】读取完毕，共读取" + count + "组套装。");
+                                //服务端输出信息.println_out("【套装系统】读取完毕，共读取" + count + "组套装。");
                                 return;
                             }
 
@@ -92,7 +92,7 @@ public class PackageOfEquipments {
 
             }
         } catch (SQLException var24) {
-            服务端输出信息.println_err("【错误】：loadFromDB错误，错误原因：" + var24);
+            //服务端输出信息.println_err("【错误】：loadFromDB错误，错误原因：" + var24);
             var24.printStackTrace();
         }
     }

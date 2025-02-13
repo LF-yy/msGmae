@@ -6,7 +6,7 @@
 package snail;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,14 +36,14 @@ public class TimeLogCenter {
     }
 
     public void saveAllLogs() {
-        服务端输出信息.println_out("【开始保存Log】...");
+        //服务端输出信息.println_out("【开始保存Log】...");
         this.saveBossLogToDB();
         this.saveBossLogaToDB();
         this.saveOneTimeLogToDB();
         this.saveOneTimeLogaToDB();
         this.saveWeekLogToDB();
         this.saveWeekLogaToDB();
-        服务端输出信息.println_out("【Log保存成功】");
+        //服务端输出信息.println_out("【Log保存成功】");
     }
 
     public void loadBossLogFromDB() {
@@ -101,7 +101,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var22) {
-            服务端输出信息.println_err("【错误】loadBossLogFromDB错误，错误原因：" + var22);
+            //服务端输出信息.println_err("【错误】loadBossLogFromDB错误，错误原因：" + var22);
             var22.printStackTrace();
         }
 
@@ -155,7 +155,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveBossLogToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveBossLogToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -245,7 +245,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setBossLog(final int chrId, final String bossId, int count)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setBossLog(final int chrId, final String bossId, int count)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -276,7 +276,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogAll(final int chrId, final String bossId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogAll(final int chrId, final String bossId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -284,7 +284,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -312,7 +312,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogAll(final String bossId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogAll(final String bossId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -320,7 +320,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -348,7 +348,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogAll(final int chrId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogAll(final int chrId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -356,7 +356,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -375,7 +375,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -383,7 +383,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteBossLogAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -444,7 +444,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var22) {
-            服务端输出信息.println_err("【错误】loadBossLogaFromDB错误，错误原因：" + var22);
+            //服务端输出信息.println_err("【错误】loadBossLogaFromDB错误，错误原因：" + var22);
             var22.printStackTrace();
         }
 
@@ -497,7 +497,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveBossLogaToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveBossLogaToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -588,7 +588,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setBossLoga(final int accountId, final String bossId, int count)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setBossLoga(final int accountId, final String bossId, int count)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -619,7 +619,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogaAll(final int accountId, final String bossId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogaAll(final int accountId, final String bossId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -627,7 +627,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -655,7 +655,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogaAll(String bossId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogaAll(String bossId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -663,7 +663,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -691,7 +691,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogaAll(final int accountId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogaAll(final int accountId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -699,7 +699,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -718,7 +718,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteBossLogaAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteBossLogaAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -726,7 +726,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteBossLogaAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -787,7 +787,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var22) {
-            服务端输出信息.println_err("【错误】loadOneTimeLogFromDB错误，错误原因：" + var22);
+            //服务端输出信息.println_err("【错误】loadOneTimeLogFromDB错误，错误原因：" + var22);
             var22.printStackTrace();
         }
 
@@ -840,7 +840,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveOneTimeLogToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveOneTimeLogToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -927,7 +927,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setOneTimeLog(final int chrId, final String logName, final int count)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setOneTimeLog(final int chrId, final String logName, final int count)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -958,7 +958,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogAll(final int chrId, final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogAll(final int chrId, final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -966,7 +966,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -994,7 +994,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogAll(final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogAll(final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1002,7 +1002,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -1030,7 +1030,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogAll(final int chrId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogAll(final int chrId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1038,7 +1038,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -1057,7 +1057,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1065,7 +1065,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -1127,7 +1127,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var22) {
-            服务端输出信息.println_err("【错误】loadOneTimeLogaFromDB错误，错误原因：" + var22);
+            //服务端输出信息.println_err("【错误】loadOneTimeLogaFromDB错误，错误原因：" + var22);
             var22.printStackTrace();
         }
 
@@ -1180,7 +1180,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveOneTimeLogaToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveOneTimeLogaToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -1275,7 +1275,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setOneTimeLoga(final int accountId, final String logName, final int count)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setOneTimeLoga(final int accountId, final String logName, final int count)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -1306,7 +1306,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll(final int accountId, final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll(final int accountId, final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1314,7 +1314,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -1342,7 +1342,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll(final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll(final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1350,7 +1350,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -1378,7 +1378,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll(final int accountId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll(final int accountId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1386,7 +1386,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -1405,7 +1405,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteOneTimeLogaAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1413,7 +1413,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteOneTimeLogaAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -1476,7 +1476,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var23) {
-            服务端输出信息.println_err("【错误】loadWeekLogFromDB错误，错误原因：" + var23);
+            //服务端输出信息.println_err("【错误】loadWeekLogFromDB错误，错误原因：" + var23);
             var23.printStackTrace();
         }
 
@@ -1529,7 +1529,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveWeekLogToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveWeekLogToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -1629,7 +1629,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setWeekLog(final int chrId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setWeekLog(final int chrId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -1660,7 +1660,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogAll(final int chrId, final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogAll(final int chrId, final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1668,7 +1668,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -1696,7 +1696,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogAll(final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogAll(final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1704,7 +1704,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -1732,7 +1732,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogAll(final int chrId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogAll(final int chrId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1740,7 +1740,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -1759,7 +1759,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -1767,7 +1767,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteWeekLogAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -1830,7 +1830,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var23) {
-            服务端输出信息.println_err("【错误】loadWeekLogaFromDB错误，错误原因：" + var23);
+            //服务端输出信息.println_err("【错误】loadWeekLogaFromDB错误，错误原因：" + var23);
             var23.printStackTrace();
         }
 
@@ -1884,7 +1884,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveWeekLogaToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveWeekLogaToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -1984,7 +1984,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setWeekLoga(final int accountId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setWeekLoga(final int accountId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -2015,7 +2015,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogaAll(final int accountId, final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogaAll(final int accountId, final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2023,7 +2023,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -2051,7 +2051,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogaAll(final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogaAll(final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2059,7 +2059,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -2087,7 +2087,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogaAll(final int accountId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogaAll(final int accountId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2095,7 +2095,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -2114,7 +2114,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteWeekLogaAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteWeekLogaAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2122,7 +2122,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteWeekLogaAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -2185,7 +2185,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var23) {
-            服务端输出信息.println_err("【错误】loadMonthLogFromDB错误，错误原因：" + var23);
+            //服务端输出信息.println_err("【错误】loadMonthLogFromDB错误，错误原因：" + var23);
             var23.printStackTrace();
         }
 
@@ -2238,7 +2238,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveMonthLogToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveMonthLogToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -2338,7 +2338,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setMonthLog(final int chrId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setMonthLog(final int chrId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -2369,7 +2369,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogAll(final int chrId, final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogAll(final int chrId, final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2377,7 +2377,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -2405,7 +2405,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogAll(final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogAll(final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2413,7 +2413,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -2441,7 +2441,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogAll(final int chrId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogAll(final int chrId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2449,7 +2449,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -2468,7 +2468,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2476,7 +2476,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteMonthLogAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }
@@ -2539,7 +2539,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var23) {
-            服务端输出信息.println_err("【错误】loadMonthLogaFromDB错误，错误原因：" + var23);
+            //服务端输出信息.println_err("【错误】loadMonthLogaFromDB错误，错误原因：" + var23);
             var23.printStackTrace();
         }
 
@@ -2593,7 +2593,7 @@ public class TimeLogCenter {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】saveMonthLogaToDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】saveMonthLogaToDB错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 
@@ -2693,7 +2693,7 @@ public class TimeLogCenter {
 
                     }
                 } catch (Exception var15) {
-                    服务端输出信息.println_err("【错误】：setMonthLoga(final int accountId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
+                    //服务端输出信息.println_err("【错误】：setMonthLoga(final int accountId, final String logName, final int count, final Date date)写数据库错误，原因：" + var15);
                     var15.printStackTrace();
                 }
 
@@ -2724,7 +2724,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogaAll(final int accountId, final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogaAll(final int accountId, final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2732,7 +2732,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -2760,7 +2760,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogaAll(final String logName)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogaAll(final String logName)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2768,7 +2768,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -2796,7 +2796,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogaAll(final int accountId)写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogaAll(final int accountId)写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2804,7 +2804,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var5) {
-            服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var5);
+            //服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var5);
             var5.printStackTrace();
             return false;
         }
@@ -2823,7 +2823,7 @@ public class TimeLogCenter {
                         ps.executeUpdate();
                         ps.close();
                     } catch (Exception var3) {
-                        服务端输出信息.println_err("【错误】：deleteMonthLogaAll写数据库错误，原因：" + var3);
+                        //服务端输出信息.println_err("【错误】：deleteMonthLogaAll写数据库错误，原因：" + var3);
                         var3.printStackTrace();
                     }
 
@@ -2831,7 +2831,7 @@ public class TimeLogCenter {
             });
             return true;
         } catch (Exception var2) {
-            服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var2);
+            //服务端输出信息.println_err("【错误】deleteMonthLogaAll错误，原因：" + var2);
             var2.printStackTrace();
             return false;
         }

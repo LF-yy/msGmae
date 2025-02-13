@@ -40,5 +40,7 @@
     <orderEntry type="library" name="jedis-2.9.0" level="project" />
     <orderEntry type="library" name="jedis-3.8.0" level="project" />
     <orderEntry type="library" name="commons-pool2-2.4.2" level="project" />
+    <orderEntry type="library" name="bms.server" level="project" />
+    <orderEntry type="library" name="bms.server (2)" level="project" />
   </component>
 </module>

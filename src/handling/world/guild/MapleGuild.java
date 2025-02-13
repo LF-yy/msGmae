@@ -10,7 +10,7 @@ import client.MapleCharacterUtil;
 import client.MapleClient;
 import database.DBConPool;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.world.World.Alliance;
 import handling.world.World.Broadcast;
 import handling.world.World.Guild;
@@ -19,14 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -120,7 +113,7 @@ public class MapleGuild implements Serializable {
                     rs.close();
                     ps.close();
                     if (!leaderCheck) {
-                        服务端输出信息.println_err("会长[" + this.leader + "]没有在公会ID为" + this.id + "的公会中，系统自动解散这个公会。");
+                        //服务端输出信息.println_err("会长[" + this.leader + "]没有在公会ID为" + this.id + "的公会中，系统自动解散这个公会。");
                         this.writeToDB(true);
                         this.proper = false;
                         return;
@@ -169,7 +162,7 @@ public class MapleGuild implements Serializable {
                     return;
                 }
 
-                服务端输出信息.println_err("公会ID：" + this.id + " 没有成员，系统自动解散公会。");
+                //服务端输出信息.println_err("公会ID：" + this.id + " 没有成员，系统自动解散公会。");
                 rs.close();
                 ps.close();
                 this.writeToDB(true);
@@ -193,7 +186,7 @@ public class MapleGuild implements Serializable {
             }
 
         } catch (SQLException var41) {
-            服务端输出信息.println_err("unable to read guild information from sql");
+            //服务端输出信息.println_err("unable to read guild information from sql");
             FileoutputUtil.outError("logs/资料库异常.txt", var41);
         }
     }
@@ -276,7 +269,7 @@ public class MapleGuild implements Serializable {
 
             }
         } catch (SQLException var60) {
-            服务端输出信息.println_err("unable to read guild information from sql");
+            //服务端输出信息.println_err("unable to read guild information from sql");
             FileoutputUtil.outError("logs/资料库异常.txt", var60);
         }
 
@@ -446,7 +439,7 @@ public class MapleGuild implements Serializable {
 
             }
         } catch (SQLException var67) {
-            服务端输出信息.println_err("Error saving guild to SQL");
+            //服务端输出信息.println_err("Error saving guild to SQL");
             FileoutputUtil.outError("logs/资料库异常.txt", var67);
         }
 
@@ -493,7 +486,7 @@ public class MapleGuild implements Serializable {
 
                 }
             } catch (SQLException var36) {
-                服务端输出信息.println_err("【错误】 家族 setLeader 错误1，原因:" + var36);
+                //服务端输出信息.println_err("【错误】 家族 setLeader 错误1，原因:" + var36);
                 var36.printStackTrace();
             }
         }
@@ -532,7 +525,7 @@ public class MapleGuild implements Serializable {
 
                 }
             } catch (SQLException var34) {
-                服务端输出信息.println_err("【错误】 家族 setLeader 错误2，原因:" + var34);
+                //服务端输出信息.println_err("【错误】 家族 setLeader 错误2，原因:" + var34);
                 var34.printStackTrace();
             }
         }
@@ -784,7 +777,7 @@ public class MapleGuild implements Serializable {
 
             }
         } catch (SQLException var34) {
-            服务端输出信息.println_err("Saving allianceid ERROR" + var34);
+            //服务端输出信息.println_err("Saving allianceid ERROR" + var34);
             FileoutputUtil.outError("logs/资料库异常.txt", var34);
         }
 
@@ -846,7 +839,7 @@ public class MapleGuild implements Serializable {
 
                 return var7;
             } catch (SQLException var20) {
-                服务端输出信息.println_err("SQL THROW");
+                //服务端输出信息.println_err("SQL THROW");
                 FileoutputUtil.outError("logs/资料库异常.txt", var20);
                 return 0;
             }
@@ -866,7 +859,7 @@ public class MapleGuild implements Serializable {
                 return var9;
             }
 
-            if ((Integer)LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关") > 0 && TimeLogCenter.getInstance().getWeekLog(mgc.getId(), "退出家族记录") > 0) {
+            if (Objects.nonNull(LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关")) && LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关") > 0 && TimeLogCenter.getInstance().getWeekLog(mgc.getId(), "退出家族记录") > 0) {
                 MapleCharacter chr = MapleCharacter.getOnlineCharacterById(mgc.getId());
                 if (chr != null) {
                     chr.dropMessage(5, "需要等到下周一以后才可以再次加入家族！");
@@ -918,7 +911,7 @@ public class MapleGuild implements Serializable {
                     }
 
                     TimeLogCenter.getInstance().setWeekLog(mgc.getId(), "退出家族记录");
-                    if ((Integer)LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关") > 0) {
+                    if (Objects.nonNull(LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关")) && (Integer)LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关") > 0) {
                         MapleCharacter chr = MapleCharacter.getOnlineCharacterById(mgc.getId());
                         if (chr != null) {
                             chr.dropMessage(5, "需要等到下周一以后才可以再次加入家族！");
@@ -953,7 +946,7 @@ public class MapleGuild implements Serializable {
 
                     TimeLogCenter.getInstance().setWeekLog(mgc.getId(), "退出家族记录");
                     if (mgc.isOnline()) {
-                        if ((Integer)LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关") > 0) {
+                        if ( Objects.nonNull(LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关")) && (Integer)LtMS.ConfigValuesMap.get("退出家族需等待周一才能加入家族开关") > 0) {
                             MapleCharacter chr = MapleCharacter.getOnlineCharacterById(mgc.getId());
                             if (chr != null) {
                                 chr.dropMessage(5, "需要等到下周一以后才可以再次加入家族！");
@@ -1011,7 +1004,7 @@ public class MapleGuild implements Serializable {
             MapleGuildCharacter mgc;
             do {
                 if (!var3.hasNext()) {
-                    服务端输出信息.println_err("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
+                    //服务端输出信息.println_err("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
                     return;
                 }
 
@@ -1035,7 +1028,7 @@ public class MapleGuild implements Serializable {
         MapleGuildCharacter mgc;
         do {
             if (!var3.hasNext()) {
-                服务端输出信息.println_err("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
+                //服务端输出信息.println_err("INFO: unable to find the correct id for changeRank({" + cid + "}, {" + newRank + "})");
                 return;
             }
 
@@ -1155,7 +1148,7 @@ public class MapleGuild implements Serializable {
 
             }
         } catch (SQLException var37) {
-            服务端输出信息.println_err("Saving guild logo / BG colo ERROR");
+            //服务端输出信息.println_err("Saving guild logo / BG colo ERROR");
             FileoutputUtil.outError("logs/资料库异常.txt", var37);
         }
 
@@ -1228,7 +1221,7 @@ public class MapleGuild implements Serializable {
 
                 }
             } catch (SQLException var33) {
-                服务端输出信息.println_err("Saving guild capacity ERROR");
+                //服务端输出信息.println_err("Saving guild capacity ERROR");
                 FileoutputUtil.outError("logs/资料库异常.txt", var33);
             }
 
@@ -1381,7 +1374,7 @@ public class MapleGuild implements Serializable {
 
             }
         } catch (SQLException var17) {
-            服务端输出信息.println_err("SQLException: " + var17.getLocalizedMessage());
+            //服务端输出信息.println_err("SQLException: " + var17.getLocalizedMessage());
             FileoutputUtil.outError("logs/资料库异常.txt", var17);
         }
 
@@ -1421,7 +1414,7 @@ public class MapleGuild implements Serializable {
 
             rs.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("战斗力排行出错！,原因：" + var17);
+            //服务端输出信息.println_err("战斗力排行出错！,原因：" + var17);
         }
 
     }
@@ -1482,7 +1475,7 @@ public class MapleGuild implements Serializable {
                 players.add(player);
             }
         } catch (SQLException var10) {
-            服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
+            //服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
         }
 
         按战斗力排序(players);
@@ -1545,7 +1538,7 @@ public class MapleGuild implements Serializable {
                 players.add(player);
             }
         } catch (SQLException var10) {
-            服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
+            //服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
         }
 
         按力量排序(players);
@@ -1608,7 +1601,7 @@ public class MapleGuild implements Serializable {
                 players.add(player);
             }
         } catch (SQLException var10) {
-            服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
+            //服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
         }
 
         按敏捷排序(players);
@@ -1671,7 +1664,7 @@ public class MapleGuild implements Serializable {
                 players.add(player);
             }
         } catch (SQLException var10) {
-            服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
+            //服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
         }
 
         按智力排序(players);
@@ -1734,7 +1727,7 @@ public class MapleGuild implements Serializable {
                 players.add(player);
             }
         } catch (SQLException var10) {
-            服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
+            //服务端输出信息.println_err("战斗力排行_snail出错！,原因：" + var10);
         }
 
         按运气排序(players);
@@ -1884,7 +1877,7 @@ public class MapleGuild implements Serializable {
 
             rs.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("总在线时间排行出错！");
+            //服务端输出信息.println_err("总在线时间排行出错！");
         }
 
     }
@@ -1919,7 +1912,7 @@ public class MapleGuild implements Serializable {
 
             rs.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("人气排行出错！");
+            //服务端输出信息.println_err("人气排行出错！");
         }
 
     }
@@ -1954,7 +1947,7 @@ public class MapleGuild implements Serializable {
 
             rs.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("人气排行出错！");
+            //服务端输出信息.println_err("人气排行出错！");
         }
 
     }
@@ -1989,7 +1982,7 @@ public class MapleGuild implements Serializable {
 
             rs.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("豆豆排行出错！");
+            //服务端输出信息.println_err("豆豆排行出错！");
         }
 
     }
@@ -2029,7 +2022,7 @@ public class MapleGuild implements Serializable {
 
             return find;
         } catch (SQLException var16) {
-            服务端输出信息.println_err("【错误】loadGuildSkillsFromDB错误，错误原因：" + var16);
+            //服务端输出信息.println_err("【错误】loadGuildSkillsFromDB错误，错误原因：" + var16);
             var16.printStackTrace();
             return false;
         }
@@ -2084,7 +2077,7 @@ public class MapleGuild implements Serializable {
 
             return "无";
         } catch (SQLException var20) {
-            服务端输出信息.println_err("【错误】loadGuildSkillsFromDB错误，错误原因：" + var20);
+            //服务端输出信息.println_err("【错误】loadGuildSkillsFromDB错误，错误原因：" + var20);
             var20.printStackTrace();
             return "无";
         }
@@ -2191,7 +2184,7 @@ public class MapleGuild implements Serializable {
 
             return var9;
         } catch (SQLException var22) {
-            服务端输出信息.println_err("【错误】addGuildSkill错误，错误原因：" + var22);
+            //服务端输出信息.println_err("【错误】addGuildSkill错误，错误原因：" + var22);
             var22.printStackTrace();
             return false;
         }
@@ -2211,7 +2204,7 @@ public class MapleGuild implements Serializable {
 
             return find;
         } catch (Exception var4) {
-            服务端输出信息.println_err("【错误】removeGuildSkill错误，错误原因：" + var4);
+            //服务端输出信息.println_err("【错误】removeGuildSkill错误，错误原因：" + var4);
             var4.printStackTrace();
             return false;
         }
@@ -2221,69 +2214,117 @@ public class MapleGuild implements Serializable {
         this.guildSkills.clear();
     }
 
+//    public boolean saveGuildSkillsToDB() {
+//        try {
+//            Connection con = DBConPool.getConnection();
+//            Throwable var2 = null;
+//
+//            boolean var18;
+//            try {
+//                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_guild_skills WHERE guildid = ? AND skilltype = ?");
+//
+//                ResultSet rs;
+//                for(Iterator var4 = this.guildSkills.iterator(); var4.hasNext(); rs.close()) {
+//                    GuildSkill skill = (GuildSkill)var4.next();
+//                    ps = con.prepareStatement("SELECT * FROM snail_guild_skills WHERE guildid = ? AND skilltype = ?");
+//                    ps.setInt(1, this.id);
+//                    ps.setInt(2, skill.type);
+//                    rs = ps.executeQuery();
+//                    if (rs.next()) {
+//                        ps = con.prepareStatement("UPDATE snail_guild_skills SET skilllevel = ?, skillval = ? WHERE guildid = ? AND skilltype = ?");
+//                        ps.setInt(1, skill.level);
+//                        ps.setInt(2, skill.val);
+//                        ps.setInt(3, skill.guildId);
+//                        ps.setInt(4, skill.type);
+//                        ps.executeUpdate();
+//                    } else {
+//                        ps = con.prepareStatement("INSERT INTO snail_guild_skills (guildid,skilltype,skilllevel, skillval) VALUES ( ?, ?, ?, ?)");
+//                        ps.setInt(1, skill.guildId);
+//                        ps.setInt(2, skill.type);
+//                        ps.setInt(3, skill.level);
+//                        ps.setInt(4, skill.val);
+//                        ps.executeUpdate();
+//                    }
+//                }
+//
+//                if (this.guildSkills.isEmpty()) {
+//                    ps = con.prepareStatement("DELETE FROM snail_guild_skills WHERE guildid = ?");
+//                    ps.setInt(1, this.id);
+//                    ps.executeUpdate();
+//                }
+//
+//                ps.close();
+//                var18 = true;
+//            } catch (Throwable var15) {
+//                var2 = var15;
+//                throw var15;
+//            } finally {
+//                if (con != null) {
+//                    if (var2 != null) {
+//                        try {
+//                            con.close();
+//                        } catch (Throwable var14) {
+//                            var2.addSuppressed(var14);
+//                        }
+//                    } else {
+//                        con.close();
+//                    }
+//                }
+//
+//            }
+//
+//            return var18;
+//        } catch (SQLException var17) {
+//            //服务端输出信息.println_err("【错误】saveGuildSkillsToDB错误，错误原因：" + var17);
+//            var17.printStackTrace();
+//            return false;
+//        }
+//    }
+private static final String SELECT_SKILL_SQL = "SELECT * FROM snail_guild_skills WHERE guildid = ? AND skilltype = ?";
+    private static final String UPDATE_SKILL_SQL = "UPDATE snail_guild_skills SET skilllevel = ?, skillval = ? WHERE guildid = ? AND skilltype = ?";
+    private static final String INSERT_SKILL_SQL = "INSERT INTO snail_guild_skills (guildid, skilltype, skilllevel, skillval) VALUES (?, ?, ?, ?)";
+    private static final String DELETE_SKILLS_SQL = "DELETE FROM snail_guild_skills WHERE guildid = ?";
+
     public boolean saveGuildSkillsToDB() {
-        try {
-            Connection con = DBConPool.getConnection();
-            Throwable var2 = null;
-
-            boolean var18;
-            try {
-                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_guild_skills WHERE guildid = ? AND skilltype = ?");
-
-                ResultSet rs;
-                for(Iterator var4 = this.guildSkills.iterator(); var4.hasNext(); rs.close()) {
-                    GuildSkill skill = (GuildSkill)var4.next();
-                    ps = con.prepareStatement("SELECT * FROM snail_guild_skills WHERE guildid = ? AND skilltype = ?");
-                    ps.setInt(1, this.id);
-                    ps.setInt(2, skill.type);
-                    rs = ps.executeQuery();
-                    if (rs.next()) {
-                        ps = con.prepareStatement("UPDATE snail_guild_skills SET skilllevel = ?, skillval = ? WHERE guildid = ? AND skilltype = ?");
-                        ps.setInt(1, skill.level);
-                        ps.setInt(2, skill.val);
-                        ps.setInt(3, skill.guildId);
-                        ps.setInt(4, skill.type);
-                        ps.executeUpdate();
-                    } else {
-                        ps = con.prepareStatement("INSERT INTO snail_guild_skills (guildid,skilltype,skilllevel, skillval) VALUES ( ?, ?, ?, ?)");
-                        ps.setInt(1, skill.guildId);
-                        ps.setInt(2, skill.type);
-                        ps.setInt(3, skill.level);
-                        ps.setInt(4, skill.val);
-                        ps.executeUpdate();
-                    }
-                }
-
-                if (this.guildSkills.isEmpty()) {
-                    ps = con.prepareStatement("DELETE FROM snail_guild_skills WHERE guildid = ?");
+        try (Connection con = DBConPool.getConnection()) {
+            if (this.guildSkills.isEmpty()) {
+                try (PreparedStatement ps = con.prepareStatement(DELETE_SKILLS_SQL)) {
                     ps.setInt(1, this.id);
                     ps.executeUpdate();
                 }
-
-                ps.close();
-                var18 = true;
-            } catch (Throwable var15) {
-                var2 = var15;
-                throw var15;
-            } finally {
-                if (con != null) {
-                    if (var2 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var14) {
-                            var2.addSuppressed(var14);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
-
+                return true;
             }
 
-            return var18;
-        } catch (SQLException var17) {
-            服务端输出信息.println_err("【错误】saveGuildSkillsToDB错误，错误原因：" + var17);
-            var17.printStackTrace();
+            for (Iterator<GuildSkill> iterator = this.guildSkills.iterator(); iterator.hasNext(); ) {
+                GuildSkill skill = iterator.next();
+                try (PreparedStatement selectPs = con.prepareStatement(SELECT_SKILL_SQL)) {
+                    selectPs.setInt(1, this.id);
+                    selectPs.setInt(2, skill.type);
+                    try (ResultSet rs = selectPs.executeQuery()) {
+                        if (rs.next()) {
+                            try (PreparedStatement updatePs = con.prepareStatement(UPDATE_SKILL_SQL)) {
+                                updatePs.setInt(1, skill.level);
+                                updatePs.setInt(2, skill.val);
+                                updatePs.setInt(3, skill.guildId);
+                                updatePs.setInt(4, skill.type);
+                                updatePs.executeUpdate();
+                            }
+                        } else {
+                            try (PreparedStatement insertPs = con.prepareStatement(INSERT_SKILL_SQL)) {
+                                insertPs.setInt(1, skill.guildId);
+                                insertPs.setInt(2, skill.type);
+                                insertPs.setInt(3, skill.level);
+                                insertPs.setInt(4, skill.val);
+                                insertPs.executeUpdate();
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (SQLException e) {
+            // 使用更完善的日志记录机制
+            //服务端输出信息.println_err("【错误】saveGuildSkillsToDB错误，错误原因：" + e);
             return false;
         }
     }
@@ -2411,8 +2452,8 @@ public class MapleGuild implements Serializable {
             if ((Integer) LtMS.ConfigValuesMap.get("战斗力计算包含潜能开关") > 0) {
                 this.solvePotentials();
             }
-
             this.force = (long)(this.level * 15 + this.str + this.dex + this.luk + this._int) + this.chr_attack / 2L;
+
             if (this.percentForce > 0) {
                 this.force += (long)this.percentForce * this.force / 100L;
             }

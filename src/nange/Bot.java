@@ -27,11 +27,15 @@ public class Bot {
      * @param content
      */
     public static void sendGroupMessage(String content) {
-        if (!enable) return;
-        executorService.execute(() -> {
-            // 因为部分用户没有 JSON 库, 我这里实现了一个手动转义
-            sendMessage(baseUrl + "/bot/api/sendGroup", String.format("{\"content\": \"%s\", \"type\": \"string\"}", escape(content)));
-        });
+        try {
+            if (!enable) return;
+            executorService.execute(() -> {
+                // 因为部分用户没有 JSON 库, 我这里实现了一个手动转义
+                sendMessage(baseUrl + "/bot/api/sendGroup", String.format("{\"content\": \"%s\", \"type\": \"string\"}", escape(content)));
+            });
+        } catch (Exception e) {
+
+        }
     }
 
     private static void sendMessage(String url, String data) {

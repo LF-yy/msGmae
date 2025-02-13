@@ -6,7 +6,7 @@ import java.util.*;
 import abc.Game;
 import constants.ServerConstants;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.channel.handler.BeanGame;
 import handling.channel.handler.FamilyHandler;
 import handling.channel.handler.HiredMerchantHandler;
@@ -198,7 +198,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 try {
                     handlePacket(recv, slea, c, this.channel == -10);
                 }catch (Exception e) {
-                    ////e.printStackTrace();
+                    //e.printStackTrace();
                     if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
                         c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
                     }
@@ -241,9 +241,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
      * @param cs
      * @throws Exception
      */
-    public static void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea, final MapleClient c, final boolean cs) throws Exception {
+    public static void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea,  MapleClient c, final boolean cs) throws Exception {
         if(LtMS.ConfigValuesMap.get("开启封包调试") == 1 && header != RecvPacketOpcode.NPC_ACTION){
-            System.out.println("封包编码:"+ header );
+            System.out.println("封包编码:"+ header+",账号:"+c.getAccountName()+",角色:"+(c.getPlayer()!=null? c.getPlayer().getName() : "无角色") );
         }
         switch (header) {
             case PONG: {
@@ -251,12 +251,12 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             case HELLO_LOGIN: {
                 if (slea.available() >= 5L) {
-                    final Long avaible = Long.valueOf(slea.available());
+                    final long avaible = slea.available();
                     String debug = "";
                     if (c != null) {
                         debug = debug + c.getAccountName() + "_";
                     }
-                    FilePrinter.print(debug + "38Logs.txt", HexTool.toStringFromAscii(slea.read(avaible.intValue())), true);
+                    FilePrinter.print(debug + "38Logs.txt", HexTool.toStringFromAscii(slea.read((int) avaible)), true);
                     break;
                 }
                 break;
@@ -323,6 +323,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case ENTER_CASH_SHOP: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 if (c.getPlayer().getMapId() != 980000010 & c.getPlayer().getMapId() != 980000020 & c.getPlayer().getMapId() != 980000100 & c.getPlayer().getMapId() != 980000101 & c.getPlayer().getMapId() != 980000102 & c.getPlayer().getMapId() != 980000103 & c.getPlayer().getMapId() != 980000104 & c.getPlayer().getMapId() != 980000200 & c.getPlayer().getMapId() != 980000201 & c.getPlayer().getMapId() != 980000202 & c.getPlayer().getMapId() != 980000203 & c.getPlayer().getMapId() != 980000204 & c.getPlayer().getMapId() != 980000300 & c.getPlayer().getMapId() != 980000301 & c.getPlayer().getMapId() != 980000302 & c.getPlayer().getMapId() != 980000303 & c.getPlayer().getMapId() != 980000304 & c.getPlayer().getMapId() != 980000400 & c.getPlayer().getMapId() != 980000401 & c.getPlayer().getMapId() != 980000402 & c.getPlayer().getMapId() != 980000403 & c.getPlayer().getMapId() != 980000404 & c.getPlayer().getMapId() != 980000400 & c.getPlayer().getMapId() != 980000501 & c.getPlayer().getMapId() != 980000502 & c.getPlayer().getMapId() != 980000503 & c.getPlayer().getMapId() != 980000504 & c.getPlayer().getMapId() != 980000600 & c.getPlayer().getMapId() != 980000601 & c.getPlayer().getMapId() != 980000602 & c.getPlayer().getMapId() != 980000603 & c.getPlayer().getMapId() != 180000001 & c.getPlayer().getMapId() != 980000604) {
                     InterServerHandler.EnterCashShop(c, c.getPlayer(), false);
                     c.getSession().writeAndFlush((Object)MaplePacketCreator.enableActions());
@@ -332,6 +335,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case ENTER_MTS: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 if (c.getPlayer().getMapId() == 180000001 || c.getPlayer().getMapId() == 910010300 || c.getPlayer().getMapId() == 910010100 || (c.getPlayer().getMapId() > 211060000 && c.getPlayer().getMapId() <= 211061000)) {
                     c.getPlayer().dropMessage(5, "抱歉，该地图无法使用拍卖功能。");
                     break;
@@ -350,27 +356,39 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case CLOSE_RANGE_ATTACK: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.closeRangeAttack(slea, c, c.getPlayer(), false);
                 break;
             }
             case RANGED_ATTACK: {//远程攻击
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.rangedAttack(slea, c, c.getPlayer());
                 break;
             }
             case MAGIC_ATTACK: {//魔法攻击
+                if(c==null ||c.getPlayer()==null || c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.MagicDamage(slea, c,c.getPlayer() );
                 //PlayerHandler.triggeredMagicDamage(slea,c,c.getPlayer());
                 break;
             }
             //特殊举动  英雄的回声
             case SPECIAL_MOVE: {
-                if(c.getPlayer().getId()>10000000){
-                    break;
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
                 }
                 PlayerHandler.SpecialMove(slea, c, c.getPlayer());
                 break;
             }
             case PASSIVE_ENERGY: {
+                if(c==null ||c.getPlayer()==null || c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.closeRangeAttack(slea, c, c.getPlayer(), true);
                 break;
             }
@@ -380,6 +398,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //受到伤害
             case TAKE_DAMAGE: {
+                if(c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.TakeDamage(slea, c, c.getPlayer());
                 break;
             }
@@ -396,6 +417,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case USE_CHAIR: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.UseChair(slea.readInt(), c, c.getPlayer());
                 break;
             }
@@ -431,6 +455,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //刷新地图
             case CHANGE_MAP: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 if (cs) {
                     CashShopOperation.LeaveCashShop(slea, c, c.getPlayer());
                     break;
@@ -465,6 +492,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //增加战神连击点数
             case ARAN_COMBO: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.AranCombo(c, c.getPlayer(), 1);
                 break;
             }
@@ -506,6 +536,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case ITEM_SORT: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 long nowTime = Calendar.getInstance().getTimeInMillis();
                 if (nowTime - c.getPlayer().lastItemSortTime >= 5000L) {
                     InventoryHandler.ItemSort(slea, c);
@@ -521,6 +554,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case ITEM_MOVE: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 InventoryHandler.ItemMove(slea, c);
                 break;
             }
@@ -530,10 +566,16 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             case USE_CASH_ITEM: {
                 //使用现金道具
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 InventoryHandler.UseCashItem(slea, c);
                 break;
             }
             case USE_ITEM: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 InventoryHandler.UseItem(slea, c, c.getPlayer());
                 break;
             }
@@ -551,11 +593,17 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //正向
             case USE_UPGRADE_SCROLL: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 c.getPlayer().updateTick(slea.readInt());
                 InventoryHandler.UseUpgradeScroll((byte)slea.readShort(), (byte)slea.readShort(), (byte)slea.readShort(), c, c.getPlayer());
                 break;
             }
             case USE_POTENTIAL_SCROLL: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 c.getPlayer().updateTick(slea.readInt());
                 InventoryHandler.UseUpgradeScroll((byte)slea.readShort(), (byte)slea.readShort(), (byte)0, c, c.getPlayer());
                 break;
@@ -586,6 +634,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case REWARD_ITEM: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 if (c.getPlayer().getImprison() > 0) {
                     c.getPlayer().dropMessage(1, "您正在被关禁闭中，无法开启脚本对话。");
                     c.getSession().writeAndFlush(MaplePacketCreator.enableActions());
@@ -616,9 +667,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
 //                }
                 break;
             }
+            //怪物自动攻击
             case AUTO_AGGRO: {
-
-                //MobHandler.handleAutoAggro(slea, c);
+                MobHandler.handleAutoAggro(slea, c);
                 break;
             }
             case FRIENDLY_DAMAGE: {
@@ -639,21 +690,33 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //打开脚本 NPC交流
             case NPC_TALK: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 NPCHandler.handleNPCTalk(slea, c, c.getPlayer());
                 break;
             }
             //NPC 下一步交流
             case NPC_TALK_MORE: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 NPCHandler.NPCMoreTalk(slea, c);
                 break;
             }
             //NPC动作
             case NPC_ACTION: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 NPCHandler.handleNPCAnimation(slea, c);
                 break;
             }
             //仓库存东西
             case STORAGE: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 NPCHandler.Storage(slea, c, c.getPlayer());
                 break;
             }
@@ -686,6 +749,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 StatsHandling.DistributeSP(slea.readInt(), c, c.getPlayer());
                 break;
             }
+            //开店
             case PLAYER_INTERACTION: {
                 PlayerInteractionHandler.PlayerInteraction(slea, c, c.getPlayer());
                 break;
@@ -733,6 +797,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //将背包物品放入商城
             case CASHSHOP_OPERATION: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 CashShopOperation.BuyCashItem(slea, c, c.getPlayer());
                 break;
             }
@@ -868,12 +935,18 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case RING_ACTION: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayersHandler.RingAction(slea, c);
                 //修复复制
                 //c.getPlayer().saveToDB(true, true);
                 break;
             }
             case ITEM_UNLOCK: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayersHandler.UnlockItem(slea, c);
                 break;
             }
@@ -882,6 +955,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
                 break;
             }
             case GACH_EXP: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayersHandler.GachExp(slea, c);
                 break;
             }
@@ -991,6 +1067,9 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //特殊攻击
             case SPECIAL_ATTACK: {
+                if(c==null ||c.getPlayer()==null ||c.getPlayer().getId()>100000){
+                    return;
+                }
                 PlayerHandler.SpecialAttack(slea, c, c.getPlayer());
                 break;
             }
@@ -1008,16 +1087,20 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             //功能集散地
             case STRANGE_DATA:{
+
                 //回收装备
                 if (Objects.isNull(c) || Objects.isNull(c.getPlayer())){
                     break;
+                }
+                if(c.getPlayer()==null || c.getPlayer().getId()>100000){
+                    return;
                 }
 //                if( System.currentTimeMillis() - (c.getPlayer().getSaveTime()==0 ? System.currentTimeMillis() : c.getPlayer().getSaveTime()) < 300000){
 //                    c.getPlayer().setSaveTime(System.currentTimeMillis());
 //                    c.getPlayer().saveToDB(false,  false);
 //                }
                 try {
-                   // c.getPlayer().recycleEquip(c, c.getPlayer());
+                    c.getPlayer().recycleEquip(c, c.getPlayer());
                 } catch (Exception e) {
 
                 }
@@ -1033,7 +1116,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
             case PLAYER_UPDATE:
                 if (Game.调试2.equals("开")) {
-                    服务端输出信息.println_out("开始执行PLAYER_UPDATE封包，读取/存储角色信息");
+                    //服务端输出信息.println_out("开始执行PLAYER_UPDATE封包，读取/存储角色信息");
                 }
                 break;
             case VICIOUS_HAMMER:

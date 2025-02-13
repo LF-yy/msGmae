@@ -1,6 +1,6 @@
 package server;
 
-import gui.服务端输出信息;
+
 import tools.MaplePacketCreator;
 import java.util.Comparator;
 import client.MapleClient;
@@ -145,7 +145,7 @@ public class MapleStorage implements Serializable
                 ps.close();
             }
         } catch (SQLException var8) {
-            服务端输出信息.println_err("Error loading storage" + var8);
+            //服务端输出信息.println_err("Error loading storage" + var8);
             FileoutputUtil.outError("logs/资料库异常.txt", var8);
         }
 

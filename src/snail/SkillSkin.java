@@ -10,7 +10,7 @@ import client.MapleCharacter;
 import client.SkillEntry;
 import constants.SkillConstants;
 import database.DBConPool;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import tools.Pair;
 
@@ -129,7 +129,7 @@ public class SkillSkin {
 
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("loadChrSkillFromDB 错误，错误原因：" + var18);
+            //服务端输出信息.println_err("loadChrSkillFromDB 错误，错误原因：" + var18);
             var18.printStackTrace();
         }
 
@@ -159,7 +159,7 @@ public class SkillSkin {
                     }
                 }
             } catch (Exception var22) {
-                服务端输出信息.println_err("【错误】saveChrSkillMapToDB出错，错误原因：" + var22);
+                //服务端输出信息.println_err("【错误】saveChrSkillMapToDB出错，错误原因：" + var22);
                 var22.printStackTrace();
             }
 
@@ -241,7 +241,7 @@ public class SkillSkin {
                     }
                 }
             } catch (SQLException var21) {
-                服务端输出信息.println_err("saveChrSkillMapToDB 错误，错误原因：" + var21);
+                //服务端输出信息.println_err("saveChrSkillMapToDB 错误，错误原因：" + var21);
                 var21.printStackTrace();
             }
 
@@ -311,7 +311,7 @@ public class SkillSkin {
 
                 }
             } catch (SQLException var19) {
-                服务端输出信息.println_err("saveChrSkillToDB 错误，错误原因：" + var19);
+                //服务端输出信息.println_err("saveChrSkillToDB 错误，错误原因：" + var19);
                 var19.printStackTrace();
             }
 
@@ -472,7 +472,7 @@ public class SkillSkin {
 
             }
         } catch (SQLException var17) {
-            服务端输出信息.println_err("loadSkillList 错误，错误原因：" + var17);
+            //服务端输出信息.println_err("loadSkillList 错误，错误原因：" + var17);
             var17.printStackTrace();
         }
 

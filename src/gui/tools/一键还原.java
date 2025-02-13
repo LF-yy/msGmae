@@ -5,7 +5,7 @@ import java.awt.EventQueue;
 import javax.swing.LookAndFeel;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 import org.jvnet.substance.skin.SubstanceBusinessBlackSteelLookAndFeel;
 import javax.swing.JDialog;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -322,7 +322,39 @@ public class 一键还原 extends JFrame
         this.Delete("pqlog", 150);
         this.Delete("lt_attack_info_skills", 151);
         this.Delete("lt_field_skills", 152);
-        this.Delete("lt_super_skills", 153);
+        this.Delete("accounts_event", 153);
+        this.Delete("accountidlog", 154);
+        this.Delete("bossrank9", 155);
+        this.Delete("donate", 156);
+        this.Delete("lt_canusegmcommand", 157);
+        this.Delete("lt_characters_hphd", 158);
+        this.Delete("lt_jingyanchi", 159);
+        this.Delete("lt_user_aotu_buff", 160);
+        this.Delete("qq_membersinfo", 161);
+        this.Delete("snail_boss_points", 162);
+        this.Delete("snail_chr_item_collect_list", 163);
+        this.Delete("snail_chr_mount_list", 164);
+        this.Delete("snail_codelist", 165);
+        this.Delete("snail_equipment_field_enhancement", 166);
+        this.Delete("snail_monster_damage", 167);
+        this.Delete("snail_monster_kill_quest", 168);
+        this.Delete("snail_prize_ban_list", 169);
+        this.Delete("snail_sell_pickup_items", 170);
+        this.Delete("snail_skillskin_chrlist", 171);
+        this.Delete("storages", 172);
+        this.Delete("wishlist", 173);
+        this.Delete("wy_depository", 174);
+        this.Delete("wy_depositoryitems", 175);
+        this.Delete("抽奖屏蔽", 176);
+        this.Delete("蘑菇战令_记录", 177);
+        this.Delete("蘑菇战令_任务", 178);
+        this.Delete("蘑菇战令_信息", 179);
+        this.Delete("徒弟列表", 180);
+        this.Delete("onetimeloga", 181);
+        this.Delete("onetimelogi", 182);
+        this.Delete("onetimeloa", 183);
+        this.Delete("onetimelob", 184);
+        this.Delete("onetimeloc", 185);
         deleteDBAll();
         JOptionPane.showMessageDialog(null, (Object)"清理完成");
         System.exit(0);
@@ -336,7 +368,7 @@ public class 一键还原 extends JFrame
 
             boolean var43;
             try {
-                String[] tableList = new String[]{"accounts", "accounts_info", "admin", "auctionitems", "auctionpoint", "auctionitems1", "auctionpoint1", "awarp", "bossrank", "bossrank1", "bossrank2", "bossrank3", "bossrank4", "bossrank5", "bossrank6", "bossrank7", "bossrank8", "bossrank9", "bosslog", "bossloga", "bosslogi", "buddies", "character_slots", "characters", "characterz", "csequipment", "csitems", "dlq_ban", "donate", "famelog", "fubenjilu", "gifts", "gmlog", "guilds", "hiredmerch", "hiredmerchequipment", "hiredmerchitems", "hypay", "inventoryequipment", "inventoryitems", "inventoryequipment_copy", "inventoryitems_copy", "inventoryslot", "ipbans", "keymap", "macbans", "monsterbook", "mountdata", "notes", "onetimelog", "onetimeloga", "onetimelogi", "pets", "questinfo", "questrequirements", "queststatus", "queststatusmobs", "regrocklocations", "rings", "savedlocations", "skillmacros", "skills", "skills_cooldowns", "speedruns", "storages", "trocklocations", "wishlist", "snail_skillskin_chrlist", "snail_boss_points", "snail_chr_mount_list", "snail_world_boss", "snail_world_level", "snail_memory_flowerpot", "snail_memory_garden", "snail_memory_seedpackage", "snail_time_log", "snail_weeklog", "snail_weekloga", "snail_monthlog", "snail_monthloga", "snail_monster_damage", "snail_guild_skills", "snail_prize_ban_list", "snail_dagong", "snail_equipment_field_enhancement", "snail_drop_item_filter", "snail_sell_pickup_items", "snail_lotto", "bank_jin", "bank_mzb", "snail_lottery_prize", "bank_item", "曾用名", "抽奖屏蔽", "技能范围检测", "蘑菇战令_记录", "蘑菇战令_任务", "蘑菇战令_信息", "骑士团link", "徒弟列表", "网关_ip白名单", "网关_宠吸授权", "网关_多开授权", "网关_机器码注册限制", "网关_内挂授权"};
+                String[] tableList = new String[]{"accounts", "accounts_info", "admin", "auctionitems", "auctionpoint", "auctionitems1", "auctionpoint1", "awarp", "bossrank", "bossrank1", "bossrank2", "bossrank3", "bossrank4", "bossrank5", "bossrank6", "bossrank7", "bossrank8", "bossrank9", "bosslog", "bossloga", "bosslogi", "buddies", "character_slots", "characters", "characterz", "csequipment", "csitems", "dlq_ban", "donate", "famelog", "fubenjilu", "gifts", "gmlog", "guilds", "hiredmerch", "hiredmerchequipment", "hiredmerchitems", "hypay", "inventoryequipment", "inventoryitems", "inventoryequipment_copy", "inventoryitems_copy", "inventoryslot", "ipbans", "keymap", "macbans", "monsterbook", "mountdata", "notes", "onetimelog", "onetimeloga", "onetimelogi", "pets", "questinfo", "questrequirements", "queststatus", "queststatusmobs", "regrocklocations", "rings", "savedlocations", "skillmacros", "skills", "skills_cooldowns", "speedruns", "storages", "trocklocations", "wishlist", "snail_skillskin_chrlist", "snail_boss_points", "snail_chr_mount_list", "snail_world_boss", "snail_world_level", "snail_memory_flowerpot", "snail_memory_garden", "snail_memory_seedpackage", "snail_time_log", "snail_weeklog", "snail_weekloga", "snail_monthlog", "snail_monthloga", "snail_monster_damage", "snail_guild_skills", "snail_prize_ban_list", "snail_dagong", "snail_equipment_field_enhancement", "snail_drop_item_filter", "snail_sell_pickup_items", "snail_lotto", "bank_jin", "bank_mzb", "snail_lottery_prize", "bank_item", "曾用名", "抽奖屏蔽", "技能范围检测", "蘑菇战令_记录", "蘑菇战令_任务", "蘑菇战令_信息", "骑士团link", "徒弟列表"};
                 stmt = con.createStatement();
                 stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 5;");
                 DatabaseMetaData dbm = con.getMetaData();
@@ -349,7 +381,7 @@ public class 一键还原 extends JFrame
                     if (rs.next()) {
                         stmt.executeUpdate("truncate table " + tableName + ";");
                     } else {
-                        服务端输出信息.println_out("【提示】删档过程中，表 [" + tableName + "] 不存在，跳过该表");
+                        //服务端输出信息.println_out("【提示】删档过程中，表 [" + tableName + "] 不存在，跳过该表");
                     }
 
                     rs.close();
@@ -406,7 +438,7 @@ public class 一键还原 extends JFrame
             } catch (SQLException var37) {
             }
 
-            服务端输出信息.println_err("【错误】deleteDBAll错误，原因：" + var40);
+            //服务端输出信息.println_err("【错误】deleteDBAll错误，原因：" + var40);
             var40.printStackTrace();
             return false;
         }

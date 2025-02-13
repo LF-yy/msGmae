@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import abc.离线人偶;
 import bean.*;
@@ -37,7 +38,7 @@ import database.DBConPool;
 import database.DatabaseConnection;
 import gui.LtMS;
 import gui.WorldBoss;
-import gui.服务端输出信息;
+
 import gui.进阶BOSS.进阶BOSS线程;
 import handling.channel.ChannelServer;
 import handling.channel.handler.InventoryHandler;
@@ -48,6 +49,7 @@ import handling.world.World;
 import handling.world.World.Broadcast;
 import handling.world.World.Find;
 import io.netty.channel.Channel;
+import nange.Bot;
 import org.apache.commons.lang.StringUtils;
 import provider.MapleData;
 import provider.MapleDataProvider;
@@ -68,6 +70,7 @@ import server.movement.LifeMovementFragment;
 import tools.*;
 import tools.packet.MobPacket;
 import tools.packet.PetPacket;
+import tools.packet.UIPacket;
 import util.GetRedisDataUtil;
 import util.ListUtil;
 import util.NumberUtils;
@@ -79,7 +82,6 @@ public class MapleMap {
     private final Map<MapleMapObjectType, ReentrantReadWriteLock> mapObjectLocks;
     private final List<MapleCharacter> characters;
     private final ReentrantReadWriteLock charactersLock;
-    private boolean hasCheckIn = false;
     private int runningOid;
     private final Lock runningOidLock;
     private final Map<String, Integer> environment;
@@ -87,7 +89,6 @@ public class MapleMap {
     private final AtomicInteger spawnedMonstersOnMap;
     private final Map<Integer, MaplePortal> portals;
     private final List<Integer> disconnectedClients;
-    //private static final Map<Integer, HashMap<String, Integer>> PointsGained;
     private final byte channel;
     private boolean respawnOnePoint = false;
     private int mapid;
@@ -160,6 +161,10 @@ public class MapleMap {
         }
     };
     int maximumSize = 1000000;
+
+    public List<Spawns> getMonsterSpawn() {
+        return monsterSpawn;
+    }
 
     public void setRespawnOnePoint(boolean respawnOnePoint) {
         this.respawnOnePoint = respawnOnePoint;
@@ -852,8 +857,9 @@ public class MapleMap {
                 * lastDrop / 100.0 * chr.getDropRateChr()
                 + (chr.getItemDropm() / 100.00) +jiac + (chr.getDropm()>1 ? (chr.getDropm()-1) : 0)));
 
-        if(chr.totalDropRate>0){
-            itemDropm += (double) (chr.totalDropRate / 100.0);
+        HideAttribute hideAttribute = Start.hideAttributeMap.get(chr.getId());
+        if(hideAttribute.totalDropRate>0){
+            itemDropm += (double) (hideAttribute.totalDropRate / 100.0);
         }
         for (MonsterDropEntry de2 : dropEntry) {
             if (de2.itemId == mob.getStolen()) {
@@ -891,13 +897,11 @@ public class MapleMap {
             }
             if (de2.itemId == 0) {
                 //金币掉落
-                int mesos = Randomizer.nextInt(1 + Math.abs(de2.Maximum - de2.Minimum)) + de2.Minimum;
-
+                int mesos = Randomizer.nextInt(1 + Math.abs(de2.Maximum+hideAttribute.totalMesoRateCount))+de2.Minimum ;
+                if(mesos>de2.Maximum){
+                    mesos = de2.Minimum;
+                }
                 if (mesos > 0) {
-                    if (mesos > 3000) {
-                        mesos = 3000;
-                    }
-                    mesos += chr.totalMesoRateCount;
                     int pGainMesoPercent = chr.getPotential(40);
                     if (pGainMesoPercent > 0) {
                         mesos += mesos * pGainMesoPercent / 100;
@@ -918,8 +922,9 @@ public class MapleMap {
                     }
                 }
             } else {
-                int i = Randomizer.nextInt(de2.Maximum - de2.Minimum <= 0 ? 1 : de2.Maximum - de2.Minimum);
-                if (extracted(de2.itemId, chr, (de2.Maximum != 1 ? Math.max(i, 0) + de2.Minimum : 1)+chr.totalDropRateCount)) {
+                int i = Randomizer.nextInt(de2.Maximum + hideAttribute.totalDropRateCount - de2.Minimum <= 0 ? 1 : de2.Maximum + hideAttribute.totalDropRateCount +1);
+
+                if (extracted(de2.itemId, chr, Math.max(i, 1))) {
 
                 }else{
                     //物品掉落
@@ -927,7 +932,7 @@ public class MapleMap {
                     if (GameConstants.getInventoryType(de2.itemId) == MapleInventoryType.EQUIP) {
                         idrop = ii.randomizeStats((Equip) ii.getEquipById(de2.itemId));
                     } else {
-                        idrop = new Item(de2.itemId, (short) 0, (short) (de2.Maximum != 1 ? Math.max(i, 0) + de2.Minimum+chr.totalDropRateCount : 1+chr.totalDropRateCount), (byte) 0);
+                        idrop = new Item(de2.itemId, (short) 0, (short)Math.max(i, 1), (byte) 0);
                     }
                     if (ItemConstants.isImportantItem(((IItem) idrop).getItemId())) {
                         FileoutputUtil.logToFile("logs/捡取重要物品记录.txt", FileoutputUtil.NowTime() + ": " + chr.getName() + " (ID:" + chr.getId() + ") 在 " + chr.getMap().getStreetName() + "-" + chr.getMap().getMapName() + " 捡到了 " + MapleItemInformationProvider.getInstance().getName(((IItem) idrop).getItemId()) + "(" + ((IItem) idrop).getItemId() + ")x" + ((IItem) idrop).getQuantity() + "\r\n");
@@ -1063,12 +1068,33 @@ public class MapleMap {
                 * lastDrop / 100.0 * chr.getDropRateChr()
                 + (chr.getItemDropm() / 100.00) +jiac +(chr.getDropm()>1 ? (chr.getDropm()-1) : 0)));
 
-
-        if(chr.totalDropRate>0){
-            itemDropm += (double) (chr.totalDropRate / 100.0);
+        HideAttribute hideAttribute = Start.hideAttributeMap.get(chr.getId());
+        if(hideAttribute.totalDropRate>0){
+            itemDropm += (double) (hideAttribute.totalDropRate / 100.0);
         }
 
-
+        int i1 = Randomizer.nextInt(9999999);
+        int ran = 1000;
+        if(i1>0 && Objects.nonNull(Start.ltMonsterValueMap)){
+            //现金实充额度标准  只有实充超过这个数值才不会进入低概率
+            if (chr.getDonate() < (Objects.nonNull(LtMS.ConfigValuesMap.get("现金实充额度标准")) ? LtMS.ConfigValuesMap.get("现金实充额度标准") : 500)){
+                ran =  Randomizer.nextInt(1000);
+            }
+            if (ran>998) {
+                Map<String, Integer> mobInfo = Start.ltMonsterValueMap.get(mob.getId());
+                if (Objects.nonNull(mobInfo) && mobInfo.get("probability") > i1 && mobInfo.get("exposure_value") >0 && mobInfo.get("number") >0) {
+                    //提现额度增加
+                    int flags = Start.setltMonstervalue(mobInfo.get("monster_id"), mobInfo.get("exposure_value"));
+                    if (flags==1) {
+                        Start.setltMonstervalueRecord(chr.getId(), mobInfo.get("monster_id"), mob.getName(), mobInfo.get("exposure_value"));
+                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[现金额度] : 恭喜 [" + chr.getName() + "] 成为天选之人,对" + mob.getName() + "上下其手成功从其身上摸到了现金额度[" + mobInfo.get("exposure_value") + "点],大家快来羡慕他(她)吧!!!=>个人信息可查看额度！"));
+                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[现金额度] : 恭喜 [" + chr.getName() + "] 成为天选之人,对" + mob.getName() + "上下其手成功从其身上摸到了现金额度[" + mobInfo.get("exposure_value") + "点],大家快来羡慕他(她)吧!!!=>个人信息可查看额度！"));
+                        World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[现金额度] : 恭喜 [" + chr.getName() + "] 成为天选之人,对" + mob.getName() + "上下其手成功从其身上摸到了现金额度[" + mobInfo.get("exposure_value") + "点],大家快来羡慕他(她)吧!!!=>个人信息可查看额度！"));
+                        Bot.sendGroupMessage("[现金额度] : 恭喜 [" + chr.getName() + "] 成为天选之人,在怪物公园,对" + mob.getName() + "上下其手成功从其身上摸到了现金额度[" + mobInfo.get("exposure_value") + "点],大家快来羡慕他(她)吧!!!");
+                    }
+                }
+            }
+        }
         for (MonsterDropEntry de2 : dropEntry) {
             if (de2.itemId == mob.getStolen()) {
                 continue;
@@ -1105,17 +1131,13 @@ public class MapleMap {
             }
             if (de2.itemId == 0) {
                 //金币掉落
-                int mesos = Randomizer.nextInt(1 + Math.abs(de2.Maximum - de2.Minimum)) + de2.Minimum;
+                int mesos = Randomizer.nextInt(1 + Math.abs(de2.Maximum+hideAttribute.totalMesoRateCount));
 
                 if (mesos > 0) {
-                    if (mesos > 3000) {
-                        mesos = 3000;
-                    }
                     int pGainMesoPercent = chr.getPotential(40);
                     if (pGainMesoPercent > 0) {
                         mesos += mesos * pGainMesoPercent / 100;
                     }
-                    mesos += chr.totalMesoRateCount;
                     double lastMeso = chr.getStat().realMesoBuff - 100.0 <= 0.0 ? 100.0 : chr.getStat().realMesoBuff - 100.0;
                     if (chr.isDropOnMyBag() && !mob.getStats().isFfaLoot() && !chr.isDropItemFilter(0)) {
                         int meso = (int) ((double) mesos * chr.getExpRateChr() * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * chr.getDropm() * (double) cmServerrate);
@@ -1131,8 +1153,8 @@ public class MapleMap {
                     }
                 }
             } else {
-                int i = Randomizer.nextInt(de2.Maximum - de2.Minimum <= 0 ? 1 : de2.Maximum - de2.Minimum);
-                if (extracted(de2.itemId, chr, (de2.Maximum != 1 ? Math.max(i, 0) + de2.Minimum : 1)+chr.totalDropRateCount)) {
+                int i = Randomizer.nextInt(de2.Maximum + hideAttribute.totalDropRateCount - de2.Minimum <= 0 ? 1 : de2.Maximum + hideAttribute.totalDropRateCount +1);
+                if (extracted(de2.itemId, chr, Math.max(i, 1))) {
 
                 }else{
                     //物品掉落
@@ -1140,7 +1162,7 @@ public class MapleMap {
                     if (GameConstants.getInventoryType(de2.itemId) == MapleInventoryType.EQUIP) {
                         idrop = ii.randomizeStats((Equip) ii.getEquipById(de2.itemId));
                     } else {
-                        idrop = new Item(de2.itemId, (short) 0, (short) (de2.Maximum != 1 ? Math.max(i, 0) + de2.Minimum+chr.totalDropRateCount : 1+chr.totalDropRateCount), (byte) 0);
+                        idrop = new Item(de2.itemId, (short) 0, (short) Math.max(i, 1), (byte) 0);
                     }
                     if (ItemConstants.isImportantItem(((IItem) idrop).getItemId())) {
                         FileoutputUtil.logToFile("logs/捡取重要物品记录.txt", FileoutputUtil.NowTime() + ": " + chr.getName() + " (ID:" + chr.getId() + ") 在 " + chr.getMap().getStreetName() + "-" + chr.getMap().getMapName() + " 捡到了 " + MapleItemInformationProvider.getInstance().getName(((IItem) idrop).getItemId()) + "(" + ((IItem) idrop).getItemId() + ")x" + ((IItem) idrop).getQuantity() + "\r\n");
@@ -1616,7 +1638,7 @@ public class MapleMap {
             ps.close();
             rs.close();
         } catch (SQLException var7) {
-            服务端输出信息.println_err("随机BOSS线程，击杀广播提醒读取数据库错误，错误原因：" + var7);
+            //服务端输出信息.println_err("随机BOSS线程，击杀广播提醒读取数据库错误，错误原因：" + var7);
             var7.printStackTrace();
         }
 
@@ -2451,106 +2473,39 @@ public class MapleMap {
      * @param bounds
      */
     public void spawnSkill( MapleCharacter applyfrom,  boolean facingLeft,  MapleStatEffect effect, Rectangle bounds, SuperSkills superSkills) {
-//        Point position = applyfrom.getPosition();
-//        AtomicReference<Integer> x = new  AtomicReference<>(0);
-//        AtomicReference<Integer> y = new  AtomicReference<>(0);
-//        AtomicReference<Integer> index1 = new  AtomicReference<>(0);
-//        if (facingLeft){
-//            x.set(position.x-LtMS.ConfigValuesMap.get("超级技能补偿坐标X"));
-//            y.set(position.y+LtMS.ConfigValuesMap.get("超级技能补偿坐标Y"));
-//        }else{
-//            x.set(position.x+LtMS.ConfigValuesMap.get("超级技能补偿坐标X"));
-//            y.set(position.y+LtMS.ConfigValuesMap.get("超级技能补偿坐标Y"));
-//        }
-//        List<MapleMist> list = new ArrayList<>();
-//
-//        for (int i = 0; i < superSkills.getStackingDistance(); i++) {
-//            if (facingLeft){
-//                x.set(x.get()-superSkills.getSkillCount());
-//                bounds = MapleStatEffect.calculateBoundingBox(new Point(x.get(),y.get()), facingLeft, new Point(superSkills.getSkillLX(),superSkills.getSkillLY()), new Point(superSkills.getSkillRX(),superSkills.getSkillRY()),superSkills.getRange());
-//            }else{
-//                x.set(x.get()+superSkills.getSkillCount());
-//                bounds = MapleStatEffect.calculateBoundingBox(new Point(x.get(),y.get()), facingLeft,new Point(superSkills.getSkillRX(),superSkills.getSkillRY()) , new Point(superSkills.getSkillLX(),superSkills.getSkillLY()),superSkills.getRange());
-//            }
-//            //设置对象
-//            MapleMist mist = new MapleMist(bounds, applyfrom, effect);
-//            list.add(mist);
-//        }
-//            //生成并添加范围映射对象
-//
-//             MapTimer.getInstance().register((Runnable)new Runnable() {
-//                @Override
-//                public void run() {
-//
-//                    if (index1.get()>=superSkills.getStackingDistance()){
-//                        for (MapleMist mapleMist : list) {
-//                            //移除技能
-//                            MapleMap.this.broadcastMessage(MaplePacketCreator.removeMist(mapleMist.getObjectId(), false));
-//                            //移除地图对象
-//                            MapleMap.this.removeMapObject((MapleMapObject) mapleMist);
-//                        }
-//                        return;
-//                    }else{
-//                        spawnAndAddRangedMapObject((MapleMapObject) list.get(index1.get()), (DelayedPacketCreation)new DelayedPacketCreation() {
-//                            @Override
-//                            public void sendPackets(final MapleClient c) {
-//                                //发送召唤数据
-//                                list.get(index1.get()).sendSpawnData(c);
-//                            }
-//                        }, null);
-//                    }
-//                    int index = 1;
-//                    for ( MapleMapObject mo : applyfrom.getClient().getPlayer().getMap().getMapObjectsInRect(list.get(index1.get()).getBox(), Collections.singletonList(MapleMapObjectType.MONSTER))) {
-//                        if (Objects.nonNull(applyfrom.getMap()) && index1.get()>=LtMS.ConfigValuesMap.get("删除起点")){
-//                            if(index >= 10 ) {break;}
-//                            long l = (long) (superSkills.getSkill_leve() * applyfrom.getStat().damage * superSkills.getHarm() + 1);
-//                            l = l>Integer.MAX_VALUE ? Integer.MAX_VALUE : l;
-//                            applyfrom.getMap().broadcastMessage(MobPacket.damageMonster(((MapleMonster)mo).getObjectId(),l));
-//                            ((MapleMonster)mo).damage(applyfrom, l, true, list.get(index1.get()).getSourceSkill().getId());
-//                            // System.out.println("产生伤害");
-//                        }
-//                        index++;
-//                    }
-//                    if (index1.get()>=LtMS.ConfigValuesMap.get("删除起点")){
-//                      //移除技能
-//                    MapleMap.this.broadcastMessage(MaplePacketCreator.removeMist(list.get(index1.get()-LtMS.ConfigValuesMap.get("删除起点")).getObjectId(), false));
-//                    //移除地图对象
-//                    MapleMap.this.removeMapObject((MapleMapObject) list.get(index1.get()-LtMS.ConfigValuesMap.get("删除起点")));
-//                    }
-//
-//                    index1.set(index1.get()+1);
-//                }
-//            }, superSkills.getInjuryinterval());
-//生成并添加范围映射对象
+
             //设置对象
             MapleMist mist = new MapleMist(bounds, applyfrom, effect);
-        this.spawnAndAddRangedMapObject((MapleMapObject)mist, (DelayedPacketCreation)new DelayedPacketCreation() {
-            @Override
-            public void sendPackets( MapleClient c) {
-                //发送召唤数据
-                mist.sendSpawnData(c);
-            }
-        }, null);
         //映射计时器
         MapTimer tMan = MapTimer.getInstance();
         tzjc t = new tzjc();
-        double totDamageToOneMonster = superSkills.getHarm()/superSkills.getSkillCount();
-        totDamageToOneMonster = totDamageToOneMonster >1 ? 1.0 : totDamageToOneMonster;
+//        double totDamageToOneMonster = superSkills.getHarm()/superSkills.getSkillCount();
+//        totDamageToOneMonster = totDamageToOneMonster >1 ? 1.0 : totDamageToOneMonster;
        // final MapleCharacter owner = this.getCharacterById(mist.getOwnerId());
-        double finalTotDamageToOneMonster = totDamageToOneMonster;
+//        double finalTotDamageToOneMonster = totDamageToOneMonster;
+        applyfrom.triggeredEquipmentsList.forEach(e ->{
+            if(StringUtils.isNotEmpty(e.getSkillTx()) && e.getSkillId()==effect.getSourceId()){
+                applyfrom.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(e.getSkillTx()));
+            }});
         ScheduledFuture<?> poisonSchedule = tMan.register((Runnable)new Runnable() {
                     @Override
                     public void run() {
                         int index = 1;
-                        for ( MapleMapObject mo : MapleMap.this.getMapObjectsInRect(mist.getBox(), Collections.singletonList(MapleMapObjectType.MONSTER))) {
-                            if(index >= 10 ) {break;}
+                        for (MapleMapObject mo : applyfrom.getClient().getPlayer().getMap().getMapObjectsInRect(mist.getBox(), Collections.singletonList(MapleMapObjectType.MONSTER))) {
+                            if (9900000 == ((MapleMonster) mo).getId() || 9900001 == ((MapleMonster) mo).getId() || 9900002 == ((MapleMonster) mo).getId() || Start.mobUnhurtList.contains(((MapleMonster) mo).getId())) {
+                                continue;
+                            }
+                            if(index > superSkills.getSkillCount() ) {break;}
                             if ( Objects.nonNull(applyfrom.getMap()) &&  ((MapleMonster)mo).getId()!=9300061){
-                                long l = (long) ( applyfrom.getStat().damage * superSkills.getHarm() + 1);
-                                l = l>Integer.MAX_VALUE ? Integer.MAX_VALUE : l;
-                                applyfrom.getMap().broadcastMessage(MobPacket.damageMonster(((MapleMonster)mo).getObjectId(),l));
-                                //((MapleMonster)mo).damage(applyfrom, l, true, mist.getSourceSkill().getId());
-                                //((MapleMonster)mo).applyStatus(applyfrom, new MonsterStatusEffect(MonsterStatus.NEUTRALISE, 1, effect.getSourceId(), null, false), false, (effect.getX() * 2L), true, effect);
-                                ((MapleMonster)mo).damage(applyfrom, t.damage(applyfrom, (long)(l*finalTotDamageToOneMonster),0.0 ), true, mist.getSourceSkill().getId());
+                                long l = (long) ( applyfrom.getStat().damage * (superSkills.getHarm()/100 )+ 1)*superSkills.getSkillCount();
+                                if (LtMS.ConfigValuesMap.get("世界BOSS") == ((MapleMonster) mo).getId()) {
+                                    applyfrom.getMap().broadcastMessage(MobPacket.damageMonster(((MapleMonster)mo).getObjectId(),999));
+                                    ((MapleMonster)mo).damage(applyfrom, t.damage(applyfrom, 999,0.0 ), true, mist.getSourceSkill().getId());
+                                }else{
+                                    applyfrom.getMap().broadcastMessage(MobPacket.damageMonster(((MapleMonster)mo).getObjectId(),l));
+                                    ((MapleMonster)mo).damage(applyfrom, t.damage(applyfrom, l,0.0 ), true, mist.getSourceSkill().getId());
+                                }
+
                             }
                             index++;
                         }
@@ -2591,10 +2546,10 @@ public class MapleMap {
         }else{
             return;
         }
-        String hget = RedisUtil.hget(RedisUtil.KEYNAMES.DOMAIN_AURA.getKeyName(), applyfrom.getId()+"");
-        if (hget != null && Integer.parseInt(hget) >= 1){
-            return;
-        }
+//        String hget = RedisUtil.hget(RedisUtil.KEYNAMES.DOMAIN_AURA.getKeyName(), applyfrom.getId()+"");
+//        if (hget != null && Integer.parseInt(hget) >= 1){
+//            return;
+//        }
         int mapId = applyfrom.getMapId();
         ScheduledFuture<?> poisonSchedule = null;
         try {
@@ -2610,11 +2565,8 @@ public class MapleMap {
                 DamageToOneMonster[0] = (long) breakthroughMechanisms.get(0).getHarm() * LtMS.ConfigValuesMap.get("境界伤害");
             }
             long l = applyfrom.getJob() >= 200 && applyfrom.getJob() <= 232 ? (long) ((applyfrom.getStat().damage + applyfrom.getStat().localint_ * 25L) + 1) : (long) (applyfrom.getStat().damage);
-            l = l > Integer.MAX_VALUE ? Integer.MAX_VALUE : l;
+            //l = l > Integer.MAX_VALUE ? Integer.MAX_VALUE : l;
             long[] damage = {tzjc.damage2(applyfrom, (long) (l * totDamageToOneMonster), 0.0) + DamageToOneMonster[0]};
-
-
-            ScheduledFuture<?> finalPoisonSchedule = poisonSchedule;
             poisonSchedule = tMan.register((Runnable)new Runnable() {
                 @Override
                 public void run() {
@@ -2624,6 +2576,9 @@ public class MapleMap {
 
 
                             for (MapleMapObject mo : applyfrom.getClient().getPlayer().getMap().getMapObjectsInRect(mist.getBox(), Collections.singletonList(MapleMapObjectType.MONSTER))) {
+                                if (9900000 == ((MapleMonster) mo).getId() || 9900001 == ((MapleMonster) mo).getId() || 9900002 == ((MapleMonster) mo).getId() || Start.mobUnhurtList.contains(((MapleMonster) mo).getId())) {
+                                    continue;
+                                }
                                 if (index > fieldSkills.getDjCount()) {
                                     break;
                                 }
@@ -2631,9 +2586,6 @@ public class MapleMap {
 
                                     if (LtMS.ConfigValuesMap.get("世界BOSS") == ((MapleMonster) mo).getId()) {
                                         damage[0] = 999;
-                                    }
-                                    if (9900000 == ((MapleMonster) mo).getId() || 9900001 == ((MapleMonster) mo).getId() || 9900002 == ((MapleMonster) mo).getId() || Start.mobUnhurtList.contains(((MapleMonster) mo).getId())) {
-                                        continue;
                                     }
                                     if ((LtMS.ConfigValuesMap.get("领域伤害屏蔽")) > 0) {
                                         applyfrom.getMap().broadcastMessage(MobPacket.damageMonster(((MapleMonster) mo).getObjectId(), damage[0]));
@@ -2676,7 +2628,7 @@ public class MapleMap {
                         if (poisonSchedule2 != null) {
                             poisonSchedule2.cancel(false);
                         }
-                        RedisUtil.hset(RedisUtil.KEYNAMES.DOMAIN_AURA.getKeyName(), applyfrom.getId()+"","0");
+//                        RedisUtil.hset(RedisUtil.KEYNAMES.DOMAIN_AURA.getKeyName(), applyfrom.getId()+"","0");
                     }
                 }, (long)fieldSkills.getDamagedestructiontime());//存在时间
 
@@ -2688,6 +2640,9 @@ public class MapleMap {
             }
 
     }
+
+
+
     public void cancelMorphs(final MapleStatEffect effect,final MapleCharacter applyfrom) {
         final LinkedList<MapleBuffStatValueHolder> allBuffs = new LinkedList<MapleBuffStatValueHolder>((Collection<? extends MapleBuffStatValueHolder>)applyfrom.getEffects().values());
         for ( MapleBuffStatValueHolder mbsvh : allBuffs) {
@@ -2845,9 +2800,14 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
             }
             idrop = equip.copy();
             if (LtMS.ConfigValuesMap.get("暗黑破坏神之冒险之神") >= 1) {
-                String s = LtDiabloEquipments.assembleEntry();
+                String s = LtDiabloEquipments.assembleEntry(MapleItemInformationProvider.getInstance().getReqLevel( idrop.getItemId()));
                 if (!StringUtils.isEmpty(s)) {
                     idrop.setOwner(s);
+                    if (Start.sendMsgList.contains(s)) {
+                        Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("[稀有词条]", " : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！", (IItem) idrop, (byte) 1, chr.getClient().getChannel()));
+
+                        Bot.sendGroupMessage("[稀有词条] : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！");
+                    }
                 }
             }
         }
@@ -3213,7 +3173,7 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
     
     public void addPlayer(MapleCharacter chr) {
         //领域重置
-        RedisUtil.hset(RedisUtil.KEYNAMES.DOMAIN_AURA.getKeyName(), chr.getId()+"","0");
+//        RedisUtil.hset(RedisUtil.KEYNAMES.DOMAIN_AURA.getKeyName(), chr.getId()+"","0");
         final List<MapleCharacter> players = this.getAllPlayersThreadsafe();
         for ( MapleCharacter c : players) {
             if (c.getId() == chr.getId()) {
@@ -3601,8 +3561,6 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
                 chr.getMap().broadcastMessage(MaplePacketCreator.startMapEffect("", 5120008, false));
             }
         }
-
-        this.hasCheckIn = true;
     }
     
     public int getNumItems() {
@@ -5386,7 +5344,7 @@ public void respawn(final boolean force) {
                     MapleMap.this.clock_s = false;
                 } catch (InterruptedException var4) {
                     var4.printStackTrace();
-                    服务端输出信息.println_err("执行 给时钟 错误，错误原因： " + var4);
+                    //服务端输出信息.println_err("执行 给时钟 错误，错误原因： " + var4);
                 }
 
             }
@@ -5463,7 +5421,7 @@ public void respawn(final boolean force) {
                     MapleMap.this.clock_s = false;
                 } catch (InterruptedException var4) {
                     var4.printStackTrace();
-                    服务端输出信息.println_err("执行 给时钟 错误，错误原因： " + var4);
+                    //服务端输出信息.println_err("执行 给时钟 错误，错误原因： " + var4);
                 }
 
             }

@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
@@ -1126,16 +1127,14 @@ public class 爆率设置 extends javax.swing.JFrame {
     }//GEN-LAST:event_世界爆物爆率ActionPerformed
 
     private void 添加世界爆物ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_添加世界爆物ActionPerformed
-        boolean result1 = this.世界爆物物品代码.getText().matches("[0-9]+");
-        boolean result2 = this.世界爆物爆率.getText().matches("[0-9]+");
+        boolean result1 = Objects.nonNull(this.世界爆物物品代码.getText());
+        boolean result2 = Objects.nonNull(this.世界爆物爆率.getText());
         if (result1 && result2) {
-            if (Integer.parseInt(this.世界爆物物品代码.getText()) < 0 && Integer.parseInt(this.世界爆物爆率.getText()) < 0) {
-                JOptionPane.showMessageDialog(null, "[信息]:请填写正确的值。");
-                return;
-            }
             PreparedStatement ps1 = null;
             ResultSet rs = null;
-            try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("INSERT INTO drop_data_global (continent,dropType,itemid,minimum_quantity,maximum_quantity,questid,chance) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+            try {
+                Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement("INSERT INTO drop_data_global (continent,dropType,itemid,minimum_quantity,maximum_quantity,questid,chance) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 ps.setInt(1, 1);
                 ps.setInt(2, 1);
                 ps.setInt(3, Integer.parseInt(this.世界爆物物品代码.getText()));
@@ -1147,8 +1146,10 @@ public class 爆率设置 extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(null, "[信息]:世界爆物添加成功。");
                 刷新世界爆物();
                 ps.close();
-            } catch (SQLException ex) {
-                Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+                con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                System.out.println("[信息]:世界爆物添加失败。"+ex.getMessage());
             }
         } else {
             JOptionPane.showMessageDialog(null, "[信息]:请输入<物品代码>，<物品爆率> 。");
@@ -1324,15 +1325,14 @@ public class 爆率设置 extends javax.swing.JFrame {
     }//GEN-LAST:event_刷新怪物卡片ActionPerformed
 
     private void 添加怪物爆物ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_添加怪物爆物ActionPerformed
-        boolean result1 = this.怪物爆物怪物代码.getText().matches("[0-9]+");
-        boolean result2 = this.怪物爆物物品代码.getText().matches("[0-9]+");
-        boolean result3 = this.怪物爆物爆率.getText().matches("[0-9]+");
+        boolean result1 = Objects.nonNull(this.怪物爆物怪物代码.getText());
+        boolean result2 = Objects.nonNull(this.怪物爆物物品代码.getText());
+        boolean result3 = Objects.nonNull(this.怪物爆物爆率.getText());
         if (result1 && result2 && result3) {
-            if (Integer.parseInt(this.怪物爆物怪物代码.getText()) < 0 && Integer.parseInt(this.怪物爆物物品代码.getText()) < 0 && Integer.parseInt(this.怪物爆物爆率.getText()) < 0) {
-                JOptionPane.showMessageDialog(null, "[信息]:请填写正确的值。");
-                return;
-            }
-            try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("INSERT INTO drop_data ( dropperid,itemid,minimum_quantity,maximum_quantity,chance) VALUES ( ?, ?, ?, ?, ?)")) {
+
+            try{
+                Connection con = DatabaseConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement("INSERT INTO drop_data ( dropperid,itemid,minimum_quantity,maximum_quantity,chance) VALUES ( ?, ?, ?, ?, ?)");
                 ps.setInt(1, Integer.parseInt(this.怪物爆物怪物代码.getText()));
                 ps.setInt(2, Integer.parseInt(this.怪物爆物物品代码.getText()));
                 ps.setInt(3, 1);
@@ -1340,9 +1340,11 @@ public class 爆率设置 extends javax.swing.JFrame {
                 ps.setInt(5, Integer.parseInt(this.怪物爆物爆率.getText()));
                 ps.executeUpdate();
                 ps.close();
+                con.close();
                 JOptionPane.showMessageDialog(null, "[信息]:添加成功。");
-            } catch (SQLException ex) {
-                Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                System.out.println("[信息]:添加失败。"+ex.getMessage());
             }
         } else {
             JOptionPane.showMessageDialog(null, "[信息]:请输入<怪物代码><物品代码><物品爆率>的格式来添加。");

@@ -6,7 +6,7 @@
 package snail;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 import tools.FileoutputUtil;
 
 import java.sql.Connection;
@@ -136,7 +136,7 @@ public class RedeemCodeUtils {
 
                 }
             } catch (SQLException var19) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.newCode执行错误，错误原因：" + var19);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.newCode执行错误，错误原因：" + var19);
                 var19.printStackTrace();
                 return false;
             }
@@ -189,7 +189,7 @@ public class RedeemCodeUtils {
 
                 }
             } catch (SQLException var21) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.getCode执行错误，错误原因：" + var21);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.getCode执行错误，错误原因：" + var21);
                 var21.printStackTrace();
             }
 
@@ -262,7 +262,7 @@ public class RedeemCodeUtils {
 
                 return count;
             } catch (SQLException var18) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.getCode执行错误，错误原因：" + var18);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.getCode执行错误，错误原因：" + var18);
                 var18.printStackTrace();
                 return 0;
             }
@@ -331,7 +331,7 @@ public class RedeemCodeUtils {
 
                 return found;
             } catch (SQLException var21) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.checkCode执行错误，错误原因：" + var21);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.checkCode执行错误，错误原因：" + var21);
                 var21.printStackTrace();
                 return false;
             }
@@ -414,7 +414,7 @@ public class RedeemCodeUtils {
 
                 return var24;
             } catch (SQLException var23) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.newCode执行错误，错误原因：" + var23);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.newCode执行错误，错误原因：" + var23);
                 var23.printStackTrace();
                 return false;
             }
@@ -478,7 +478,7 @@ public class RedeemCodeUtils {
 
                 }
             } catch (SQLException var18) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.getItemId执行错误，错误原因：" + var18);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.getItemId执行错误，错误原因：" + var18);
                 var18.printStackTrace();
                 return -1;
             }
@@ -538,7 +538,7 @@ public class RedeemCodeUtils {
 
                 }
             } catch (SQLException var18) {
-                服务端输出信息.println_err("【错误】RedeemCodeUtils.getMount执行错误，错误原因：" + var18);
+                //服务端输出信息.println_err("【错误】RedeemCodeUtils.getMount执行错误，错误原因：" + var18);
                 var18.printStackTrace();
                 return 0;
             }

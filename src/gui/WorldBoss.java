@@ -2,7 +2,7 @@ package gui;
 
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 import java.awt.Point;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,7 +29,7 @@ public class WorldBoss {
     }
 
     public static boolean loadFromDB() {
-        服务端输出信息.println_out("【世界BOSS】开始从数据库的读取BOSS信息。。。");
+        //服务端输出信息.println_out("【世界BOSS】开始从数据库的读取BOSS信息。。。");
         bossMap.clear();
         maxStage = 0;
         nowStage = 1;
@@ -62,7 +62,7 @@ public class WorldBoss {
                         }
                     }
 
-                    服务端输出信息.println_out("【世界BOSS】读取成功");
+                    //服务端输出信息.println_out("【世界BOSS】读取成功");
                     boolean var17 = true;
                     return var17;
                 }
@@ -84,7 +84,7 @@ public class WorldBoss {
 
             }
         } catch (SQLException var16) {
-            服务端输出信息.println_err("【错误】loadFromDB错误，错误原因：" + var16);
+            //服务端输出信息.println_err("【错误】loadFromDB错误，错误原因：" + var16);
             var16.printStackTrace();
             return false;
         }
@@ -156,7 +156,7 @@ public class WorldBoss {
 
                 return var16;
             } catch (SQLException var15) {
-                服务端输出信息.println_err("【错误】saveToDB错误，错误原因：" + var15);
+                //服务端输出信息.println_err("【错误】saveToDB错误，错误原因：" + var15);
                 var15.printStackTrace();
                 return false;
             }
@@ -198,7 +198,7 @@ public class WorldBoss {
             ++maxStage;
             return true;
         } catch (Exception var6) {
-            服务端输出信息.println_err("【错误】addBoss错误，错误原因：" + var6);
+            //服务端输出信息.println_err("【错误】addBoss错误，错误原因：" + var6);
             var6.printStackTrace();
             return false;
         }
@@ -210,7 +210,7 @@ public class WorldBoss {
             ++maxStage;
             return true;
         } catch (Exception var14) {
-            服务端输出信息.println_err("【错误】loadBoss错误，错误原因：" + var14);
+            //服务端输出信息.println_err("【错误】loadBoss错误，错误原因：" + var14);
             var14.printStackTrace();
             return false;
         }

@@ -6,7 +6,7 @@
 package snail;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -87,7 +87,7 @@ public class JKook {
             return var5;
         } catch (SQLException var20) {
             var20.printStackTrace();
-            服务端输出信息.println_err("【错误】JKook addReward错误，原因：" + var20);
+            //服务端输出信息.println_err("【错误】JKook addReward错误，原因：" + var20);
             return 0;
         }
     }
@@ -127,7 +127,7 @@ public class JKook {
             return kookId;
         } catch (SQLException var16) {
             var16.printStackTrace();
-            服务端输出信息.println_err("【错误】JKook getKookId错误，原因：" + var16);
+            //服务端输出信息.println_err("【错误】JKook getKookId错误，原因：" + var16);
             return "";
         }
     }
@@ -172,7 +172,7 @@ public class JKook {
             return var5;
         } catch (SQLException var18) {
             var18.printStackTrace();
-            服务端输出信息.println_err("【错误】JKook getKookId错误，原因：" + var18);
+            //服务端输出信息.println_err("【错误】JKook getKookId错误，原因：" + var18);
             return false;
         }
     }
@@ -215,7 +215,7 @@ public class JKook {
             return var6;
         } catch (SQLException var19) {
             var19.printStackTrace();
-            服务端输出信息.println_err("【错误】JKook getKookId错误，原因：" + var19);
+            //服务端输出信息.println_err("【错误】JKook getKookId错误，原因：" + var19);
             return 0;
         }
     }

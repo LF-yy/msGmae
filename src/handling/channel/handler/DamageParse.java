@@ -1,6 +1,8 @@
 package handling.channel.handler;
 
+import bean.ASkill;
 import bean.BreakthroughMechanism;
+import bean.HideAttribute;
 import bean.LtDiabloEquipments;
 import constants.tzjc;
 import database.DBConPool;
@@ -9,9 +11,11 @@ import handling.world.World;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import server.Start;
+import server.maps.*;
 import snail.Potential;
 import tools.data.LittleEndianAccessor;
 
+import java.awt.*;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -21,16 +25,15 @@ import java.util.*;
 
 import client.MapleJob;
 
-import java.awt.Point;
 import server.life.Element;
 import client.anticheat.CheatTracker;
 import client.inventory.IItem;
 import server.life.MapleMonsterStats;
 import server.life.MapleMonster;
 import client.PlayerStats;
-import server.maps.MapleMap;
-import server.maps.MaplePvp;
 import constants.ServerConfig;
+
+import java.util.List;
 import java.util.Map.Entry;
 import client.inventory.MapleInventoryType;
 import client.status.MonsterStatusEffect;
@@ -43,9 +46,6 @@ import tools.FileoutputUtil;
 import tools.Pair;
 import client.status.MonsterStatus;
 import client.MapleBuffStat;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapItem;
-import server.maps.MapleMapObjectType;
 import tools.AttackPair;
 import constants.GameConstants;
 import tools.MaplePacketCreator;
@@ -176,13 +176,18 @@ public class DamageParse {
             }
             attackCount /= 2;
         }
+        HideAttribute hideAttribute = Start.hideAttributeMap.get(player.getId());
 
         int pDamagePercent = player.getPotential(29);
         int pDamagePercentBoss = player.getPotential(30);
         int pDamagePercentNormal = player.getPotential(31);
-        int packageDamagePercent = player.package_total_damage_percent;
-        int packageDamagePercentBoss = player.package_boss_damage_percent;
-        int packageDamagePercentNormal = player.package_normal_damage_percent;
+        int packageDamagePercent = player.package_total_damage_percent + hideAttribute.getTotal_total_damage_percent()+(Start.masterApprenticeGain.get(player.getId()) !=null ? Start.masterApprenticeGain.get(player.getId()) : 0);
+        int packageDamagePercentBoss = player.package_boss_damage_percent + hideAttribute.getTotal_boss_damage_percent();
+        int packageDamagePercentNormal = player.package_normal_damage_percent + hideAttribute.getTotal_normal_damage_percent();
+        double skillDamage = 1.0;
+        if(Objects.nonNull(hideAttribute.getSkillDamage()) && hideAttribute.getSkillDamage().size()>0 && Objects.nonNull(effect) && Objects.nonNull(hideAttribute.getSkillDamage().get(effect.getSourceId()))){
+            skillDamage = hideAttribute.getSkillDamage().get(effect.getSourceId());
+        }
         int pDamagePercentSkill = 0;
         if (Potential.isDamageSkill(attack.skill)) {
             pDamagePercentSkill = player.getPotential(attack.skill);
@@ -204,25 +209,53 @@ public class DamageParse {
 
         //特效攻击,如:致命一击 2倍伤害 3倍伤害 4倍伤害 5倍伤害
         if (ListUtil.isNotEmpty(player.LtDiabloEquipmentsList)){
-            for (LtDiabloEquipments ltDiabloEquipments : player.LtDiabloEquipmentsList) {
-                int rom = RandomUtils.nextInt(1000000);
-                if(player.getJob() ==312){
-                    rom = RandomUtils.nextInt(2000000);
-                }
-                if (rom >ltDiabloEquipments.getSkillDs() && rom<ltDiabloEquipments.getSkillSl()) {
-                    分身伤害加成+= ltDiabloEquipments.getSkillDamage();
-                    if(分身伤害加成> LtMS.ConfigValuesMap.get("倍率伤害加成上限")){
-                        分身伤害加成 = LtMS.ConfigValuesMap.get("倍率伤害加成上限");
+            try {
+                for (LtDiabloEquipments ltDiabloEquipments : player.LtDiabloEquipmentsList) {
+                    int rom = RandomUtils.nextInt(1000000);
+                    if(theSkill.getId() == 5221004 || theSkill.getId() == 13111000 || theSkill.getId() == 3121004 ){
+                        rom = RandomUtils.nextInt(4000000);
                     }
-                    if(StringUtils.isNotEmpty(ltDiabloEquipments.getSkillTx())){
-                        player.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(ltDiabloEquipments.getSkillTx()));
+                    if (rom >ltDiabloEquipments.getSkillDs() && rom<ltDiabloEquipments.getSkillSl()) {
+                        分身伤害加成+= ltDiabloEquipments.getSkillDamage();
+                        if(分身伤害加成> LtMS.ConfigValuesMap.get("倍率伤害加成上限")){
+                            分身伤害加成 = LtMS.ConfigValuesMap.get("倍率伤害加成上限");
+                        }
+                        if(StringUtils.isNotEmpty(ltDiabloEquipments.getSkillTx())){
+                            //client.sendPacket(UIPacket.ShowWZEffect("Effect/ItemEff.img/1102865/effect/default"));
+                            player.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(ltDiabloEquipments.getSkillTx()));
+                        }
                     }
                 }
+            } catch (Exception e) {
             }
+        }
+        if (ListUtil.isNotEmpty(player.shieldEnhancementEquipmentsList)){
+            try {
+                boolean flg = false;
+                String skillTx = "";
+                for (LtDiabloEquipments ltDiabloEquipments : player.shieldEnhancementEquipmentsList) {
+                    int rom = RandomUtils.nextInt(1000000);
+                    if(theSkill.getId() == 5221004 || theSkill.getId() == 13111000 || theSkill.getId() == 3121004 ){
+                        rom = RandomUtils.nextInt(4000000);
+                    }
+                    if (rom >ltDiabloEquipments.getSkillDs() && rom<ltDiabloEquipments.getSkillSl()) {
+                        if(StringUtils.isNotEmpty(ltDiabloEquipments.getSkillTx())){
+                            player.getStat().setHphd(player.getStat().getHphd() + ltDiabloEquipments.getSkillDamage());
+                            flg = true;
+                            skillTx = ltDiabloEquipments.getSkillTx();
+                        }
+                    }
+                }
+                if (flg && StringUtils.isNotEmpty(skillTx)) {
+                    player.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(skillTx));
+                }
+            } catch (Exception e) {}
         }
 
         double maxDamagePerHit = 0.0;
 //        System.out.println("当前段数:"+attack.allDamage.size());
+        //词条加成额外计算
+
         for (final AttackPair oned2 : attack.allDamage) {
             final MapleMonster monster = map.getMonsterByOid(oned2.objectid);
             if (monster != null) {
@@ -257,17 +290,23 @@ public class DamageParse {
                         else {
                             eachd = fixeddmg;
                         }
-                    }
-                    else if (monsterstats.getOnlyNoramlAttack()) {
+                    }else if (monsterstats.getOnlyNoramlAttack()) {
                         eachd = (attack.skill != 0) ? 0 : Math.min((int) eachd, (int) maxDamagePerHit);
+                    }
+                    if(effect!=null && player.getUserASkill()!=null && player.getUserASkill().size()>0 && player.getUserASkill().get(effect.getSourceId())!=null) {
+                        eachd = (int)(eachd * player.getUserASkill().get(effect.getSourceId()).getDamage());
+                    }
+                    if(eachd < 0 ){
+                        eachd = Integer.MAX_VALUE;
+                    }
+                    if (eachd > (player.读取伤害上限值() >Integer.MAX_VALUE? Integer.MAX_VALUE : player.读取伤害上限值())&& LtMS.ConfigValuesMap.get("破总伤") ==0) {
+                        eachd = Math.toIntExact((player.读取伤害上限值() > Integer.MAX_VALUE ? Integer.MAX_VALUE : player.读取伤害上限值()));
                     }
                     newtotDamageToOneMonster += (long)eachd;
                     if (monster.getId() == 9300021 && player.getPyramidSubway() != null) {
                         player.getPyramidSubway().onMiss(player);
                     }
-                    if (newtotDamageToOneMonster > player.读取伤害上限值() && LtMS.ConfigValuesMap.get("破总伤") ==0) {
-                        newtotDamageToOneMonster = player.读取伤害上限值();
-                    }
+
                 }
                 //职业伤害调整
                 if(Start.dropCoefficientMap.get((int)player.getJob()) != null){
@@ -332,7 +371,7 @@ public class DamageParse {
 
                 //伤害加成计算
                 newtotDamageToOneMonster =getNewtotDamageToOneMonster(player,newtotDamageToOneMonster, pDamagePercent, pDamagePercentBoss, pDamagePercentNormal, packageDamagePercent, packageDamagePercentBoss, packageDamagePercentNormal, pDamagePercentSkill, monster);
-
+                newtotDamageToOneMonster *= skillDamage;
 
                 List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(player.getId());
                 if (ListUtil.isNotEmpty(breakthroughMechanisms)) {
@@ -646,8 +685,68 @@ public class DamageParse {
         }
         return newtotDamageToOneMonster;
     }
-
-    public static void applyAttackMagic(final AttackInfo attack, final ISkill theSkill, final MapleCharacter player, final MapleStatEffect effect) {
+    /**
+     * 伤害附加计算
+     */
+    public static void 计算伤害(MapleCharacter applyfrom, MapleStatEffect effect, ASkill aSkill, AttackInfo attack) {
+        Rectangle bounds = MapleStatEffect.calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft(), new Point(-400, -400), new Point(400, 400), 800);
+        if (attack.allDamage ==null || attack.allDamage.size()==0 ){
+            //System.out.println("无技能伤害");
+            return ;
+        }
+        int attackCount = 0;
+        int mobCount = 0;
+        if(aSkill.getAttackCount()>0 && attack.allDamage.size()>0 && attack.allDamage.get(0).getAttack().size()>0){
+            attackCount = aSkill.getAttackCount();
+            attack.setHits((byte) attackCount);
+        }
+        if (aSkill.getMobCount()>0){
+            mobCount = aSkill.getMobCount();
+        }
+//        System.out.println("开始计算1"+mobCount);
+        if (attackCount>0){
+            for (AttackPair attackPair : attack.allDamage) {
+                List<Pair<Integer, Boolean>> attackPairAttack = attackPair.getAttack();
+                if (!attackPairAttack.isEmpty()){
+                    for (int i = 0; i < attackCount; i++) {
+                        attackPairAttack.add(new Pair<Integer, Boolean>(attackPairAttack.get(0).getLeft(),attackPairAttack.get(0).getRight()));
+                    }
+                    attackPair.setAttack(attackPairAttack);
+                }
+            }
+            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害气泡显示")).intValue() > 0 && (System.currentTimeMillis() - applyfrom.getQpStartTime())>LtMS.ConfigValuesMap.get("伤害气泡显示时间")) {
+                applyfrom.showInstruction("【词条额外段数 → " + attackCount + "#k】", 240, 10);
+            }
+            if (((Integer) LtMS.ConfigValuesMap.get("自定义伤害黄字喇叭显示")).intValue() > 0 && (System.currentTimeMillis() - applyfrom.getQpStartTime())>LtMS.ConfigValuesMap.get("伤害气泡显示时间")) {
+                applyfrom.dropMessage(-1, "【词条额外段数 →" + attackCount + "】");
+            }
+        }
+//        System.out.println("开始计算2"+attackCount);
+        if (mobCount>0) {
+            //设置对象
+            MapleMist mist = new MapleMist(bounds, applyfrom, effect);
+            try {
+                int count = 0;
+                List<MapleMapObject> mapObjectsInRect = applyfrom.getClient().getPlayer().getMap().getMapObjectsInRect(mist.getBox(), Collections.singletonList(MapleMapObjectType.MONSTER));
+                if (mapObjectsInRect != null && mapObjectsInRect.size() > 0  && attack.allDamage.size() < mapObjectsInRect.size()) {
+                    for (MapleMapObject mapleMapObject : mapObjectsInRect) {
+                        if (attack.allDamage.stream().noneMatch(attackPair -> attackPair.getObjectid() == mapleMapObject.getObjectId())) {
+                            if (mobCount <= count) {
+                                break;
+                            }
+                            AttackPair attackPair = attack.allDamage.get(0);
+                            List<Pair<Integer, Boolean>> attackPairAttack = attackPair.getAttack();
+                            attack.allDamage.add(new AttackPair(mapleMapObject.getObjectId(), attackPairAttack));
+                            count++;
+                        }
+                    }
+                }
+//                System.out.println("开始计算3"+count);
+            } catch (Exception e) {
+            }
+        }
+    }
+    public static void applyAttackMagic( AttackInfo attack, final ISkill theSkill, final MapleCharacter player, final MapleStatEffect effect) {
         if (!player.isAlive()) {
             player.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
@@ -699,8 +798,8 @@ public class DamageParse {
         }
         maxDamagePerHit *= 1.04;
         final Element element = (player.getBuffedValue(MapleBuffStat.ELEMENT_RESET) != null) ? Element.NEUTRAL : theSkill.getElement();
-        int totDamage = 0;
-        final int CriticalDamage = stats.passive_sharpeye_percent();
+        long totDamage = 0;
+        //final int CriticalDamage = stats.passive_sharpeye_percent();
         final ISkill eaterSkill = SkillFactory.getSkill(GameConstants.getMPEaterForJob((int)player.getJob()));
         final int eaterLevel = player.getSkillLevel(eaterSkill);
         final MapleMap map = player.getMap();
@@ -708,9 +807,15 @@ public class DamageParse {
         int pDamagePercent = player.getPotential(29);
         int pDamagePercentBoss = player.getPotential(30);
         int pDamagePercentNormal = player.getPotential(31);
-        int packageDamagePercent = player.package_total_damage_percent;
-        int packageDamagePercentBoss = player.package_boss_damage_percent;
-        int packageDamagePercentNormal = player.package_normal_damage_percent;
+        HideAttribute hideAttribute = Start.hideAttributeMap.get(player.getId());
+
+        int packageDamagePercent = player.package_total_damage_percent + hideAttribute.getTotal_total_damage_percent()+(Start.masterApprenticeGain.get(player.getId()) !=null ? Start.masterApprenticeGain.get(player.getId()) : 0);
+        int packageDamagePercentBoss = player.package_boss_damage_percent + hideAttribute.getTotal_boss_damage_percent();
+        int packageDamagePercentNormal = player.package_normal_damage_percent + hideAttribute.getTotal_normal_damage_percent();
+        double skillDamage = 1.0;
+        if(Objects.nonNull(hideAttribute.getSkillDamage()) && hideAttribute.getSkillDamage().size()>0 && Objects.nonNull(hideAttribute.getSkillDamage().get(effect.getSourceId()))){
+             skillDamage = hideAttribute.getSkillDamage().get(effect.getSourceId());
+        }
         int pDamagePercentSkill = 0;
         if (Potential.isDamageSkill(attack.skill)) {
             pDamagePercentSkill = player.getPotential(attack.skill);
@@ -729,12 +834,56 @@ public class DamageParse {
         } catch (Exception e) {
             System.out.println("魔法克隆伤害加成计算错误");
         }
-
+//特效攻击,如:致命一击 2倍伤害 3倍伤害 4倍伤害 5倍伤害
+        if (ListUtil.isNotEmpty(player.LtDiabloEquipmentsList)) {
+            try {
+                for (LtDiabloEquipments ltDiabloEquipments : player.LtDiabloEquipmentsList) {
+                    int rom = RandomUtils.nextInt(1000000);
+                    if (theSkill.getId() == 5221004 || theSkill.getId() == 13111000 || theSkill.getId() == 3121004) {
+                        rom = RandomUtils.nextInt(4000000);
+                    }
+                    if (rom > ltDiabloEquipments.getSkillDs() && rom < ltDiabloEquipments.getSkillSl()) {
+                        分身伤害加成 += ltDiabloEquipments.getSkillDamage();
+                        if (分身伤害加成 > LtMS.ConfigValuesMap.get("倍率伤害加成上限")) {
+                            分身伤害加成 = LtMS.ConfigValuesMap.get("倍率伤害加成上限");
+                        }
+                        if (StringUtils.isNotEmpty(ltDiabloEquipments.getSkillTx())) {
+                            //client.sendPacket(UIPacket.ShowWZEffect("Effect/ItemEff.img/1102865/effect/default"));
+                            player.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(ltDiabloEquipments.getSkillTx()));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+        }
+        if (ListUtil.isNotEmpty(player.shieldEnhancementEquipmentsList)) {
+            try {
+                boolean flg = false;
+                String skillTx = "";
+                for (LtDiabloEquipments ltDiabloEquipments : player.shieldEnhancementEquipmentsList) {
+                    int rom = RandomUtils.nextInt(1000000);
+                    if (theSkill.getId() == 5221004 || theSkill.getId() == 13111000 || theSkill.getId() == 3121004) {
+                        rom = RandomUtils.nextInt(4000000);
+                    }
+                    if (rom > ltDiabloEquipments.getSkillDs() && rom < ltDiabloEquipments.getSkillSl()) {
+                        if (StringUtils.isNotEmpty(ltDiabloEquipments.getSkillTx())) {
+                            player.getStat().setHphd(player.getStat().getHphd() + ltDiabloEquipments.getSkillDamage());
+                            flg = true;
+                            skillTx = ltDiabloEquipments.getSkillTx();
+                        }
+                    }
+                }
+                if (flg && StringUtils.isNotEmpty(skillTx)) {
+                    player.getClient().sendPacket(UIPacket.AranTutInstructionalBalloon(skillTx));
+                }
+            } catch (Exception e) {
+            }
+        }
         for (final AttackPair oned : attack.allDamage) {
             final MapleMonster monster = map.getMonsterByOid(oned.objectid);
             if (monster != null) {
                 final boolean Tempest = monster.getStatusSourceID(MonsterStatus.FREEZE) == 21120006 && !monster.getStats().isBoss();
-                int totDamageToOneMonster = 0;
+                long totDamageToOneMonster = 0;
                 long newtotDamageToOneMonster = 0L;
                 final MapleMonsterStats monsterstats = monster.getStats();
                 final int fixeddmg = monsterstats.getFixedDamage();
@@ -777,12 +926,17 @@ public class DamageParse {
                     else if (monsterstats.getOnlyNoramlAttack()) {
                         eachd = Integer.valueOf(0);
                     }
-
-                    totDamageToOneMonster += (int)eachd;
-                    newtotDamageToOneMonster += (long)eachd;
-                    if (newtotDamageToOneMonster > player.读取伤害上限值() && LtMS.ConfigValuesMap.get("破总伤") ==0) {
-                        newtotDamageToOneMonster = player.读取伤害上限值();
+                    if(effect!=null && player.getUserASkill()!=null && player.getUserASkill().size()>0 && player.getUserASkill().get(effect.getSourceId())!=null) {
+                        eachd = (int)(eachd * player.getUserASkill().get(effect.getSourceId()).getDamage());
                     }
+                    if(eachd < 0 ){
+                        eachd = Integer.MAX_VALUE;
+                    }
+                    totDamageToOneMonster += (int)eachd;
+                    if (eachd > (player.读取伤害上限值() >Integer.MAX_VALUE? Integer.MAX_VALUE : player.读取伤害上限值())&& LtMS.ConfigValuesMap.get("破总伤") ==0) {
+                        eachd = Math.toIntExact((player.读取伤害上限值() > Integer.MAX_VALUE ? Integer.MAX_VALUE : player.读取伤害上限值()));
+                    }
+                    newtotDamageToOneMonster += (long)eachd;
                 }
                 //增加的段数伤害
                 //统计段数  技能增加段数  装备增加段数
@@ -829,6 +983,7 @@ public class DamageParse {
                 }
                 //伤害加成计算
                 newtotDamageToOneMonster = getNewtotDamageToOneMonster(player,newtotDamageToOneMonster, pDamagePercent, pDamagePercentBoss, pDamagePercentNormal, packageDamagePercent, packageDamagePercentBoss, packageDamagePercentNormal, pDamagePercentSkill, monster);
+                newtotDamageToOneMonster *= skillDamage;
                 List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(player.getId());
                 if (ListUtil.isNotEmpty(breakthroughMechanisms)) {
                     newtotDamageToOneMonster +=breakthroughMechanisms.get(0).getHarm()*LtMS.ConfigValuesMap.get("境界伤害");
@@ -1351,7 +1506,22 @@ public class DamageParse {
         ret.position = lea.readPos();
         return ret;
     }
-    
+    public static List<AttackPair> parseDamage(List<MapleMapObject> lea,long damageSum,int ds) {
+        if (lea.size()<=0) {
+            return null;
+        }
+        ArrayList<AttackPair> attackPairs = new ArrayList<>();
+        for (MapleMapObject mapleMapObject : lea) {
+            final List<Pair<Integer, Boolean>> allDamageNumbers = new ArrayList<Pair<Integer, Boolean>>();
+           double damageAvg =(double) damageSum/ds;
+            for (int j = 0; j < ds; ++j) {
+                 int damage = damageAvg>Integer.MAX_VALUE?Integer.MAX_VALUE:(int)damageAvg;
+                allDamageNumbers.add(new Pair<Integer, Boolean>(damage, Boolean.FALSE));
+            }
+            attackPairs.add(new AttackPair(mapleMapObject.getObjectId(), allDamageNumbers));
+        }
+        return attackPairs;
+    }
     public static AttackInfo parseDmgM(final LittleEndianAccessor lea) {
         final AttackInfo ret = new AttackInfo();
         lea.skip(1);

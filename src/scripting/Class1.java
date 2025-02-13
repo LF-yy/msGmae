@@ -5,7 +5,7 @@
 
 package scripting;
 
-import gui.服务端输出信息;
+
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 import tools.FileoutputUtil;
@@ -68,7 +68,7 @@ public class Class1 {
             String originalString = new String(original, "utf-8");
             return originalString;
         } catch (Exception var9) {
-            服务端输出信息.println_err("decrypt解密错误：" + var9);
+            //服务端输出信息.println_err("decrypt解密错误：" + var9);
             return null;
         }
     }

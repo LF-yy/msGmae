@@ -1,15 +1,17 @@
 package handling.channel.handler;
 
+import client.inventory.MapleInventoryType;
 import client.messages.CommandProcessor;
 import constants.ServerConfig;
 import constants.tzjc;
 import database.DBConPool;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import scripting.NPCScriptManager;
 import server.MapleItemInformationProvider;
 import server.ServerProperties;
 import server.Start;
+import snail.FakePlayer;
 import snail.Marathon;
 import snail.Potential;
 import server.maps.FieldLimitType;
@@ -26,6 +28,8 @@ import java.util.Collection;
 import abc.离线人偶;
 
 import java.util.List;
+import java.util.Objects;
+
 import client.BuddyEntry;
 import client.MapleQuestStatus;
 import handling.world.MapleParty;
@@ -55,6 +59,7 @@ import tools.MaplePacketCreator;
 import handling.world.World;
 import client.MapleCharacter;
 import client.MapleClient;
+import tools.packet.MTSCSPacket;
 
 public class InterServerHandler
 {
@@ -446,11 +451,12 @@ public class InterServerHandler
             if (World.backupInventoryItems(player.getId())) {
                 player.setBossLog("自动备份背包");
             } else {
-                服务端输出信息.println_err("【错误】角色id" + player.getId() + "自动备份背包失败！");
+                //服务端输出信息.println_err("【错误】角色id" + player.getId() + "自动备份背包失败！");
             }
         }
 
         player.setPower(player.获取角色战斗力());
+        FakePlayer.rewardChr(player);
         if ((Integer) LtMS.ConfigValuesMap.get("潜能系统开关") > 0) {
             c.getPlayer().getStat().recalcLocalStats();
             player.givePotentialBuff(Potential.buffItemId, Potential.duration, true);
@@ -525,6 +531,14 @@ public class InterServerHandler
         }
         //套装伤害加载
         player.set套装伤害加成(tzjc.check_tz(player));
+        //初始化自动buff
+        tzjc.selectBuffIfNotExists(player);
+        player.getLtDonate();
+        player.开启巅峰等级 = player.getBossLog1("开启巅峰等级",1);
+        player.裂隙层数 = player.getBossLog1("裂隙层数",1)+1;
+        player.是否储备经验 = player.getBossLog1("开启储备经验",1)>0;
+        player.飞升等级 = player.getBossLog1("飞升等级",1);
+
     }
     
     public static void ChangeChannel(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
@@ -588,7 +602,7 @@ public class InterServerHandler
 
             ps.close();
         } catch (SQLException var17) {
-            服务端输出信息.println_err("[队列提醒]；账号ID取账号、出错");
+            //服务端输出信息.println_err("[队列提醒]；账号ID取账号、出错");
         }
 
         return data;

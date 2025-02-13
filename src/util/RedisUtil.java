@@ -41,59 +41,49 @@ public final class RedisUtil {
      */
     static {
 //
-        try {
-            boolean isInstall = true;
-            boolean isRunning = false;
-            Process process = Runtime.getRuntime().exec("SC QUERY redserver");
-            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-//                StringBuilder stringBuilder = new StringBuilder();
-                String s;
-                while ((s = bufferedReader.readLine()) != null) {
-                    if (s.contains("1060")) {
-                        System.out.println("1060");
-                        isInstall = false;
-                        break;
-                    } else if (s.contains("STATE")) {
-                        System.out.println("STATE");
-                        isRunning = s.contains("RUNNING");
-                        break;
-                    }
-//                    stringBuilder.append(s).append("\r\n");
-                }
-            }
-           if (!isInstall) {
-                System.out.println("isInstall");
-
-                Process process1 = Runtime.getRuntime().exec("cmd /c redis-server.exe --service-install redis.windows-service.conf --loglevel verbose --service-name redserver", null, new File("config\\"));
-                process1.waitFor();
-
-            }
-
-            if (!isRunning) {
-                System.out.println("isRunning");
-
-                Process process1 = Runtime.getRuntime().exec("cmd /c redis-server.exe --service-start --service-name redserver", null, new File("config\\redis\\"));
-                process1.waitFor();
-            }
-
-        } catch (IOException | InterruptedException e) {//
-            e.printStackTrace();
-            System.out.println("Cache初始化失败");
-        }
-
-        try {
-            System.out.println("CachePool开始初始化");
-            JedisPoolConfig config = new JedisPoolConfig();
-            config.setMaxTotal(MAX_ACTIVE);
-            config.setMaxIdle(MAX_IDLE);
-            config.setMaxWaitMillis(MAX_WAIT);
-            config.setTestOnBorrow(TEST_ON_BORROW);
-            jedisPool = new JedisPool(config, ADDR, PORT, TIMEOUT);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("CachePool初始化失败");
-        }
-        // redis-server --service-install redis.windows-service.conf --loglevel verbose
+//        try {
+//            boolean isInstall = true;
+//            boolean isRunning = false;
+//            Process process = Runtime.getRuntime().exec("SC QUERY redserver");
+//            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+//                String s;
+//                while ((s = bufferedReader.readLine()) != null) {
+//                    if (s.contains("1060")) {
+//                        isInstall = false;
+//                        break;
+//                    } else if (s.contains("STATE")) {
+//                        isRunning = s.contains("RUNNING");
+//                        break;
+//                    }
+//                }
+//            }
+//           if (!isInstall) {
+//
+//                Process process1 = Runtime.getRuntime().exec("cmd /c redis-server.exe --service-install redis.windows-service.conf --loglevel verbose --service-name redserver", null, new File("config\\"));
+//                process1.waitFor();
+//
+//            }
+//
+//            if (!isRunning) {
+//
+//                Process process1 = Runtime.getRuntime().exec("cmd /c redis-server.exe --service-start --service-name redserver", null, new File("config\\redis\\"));
+//                process1.waitFor();
+//            }
+//
+//        } catch (IOException | InterruptedException e) {//
+//            e.printStackTrace();
+//        }
+//
+//        try {
+//            JedisPoolConfig config = new JedisPoolConfig();
+//            config.setMaxTotal(MAX_ACTIVE);
+//            config.setMaxIdle(MAX_IDLE);
+//            config.setMaxWaitMillis(MAX_WAIT);
+//            config.setTestOnBorrow(TEST_ON_BORROW);
+//            jedisPool = new JedisPool(config, ADDR, PORT, TIMEOUT);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
     public static <T> T domain(RedisDomainInterface<T> interfaces) {

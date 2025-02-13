@@ -5,7 +5,7 @@
 
 package gui.图片.xiazai;
 
-import gui.服务端输出信息;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,14 +37,14 @@ public class StartDownload extends Thread {
     public void run() {
         List<DownloadFile> fileList = new ArrayList();
         buildList(fileList);
-        服务端输出信息.println_out("下载开始");
+        //服务端输出信息.println_out("下载开始");
         this.label1.setText("下载开始");
         List<FileDownThread> list = new ArrayList();
 
         FileDownThread my;
         for(int i = 0; i < 3; ++i) {
             my = new FileDownThread("线程 " + i, fileList, 3, this.jpList, this.jlList);
-            服务端输出信息.println_out(my);
+            //服务端输出信息.println_out(my);
             my.start();
             list.add(my);
         }
@@ -57,10 +57,10 @@ public class StartDownload extends Thread {
                 my.join();
             }
         } catch (InterruptedException var5) {
-            服务端输出信息.println_err(var5);
+            //服务端输出信息.println_err(var5);
         }
 
-        服务端输出信息.println_out("下载完成");
+        //服务端输出信息.println_out("下载完成");
         this.label1.setText("下载结束");
     }
 

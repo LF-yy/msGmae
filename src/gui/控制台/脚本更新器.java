@@ -5,7 +5,7 @@
 
 package gui.控制台;
 
-import gui.服务端输出信息;
+
 import org.jvnet.substance.skin.SubstanceBusinessBlackSteelLookAndFeel;
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import org.netbeans.lib.awtextra.AbsoluteLayout;
@@ -105,7 +105,7 @@ public class 脚本更新器 extends JFrame {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
             UIManager.setLookAndFeel(new SubstanceBusinessBlackSteelLookAndFeel());
         } catch (Exception var5) {
-            服务端输出信息.println_err(var5);
+            //服务端输出信息.println_err(var5);
         }
 
         EventQueue.invokeLater(new Runnable() {

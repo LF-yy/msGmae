@@ -7,7 +7,7 @@ import client.MapleCharacter;
 import client.MapleStat;
 import client.MapleClient;
 import constants.ServerConstants.PlayerGMRank;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import server.Timer;
 import snail.SkillSkin;
@@ -421,7 +421,7 @@ public class GodCommand
                                             }
                                         }
                                     } catch (Exception var4) {
-                                        服务端输出信息.println_err("【错误】吸怪命令子线程错误，错误原因：" + var4);
+                                        //服务端输出信息.println_err("【错误】吸怪命令子线程错误，错误原因：" + var4);
                                     }
 
                                 }
@@ -510,7 +510,7 @@ public class GodCommand
                                             }
                                         }
                                     } catch (Exception var4) {
-                                        服务端输出信息.println_err("【错误】吸怪命令子线程错误，错误原因：" + var4);
+                                        //服务端输出信息.println_err("【错误】吸怪命令子线程错误，错误原因：" + var4);
                                     }
 
                                 }
@@ -570,7 +570,7 @@ public class GodCommand
 
                             chr.dropMessage("[管理员提示] 你的 " + skillName + " 技能皮肤已被管理员切换为类型 " + skillType + " ！");
                             c.getPlayer().dropMessage("[系统提示]已成功将 " + chr.getName() + " 的 " + skillName + " 技能皮肤切换为类型 " + skillType + "。");
-                            服务端输出信息.println_out("[系统提示]管理员'" + c.getPlayer().getName() + "'使用GM指令将" + chr.getName() + "的 " + skillName + " 技能皮肤切换为类型 " + skillType + "。");
+                            //服务端输出信息.println_out("[系统提示]管理员'" + c.getPlayer().getName() + "'使用GM指令将" + chr.getName() + "的 " + skillName + " 技能皮肤切换为类型 " + skillType + "。");
                         }
                     }
                 }
@@ -614,7 +614,7 @@ public class GodCommand
                             chr.setSkillSkinAll(Integer.parseInt(skillType));
                             chr.dropMessage("[管理员提示] 你的所有技能皮肤已被管理员切换为类型 " + skillType + " ！");
                             c.getPlayer().dropMessage("[系统提示]已成功将 " + chr.getName() + " 的所有技能皮肤切换为类型 " + skillType + "。");
-                            服务端输出信息.println_out("[系统提示]管理员'" + c.getPlayer().getName() + "'使用GM指令将" + chr.getName() + "的所有技能皮肤切换为类型 " + skillType + "。");
+                            //服务端输出信息.println_out("[系统提示]管理员'" + c.getPlayer().getName() + "'使用GM指令将" + chr.getName() + "的所有技能皮肤切换为类型 " + skillType + "。");
                         }
                     }
                 }

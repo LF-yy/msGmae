@@ -26,23 +26,31 @@ public class ItemConstants
     }
     public static void loadImportantItems() {
         importantItems.clear();
-        importantItemsString = ServerProperties.getProperty("server.settings.importantItems", "");
-        String list = importantItemsString;
-        list = list.replace(" ", "");
-        String[] var1 = list.split(",");
-        int var2 = var1.length;
+        try {
+            importantItemsString = ServerProperties.getProperty("server.settings.importantItems", "");
+            String list = importantItemsString;
+            list = list.replace(" ", "");
+            String[] var1 = list.split(",");
+            int var2 = var1.length;
 
-        for(int var3 = 0; var3 < var2; ++var3) {
-            String str = var1[var3];
-            if (str.length() == 7) {
-                importantItems.add(Integer.parseInt(str));
+            for(int var3 = 0; var3 < var2; ++var3) {
+                String str = var1[var3];
+                if (str.length() == 7) {
+                    importantItems.add(Integer.parseInt(str));
+                }
             }
+        } catch (NumberFormatException e) {
+
         }
 
     }
 
     public static void setImportantItems() {
-        ServerProperties.setProperty("server.settings.importantItems", importantItemsString);
+        try {
+            ServerProperties.setProperty("server.settings.importantItems", importantItemsString);
+        } catch (Exception e) {
+
+        }
     }
 
     public static ArrayList<Integer> getImportantItems() {
@@ -1583,23 +1591,31 @@ public class ItemConstants
 
     public static void loadCanDropedItems() {
         canDropedItems.clear();
-        canDropedItemsString = ServerProperties.getProperty("server.settings.canDropedItems", "");
-        String list = canDropedItemsString;
-        list = list.replace(" ", "");
-        String[] var1 = list.split(",");
-        int var2 = var1.length;
+        try {
+            canDropedItemsString = ServerProperties.getProperty("server.settings.canDropedItems", "");
+            String list = canDropedItemsString;
+            list = list.replace(" ", "");
+            String[] var1 = list.split(",");
+            int var2 = var1.length;
 
-        for(int var3 = 0; var3 < var2; ++var3) {
-            String str = var1[var3];
-            if (str.length() == 7) {
-                canDropedItems.add(Integer.parseInt(str));
+            for(int var3 = 0; var3 < var2; ++var3) {
+                String str = var1[var3];
+                if (str.length() == 7) {
+                    canDropedItems.add(Integer.parseInt(str));
+                }
             }
+        } catch (NumberFormatException e) {
+
         }
 
     }
 
     public static void setCanDropedItems() {
-        ServerProperties.setProperty("server.settings.canDropedItems", canDropedItemsString);
+        try {
+            ServerProperties.setProperty("server.settings.canDropedItems", canDropedItemsString);
+        } catch (Exception e) {
+
+        }
     }
 
     public static class 类型 {

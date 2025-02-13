@@ -2,7 +2,7 @@ package handling.channel.handler;
 
 import database.DatabaseConnection;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import handling.world.MapleParty;
 import server.*;
 import snail.Potential;
@@ -363,7 +363,7 @@ public class InventoryHandler
                 itemList.clear();
             }
         } catch (Exception var12) {
-            服务端输出信息.println_err("【错误】ItemGatherS执行错误，错误名:" + var12 + "；错误原因：" + var12.getCause());
+            //服务端输出信息.println_err("【错误】ItemGatherS执行错误，错误名:" + var12 + "；错误原因：" + var12.getCause());
             var12.printStackTrace();
         }
 
@@ -668,8 +668,9 @@ public class InventoryHandler
 
     //使用消耗品
     public static final void UseItem( LittleEndianAccessor slea,  MapleClient c, MapleCharacter chr) {
-
-
+        if(c.getPlayer().getId()>100000){
+            return;
+        }
         c.getPlayer().updateTick(slea.readInt());
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
@@ -1421,6 +1422,9 @@ public class InventoryHandler
     }
     
     public static void UseCashItem(final LittleEndianAccessor slea, final MapleClient c) {
+        if(c.getPlayer().getId()>100000){
+            return;
+        }
         final byte slot = (byte)slea.readShort();
         final int itemId = slea.readInt();
         IItem toUse = c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((short)slot);

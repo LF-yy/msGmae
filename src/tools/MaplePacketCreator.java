@@ -924,36 +924,78 @@ public class MaplePacketCreator
     }
     
     public static byte[] spawnPlayerMapobject(MapleCharacter chr) {
+
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.SPAWN_PLAYER.getValue());
         mplew.writeInt(chr.getId());
         mplew.write((int)chr.getLevel());
         mplew.writeMapleAsciiString(chr.getName());
-        StringBuilder sb = new StringBuilder();
-        //sb.append(ServerConfig.SERVERNAME);
         boolean showPower = (Integer)LtMS.ConfigValuesMap.get("角色名战斗力显示") > 0;
-        if (showPower) {
-            sb.append("『战斗力:" + chr.getPower()+"』");
-        }
-        if (chr.getGuildId() > 0) {
-            final MapleGuild gs = Guild.getGuild(chr.getGuildId());
+        boolean 家族名称显示 = Objects.nonNull(LtMS.ConfigValuesMap.get("家族名称显示")) && LtMS.ConfigValuesMap.get("家族名称显示") > 0;
+        boolean BOSS伤害显示 = Objects.nonNull(LtMS.ConfigValuesMap.get("BOSS伤害显示")) && LtMS.ConfigValuesMap.get("BOSS伤害显示") > 0;
+
+        if (chr.getGuildId() <= 0) {
+            if (showPower) {
+                if(BOSS伤害显示) {
+                    mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(chr.getPower()) + "』"+"|BOSS伤:"+(int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(chr.get套装伤害加成()*100))+"%"+(chr.开启巅峰等级>0 ? "|巅峰:"+chr.开启巅峰等级+"级" : ""));
+                }else{
+                    mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(chr.getPower()) + "』"+(chr.开启巅峰等级>0 ? "|巅峰:"+chr.开启巅峰等级+"级" : ""));
+                }
+            } else {
+                if(BOSS伤害显示) {
+                    mplew.writeMapleAsciiString("BOSS伤:"+((int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(chr.get套装伤害加成()*100)))+"%"+(chr.开启巅峰等级>0 ? "|巅峰:"+chr.开启巅峰等级+"级" : ""));
+                }else{
+                    mplew.writeMapleAsciiString("");
+                }
+            }
+
+            mplew.writeZeroBytes(6);
+        } else {
+            MapleGuild gs = Guild.getGuild(chr.getGuildId());
             if (gs != null) {
-                sb.append("[" + gs.getName() + "]");
+                if (showPower) {
+                    if(家族名称显示){
+                        if(BOSS伤害显示) {
+                            mplew.writeMapleAsciiString(gs.getName() + "『战力:" + formatNumberWithUnit(chr.getPower()) + "』"+"|BOSS伤:"+(int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(chr.get套装伤害加成()*100))+"%");
+                        }else{
+                            mplew.writeMapleAsciiString(gs.getName() + "『战力:" + formatNumberWithUnit(chr.getPower()) + "』");
+                        }
+                    }else{
+                        if(BOSS伤害显示) {
+                            mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(chr.getPower()) + "』"+"|BOSS伤:"+(int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(chr.get套装伤害加成()*100))+"%");
+                        }else{
+                            mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(chr.getPower()) + "』");
+                        }
+                    }
+                } else {
+                    if(BOSS伤害显示) {
+                        mplew.writeMapleAsciiString(gs.getName()+"|BOSS伤:"+(int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(chr.get套装伤害加成()*100))+"%");
+                    }else{
+                        mplew.writeMapleAsciiString(gs.getName());
+                    }
+                }
+
                 mplew.writeShort(gs.getLogoBG());
                 mplew.write(gs.getLogoBGColor());
                 mplew.writeShort(gs.getLogo());
                 mplew.write(gs.getLogoColor());
+            } else {
+                if (showPower) {
+                    if(BOSS伤害显示) {
+                        mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(chr.getPower()) + "』"+"|BOSS伤:"+(int)(chr.getStat().bossdam_r+chr.package_boss_damage_percent+chr.getPotential(30)+(chr.get套装伤害加成()*100))+"%");
+                    }else{
+                        mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(chr.getPower()) + "』");
+                    }
+                } else {
+                    mplew.writeMapleAsciiString("");
+                }
+
+                mplew.writeZeroBytes(6);
             }
         }
 
-        //境界名称
-        List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(chr.getId());
-        if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-            sb.append("[" + breakthroughMechanisms.get(0).getName()+breakthroughMechanisms.get(0).getEqualOrder()+ "]" );
-        }
-
-        mplew.writeMapleAsciiString(sb.toString());
-        mplew.writeZeroBytes(6);
+//        mplew.writeMapleAsciiString(sb.toString());
+//        mplew.writeZeroBytes(6);
         final List<Pair<Integer, Integer>> buffvalue = new ArrayList<Pair<Integer, Integer>>();
         final List<Pair<Integer, Integer>> buffvaluenew = new ArrayList<Pair<Integer, Integer>>();
         final int[] mask = (int[])MaplePacketCreator.SecondaryStatRemote.clone();
@@ -3431,19 +3473,26 @@ public class MaplePacketCreator
     }
     
     public static void getGuildInfo(final MaplePacketLittleEndianWriter mplew, final MapleGuild guild, final MapleCharacter c) {
+
         mplew.writeInt(guild.getId());
-//        mplew.writeMapleAsciiString(guild.getName());
+        boolean BOSS伤害显示 = Objects.nonNull(LtMS.ConfigValuesMap.get("BOSS伤害显示")) && LtMS.ConfigValuesMap.get("BOSS伤害显示") > 0;
+        boolean 家族名称显示 = Objects.nonNull(LtMS.ConfigValuesMap.get("家族名称显示")) && LtMS.ConfigValuesMap.get("家族名称显示") > 0;
         if (c != null && (Integer)LtMS.ConfigValuesMap.get("角色名战斗力显示") > 0) {
-                mplew.writeMapleAsciiString("『战斗力:" + c.getPower()+"』");
-        }else if (c != null) {
-                List<BreakthroughMechanism> breakthroughMechanisms = Start.breakthroughMechanism.get(c.getClient().getPlayer().getId());
-                if(ListUtil.isNotEmpty(breakthroughMechanisms)){
-                    mplew.writeMapleAsciiString("『战斗力:" + c.getPower()+"』"+"[" + breakthroughMechanisms.get(0).getName()+ "]" + breakthroughMechanisms.get(0).getEqualOrder()+"]");
+            if(家族名称显示){
+                if(BOSS伤害显示) {
+                    mplew.writeMapleAsciiString(guild.getName() + "『战力:" + formatNumberWithUnit(c.getPower()) + "』"+"|BOSS伤:"+(int)(c.getStat().bossdam_r+c.package_boss_damage_percent+c.getPotential(30)+(c.get套装伤害加成()*100))+"%"+(c.开启巅峰等级>0 ? "|巅峰:"+c.开启巅峰等级+"级" : ""));
                 }else{
-                    mplew.writeMapleAsciiString("[" + guild.getName() + "]");
+                    mplew.writeMapleAsciiString(guild.getName() + "『战力:" + formatNumberWithUnit(c.getPower()) + "』"+(c.开启巅峰等级>0 ? "|巅峰:"+c.开启巅峰等级+"级" : ""));
                 }
+            }else{
+                if(BOSS伤害显示) {
+                    mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(c.getPower()) + "』"+"|BOSS伤:"+(int)(c.getStat().bossdam_r+c.package_boss_damage_percent+c.getPotential(30)+(c.get套装伤害加成()*100))+"%"+(c.开启巅峰等级>0 ? "|巅峰:"+c.开启巅峰等级+"级" : ""));
+                }else{
+                    mplew.writeMapleAsciiString("『战力:" + formatNumberWithUnit(c.getPower()) + "』"+(c.开启巅峰等级>0 ? "|巅峰:"+c.开启巅峰等级+"级" : ""));
+                }
+            }
         } else {
-            mplew.writeMapleAsciiString("[" + guild.getName() + "]");
+            mplew.writeMapleAsciiString(guild.getName());
         }
 
         for (int i = 1; i <= 5; ++i) {
@@ -3459,7 +3508,27 @@ public class MaplePacketCreator
         mplew.writeInt(guild.getGP());
         mplew.writeInt((guild.getAllianceId() > 0) ? guild.getAllianceId() : 0);
     }
-    
+    public static String formatNumberWithUnit(long number) {
+        if (number < 1000) {
+            return String.valueOf(number);
+        } else if (number < 10000) {
+            return String.format("%.0f千", number / 1000.0);
+        } else if (number < 100000) {
+            return String.format("%.0f万", number / 10000.0).replace(".0万", "万");
+        } else if (number < 1000000) {
+            return String.format("%.0f万", number / 10000.0).replace(".00万", "万");
+        } else if (number < 100000000) {
+            return String.format("%.0f万", number / 10000.0).replace(".0万", "万");
+        } else if (number < 1000000000) {
+            return String.format("%.0f亿", number / 100000000.0).replace(".0亿", "亿");
+        } else {
+            return String.format("%.0f亿", number / 100000000.0).replace(".00亿", "亿");
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(formatNumberWithUnit(111111));
+    }
     public static byte[] 勳章(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());

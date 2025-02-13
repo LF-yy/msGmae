@@ -4073,7 +4073,7 @@ public class BytesEncodingDetect extends Encoding
 
 //
 //
-//import gui.服务端输出信息;
+//
 //import java.io.File;
 //import java.io.FileInputStream;
 //import java.io.InputStream;
@@ -4102,7 +4102,7 @@ public class BytesEncodingDetect extends Encoding
 //                try {
 //                    result = sinodetector.detectEncoding(new URL(argc[i]));
 //                } catch (Exception var5) {
-//                    服务端输出信息.println_err("Bad URL " + var5.toString());
+//                    //服务端输出信息.println_err("Bad URL " + var5.toString());
 //                }
 //            } else {
 //                if (argc[i].equals("-d")) {
@@ -4113,7 +4113,7 @@ public class BytesEncodingDetect extends Encoding
 //                result = sinodetector.detectEncoding(new File(argc[i]));
 //            }
 //
-//            服务端输出信息.println_out("z" + nicename[result]);
+//            //服务端输出信息.println_out("z" + nicename[result]);
 //        }
 //
 //    }
@@ -4132,7 +4132,7 @@ public class BytesEncodingDetect extends Encoding
 //            chinesestream.close();
 //            guess = this.detectEncoding(rawtext);
 //        } catch (Exception var8) {
-//            服务端输出信息.println_err("Error loading or using URL " + var8.toString());
+//            //服务端输出信息.println_err("Error loading or using URL " + var8.toString());
 //            guess = -1;
 //        }
 //
@@ -4147,7 +4147,7 @@ public class BytesEncodingDetect extends Encoding
 //            chinesefile.read(rawtext);
 //            chinesefile.close();
 //        } catch (Exception var5) {
-//            服务端输出信息.println_err("Error: " + var5);
+//            //服务端输出信息.println_err("Error: " + var5);
 //        }
 //
 //        return this.detectEncoding(rawtext);
@@ -4182,7 +4182,7 @@ public class BytesEncodingDetect extends Encoding
 //
 //        for(int index = 0; index < TOTALTYPES; ++index) {
 //            if (this.debug) {
-//                服务端输出信息.println_err("Encoding " + nicename[index] + " score " + scores[index]);
+//                //服务端输出信息.println_err("Encoding " + nicename[index] + " score " + scores[index]);
 //            }
 //
 //            if (scores[index] > maxscore) {

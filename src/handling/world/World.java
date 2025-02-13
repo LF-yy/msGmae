@@ -5,7 +5,7 @@ import constants.MapConstants;
 import constants.ServerConfig;
 import constants.WorldConstants;
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import scripting.ReactorScriptManager;
 import server.*;
 import server.life.MapleLifeFactory;
@@ -165,7 +165,7 @@ public class World
                         }
                     }
                 } catch (Exception var4) {
-                    服务端输出信息.println_err("【错误】monitorDurationMonster执行错误，错误原因：" + var4);
+                    //服务端输出信息.println_err("【错误】monitorDurationMonster执行错误，错误原因：" + var4);
                     var4.printStackTrace();
                 }
 
@@ -192,7 +192,7 @@ public class World
                 outsideMap.add(rs.getInt("mapid"));
             }
         } catch (SQLException var3) {
-            服务端输出信息.println_err("getOutsideMap 错误，错误原因：" + var3);
+            //服务端输出信息.println_err("getOutsideMap 错误，错误原因：" + var3);
         }
 
         return outsideMap;
@@ -1761,9 +1761,11 @@ public class World
 //                    World.handleMap(map, this.numTimes, map.getCharactersSize());
 //                }
 //            }
-            if (this.numTimes % 1800 == 0) {
-                MapleMonsterInformationProvider.getInstance().clearDrops();
-                ReactorScriptManager.getInstance().clearDrops();
+            if (Objects.nonNull(LtMS.ConfigValuesMap.get("开启自动重载爆率")) && LtMS.ConfigValuesMap.get("开启自动重载爆率")>0) {
+                if (this.numTimes % 1800 == 0) {
+                    MapleMonsterInformationProvider.getInstance().clearDrops();
+                    ReactorScriptManager.getInstance().clearDrops();
+                }
             }
         }
     }
@@ -2107,7 +2109,7 @@ public class World
                     }
                 }
             } catch (SQLException var17) {
-                服务端输出信息.println_err("changeCharName出错，错误原因：" + var17);
+                //服务端输出信息.println_err("changeCharName出错，错误原因：" + var17);
                 var17.printStackTrace();
                 return 0;
             }
@@ -2122,7 +2124,7 @@ public class World
             ps.executeUpdate();
             ps.close();
         } catch (Exception var6) {
-            服务端输出信息.println_err("changeNameWhereCharacterId出错，错误原因：" + var6);
+            //服务端输出信息.println_err("changeNameWhereCharacterId出错，错误原因：" + var6);
             var6.printStackTrace();
         }
 
@@ -2200,7 +2202,7 @@ public class World
             mch.getClient().sendPacket(MaplePacketCreator.serverBlocked(2));
         }
 
-        服务端输出信息.println_out("[系统提示]共将" + number + "个玩家踢下线，还有" + gm_number + "个管理员在线。");
+        //服务端输出信息.println_out("[系统提示]共将" + number + "个玩家踢下线，还有" + gm_number + "个管理员在线。");
     }
 
     public static boolean backupInventoryItems(int chrid) {
@@ -2299,7 +2301,7 @@ public class World
 
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("【错误】backupInventoryItems错误，错误原因：" + var18);
+            //服务端输出信息.println_err("【错误】backupInventoryItems错误，错误原因：" + var18);
             var18.printStackTrace();
             return false;
         }
@@ -2319,7 +2321,7 @@ public class World
                 outsideBoss.add(new Pair(rs.getInt("mobid"), rs.getInt("point")));
             }
         } catch (SQLException var3) {
-            服务端输出信息.println_err("getOutsideBoss 错误，错误原因：" + var3);
+            //服务端输出信息.println_err("getOutsideBoss 错误，错误原因：" + var3);
         }
 
         return outsideBoss;
@@ -2327,6 +2329,7 @@ public class World
     public static void outsideBoss(int min) {
         WorldTimer.getInstance().register(new Runnable() {
             public void run() {
+
                 long interval = (long)((Integer)LtMS.ConfigValuesMap.get("随机野外BOSS刷新时间") * 60 * 1000);
                 int mobMount = (Integer)LtMS.ConfigValuesMap.get("随机野外BOSS刷新数量");
                 if (mobMount != 0 && interval != 0L) {

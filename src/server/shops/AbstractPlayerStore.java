@@ -171,7 +171,7 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
                     iters.add(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId())));
                 }
             }
-            ItemLoader.HIRED_MERCHANT.saveItems(iters, Integer.valueOf(packageid), Integer.valueOf(this.ownerAccount));
+            ItemLoader.HIRED_MERCHANT.saveItems(iters, packageid, this.ownerAccount);
             return true;
         }
         catch (SQLException se) {

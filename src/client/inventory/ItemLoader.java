@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.sql.SQLException;
 
 import client.MapleCharacter;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import tools.FileoutputUtil;
 import constants.GameConstants;
@@ -595,7 +595,7 @@ public enum ItemLoader
                     return items;
                 }
             } catch (SQLException var13) {
-                服务端输出信息.println_err("loadItems错误，角色ID：" + id + "，读" + this.table + "错误，" + var13);
+                //服务端输出信息.println_err("loadItems错误，角色ID：" + id + "，读" + this.table + "错误，" + var13);
                 FileoutputUtil.outError("logs/资料库异常.txt", var13);
                 return null;
             }

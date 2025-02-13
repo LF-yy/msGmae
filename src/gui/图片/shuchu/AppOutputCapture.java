@@ -5,7 +5,7 @@
 
 package gui.图片.shuchu;
 
-import gui.服务端输出信息;
+
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -22,14 +22,14 @@ public class AppOutputCapture {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            服务端输出信息.println_err("用法：java AppOutputCapture <程序名字> {参数1 参数2 ...}");
+            //服务端输出信息.println_err("用法：java AppOutputCapture <程序名字> {参数1 参数2 ...}");
             System.exit(0);
         }
 
         try {
             process = Runtime.getRuntime().exec(args);
         } catch (IOException var4) {
-            服务端输出信息.println_err("创建进程时出错...\n" + var4);
+            //服务端输出信息.println_err("创建进程时出错...\n" + var4);
             System.exit(1);
         }
 

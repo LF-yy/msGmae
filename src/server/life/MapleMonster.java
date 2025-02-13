@@ -1,5 +1,6 @@
 package server.life;
 
+import bean.HideAttribute;
 import fumo.FumoSkill;
 import gui.LtMS;
 import handling.world.MaplePartyCharacter;
@@ -483,10 +484,12 @@ public class MapleMonster extends AbstractLoadedMapleLife
         if (LtMS.ConfigValuesMap.get("修正经验") >0 && attacker.getLevel() >= 200) {
             exp = (int)Math.round(exp * ((double)LtMS.ConfigValuesMap.get("修正经验比例") / 100.0));
         }
-        if (attacker.totalExpRate>0){
-            exp += (int)Math.round(exp * (attacker.totalExpRate / 100.0));
+        HideAttribute hideAttribute = Start.hideAttributeMap.get(attacker.getId());
+
+        if (hideAttribute.totalExpRate>0){
+            exp += (int)Math.round(exp * (hideAttribute.totalExpRate / 100.0));
         }
-        exp += attacker.totalExpRateCount;
+        exp += hideAttribute.totalExpRateCount;
         if(exp <0 ){
             exp = 0;
         }

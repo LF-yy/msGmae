@@ -8,19 +8,17 @@ import java.util.*;
 
 import gui.LtMS;
 import handling.world.World;
+import nange.Bot;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.RandomUtils;
+import server.*;
 import tools.Pair;
-import server.Randomizer;
 import server.ItemMakerFactory.ItemMakerCreateEntry;
 import server.ItemMakerFactory.GemCreateEntry;
 import client.inventory.IItem;
 import client.inventory.Equip;
-import server.MapleItemInformationProvider;
 import client.inventory.MapleInventoryType;
 import tools.MaplePacketCreator;
-import server.MapleInventoryManipulator;
-import server.ItemMakerFactory;
 import constants.GameConstants;
 import client.MapleClient;
 import tools.data.LittleEndianAccessor;
@@ -153,9 +151,13 @@ public class ItemMakerHandler
 
                     //暗黑破坏神词条
                     if(LtMS.ConfigValuesMap.get("暗黑破坏神制作道具")>=1) {
-                        String s = LtDiabloEquipments.assembleEntry();
+                        String s = LtDiabloEquipments.assembleEntry(MapleItemInformationProvider.getInstance().getReqLevel( toGive.getItemId()));
                         if (!StringUtils.isEmpty(s)) {
                             toGive.setOwner(s);
+                            if (Start.sendMsgList.contains(s)) {
+                                World.Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("[稀有词条]", " : 恭喜 [" + c.getPlayer().getName() + "] 获得了稀有词条["+s+"]！", (IItem) toGive, (byte) 1,  c.getPlayer().getClient().getChannel()));
+                                Bot.sendGroupMessage("[稀有词条] : 恭喜 [" + c.getPlayer().getName() + "] 获得了稀有词条["+s+"]！");
+                            }
                             //重构装备属性
                         }
                     }

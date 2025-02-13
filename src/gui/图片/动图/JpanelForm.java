@@ -5,7 +5,7 @@
 
 package gui.图片.动图;
 
-import gui.服务端输出信息;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -61,7 +61,7 @@ public class JpanelForm {
         jb3.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JpanelForm.this.xiaoGuo(JpanelForm.this.p3);
-                服务端输出信息.println_out("panel3========================/n");
+                //服务端输出信息.println_out("panel3========================/n");
             }
         });
         JButton jb4 = new JButton("返回");
@@ -110,7 +110,7 @@ public class JpanelForm {
                                     try {
                                         Thread.sleep(5L);
                                     } catch (InterruptedException var5) {
-                                        服务端输出信息.println_err(var5);
+                                        //服务端输出信息.println_err(var5);
                                     }
 
                                     y -= 10;
@@ -164,7 +164,7 @@ public class JpanelForm {
                                     try {
                                         Thread.sleep(5L);
                                     } catch (InterruptedException var5) {
-                                        服务端输出信息.println_err(var5);
+                                        //服务端输出信息.println_err(var5);
                                     }
 
                                     y += 10;

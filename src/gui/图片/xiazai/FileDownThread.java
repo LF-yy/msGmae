@@ -5,7 +5,7 @@
 
 package gui.图片.xiazai;
 
-import gui.服务端输出信息;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JLabel;
@@ -26,13 +26,13 @@ public class FileDownThread extends Thread {
     }
 
     public void run() {
-        服务端输出信息.println_out(this.getName() + " 开始 ");
+        //服务端输出信息.println_out(this.getName() + " 开始 ");
 
         for(int i = 0; i < this.downloadFileList.size() && ThreadController.start; ++i) {
             if (((DownloadFile)this.downloadFileList.get(i)).finished == 0) {
                 ((DownloadFile)this.downloadFileList.get(i)).finished = 1;
                 int intMain = Integer.parseInt(this.getName().substring(this.getName().length() - 1));
-                服务端输出信息.println_out("" + intMain);
+                //服务端输出信息.println_out("" + intMain);
 
                 try {
                     ((JLabel)this.jlabel.get(intMain)).setText(((DownloadFile)this.downloadFileList.get(i)).sourceFile);
@@ -45,7 +45,7 @@ public class FileDownThread extends Thread {
             }
         }
 
-        服务端输出信息.println_out(this.getName() + " 结束");
+        //服务端输出信息.println_out(this.getName() + " 结束");
     }
 
     public List<DownloadFile> getDfList() {

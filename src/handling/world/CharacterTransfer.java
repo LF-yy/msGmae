@@ -186,6 +186,7 @@ public class CharacterTransfer implements Externalizable
     public float mesoRateChr ;
     public float dropRateChr ;
     public ArrayList<Integer> mountList;
+
     public CharacterTransfer() {
         this.mbook = new LinkedHashMap<Integer, Integer>();
         this.keymap = new LinkedHashMap<Integer, Pair<Byte, Integer>>();

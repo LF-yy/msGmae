@@ -5,7 +5,7 @@
 
 package gui.图片.xiazai;
 
-import gui.服务端输出信息;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -35,7 +35,7 @@ public class MultiDown {
                 URL url = new URL(sourceFile);
                 isArr[0] = url.openStream();
                 long fileLen = getFileLength(url);
-                服务端输出信息.println_out(sourceFile + "的大小" + fileLen);
+                //服务端输出信息.println_out(sourceFile + "的大小" + fileLen);
                 outArr[0] = new RandomAccessFile(DL_FILE_NAME, "rw");
                 outArr[0].setLength(fileLen);
                 long numPerThred = fileLen / (long)DOWN_THREAD_NUM;
@@ -109,10 +109,10 @@ public class MultiDown {
                         }
                     }
                 } catch (InterruptedException var26) {
-                    服务端输出信息.println_err(var26);
+                    //服务端输出信息.println_err(var26);
                 }
             } catch (Exception var27) {
-                服务端输出信息.println_err(var27);
+                //服务端输出信息.println_err(var27);
             }
 
         }

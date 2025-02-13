@@ -6,7 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import gui.LtMS;
-import gui.服务端输出信息;
+
 import server.Start;
 import tools.FileoutputUtil;
 import database.DBConPool;

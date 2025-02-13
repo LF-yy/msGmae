@@ -8,7 +8,7 @@ package snail;
 import client.MapleCharacter;
 import constants.GameConstants;
 import database.DBConPool;
-import gui.服务端输出信息;
+
 import handling.channel.ChannelServer;
 import server.life.MapleMonster;
 import server.maps.MapleMap;
@@ -128,7 +128,7 @@ public class DamageManage {
 
             return var6;
         } catch (Exception var18) {
-            服务端输出信息.println_err("【错误】deleteAllMobDamageDataByChr 删除数据库错误，错误原因：" + var18);
+            //服务端输出信息.println_err("【错误】deleteAllMobDamageDataByChr 删除数据库错误，错误原因：" + var18);
             var18.printStackTrace();
             return false;
         }
@@ -176,7 +176,7 @@ public class DamageManage {
 
             return var7;
         } catch (Exception var19) {
-            服务端输出信息.println_err("【错误】deleteMobDamageDataByChr 删除数据库错误，错误原因：" + var19);
+            //服务端输出信息.println_err("【错误】deleteMobDamageDataByChr 删除数据库错误，错误原因：" + var19);
             var19.printStackTrace();
             return false;
         }
@@ -225,7 +225,7 @@ public class DamageManage {
 
             return var6;
         } catch (Exception var18) {
-            服务端输出信息.println_err("【错误】deleteAllMobDamageDataByMob 删除数据库错误，错误原因：" + var18);
+            //服务端输出信息.println_err("【错误】deleteAllMobDamageDataByMob 删除数据库错误，错误原因：" + var18);
             var18.printStackTrace();
             return false;
         }
@@ -295,7 +295,7 @@ public class DamageManage {
 
             }
         } catch (Exception var17) {
-            服务端输出信息.println_err("【错误】loadMobDamageDataListFromDB错误，错误原因：" + var17);
+            //服务端输出信息.println_err("【错误】loadMobDamageDataListFromDB错误，错误原因：" + var17);
             var17.printStackTrace();
             return false;
         }
@@ -928,7 +928,7 @@ public class DamageManage {
 
                                         }
                                     } catch (SQLException var22) {
-                                        服务端输出信息.println_err("【错误】calculate()写数据库错误，错误原因：" + var22);
+                                        //服务端输出信息.println_err("【错误】calculate()写数据库错误，错误原因：" + var22);
                                         var22.printStackTrace();
                                     }
 

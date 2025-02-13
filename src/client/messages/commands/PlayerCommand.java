@@ -21,6 +21,8 @@ import handling.world.World.Broadcast;
 import constants.PiPiConfig;
 import tools.StringUtil;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -421,8 +423,8 @@ public class PlayerCommand
                             + "当前剩余 " + c.getPlayer().getCSPoints(1) + " 点券 " + c.getPlayer().getCSPoints(2) + " 抵用券\r\n"
                             + "当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒\r\n"
                             + "角色坐标 " + "X:"+c.getPlayer().getPosition().x+"-Y:"+c.getPlayer().getPosition().y
-                            + "+系统爆率加成:"+(c.getPlayer().getDropm() > 1 ? c.getPlayer().getDropm() -1 : "0")+ "破功爆率加成: " + jiac+"+4人组队爆率加成"+coefficient+"*爆率卡加成:"+c.getPlayer().getDropMod()+"*爆率buff加成:"+(c.getPlayer().getStat().dropBuff / 100.0)+"*频道爆率加:"+DROP_RATE+"+物品爆率加成:"+(c.getPlayer().getItemDropm()/100)
-                            + "", 350, 5));
+                            + "\n\n+系统爆率加成:"+(c.getPlayer().getDropm() > 1 ? c.getPlayer().getDropm() -1 : "0")+ "+破功爆率加成: " + new BigDecimal(jiac).setScale(2, RoundingMode.HALF_UP) + "+4人组队爆率加成"+coefficient+"*爆率卡加成:"+c.getPlayer().getDropMod()+"*爆率buff加成:"+(c.getPlayer().getStat().dropBuff / 100.0)+"*频道爆率加:"+DROP_RATE+"+物品爆率加成:"+new BigDecimal((c.getPlayer().getItemDropm()/100)).setScale(2, RoundingMode.HALF_UP)
+                    + "", 350, 5));
             return true;
         }
         @Override
@@ -431,7 +433,9 @@ public class PlayerCommand
         }
         }
 
-
+    public static void main(String[] args) {
+        System.out.println("ssss"+new BigDecimal(0.01).setScale(2, RoundingMode.HALF_UP)+"wwwwww");
+    }
 //    public static class xw extends CommandExecute
 //    {
 //        @Override
@@ -498,7 +502,7 @@ public class PlayerCommand
     {
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@怪物 - 查看怪物状态").toString();
+            return "@怪物 - 查看怪物状态";
         }
     }
     
@@ -507,7 +511,7 @@ public class PlayerCommand
         @Override
         public boolean execute(final MapleClient c, final String[] splitted) {
             MapleMonster monster = null;
-            for (final MapleMapObject monstermo : c.getPlayer().getMap().getMapObjectsInRange(c.getPlayer().getPosition(), 100000.0, Arrays.asList(MapleMapObjectType.MONSTER))) {
+            for (final MapleMapObject monstermo : c.getPlayer().getMap().getMapObjectsInRange(c.getPlayer().getPosition(), 999*999, Collections.singletonList(MapleMapObjectType.MONSTER))) {
                 monster = (MapleMonster)monstermo;
                 if (monster.isAlive()) {
                     c.getPlayer().dropMessage(6, "怪物 " + monster.toString());
@@ -521,7 +525,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@mob - 查看怪物状态").toString();
+            return "@mob - 查看怪物状态";
         }
     }
 
@@ -532,7 +536,7 @@ public class PlayerCommand
             int total = 0;
             int curConnected = c.getChannelServer().getConnectedClients();
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
-            c.getPlayer().dropMessage(6, new StringBuilder().append("频道: ").append(c.getChannelServer().getChannel()).append(" 线上人数: ").append(curConnected).toString());
+            c.getPlayer().dropMessage(6, "频道: " + c.getChannelServer().getChannel() + " 线上人数: " + curConnected);
             total += curConnected;
             for (MapleCharacter chr : c.getChannelServer().getPlayerStorage().getAllCharacters()) {
                 if (chr != null && c.getPlayer().getGMLevel() >= chr.getGMLevel()) {
@@ -552,7 +556,7 @@ public class PlayerCommand
                     }
                 }
             }
-            c.getPlayer().dropMessage(6, new StringBuilder().append("当前频道总计线上人数: ").append(total).toString());
+            c.getPlayer().dropMessage(6, "当前频道总计线上人数: " + total);
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
             int channelOnline = c.getChannelServer().getConnectedClients();
             int totalOnline = 0;
@@ -560,7 +564,7 @@ public class PlayerCommand
             for (ChannelServer cserv : ChannelServer.getAllInstances()) {
                 totalOnline += cserv.getConnectedClients();
             }
-            c.getPlayer().dropMessage(6, new StringBuilder().append("当前服务器总计线上人数: ").append(totalOnline).append("个").toString());
+            c.getPlayer().dropMessage(6, "当前服务器总计线上人数: " + totalOnline + "个");
             c.getPlayer().dropMessage(6, "-------------------------------------------------------------------------------------");
 
             return true;
@@ -568,7 +572,7 @@ public class PlayerCommand
 
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@在线人数 - 查看线上人数").toString();
+            return "@在线人数 - 查看线上人数";
         }
     }
 
@@ -580,6 +584,9 @@ public class PlayerCommand
             if (splitted.length < 2) {
                 return false;
             }
+            if(1==1){
+                return false;
+            }
             final String talk = StringUtil.joinStringFrom(splitted, 1);
             if (c.getPlayer().isGM()) {
                 c.getPlayer().dropMessage(6, "因为你自己是GM所以无法使用此指令,可以尝试!cngm <讯息> 来建立GM聊天频道~");
@@ -587,7 +594,7 @@ public class PlayerCommand
             else if (!c.getPlayer().getCheatTracker().GMSpam(100000, 1)) {
                 boolean fake = false;
                 boolean showmsg = true;
-                if (PiPiConfig.getBlackList().containsKey((Object)Integer.valueOf(c.getAccID()))) {
+                if (PiPiConfig.getBlackList().containsKey((Object) c.getAccID())) {
                     fake = true;
                 }
                 if (talk.contains((CharSequence)"抢") && talk.contains((CharSequence)"图")) {
@@ -646,7 +653,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@cgm - 跟GM回报").toString();
+            return "@cgm - 跟GM回报";
         }
     }
     
@@ -759,7 +766,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@清除道具 <装备栏/消耗栏/装饰栏/其他栏/特殊栏> <开始格数> <结束格数>").toString();
+            return "@清除道具 <装备栏/消耗栏/装饰栏/其他栏/特殊栏> <开始格数> <结束格数>";
         }
     }
     
@@ -774,7 +781,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@jk_hm - 卡精灵商人解除").toString();
+            return "@jk_hm - 卡精灵商人解除";
         }
     }
     
@@ -803,7 +810,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@jcds - 领取在线点数").toString();
+            return "@jcds - 领取在线点数";
         }
     }
     
@@ -832,46 +839,46 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@在线点数 - 领取在线点数").toString();
+            return "@在线点数 - 领取在线点数";
         }
     }
     
-    public static class 出来吧皮卡丘 extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            if (splitted.length < 2) {
-                return false;
-            }
-            final int id = Integer.parseInt(splitted[1]);
-            final int quantity = 1;
-            final int mod = Integer.parseInt(splitted[2]);
-            final String npcname = GashaponFactory.getInstance().getGashaponByNpcId(mod).getName();
-            final IItem item = MapleInventoryManipulator.addbyId_GachaponGM(c, id, (short)quantity);
-            Broadcast.broadcastGashponmega(MaplePacketCreator.getGachaponMega(c.getPlayer().getName(), " : x" + quantity + "恭喜玩家 " + c.getPlayer().getName() + " 在" + npcname + "获得！", item, (byte)1, c.getPlayer().getClient().getChannel()));
-            return true;
-        }
-        
-        @Override
-        public String getMessage() {
-            return new StringBuilder().append("你就是傻逼").toString();
-        }
-    }
-    
-    public static class 丢弃点装 extends CommandExecute
-    {
-        @Override
-        public boolean execute(final MapleClient c, final String[] splitted) {
-            c.sendPacket(MaplePacketCreator.enableActions());
-            NPCScriptManager.getInstance().start(c, 9010000, "丢弃点装");
-            return true;
-        }
-        
-        @Override
-        public String getMessage() {
-            return "@" + this.getClass().getSimpleName().toLowerCase() + "丢弃点装 [点装在装备栏的位置]";
-        }
-    }
+//    public static class 出来吧皮卡丘 extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            if (splitted.length < 2) {
+//                return false;
+//            }
+//            final int id = Integer.parseInt(splitted[1]);
+//            final int quantity = 1;
+//            final int mod = Integer.parseInt(splitted[2]);
+//            final String npcname = GashaponFactory.getInstance().getGashaponByNpcId(mod).getName();
+//            final IItem item = MapleInventoryManipulator.addbyId_GachaponGM(c, id, (short)quantity);
+//            Broadcast.broadcastGashponmega(MaplePacketCreator.getGachaponMega(c.getPlayer().getName(), " : x" + quantity + "恭喜玩家 " + c.getPlayer().getName() + " 在" + npcname + "获得！", item, (byte)1, c.getPlayer().getClient().getChannel()));
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return new StringBuilder().append("你就是傻逼").toString();
+//        }
+//    }
+//
+//    public static class 丢弃点装 extends CommandExecute
+//    {
+//        @Override
+//        public boolean execute(final MapleClient c, final String[] splitted) {
+//            c.sendPacket(MaplePacketCreator.enableActions());
+//            NPCScriptManager.getInstance().start(c, 9010000, "丢弃点装");
+//            return true;
+//        }
+//
+//        @Override
+//        public String getMessage() {
+//            return "@" + this.getClass().getSimpleName().toLowerCase() + "丢弃点装 [点装在装备栏的位置]";
+//        }
+//    }
     
     public abstract static class DistributeStatCommands extends CommandExecute
     {
@@ -967,7 +974,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@力量 - 力量").toString();
+            return "@力量 - 力量";
         }
     }
     
@@ -979,7 +986,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@敏捷 - 敏捷").toString();
+            return "@敏捷 - 敏捷";
         }
     }
     
@@ -991,7 +998,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@智力 - 智力").toString();
+            return "@智力 - 智力";
         }
     }
     
@@ -1003,7 +1010,7 @@ public class PlayerCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@运气 - 运气").toString();
+            return "@运气 - 运气";
         }
     }
 
@@ -1018,7 +1025,7 @@ public class PlayerCommand
 
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@解卡组队-游戏无法进行组队的时候输入").toString();
+            return "@解卡组队-游戏无法进行组队的时候输入";
         }
     }
 
@@ -1077,7 +1084,7 @@ public class PlayerCommand
 
         @Override
         public String getMessage() {
-            return new StringBuilder().append("@副本拉人-副本或者boss击杀过程中有人掉线可以拉回").toString();
+            return "@副本拉人-副本或者boss击杀过程中有人掉线可以拉回";
         }
     }
 
@@ -1112,41 +1119,57 @@ public class PlayerCommand
         }
 
         public boolean execute(MapleClient c, String[] splitted) {
-            Iterator var3 = ChannelServer.getAllInstances().iterator();
+//            Iterator var3 = ChannelServer.getAllInstances().iterator();
+//
+//            label44:
+//            while(var3.hasNext()) {
+//                ChannelServer cs = (ChannelServer)var3.next();
+//                Iterator var5 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+//
+//                while(true) {
+//                    MapleMap map;
+//                    do {
+//                        if (!var5.hasNext()) {
+//                            continue label44;
+//                        }
+//
+//                        map = (MapleMap)var5.next();
+//                    } while(!MapConstants.isMarket(map.getId()));
+//
+//                    Iterator var7 = map.getAllMerchant().iterator();
+//
+//                    while(var7.hasNext()) {
+//                        MapleMapObject obj = (MapleMapObject)var7.next();
+//                        if (obj instanceof IMaplePlayerShop) {
+//                            IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+//                            if (obj instanceof HiredMerchant) {
+//                                HiredMerchant merchant1 = (HiredMerchant)ips;
+//                                if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(c.getPlayer()) && merchant1.isAvailable()) {
+//                                    c.getPlayer().dropMessage(1, "你的雇佣商店在 " + cs.getChannel() + " 频道 " + map.getStreetName() + ":" + map.getMapName());
+//                                    return true;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+            for (ChannelServer cs : ChannelServer.getAllInstances()) {
+                for (MapleMap map : cs.getMapFactory().getAllMapThreadSafe()) {
+                    if (!MapConstants.isMarket(map.getId())) {
+                        continue;
+                    }
 
-            label44:
-            while(var3.hasNext()) {
-                ChannelServer cs = (ChannelServer)var3.next();
-                Iterator var5 = cs.getMapFactory().getAllMapThreadSafe().iterator();
-
-                while(true) {
-                    MapleMap map;
-                    do {
-                        if (!var5.hasNext()) {
-                            continue label44;
-                        }
-
-                        map = (MapleMap)var5.next();
-                    } while(!MapConstants.isMarket(map.getId()));
-
-                    Iterator var7 = map.getAllMerchant().iterator();
-
-                    while(var7.hasNext()) {
-                        MapleMapObject obj = (MapleMapObject)var7.next();
-                        if (obj instanceof IMaplePlayerShop) {
-                            IMaplePlayerShop ips = (IMaplePlayerShop)obj;
-                            if (obj instanceof HiredMerchant) {
-                                HiredMerchant merchant1 = (HiredMerchant)ips;
-                                if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(c.getPlayer()) && merchant1.isAvailable()) {
-                                    c.getPlayer().dropMessage(1, "你的雇佣商店在 " + cs.getChannel() + " 频道 " + map.getStreetName() + ":" + map.getMapName());
-                                    return true;
-                                }
+                    for (MapleMapObject obj : map.getAllMerchant()) {
+                        if (obj instanceof HiredMerchant) {
+                            HiredMerchant merchant = (HiredMerchant) obj;
+                            if (merchant != null && merchant.getShopType() == 1 && merchant.isOwner(c.getPlayer()) && merchant.isAvailable()) {
+                                c.getPlayer().dropMessage(1, "你的雇佣商店在 " + cs.getChannel() + " 频道 " + map.getStreetName() + ":" + map.getMapName());
+                                return true;
                             }
                         }
                     }
                 }
             }
-
             c.getPlayer().dropMessage(1, "没有找到你的雇佣商店。");
             return false;
         }
@@ -1161,64 +1184,94 @@ public class PlayerCommand
         }
 
         public boolean execute(MapleClient c, String[] splitted) {
+//            IMaplePlayerShop merchant = c.getPlayer().getPlayerShop();
+//            if (merchant != null && merchant.getShopType() == 1 && merchant.isOwner(c.getPlayer()) && merchant.isAvailable()) {
+//                c.getPlayer().getClient().sendPacket(PlayerShopPacket.shopErrorMessage(21, 0));
+//                c.getPlayer().getClient().sendPacket(MaplePacketCreator.serverNotice(1, "请去找富兰德里领取你的装备和金币"));
+//                c.getPlayer().getClient().sendPacket(MaplePacketCreator.enableActions());
+//                merchant.removeAllVisitors(-1, -1);
+//                c.getPlayer().setPlayerShop((IMaplePlayerShop)null);
+//                merchant.closeShop(true, true);
+//                c.getPlayer().dropMessage(1, "你的雇佣商店已关闭！");
+//                return true;
+//            } else {
+//                Iterator var4 = ChannelServer.getAllInstances().iterator();
+//
+//                label54:
+//                while(var4.hasNext()) {
+//                    ChannelServer cs = (ChannelServer)var4.next();
+//                    Iterator var6 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+//
+//                    while(true) {
+//                        MapleMap map;
+//                        do {
+//                            if (!var6.hasNext()) {
+//                                continue label54;
+//                            }
+//
+//                            map = (MapleMap)var6.next();
+//                        } while(!MapConstants.isMarket(map.getId()));
+//
+//                        Iterator var8 = map.getAllMerchant().iterator();
+//
+//                        while(var8.hasNext()) {
+//                            MapleMapObject obj = (MapleMapObject)var8.next();
+//                            if (obj instanceof IMaplePlayerShop) {
+//                                IMaplePlayerShop ips = (IMaplePlayerShop)obj;
+//                                if (obj instanceof HiredMerchant) {
+//                                    HiredMerchant merchant1 = (HiredMerchant)ips;
+//                                    if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(c.getPlayer()) && merchant1.isAvailable()) {
+//                                        merchant1.removeAllVisitors(-1, -1);
+//                                        merchant1.closeShop(true, true);
+//                                        c.getPlayer().dropMessage(1, "你的雇佣商店已关闭！");
+//                                        return true;
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
             IMaplePlayerShop merchant = c.getPlayer().getPlayerShop();
-            if (merchant != null && merchant.getShopType() == 1 && merchant.isOwner(c.getPlayer()) && merchant.isAvailable()) {
-                c.getPlayer().getClient().sendPacket(PlayerShopPacket.shopErrorMessage(21, 0));
-                c.getPlayer().getClient().sendPacket(MaplePacketCreator.serverNotice(1, "请去找富兰德里领取你的装备和金币"));
-                c.getPlayer().getClient().sendPacket(MaplePacketCreator.enableActions());
-                merchant.removeAllVisitors(-1, -1);
-                c.getPlayer().setPlayerShop((IMaplePlayerShop)null);
-                merchant.closeShop(true, true);
-                c.getPlayer().dropMessage(1, "你的雇佣商店已关闭！");
-                return true;
-            } else {
-                Iterator var4 = ChannelServer.getAllInstances().iterator();
+            if (merchant instanceof HiredMerchant) {
+                HiredMerchant hiredMerchant = (HiredMerchant) merchant;
+                if (hiredMerchant != null && hiredMerchant.getShopType() == 1 && hiredMerchant.isOwner(c.getPlayer()) && hiredMerchant.isAvailable()) {
+                    closeHiredMerchant(hiredMerchant, c.getPlayer());
+                    return true;
+                }
+            }
 
-                label54:
-                while(var4.hasNext()) {
-                    ChannelServer cs = (ChannelServer)var4.next();
-                    Iterator var6 = cs.getMapFactory().getAllMapThreadSafe().iterator();
-
-                    while(true) {
-                        MapleMap map;
-                        do {
-                            if (!var6.hasNext()) {
-                                continue label54;
-                            }
-
-                            map = (MapleMap)var6.next();
-                        } while(!MapConstants.isMarket(map.getId()));
-
-                        Iterator var8 = map.getAllMerchant().iterator();
-
-                        while(var8.hasNext()) {
-                            MapleMapObject obj = (MapleMapObject)var8.next();
-                            if (obj instanceof IMaplePlayerShop) {
-                                IMaplePlayerShop ips = (IMaplePlayerShop)obj;
-                                if (obj instanceof HiredMerchant) {
-                                    HiredMerchant merchant1 = (HiredMerchant)ips;
-                                    if (merchant1 != null && merchant1.getShopType() == 1 && merchant1.isOwner(c.getPlayer()) && merchant1.isAvailable()) {
-                                        merchant1.removeAllVisitors(-1, -1);
-                                        merchant1.closeShop(true, true);
-                                        c.getPlayer().dropMessage(1, "你的雇佣商店已关闭！");
-                                        return true;
-                                    }
+            for (ChannelServer cs : ChannelServer.getAllInstances()) {
+                for (MapleMap map : cs.getMapFactory().getAllMapThreadSafe()) {
+                    if (MapConstants.isMarket(map.getId())) {
+                        for (MapleMapObject obj : map.getAllMerchant()) {
+                            if (obj instanceof HiredMerchant) {
+                                HiredMerchant hiredMerchant = (HiredMerchant) obj;
+                                if (hiredMerchant != null && hiredMerchant.getShopType() == 1 && hiredMerchant.isOwner(c.getPlayer()) && hiredMerchant.isAvailable()) {
+                                    closeHiredMerchant(hiredMerchant, c.getPlayer());
+                                    return true;
                                 }
                             }
                         }
                     }
                 }
-
+            }
                 c.getPlayer().dropMessage(1, "没有找到你的雇佣商店。");
                 return false;
-            }
         }
 
         public String getMessage() {
             return "@关闭雇佣 - 关闭自己的雇佣商店";
         }
     }
-
+    private static void closeHiredMerchant(HiredMerchant merchant, MapleCharacter player) {
+        merchant.removeAllVisitors(-1, -1);
+        merchant.closeShop(true, true);
+        player.setPlayerShop(null);
+        player.getClient().sendPacket(PlayerShopPacket.shopErrorMessage(21, 0));
+        player.getClient().sendPacket(MaplePacketCreator.serverNotice(1, "请去找富兰德里领取你的装备和金币"));
+        player.getClient().sendPacket(MaplePacketCreator.enableActions());
+        player.dropMessage(1, "你的雇佣商店已关闭！");
+    }
     public static class 我的位置 extends CommandExecute {
         public 我的位置() {
         }

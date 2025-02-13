@@ -6,7 +6,7 @@
 package snail;
 
 import database.DBConPool;
-import gui.服务端输出信息;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -75,7 +75,7 @@ public class EquipFieldEnhancement {
 
             }
         } catch (SQLException var18) {
-            服务端输出信息.println_err("【错误】loadChrEquipFieldMapFromDB错误，原因：" + var18);
+            //服务端输出信息.println_err("【错误】loadChrEquipFieldMapFromDB错误，原因：" + var18);
             var18.printStackTrace();
             return false;
         }
@@ -283,7 +283,7 @@ public class EquipFieldEnhancement {
                         con.close();
                     }
                 } catch (SQLException var14) {
-                    服务端输出信息.println_err("【错误】EquipFieldEnhancement.saveChrToDB错误，原因：" + var14);
+                    //服务端输出信息.println_err("【错误】EquipFieldEnhancement.saveChrToDB错误，原因：" + var14);
                     var14.printStackTrace();
                 }
             }
@@ -319,7 +319,7 @@ public class EquipFieldEnhancement {
             ps.close();
             return true;
         } catch (SQLException var6) {
-            服务端输出信息.println_err("【错误】EquipFieldEnhancement.loadCharFromDB错误，原因：" + var6);
+            //服务端输出信息.println_err("【错误】EquipFieldEnhancement.loadCharFromDB错误，原因：" + var6);
             var6.printStackTrace();
             return false;
         }

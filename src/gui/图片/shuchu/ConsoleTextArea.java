@@ -5,7 +5,7 @@
 
 package gui.图片.shuchu;
 
-import gui.服务端输出信息;
+
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
@@ -72,7 +72,7 @@ public class ConsoleTextArea extends JTextArea {
         try {
             consoleTextArea = new ConsoleTextArea();
         } catch (IOException var4) {
-            服务端输出信息.println_err("不能创建LoopedStreams：" + var4);
+            //服务端输出信息.println_err("不能创建LoopedStreams：" + var4);
             System.exit(1);
         }
 
