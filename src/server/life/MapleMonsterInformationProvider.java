@@ -71,94 +71,94 @@ public class MapleMonsterInformationProvider
         }
     }
 
-//    public final ArrayList<MonsterDropEntry> retrieveDrop(final int monsterId) {
-//        if (this.drops.containsKey(monsterId)) {
-//            return this.drops.get(monsterId);
-//        }
-//        final ArrayList<MonsterDropEntry> ret = new ArrayList<>();
-//        PreparedStatement ps = null;
-//        ResultSet rs = null;
-//        Connection con = null;
-//        try {
-//            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
-//            ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid = ?");
-//            ps.setInt(1, monsterId);
-//            rs = ps.executeQuery();
-//            while (rs.next()) {
-//                ret.add(new MonsterDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
-//            }
-//            rs.close();
-//            ps.close();
-//            con.close();
-//            try {
-//                if (ps != null) {
-//                    ps.close();
-//                }
-//                if (rs != null) {
-//                    rs.close();
-//                }
-//                if (con != null) {
-//                    con.close();
-//                }
-//            }
-//            catch (SQLException ignore) {
-//                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ignore);
-//                return ret;
-//            }
-//        }
-//        catch (SQLException e) {
-//            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
-//            return ret;
-//        }
-//        finally {
-//            try {
-//                if (ps != null) {
-//                    ps.close();
-//                }
-//                if (rs != null) {
-//                    rs.close();
-//                }
-//                if (con != null) {
-//                    con.close();
-//                }
-//            }
-//            catch (SQLException ignore2) {
-//                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ignore2);
-//                return ret;
-//            }
-//        }
-//        this.drops.put(monsterId, ret);
-//        return ret;
-//    }
-public final ArrayList<MonsterDropEntry> retrieveDrop(final int monsterId) {
-    return drops.computeIfAbsent(monsterId, id -> {
+    public final ArrayList<MonsterDropEntry> retrieveDrop(final int monsterId) {
+        if (this.drops.containsKey(monsterId)) {
+            return this.drops.get(monsterId);
+        }
         final ArrayList<MonsterDropEntry> ret = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
         Connection con = null;
         try {
-            con = DBConPool.getInstance().getDataSource().getConnection();
+            con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
             ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid = ?");
-            ps.setInt(1, id);
+            ps.setInt(1, monsterId);
             rs = ps.executeQuery();
             while (rs.next()) {
                 ret.add(new MonsterDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
             }
-        } catch (SQLException e) {
-            FileoutputUtil.outError("logs/资料库异常.txt", e);
-        } finally {
+            rs.close();
+            ps.close();
+            con.close();
             try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException ignore) {
-                FileoutputUtil.outError("logs/资料库异常.txt", ignore);
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+                if (con != null) {
+                    con.close();
+                }
+            }
+            catch (SQLException ignore) {
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ignore);
+                return ret;
             }
         }
+        catch (SQLException e) {
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
+            return ret;
+        }
+        finally {
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+                if (rs != null) {
+                    rs.close();
+                }
+                if (con != null) {
+                    con.close();
+                }
+            }
+            catch (SQLException ignore2) {
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ignore2);
+                return ret;
+            }
+        }
+        this.drops.put(monsterId, ret);
         return ret;
-    });
-}
-
+    }
+//public final ArrayList<MonsterDropEntry> retrieveDrop(final int monsterId) {
+//    return drops.computeIfAbsent(monsterId, id -> {
+//        final ArrayList<MonsterDropEntry> ret = new ArrayList<>();
+//        PreparedStatement ps = null;
+//        ResultSet rs = null;
+//        Connection con = null;
+//        try {
+//            con = DBConPool.getInstance().getDataSource().getConnection();
+//            ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid = ?");
+//            ps.setInt(1, id);
+//            rs = ps.executeQuery();
+//            while (rs.next()) {
+//                ret.add(new MonsterDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
+//            }
+//        } catch (SQLException e) {
+//            FileoutputUtil.outError("logs/资料库异常.txt", e);
+//        } finally {
+//            try {
+//                if (rs != null) rs.close();
+//                if (ps != null) ps.close();
+//                if (con != null) con.close();
+//            } catch (SQLException ignore) {
+//                FileoutputUtil.outError("logs/资料库异常.txt", ignore);
+//            }
+//        }
+//        return ret;
+//    });
+//}
+//
     public final void clearDrops() {
         synchronized (this) {
             if (this.drops != null) {

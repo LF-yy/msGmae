@@ -134,22 +134,17 @@ public class ChannelServer implements Serializable
     public void setup() {
         this.setChannel(this.channel);
         try {
-           // System.out.println(ServerProperties.getProperty("LtMS.events"));
             this.eventSM = new EventScriptManager(this, ServerProperties.getProperty("LtMS.events").split(","));
             this.port = (short)(ServerProperties.getProperty("LtMS.channel.port", ChannelServer.DEFAULT_PORT) + this.channel - 1);
         }
         catch (Exception e) {
             throw new RuntimeException((Throwable)e);
         }
-//        int 双爆频道 = (Integer) LtMS.ConfigValuesMap.get("双爆频道开关");
-//        if (双爆频道 == 0 && this.channel >= Integer.parseInt(ServerProperties.getProperty("LtMS.Count"))) {
-//            WorldConstants.DROP_RATE *= 2.0F;
-//        }
         this.socket = ServerConfig.IP + ":" + (int)this.port;
         this.players = new PlayerStorage(this.channel);
         this.loadEvents();
         (this.acceptor = new ServerConnection((int)this.port, 0, this.channel)).run();
-        System.out.println("[正在启动] 频道" + this.getChannel() + "端口:" + (int)this.port + "");
+        System.out.println("[正在启动] 频道" + this.getChannel() + "端口:" + (int)this.port );
         this.eventSM.init();
     }
     public float getMesoRateSpecial() {

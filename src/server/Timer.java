@@ -89,12 +89,12 @@ public void start() {
             this.ses.shutdown();
 
             // 等待60秒，确保所有任务完成
-            if (!this.ses.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!this.ses.awaitTermination(5, TimeUnit.SECONDS)) {
                 // 如果超时，则强制关闭线程池
                 this.ses.shutdownNow();
 
                 // 再次等待几秒钟以确保所有任务都已终止
-                if (!this.ses.awaitTermination(10, TimeUnit.SECONDS)) {
+                if (!this.ses.awaitTermination(5, TimeUnit.SECONDS)) {
                     System.err.println("ScheduledThreadPoolExecutor did not terminate");
                 }
             }

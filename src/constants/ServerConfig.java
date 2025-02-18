@@ -3,9 +3,8 @@ package constants;
 import abc.Game;
 import server.ServerProperties;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ServerConfig
 {
@@ -59,6 +58,7 @@ public class ServerConfig
     public static int MesoRate;
     public static int DropRate;
     public static int CashRate;
+    public static List<Integer> 双倍线路;
 
     private static Map<Integer, Float> channelExpRateMap = new HashMap();
     private static Map<Integer, Float> channelMesoRateMap = new HashMap();
@@ -387,6 +387,7 @@ public class ServerConfig
         ServerConfig.BeiShu3 = ServerProperties.getProperty("LtMS.BeiShu3", ServerConfig.BeiShu3);
         ServerConfig.IP =  ServerProperties.getProperty("LtMS.ip.listen", Game.IP地址);
         ServerConfig.setUserlimit(ServerProperties.getProperty("LtMS.userlimit", 2));
+        ServerConfig.双倍线路 = Arrays.stream(ServerProperties.getProperty("LtMS.Count","5,6").split(",")).map(Integer::parseInt).collect(Collectors.toList());
        // GameConstants.loadBanChannelList();
         GameConstants.loadBanMultiMobRateList();
         //GameConstants.loadMarketGainPointChannelList();
@@ -445,6 +446,7 @@ public class ServerConfig
         ServerConfig.MesoRate = 1;
         ServerConfig.DropRate = 2;
         ServerConfig.CashRate = 1;
+        ServerConfig.双倍线路 = Arrays.asList(5,6);
         ServerConfig.ipStr = ServerConfig.IP.split("\\.");
         Gateway_IP = new byte[] { (byte)Integer.parseInt(ServerConfig.ipStr[0]), (byte)Integer.parseInt(ServerConfig.ipStr[1]), (byte)Integer.parseInt(ServerConfig.ipStr[2]), (byte)Integer.parseInt(ServerConfig.ipStr[3]) };
         Gateway_IP2 = new byte[] { (byte)Integer.parseInt(ServerConfig.ipStr[0]), (byte)Integer.parseInt(ServerConfig.ipStr[1]), (byte)Integer.parseInt(ServerConfig.ipStr[2]), (byte)Integer.parseInt(ServerConfig.ipStr[3]) };

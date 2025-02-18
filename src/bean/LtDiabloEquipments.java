@@ -301,62 +301,62 @@ public class LtDiabloEquipments {
                     }
                 }
                 reqlv = source.getStr() + totalStr;
-                if (reqlv > 32767) {
+                if (reqlv > 30000) {
                     reqlv = 0;
                 }
 
                 source.setStr((short)reqlv);
                 dex = source.getDex() + totalDex;
-                if (dex > 32767) {
-                    dex = 32767;
+                if (dex > 30000) {
+                    dex = 30000;
                 }
 
                 source.setDex((short)dex);
                 _int = source.getInt() + totalInt;
-                if (_int > 32767) {
-                    _int = 32767;
+                if (_int > 30000) {
+                    _int = 30000;
                 }
 
                 source.setInt((short)_int);
                 luk = source.getLuk() + totalLuk;
-                if (luk > 32767) {
-                    luk = 32767;
+                if (luk > 30000) {
+                    luk = 30000;
                 }
 
                 source.setLuk((short)luk);
                 hp = source.getHp() + totalMaxHp;
-                if (hp > 32767) {
-                    hp = 32767;
+                if (hp > 30000) {
+                    hp = 30000;
                 }
 
                 source.setHp((short)hp);
                 mp = source.getMp() + totalMaxMp;
-                if (mp > 32767) {
-                    mp = 32767;
+                if (mp > 30000) {
+                    mp = 30000;
                 }
 
                 source.setMp((short)mp);
                 watk = source.getWatk() + totalWatk;
-                if (watk > 32767) {
-                    watk = 32767;
+                if (watk > 30000) {
+                    watk = 30000;
                 }
 
                 source.setWatk((short)watk);
                 matk = source.getMatk() + totalMatk;
-                if (matk > 32767) {
-                    matk = 32767;
+                if (matk > 30000) {
+                    matk = 30000;
                 }
 
                 source.setMatk((short)matk);
                 wdef = source.getWdef() + totalWdef;
-                if (wdef > 32767) {
-                    wdef = 32767;
+                if (wdef > 30000) {
+                    wdef = 30000;
                 }
 
                 source.setWdef((short)wdef);
                 mdef = source.getMdef() + totalMdef;
-                if (mdef > 32767) {
-                    mdef = 32767;
+                if (mdef > 30000) {
+                    mdef = 30000;
                 }
 
                 source.setMdef((short)mdef);

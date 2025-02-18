@@ -61,13 +61,13 @@ public class PlayerStats implements Serializable
     public transient int localluk; //运气
     public transient int localint_;//智力
 
-    public transient int magic; //魔法防御
-    public transient int watk;  //物理防御
+    public transient int magic; //魔力
+    public transient int watk;  //物理攻击
     public transient int hands;//手技
     public transient int accuracy; //命中
     public transient int avoid;
-    public transient int wdef;
-    public transient int mdef;
+    public transient int wdef;//物理防御
+    public transient int mdef;//魔法防御
     public transient boolean equippedWelcomeBackRing; //以前是1112127 盛大修改 回归戒指 - 热烈欢迎玩家回归的特别戒指，附带特殊福利。佩戴本戒指时，在组队状态下，#c全队队员可享受额外80%的召回经验奖励#。归来的朋友，快去和其他玩家组队一起战斗吧！
     public transient boolean equippedFairy;
     public transient boolean hasMeso;
@@ -467,8 +467,15 @@ public class PlayerStats implements Serializable
                 int i;
                 int percentTotal;
                 int p_luk;
+                chra.坐骑攻击力 = 0;
+                chra.坐骑魔力 = 0;
                 for (IItem iItemEquipped : chra.getInventory(MapleInventoryType.EQUIPPED)) {
                     IEquip equip = (IEquip)iItemEquipped;
+
+                    if(Start.坐骑.contains(equip.getItemId())) {
+                        chra.坐骑攻击力 += equip.getWatk();
+                        chra.坐骑魔力 += equip.getMatk();
+                    }
                     if (equip.getPosition() == -11 && GameConstants.isMagicWeapon(equip.getItemId())) {
                         Map<String, Integer> eqstat = MapleItemInformationProvider.getInstance().getEquipStats(equip.getItemId());
                         this.element_fire = (Integer)eqstat.get("incRMAF");
@@ -1705,9 +1712,6 @@ public class PlayerStats implements Serializable
         chra.reloadPotentialMap();
         chra.loadPackageList();
         chra.solvePackageStats();
-
-
-
         this.isRecalc = true;
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final int oldmaxhp = this.localmaxhp;

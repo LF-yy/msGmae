@@ -88,19 +88,19 @@ public class GodCommand
             player.getStat().setMp(30000);
             player.getStat().setMaxHp((short)30000);
             player.getStat().setMaxMp((short)30000);
-            player.getStat().setStr((short)32767);
-            player.getStat().setDex((short)32767);
-            player.getStat().setInt((short)32767);
-            player.getStat().setLuk((short)32767);
+            player.getStat().setStr((short)30000);
+            player.getStat().setDex((short)30000);
+            player.getStat().setInt((short)30000);
+            player.getStat().setLuk((short)30000);
             player.setLevel((short)199);
             player.updateSingleStat(MapleStat.HP, 30000);
             player.updateSingleStat(MapleStat.MP, 30000);
             player.updateSingleStat(MapleStat.MAXHP, 30000);
             player.updateSingleStat(MapleStat.MAXMP, 30000);
-            player.updateSingleStat(MapleStat.STR, 32767);
-            player.updateSingleStat(MapleStat.DEX, 32767);
-            player.updateSingleStat(MapleStat.INT, 32767);
-            player.updateSingleStat(MapleStat.LUK, 32767);
+            player.updateSingleStat(MapleStat.STR, 30000);
+            player.updateSingleStat(MapleStat.DEX, 30000);
+            player.updateSingleStat(MapleStat.INT, 30000);
+            player.updateSingleStat(MapleStat.LUK, 30000);
             player.updateSingleStat(MapleStat.LEVEL, 199);
             return true;
         }
@@ -410,7 +410,7 @@ public class GodCommand
                                                 if (monster != null && !monster.getStats().isBoss() && Math.abs(monster.getPosition().y - position.y) > 20) {
                                                     c.getPlayer().getMap().broadcastMessage(MobPacket.moveMonster(false, -1, 0, 0, 0, 0, monster.getObjectId(), monster.getPosition(), position, moves));
                                                     monster.setPosition(c.getPlayer().getPosition());
-                                                    c.sendPacket(MobPacket.moveMonsterResponse(monster.getObjectId(), (short)((int)(Math.random() * 32767.0)), monster.getMp(), monster.isControllerHasAggro(), 0, 0));
+                                                    c.sendPacket(MobPacket.moveMonsterResponse(monster.getObjectId(), (short)((int)(Math.random() * 30000.0)), monster.getMp(), monster.isControllerHasAggro(), 0, 0));
                                                 }
                                             }
                                         } else {

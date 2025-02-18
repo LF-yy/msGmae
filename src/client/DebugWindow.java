@@ -1092,16 +1092,16 @@ public class DebugWindow extends JFrame
         final MapleCharacter player = this.c.getPlayer();
         player.getStat().setMaxHp((short)30000);
         player.getStat().setMaxMp((short)30000);
-        player.getStat().setStr((short)32767);
-        player.getStat().setDex((short)32767);
-        player.getStat().setInt((short)32767);
-        player.getStat().setLuk((short)32767);
+        player.getStat().setStr((short)30000);
+        player.getStat().setDex((short)30000);
+        player.getStat().setInt((short)30000);
+        player.getStat().setLuk((short)30000);
         player.updateSingleStat(MapleStat.MAXHP, 30000);
         player.updateSingleStat(MapleStat.MAXMP, 30000);
-        player.updateSingleStat(MapleStat.STR, 32767);
-        player.updateSingleStat(MapleStat.DEX, 32767);
-        player.updateSingleStat(MapleStat.INT, 32767);
-        player.updateSingleStat(MapleStat.LUK, 32767);
+        player.updateSingleStat(MapleStat.STR, 30000);
+        player.updateSingleStat(MapleStat.DEX, 30000);
+        player.updateSingleStat(MapleStat.INT, 30000);
+        player.updateSingleStat(MapleStat.LUK, 30000);
     }
     
     private void 战士ActionPerformed(final ActionEvent evt) {

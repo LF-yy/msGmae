@@ -27,7 +27,6 @@ import database.DBConPool;
 import database.DatabaseConnection;
 import gui.*;
 import gui.控制台.聊天记录显示;
-import gui.控制台.脚本更新器;
 import handling.cashshop.CashShopServer;
 import handling.channel.ChannelServer;
 import handling.channel.MapleGuildRanking;
@@ -168,7 +167,7 @@ public class Start
     public static Map<Integer, String[]> potentialListMap = new HashMap<>();
     public static Map<Integer, List<MonsterDropEntry>> dropsMap;
     public static Map<Integer, List<MonsterDropEntry>> dropsMapTwo;
-    public static volatile int dropsFalg;
+    public static  int dropsFalg;
     public static Map<Integer, Integer> dropsMapCount;
     public static Map<Integer, Integer> dropsMapCountTwo;
     public static Map<String , File> in ;
@@ -184,7 +183,7 @@ public class Start
     public static Map<String, Integer> 技能范围检测 = new HashMap();
     public static Map<String, Integer> PVP技能伤害 = new HashMap();
     public static Map<String, Integer> 个人信息设置 = new HashMap();
-    public static 脚本更新器 更新通知;
+
     public static 聊天记录显示 信息输出;
     public static client.DebugWindow DebugWindow;
     private static int chrCountOfReward = 0;
@@ -224,9 +223,12 @@ public class Start
     public static Map<String, ArrayList> RewardNameMap = new HashMap();
     public static Map<String, ArrayList> RewardAnnouncementMap = new HashMap();
 
+    public static List<Integer> BUFFSkill = Arrays.asList(1001,1002,1005,1001003,1101004,1101005,1101006,1101007,1111002,1121000,1121002,1121010,1201004,1201005,1201007,1211003,1211004,1211005,1211006,1211007,1211008,1221000,1221002,1221003,1221004,1301004,1301005,1301006,1301007,1311005,1311008,1321000,1321002,1321007,2001002,2001003,2101001,2111005,2121000,2121005,2201001,2211005,2221000,2221005,2301003,2301004,2311003,2321000,3001003,3101002,3101004,3110000,3121000,3121002,3121006,3121008,3201002,3201004,3210000,3221000,3221002,3221005,3221006,4101003,4111002,4121000,4121006,4201002,4201003,4211005,4221000,5000000,5101005,5121000,5121009,5201001,5221000,5221010,20001001,20001002,20001005,21001003,21100005,21101003,21111001,21111005,21120007,21121000,21121003,21121008);
+
     public static List<String> 授权IP = Arrays.asList("160.202.231.123","1.15.43.65","175.24.182.189","202.189.5.75","106.54.24.67","159.75.177.122","58.220.33.222","27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23");
     public static int 计数器 = 0;
     public static int 删除标记 = 0;
+    public static List<Integer> 坐骑 = Arrays.asList(1902001,1912000,1902018,1912011,1902031,1912024,1902035,1912028,1902007,1912005,1902042,1912035,1902002,1902000);
     public static void 刷新抽奖物品() {
         RewardIDMap.clear();
         RewardChanceMap.clear();
@@ -416,102 +418,116 @@ public class Start
             System.out.println("◇ -> 玩家角色数量: " + 服务器角色() + " 个");
             System.out.println("◇ -> 玩家道具数量: " + 服务器道具() + " 个");
             System.out.println("◇ -> 玩家技能数量: " + 服务器技能() + " 个");
-//
-//            System.out.println("◇ -> 启动记录在线时长线程");
-//            System.out.println("◇ -> 启动服务端内存回收线程");
-//            System.out.println("◇ -> 启动服务端地图回收线程");
-//            System.out.println("◇ -> 处理怪物重生、CD、宠物、坐骑");
-//            System.out.println("◇ -> 自定义玩家NPC");
+            System.out.println("获取并更新公会排名信息");
             MapleGuildRanking.getInstance().getGuildRank();
+            System.out.println("获取并更新各职业排名信息");
             MapleGuildRanking.getInstance().getJobRank(1);
             MapleGuildRanking.getInstance().getJobRank(2);
             MapleGuildRanking.getInstance().getJobRank(3);
             MapleGuildRanking.getInstance().getJobRank(4);
             MapleGuildRanking.getInstance().getJobRank(5);
             MapleGuildRanking.getInstance().getJobRank(6);
+        System.out.println("获取家族缓冲区入口信息");
             MapleFamilyBuff.getBuffEntry();
-//            System.out.println("\r\n[加载设置] -> 游戏倍率信息");
-//            if (Integer.parseInt(ServerProperties.getProperty("LtMS.expRate")) > 1000) {
-//                System.out.println("游戏经验倍率: 1000 倍 (上限)");
-//            }
-//            else {
-//                System.out.println("游戏经验倍率: " + Integer.parseInt(ServerProperties.getProperty("LtMS.expRate")) + " 倍 ");
-//            }
-//            if (Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate")) > 100) {
-//                System.out.println("游戏物品倍率：100 倍 (上限)");
-//            }
-//            else {
-//                System.out.println("游戏物品倍率：" + Integer.parseInt(ServerProperties.getProperty("LtMS.dropRate")) + " 倍 ");
-//            }
-//            if (Integer.parseInt(ServerProperties.getProperty("LtMS.mesoRate")) > 100) {
-//                System.out.println("游戏金币倍率：100 倍 (上限)");
-//            }
-//            else {
-//                System.out.println("游戏金币倍率：" + Integer.parseInt(ServerProperties.getProperty("LtMS.mesoRate")) + " 倍 ");
-//            }
-            //System.out.println("\r\n[加载设置] -> 游戏端口配置");
+        System.out.println("加载商人主界面数据");
             merchant_main.getInstance().load_data();
+        System.out.println("登录服务器设置");
             LoginServer.setup();
+        System.out.println("启动所有频道服务器");
             ChannelServer.startAllChannels();
+        System.out.println("现金商店设置");
             CashShopServer.setup();
+        System.out.println("注册作弊检测定时任务");
             CheatTimer.getInstance().register((Runnable)AutobanManager.getInstance(), 60000L);
+        System.out.println("添加服务器关闭钩子线程");
             Runtime.getRuntime().addShutdownHook(new Thread((Runnable)ShutdownServer.getInstance()));
+        System.out.println("加载速度跑数据");
             SpeedRunner.getInstance().loadSpeedRuns();
+        System.out.println("注册重生点");
             World.registerRespawn();
+        System.out.println("加载所有玩家NPC数据");
             PlayerNPC.loadAll();
+        System.out.println("启用登录服务器");
             LoginServer.setOn();
+        System.out.println("加载自定义地图生命体数据");
             MapleMapFactory.loadCustomLife();
-            //checkCPU(10);
+        System.out.println("从数据库加载怪物伤害数据列表");
             DamageManage.getInstance().loadMobDamageDataListFromDB();
+        System.out.println(" 加载地图中的额外怪物信息");
             loadExtraMobInMapId();
+        System.out.println("从数据库加载日志信息");
             loadLogFromDB();
+        System.out.println("刷新抽奖物品信息");
             刷新抽奖物品();
+        System.out.println("开始加载镶嵌装备效果");
             GetFuMoInfo();
+        System.out.println("加载潜在地图信息");
             loadPotentialMap();
+        //System.out.println("");
             //读取技能范围检测();
+        System.out.println("读取技能PVP伤害数据");
             读取技能PVP伤害();
+        System.out.println("读取玩家个人信息设置");
             读取技个人信息设置();
+        //System.out.println("重置仙人数据");
             重置仙人数据();
+        System.out.println("根据配置决定是否开启重要道具掉落广播");
         WorldConstants.importantItemsBroadcast = (Integer)LtMS.ConfigValuesMap.get("重要道具掉落广播") > 0;
 
+        System.out.println("加载所有论坛分区数据");
         Forum_Section.loadAllSection();
-            //读取地图吸怪检测();
-            //System.out.println("[启动角色福利泡点线程]");
            // 福利泡点(2);
+        System.out.println("自动存档功能，参数为时间间隔");
             自动存档(10);
+        System.out.println("在线时间统计");
             在线时间(1);
+        System.out.println("定时回收内存");
             回收内存(300);
+        System.out.println("定时回收地图");
             回收地图(180);
+        System.out.println("在线统计功能");
             在线统计(1);
+        System.out.println("循环线程功能");
             循环线程(1);
             //定时重载爆率(10);
             //吸怪检测(3);
             World.isShutDown = false;
+        System.out.println("初始化OnlyID实例");
             OnlyID.getInstance();
             //清理复制道具
-            //System.out.println("◇ -> 检测游戏复制道具系统");
+        System.out.println("注释掉的清理复制道具功能");
             checkCopyItemFromSql();
-           // System.out.println("◇ -> 加载赋能系统");
-
            // //服务端输出信息.println_out("【启动中】 加载每日泡点、每日重置:::");
             //World.GainZx(Zx_time);
             //ZaiXian(1);
-            ////服务端输出信息.println_out("○ 开始加载野外随机BOSS");
+        System.out.println("初始化野外BOSS");
             World.outsideBoss(1);
+        System.out.println("从数据库加载世界BOSS数据");
              WorldBoss.loadFromDB();
+        System.out.println("定时保存技能皮肤映射");
             AutoSaveSkillSkinMap(30);
+        System.out.println("特定功能的时间设置");
             tzjc.sr_tz();
+        System.out.println("设置第二类掉落物");
             setdrops();
+        System.out.println("获取怪物价值信息");
             setdropsTwo();
+        System.out.println("获取怪物价值信息");
             getltMonstervalue();
+        System.out.println("自定义怪物伤害增加");
         ltMonsterCustomizeDamageAddition();
+        System.out.println("等级伤害增加");
         ltMonsterLevelDamageAddition();
+        System.out.println("获取所有物品信息");
             getAllItemInfo();
             //暗黑破坏神玩法词条加载
+        System.out.println("暗黑破坏神玩法词条加载");
             setLtDiabloEquipments();
             //巅峰等级
+        System.out.println("巅峰等级设置");
             getLtPeakLevel();
             //PK
+        System.out.println(" PK相关设置和数据加载");
         GameConstants.loadPKChannelList();
         GameConstants.loadPKGuildChannelList();
         GameConstants.loadPKPlayerMapList();
@@ -521,19 +537,18 @@ public class Start
         GameConstants.loadPKDropItemsList();
         GameConstants.loadPKDropItemsList2();
         GameConstants.loadMultiOnlyEquipList();
+        System.out.println("检查服务器IP是否在授权列表中");
         if (!授权IP.contains(ServerConfig.IP)){
             ServerConfig.setUserlimit(5);
             启动轮播(50);
         }
+        System.out.println("初始化所有频道的黑暗地图信息");
         for (Integer allChannel : ChannelServer.getAllChannels()) {
             Map<String, List<Integer>> map= new ConcurrentHashMap<>();
             Start.darkMap.put(allChannel,map);
         }
-        System.out.println("[所有游戏数据加载完毕] ");
-        System.out.println("[LtMs079服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
+        System.out.println("[服务端已启动完毕，耗时 " + (System.currentTimeMillis() - startQuestTime) / 1000L + " 秒]");
         System.out.println("[温馨提示]运行中请勿直接关闭本控制台，使用下方关闭服务器按钮来关闭服务端，否则回档自负\r\n");
-        System.out.println("◇ -> 服务器启动成功");
-
     }
     public static void AutoSaveSkillSkinMap(int time) {
         //服务端输出信息.println_out("【读取中】 加载自动存储技能皮肤列表:::");
@@ -940,24 +955,31 @@ public class Start
                     int day = Calendar.getInstance().get(7);
                     int dayMonth = Calendar.getInstance().get(5);
                     if (时 == 0 && !isClearBossLog) {
-                        System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
-                        System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端开始清理每日信息 √");
+                        System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
+                        System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端开始清理每日信息 √");
                         世界BOSS刷新记录 = 0;
                         try {
                             try (final PreparedStatement ps = con.prepareStatement("UPDATE characters SET todayOnlineTime = 0")) {
                                 ps.executeUpdate();
-                                System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日在线时间完成 √");
+                                System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日在线时间完成 √");
                             }
                             try (final PreparedStatement ps = con.prepareStatement("UPDATE accountidbosslog SET sz1 = 0")) {
                                 ps.executeUpdate();
-                                System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日在线时间完成 √");
+                                System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日在线时间完成 √");
                             }
                             try (final PreparedStatement ps = con.prepareStatement("delete from bosslog  where type = 0")) {
                                 ps.executeUpdate();
-                                System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日log信息完成 √");
+                                System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理今日log信息完成 √");
                             }
-                            System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端清理每日信息完成 √");
-                            System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
+                            if(星期 == 1){
+                                try (final PreparedStatement ps = con.prepareStatement("delete from prizelog")) {
+                                    ps.executeUpdate();
+                                    System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 清理周表信息完成 √");
+                                }
+                            }
+
+                            System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端清理每日信息完成 √");
+                            System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
                             try {
                                 merchant_main.getInstance().save_data();
                             } catch (Exception e) {
@@ -968,8 +990,8 @@ public class Start
 
                         }
                         catch (SQLException ex) {
-                            System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端处理每日数据出错 × " + ex.getMessage());
-                            System.err.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
+                            System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 服务端处理每日数据出错 × " + ex.getMessage());
+                            System.out.println("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : ------------------------------");
                         }
                         isClearBossLog = true;
                         魔族入侵 = false;
@@ -1040,6 +1062,7 @@ public class Start
                         //GameConstants.setBanMultiMobRateList();
                        // World.Guild.save();
                         if(dropsFalg >=1 ){
+                            dropsFalg=0;
                             setdrops();
                             setdropsTwo();
                             MapleMonsterInformationProvider.getInstance().clearDrops();
@@ -1524,34 +1547,6 @@ public class Start
 
                 删除标记++;
 
-//                    PreparedStatement ps = null;
-//                    ResultSet rs = null;
-//                    Connection connection = DatabaseConnection.getConnection();
-//                    try {
-//                        List<Integer> ids = new ArrayList<>();
-//                        int ljs = LtMS.ConfigValuesMap.get("连接数清理时间");
-//                        String sql = "SELECT ID, TIME FROM information_schema.`PROCESSLIST` WHERE USER = 'root' AND COMMAND = 'Sleep' AND TIME > "+ljs;
-//                        ps = connection.prepareStatement("SELECT ID from information_schema.`PROCESSLIST` WHERE Time > ljs AND USER = 'root'");
-//                        rs = ps.executeQuery();
-//                        while (rs.next()) {
-//                            ids.add(rs.getInt("ID"));
-//                        }
-//                        for (Integer id : ids) {
-//                            deleteInventoryequipment(connection,"kill " + id );
-//                        }
-//                        rs.close();
-//                        ps.close();
-//                        connection.close();
-//                    } catch (SQLException e) {
-//                        FilePrinter.printError("information_schema_PROCESSLIST.txt", (Throwable) e, "[information_schema_PROCESSLIST]");
-//                    } finally {
-//                        try {
-//                            connection.close();
-//                        } catch (SQLException e) {
-//                        }
-//                    }
-
-
 //
 //                if (LtMS.ConfigValuesMap.get("定时重载爆率") == 1 && Start.dropsFalg == 1) {
 //                    MapleMonsterInformationProvider.getInstance().clearDrops();
@@ -1802,38 +1797,20 @@ public class Start
         WorldTimer.getInstance().register((Runnable)new Runnable() {
             @Override
             public void run() {
+                Map<String,String> map = new HashMap<>();
                 ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
                 long[] threadIds = threadMXBean.getAllThreadIds();
                 ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadIds);
                 for (ThreadInfo threadInfo : threadInfos) {
-                    if (threadInfo.getBlockedCount() >= 500 || threadInfo.getWaitedCount() >= 500) {
-                        System.out.println("Thread ID: " + threadInfo.getThreadId());
-                        System.out.println("Thread Name: " + threadInfo.getThreadName());
-                        System.out.println("Thread State: " + threadInfo.getThreadState());
-                        System.out.println("Blocked Time: " + threadInfo.getBlockedTime());
-                        System.out.println("Blocked Count: " + threadInfo.getBlockedCount());
-                        System.out.println("Waited Time: " + threadInfo.getWaitedTime());
-                        System.out.println("Waited Count: " + threadInfo.getWaitedCount());
-                        System.out.println("----------------------------------------");
-                        // 检查线程是否闲置
-//                        try {
-//                            if (isIdleThread(threadInfo) && threadInfo.getThreadName().contains("Thread-")) {
-//                                Thread thread = findThreadById(threadInfo.getThreadId());
-//                                if (thread != null) {
-//                                    System.out.println("Interrupting idle thread: " + thread.getName());
-//                                    thread.interrupt();
-//                                }
-//                            }else if (isIdleThread2(threadInfo) && threadInfo.getThreadName().contains("Thread-")){
-//                                Thread thread = findThreadById(threadInfo.getThreadId());
-//                                if (thread != null) {
-//                                    System.out.println("Interrupting idle thread: " + thread.getName());
-//                                    thread.interrupt();
-//                                }
-//                            }
-//                        } catch (Exception e) {
-//                            System.out.println("结束线程异常 ");
-//                        }
-                    }
+                    map.put(threadInfo.getThreadName(),threadInfo.getThreadState().name());
+                }
+                Map<String,Integer> map1 = new HashMap<>();
+
+                for (Map.Entry<String, String> stringStringEntry : map.entrySet()) {
+                    map1.merge(stringStringEntry.getKey().split("-")[0], 1, Integer::sum);
+                }
+                for (Map.Entry<String, Integer> stringIntegerEntry : map1.entrySet()) {
+                    System.out.println(stringIntegerEntry.getKey()+"-"+stringIntegerEntry.getValue());
                 }
             }
         }, (long)(60000 * time));

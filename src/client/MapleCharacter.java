@@ -553,6 +553,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 开启巅峰等级;
     public int 裂隙层数;
     public int 飞升等级;
+    public int 坐骑攻击力;
+    public int 坐骑魔力;
     public int getDonate() {
         return donate;
     }
@@ -3747,6 +3749,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.combo = 0;
         }
         if (!overwrite) {
+            //取消buff
             this.cancelPlayerBuffs(buffstats);
             if (this.isGM() && effect.isHide() && this.client.getChannelServer().getPlayerStorage().getCharacterById(this.getId()) != null) {
                 this.hidden = false;
@@ -3778,53 +3781,88 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.getDebugMessage()) {
             this.dropMessage("取消技能 - " + effect.getName() + "(" + effect.getSourceId() + ")");
         }
+        if (effect.getSourceId() != 3020032) {
+            return;
+        }
 
-        if (effect.getSourceId() == 3020032) {
-            boolean find = false;
-            Iterator var23 = ChannelServer.getAllInstances().iterator();
+        boolean find = false;
 
-            while(var23.hasNext()) {
-                ChannelServer cs = (ChannelServer)var23.next();
-                Iterator var25 = cs.getMapFactory().getAllMapThreadSafe().iterator();
-
-                while(var25.hasNext()) {
-                    MapleMap map = (MapleMap)var25.next();
-                    if (map != null) {
-                        Iterator var14 = map.getAllMonstersThreadsafe().iterator();
-
-                        label112:
-                        while(true) {
-                            MapleMonster monster;
-                            do {
-                                do {
-                                    if (!var14.hasNext()) {
-                                        break label112;
-                                    }
-
-                                    monster = (MapleMonster)var14.next();
-                                } while(monster == null);
-                            } while(monster.getId() != 9900000 && monster.getId() != 9900001 && monster.getId() != 9900002);
-
-                            if (monster.getOwner() == this.getId()) {
-                                map.killMonster(monster, true);
-                                map.setStoneLevel(0);
-                                map.setHaveStone(false);
-                                find = true;
-                                break;
-                            }
+        for (ChannelServer cs : ChannelServer.getAllInstances()) {
+            for (MapleMap map : cs.getMapFactory().getAllMapThreadSafe()) {
+                if (map == null) {
+                    continue;
+                }
+                for (MapleMonster monster : map.getAllMonstersThreadsafe()) {
+                    if (monster == null) {
+                        continue;
+                    }
+                    if (monster.getId() == 9900000 || monster.getId() == 9900001 || monster.getId() == 9900002) {
+                        if (monster.getOwner() == this.getId()) {
+                            map.killMonster(monster, true);
+                            map.setStoneLevel(0);
+                            map.setHaveStone(false);
+                            find = true;
+                            break;
                         }
                     }
-
-                    if (find) {
-                        break;
-                    }
                 }
-
                 if (find) {
                     break;
                 }
             }
+            if (find) {
+                break;
+            }
         }
+        if (!find) {
+            System.out.println("No matching monsters found for effect with source ID: "+ effect.getSourceId());
+        }
+//        if (effect.getSourceId() == 3020032) {
+//            boolean find = false;
+//            Iterator var23 = ChannelServer.getAllInstances().iterator();
+//
+//            while(var23.hasNext()) {
+//                ChannelServer cs = (ChannelServer)var23.next();
+//                Iterator var25 = cs.getMapFactory().getAllMapThreadSafe().iterator();
+//
+//                while(var25.hasNext()) {
+//                    MapleMap map = (MapleMap)var25.next();
+//                    if (map != null) {
+//                        Iterator var14 = map.getAllMonstersThreadsafe().iterator();
+//
+//                        label112:
+//                        while(true) {
+//                            MapleMonster monster;
+//                            do {
+//                                do {
+//                                    if (!var14.hasNext()) {
+//                                        break label112;
+//                                    }
+//
+//                                    monster = (MapleMonster)var14.next();
+//                                } while(monster == null);
+//                            } while(monster.getId() != 9900000 && monster.getId() != 9900001 && monster.getId() != 9900002);
+//
+//                            if (monster.getOwner() == this.getId()) {
+//                                map.killMonster(monster, true);
+//                                map.setStoneLevel(0);
+//                                map.setHaveStone(false);
+//                                find = true;
+//                                break;
+//                            }
+//                        }
+//                    }
+//
+//                    if (find) {
+//                        break;
+//                    }
+//                }
+//
+//                if (find) {
+//                    break;
+//                }
+//            }
+//        }
     }
     
     public void cancelBuffStats(final MapleBuffStat... stat) {
@@ -3838,6 +3876,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.cancelEffect(((MapleBuffStatValueHolder)this.effects.get((Object)stat)).effect, false, -1L);
         }
     }
+    /**
+     * 恢复潜在的增益效果
+     * 该方法用于根据物品ID和增益状态列表来恢复角色的潜在增益效果
+     *
+     * @param itemId 物品ID，用于确定要恢复的增益效果
+     * @param duration 增益效果的持续时间
+     * @param isCanCancel 是否可以取消增益效果
+     * @param buffstats 增益状态的列表，用于确定要恢复的增益类型
+     */
     private void recoverPotentialBuff(int itemId, int duration, boolean isCanCancel, List<MapleBuffStat> buffstats) {
         List<Pair<MapleBuffStat, Integer>> statups = new ArrayList();
         Iterator var6 = buffstats.iterator();
@@ -3847,10 +3894,18 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             if (stat != null) {
                 Pair statup;
                 if (stat.name().equals("WATK")) {
-                    statup = new Pair(stat, this.getStat().pWatk);
+                    if(itemId == Potential.buffItemId){
+                    statup = new Pair(stat, this.getStat().pWatk+this.坐骑攻击力);
+                    }else{
+                    statup = new Pair(stat, this.getStat().pWatk );
+                    }
                     statups.add(statup);
                 } else if (stat.name().equals("MATK")) {
-                    statup = new Pair(stat, this.getStat().pMatk);
+                    if(itemId == Potential.buffItemId){
+                    statup = new Pair(stat, this.getStat().pMatk+this.坐骑魔力);
+                    }else{
+                        statup = new Pair(stat, this.getStat().pMatk);
+                    }
                     statups.add(statup);
                 } else if (stat.name().equals("WDEF")) {
                     statup = new Pair(stat, this.getStat().pWdef);
@@ -4997,17 +5052,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void gainExp( int total,  boolean show,  boolean inChat,  boolean white) {
         try {
-            if(total>=Integer.MAX_VALUE){
-                total = Integer.MAX_VALUE;
+          long l = this.exp + total;
+            if(l < 0 ){
+                total = Integer.MAX_VALUE - this.exp;
             }
-
             if (等级上限 == 0 ){
                 等级上限 =  this.取限制等级1(getId());
-            }
-            if ( this.level >= 等级上限) {
-                if(this.exp + total >= Integer.MAX_VALUE) {
-               // this.经验入池(this.id,total);
-                }
             }
             int prevexp = this.getExp();
             int needed = GameConstants.getExpNeededForLevel(this.level);
@@ -5176,16 +5226,39 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             try {
                 if(LtMS.ConfigValuesMap.get("飞升开启") >0 && this.飞升等级 == LtMS.ConfigValuesMap.get("飞升等级")){
-                    this.setLevel((short) 199);
-                    levelUp();
-                    this.client.getSession().write((Object)MaplePacketCreator.getCharInfo(this));
-                    this.getMap().removePlayer(this);
-                    this.getMap().addPlayer(this);
-                    this.client.getSession().write((Object)MaplePacketCreator.enableActions());
+                    Map<String, List<Integer>> ltFlyingUp = Start.getLtFlyingUp(this.飞升等级);
+                    List<Integer> itemList = ltFlyingUp.get("item_list");
+                    List<Integer> itemCount = ltFlyingUp.get("item_count");
+                    boolean flag = true;
+                    if(ListUtil.isNotEmpty(itemList)) {
+                        for (int i = 0; i < itemList.size(); i++) {
+                            if(!this.haveItem(itemList.get(i), itemCount.get(i))){
+                                flag = false;
+                            }
+                        }
+                        if(flag){
+                            for (int i = 0; i < itemList.size(); i++) {
+                                this.gainItem(itemList.get(i), -itemCount.get(i));
+                            }
+                            this.setExp(0);
+                            this.setLevel((short) 199);
+                            levelUp();
+//                            this.client.getSession().write((Object)MaplePacketCreator.getCharInfo(this));
+//                            this.getMap().removePlayer(this);
+//                            this.getMap().addPlayer(this);
+//                            this.client.getSession().write((Object)MaplePacketCreator.enableActions());
+
+                        }
+
+                    }
                 }
             } catch (Exception e) {
-            }
 
+            }
+            long l = this.exp + total;
+            if(l < 0 ){
+                total = Integer.MAX_VALUE - this.exp;
+            }
             int needed = GameConstants.getExpNeededForLevel(this.level);
             if ((Integer)LtMS.ConfigValuesMap.get("高等级经验限制开关") > 0 && this.getLevel() >= (Integer)LtMS.ConfigValuesMap.get("高等级经验限制判定等级")) {
                 int expToStore = total - total / (Integer)LtMS.ConfigValuesMap.get("高等级经验减少倍数");
@@ -6191,6 +6264,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public Map<Integer, EquipFieldEnhancement.EquipField> getEquipFieldMap() {
         return EquipFieldEnhancement.getInstance().getChrEquipFieldMap(this.id);
     }
+    /**
+     * 当装备发生变化时调用此方法以更新角色外观和相关统计信息
+     * 此方法首先检查角色是否在地图中，如果不在则直接返回
+     * 然后广播更新角色外观的消息，并重新计算本地统计信息
+     * 如果角色在使者中，则更新使者的相关信息
+     */
     public void equipChanged() {
         if (this.map == null) {
             return;
@@ -7220,16 +7299,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair(MapleBuffStat.MORPH, effect.getMorph(this)));
             ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList();
-            Selfstat.add(new Pair(MapleBuffStat.WATK, Integer.valueOf(effect.getWatk())));
-            Selfstat.add(new Pair(MapleBuffStat.MATK, Integer.valueOf(effect.getMatk())));
-            Selfstat.add(new Pair(MapleBuffStat.WDEF, Integer.valueOf(effect.getWdef())));
-            Selfstat.add(new Pair(MapleBuffStat.MDEF, Integer.valueOf(effect.getMdef())));
-            Selfstat.add(new Pair(MapleBuffStat.ACC, Integer.valueOf(effect.getAcc())));
-            Selfstat.add(new Pair(MapleBuffStat.AVOID, Integer.valueOf(effect.getAvoid())));
-            Selfstat.add(new Pair(MapleBuffStat.SPEED, Integer.valueOf(effect.getSpeed())));
-            Selfstat.add(new Pair(MapleBuffStat.JUMP, Integer.valueOf(effect.getJump())));
-            Selfstat.add(new Pair(MapleBuffStat.MAXHP, Integer.valueOf(maxHpPercent)));
-            Selfstat.add(new Pair(MapleBuffStat.MAXMP, Integer.valueOf(maxMpPercent)));
+            Selfstat.add(new Pair<>(MapleBuffStat.WATK, (int) effect.getWatk()));
+            Selfstat.add(new Pair<>(MapleBuffStat.MATK, (int) effect.getMatk()));
+            Selfstat.add(new Pair<>(MapleBuffStat.WDEF, (int) effect.getWdef()));
+            Selfstat.add(new Pair<>(MapleBuffStat.MDEF, (int) effect.getMdef()));
+            Selfstat.add(new Pair<>(MapleBuffStat.ACC, (int) effect.getAcc()));
+            Selfstat.add(new Pair<>(MapleBuffStat.AVOID, (int) effect.getAvoid()));
+            Selfstat.add(new Pair<>(MapleBuffStat.SPEED, (int) effect.getSpeed()));
+            Selfstat.add(new Pair<>(MapleBuffStat.JUMP, (int) effect.getJump()));
+            Selfstat.add(new Pair<>(MapleBuffStat.MAXHP, (int) maxHpPercent));
+            Selfstat.add(new Pair<>(MapleBuffStat.MAXMP, (int) maxMpPercent));
             this.cancelEffect(effect, true, -1L, Selfstat);
             this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, duration, Selfstat, effect));
             this.updateSingleStat(MapleStat.HP, this.getHp());
@@ -7246,11 +7325,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
         }
     }
+    //潜能BUFF
     public void givePotentialBuff(int itemId, int duration, boolean isCanCancel) {
         if (this.getStat().pWatk <= 0 && this.getStat().pMatk <= 0 && this.getStat().pWdef <= 0 && this.getStat().pMdef <= 0 && this.getStat().pAcc <= 0 && this.getStat().pAvoid <= 0 && this.getStat().pSpeed <= 0 && this.getStat().pJump <= 0 && this.getStat().pMaxHpPercent <= 0 && this.getStat().pMaxMpPercent <= 0) {
-            this.givePotentialBuff(itemId, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 1000, true);
+            this.givePotentialBuff(itemId, (short)(0+(this.坐骑攻击力>30000 ? 30000:this.坐骑攻击力)), (short)(0+(this.坐骑魔力>30000 ? 30000 :this.坐骑魔力)), (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, 1000, true);
         } else {
-            this.givePotentialBuff(itemId, (short)(Math.min(this.getStat().pWatk, 32766)), (short)(Math.min(this.getStat().pMatk, 32766)), (short)(Math.min(this.getStat().pWdef, 32766)), (short)(Math.min(this.getStat().pMdef, 32766)), (short)(Math.min(this.getStat().pAcc, 32766)), (short)(Math.min(this.getStat().pAvoid, 32766)), (short)(Math.min(this.getStat().pSpeed, 32766)), (short)(Math.min(this.getStat().pJump, 32766)), (short)(Math.min(this.getStat().pMaxHpPercent, 30000)), (short)(Math.min(this.getStat().pMaxMpPercent, 30000)), duration, isCanCancel);
+            this.givePotentialBuff(itemId, (short)(Math.min(this.getStat().pWatk+this.坐骑攻击力, 30000)), (short)(Math.min(this.getStat().pMatk+this.坐骑魔力, 30000)), (short)(Math.min(this.getStat().pWdef, 30000)), (short)(Math.min(this.getStat().pMdef, 30000)), (short)(Math.min(this.getStat().pAcc, 30000)), (short)(Math.min(this.getStat().pAvoid, 30000)), (short)(Math.min(this.getStat().pSpeed, 30000)), (short)(Math.min(this.getStat().pJump, 30000)), (short)(Math.min(this.getStat().pMaxHpPercent, 30000)), (short)(Math.min(this.getStat().pMaxMpPercent, 30000)), duration, isCanCancel);
         }
 
     }
@@ -7279,14 +7359,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<>(MapleBuffStat.MORPH, effect.getMorph(this)));
             ArrayList<Pair<MapleBuffStat, Integer>> Selfstat = new ArrayList<>();
-            Selfstat.add(new Pair<>(MapleBuffStat.WATK, (int) effect.getWatk() + this.getStat().pWatk));
-            Selfstat.add(new Pair<>(MapleBuffStat.MATK, (int) effect.getMatk() + this.getStat().pMatk));
-            Selfstat.add(new Pair<>(MapleBuffStat.WDEF, (int) effect.getWdef() + this.getStat().pWdef));
-            Selfstat.add(new Pair<>(MapleBuffStat.MDEF, (int) effect.getMdef() + this.getStat().pMdef));
-            Selfstat.add(new Pair<>(MapleBuffStat.ACC, (int) effect.getAcc() + this.getStat().pAcc));
-            Selfstat.add(new Pair<>(MapleBuffStat.AVOID, (int) effect.getAvoid() + this.getStat().pAvoid));
-            Selfstat.add(new Pair<>(MapleBuffStat.SPEED, (int) effect.getSpeed() + this.getStat().pSpeed));
-            Selfstat.add(new Pair<>(MapleBuffStat.JUMP, (int) effect.getJump() + this.getStat().pJump));
+            Selfstat.add(new Pair<>(MapleBuffStat.WATK, Math.min((int) effect.getWatk() + this.getStat().pWatk,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.MATK, Math.min((int) effect.getMatk() + this.getStat().pMatk,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.WDEF, Math.min((int) effect.getWdef() + this.getStat().pWdef,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.MDEF, Math.min((int) effect.getMdef() + this.getStat().pMdef,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.ACC, Math.min((int) effect.getAcc() + this.getStat().pAcc,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.AVOID, Math.min((int) effect.getAvoid() + this.getStat().pAvoid,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.SPEED, Math.min((int) effect.getSpeed() + this.getStat().pSpeed,30000)));
+            Selfstat.add(new Pair<>(MapleBuffStat.JUMP, Math.min((int) effect.getJump() + this.getStat().pJump,30000)));
             this.cancelEffect(effect, true, -1L, Selfstat);
             this.getClient().sendPacket(MaplePacketCreator.giveBuff(-itemId, duration, Selfstat, effect));
             this.setHp(this.getHp() + hp);

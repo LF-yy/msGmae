@@ -3,6 +3,7 @@ package client.messages.commands;
 import client.MapleCharacter;
 import client.inventory.IItem;
 import constants.MapConstants;
+import constants.ServerConfig;
 import gui.LtMS;
 import handling.channel.ChannelServer;
 import handling.world.MaplePartyCharacter;
@@ -403,7 +404,7 @@ public class PlayerCommand
                 jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
             }
             double DROP_RATE = 1.0F;
-        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && c.getPlayer().getMap().getChannel()>= Integer.parseInt(ServerProperties.getProperty("LtMS.Count"))) {
+        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && ServerConfig.双倍线路.contains(c.getPlayer().getMap().getChannel())) {
             DROP_RATE = c.getChannelServer().getDropRate()*2.0F;
         }else{
             DROP_RATE = c.getChannelServer().getDropRate();

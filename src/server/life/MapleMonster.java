@@ -17,6 +17,7 @@ import java.util.*;
 
 import server.Start;
 import snail.DamageManage;
+import snail.MonsterKillQuest;
 import tools.Pair;
 import server.Timer.MobTimer;
 import client.ISkill;
@@ -430,6 +431,20 @@ public class MapleMonster extends AbstractLoadedMapleLife
                             }
                         }
                     }
+                    if (from.getParty() != null) {
+                        for (MaplePartyCharacter pChr : from.getParty().getMembers()) {
+                            int chrId = pChr.getId();
+                            MapleCharacter chr = from.getMap().getCharacterById(chrId);
+                            if (chr != null) {
+                                updateMonsterKillQuest(chr, this.getId(), this.getName());
+                            }
+                        }
+                    } else {
+                        updateMonsterKillQuest(from, this.getId(), this.getName());
+                    }
+
+
+
                     if (this.getStats().getHPDisplayType() == -1) {
                         this.getMap().broadcastMessage(MobPacket.showMonsterHP(this.getObjectId(), (int)Math.ceil((double)this.hp * 100.0 / (double)this.getMobMaxHp())));
                     }
@@ -439,7 +454,15 @@ public class MapleMonster extends AbstractLoadedMapleLife
         }
         this.startDropItemSchedule();
     }
-
+    private void updateMonsterKillQuest(MapleCharacter character, int monsterId, String monsterName) {
+        List<MonsterKillQuest> monsterKillQuestList = character.getMonsterKillQuestByMonsterId(monsterId);
+        for (MonsterKillQuest monsterKillQuest : monsterKillQuestList) {
+            if (monsterKillQuest != null && !monsterKillQuest.isFinished(monsterId)) {
+                monsterKillQuest.addCount(monsterId, 1);
+                character.dropMessage(-1, "击杀 " + monsterName + "[" + monsterKillQuest.getNowQuantity(monsterId) + "/" + monsterKillQuest.getFinishQuantity(monsterId) + "]");
+            }
+        }
+    }
     public void heal(final int hp, final int mp, final boolean broadcast) {
         long totalHP = this.getHp() + (long)hp;
         int totalMP = this.getMp() + mp;

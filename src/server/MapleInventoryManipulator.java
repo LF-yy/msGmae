@@ -1031,86 +1031,86 @@ public class MapleInventoryManipulator
                     EquipFieldEnhancement.EquipField equipField = c.getPlayer().getEquipField(dst);
                     if (equipField != null) {
                         int str = source.getStr() + equipField.getStr();
-                        if (str > 32767) {
-                            str = 32767;
+                        if (str > 30000) {
+                            str = 30000;
                         }
 
                         source.setStr((short)str);
                          dex = source.getDex() + equipField.getDex();
-                        if (dex > 32767) {
-                            dex = 32767;
+                        if (dex > 30000) {
+                            dex = 30000;
                         }
                         source.setDex((short)dex);
 
                          reqlv = source.getInt() + equipField.getInt();
-                        if (reqlv > 32767) {
-                            reqlv = 32767;
+                        if (reqlv > 30000) {
+                            reqlv = 30000;
                         }
                         source.setInt((short)reqlv);
 
                          luk = source.getLuk() + equipField.getLuk();
-                        if (luk > 32767) {
-                            luk = 32767;
+                        if (luk > 30000) {
+                            luk = 30000;
                         }
                         source.setLuk((short)luk);
 
                          hp = source.getHp() + equipField.getHp();
-                        if (hp > 32767) {
-                            hp = 32767;
+                        if (hp > 30000) {
+                            hp = 30000;
                         }
                         source.setHp((short)hp);
 
                          mp = source.getMp() + equipField.getMp();
-                        if (mp > 32767) {
-                            mp = 32767;
+                        if (mp > 30000) {
+                            mp = 30000;
                         }
                         source.setMp((short)mp);
 
                          watk = source.getWatk() + equipField.getWatk();
-                        if (watk > 32767) {
-                            watk = 32767;
+                        if (watk > 30000) {
+                            watk = 30000;
                         }
                         source.setWatk((short)watk);
 
                          matk = source.getMatk() + equipField.getMatk();
-                        if (matk > 32767) {
-                            matk = 32767;
+                        if (matk > 30000) {
+                            matk = 30000;
                         }
                         source.setMatk((short)matk);
 
                          wdef = source.getWdef() + equipField.getWdef();
-                        if (wdef > 32767) {
-                            wdef = 32767;
+                        if (wdef > 30000) {
+                            wdef = 30000;
                         }
                         source.setWdef((short)wdef);
 
                          mdef = source.getMdef() + equipField.getMdef();
-                        if (mdef > 32767) {
-                            mdef = 32767;
+                        if (mdef > 30000) {
+                            mdef = 30000;
                         }
                         source.setMdef((short)mdef);
 
                          acc = source.getAcc() + equipField.getAcc();
-                        if (acc > 32767) {
-                            acc = 32767;
+                        if (acc > 30000) {
+                            acc = 30000;
                         }
                         source.setAcc((short)acc);
 
                          avoid = source.getAvoid() + equipField.getAvoid();
-                        if (avoid > 32767) {
-                            avoid = 32767;
+                        if (avoid > 30000) {
+                            avoid = 30000;
                         }
                         source.setAvoid((short)avoid);
 
                         int speed = source.getSpeed() + equipField.getSpeed();
-                        if (speed > 32767) {
-                            speed = 32767;
+                        if (speed > 30000) {
+                            speed = 30000;
                         }
                         source.setSpeed((short)speed);
 
                         int jump = source.getJump() + equipField.getJump();
-                        if (jump > 32767) {
-                            jump = 32767;
+                        if (jump > 30000) {
+                            jump = 30000;
                         }
                         source.setJump((short)jump);
 
@@ -1587,7 +1587,7 @@ public class MapleInventoryManipulator
                         mods.add(new ModifyInventory(3, source));
                         mods.add(new ModifyInventory(0, source.copy()));
                     }
-
+                    //交换背包与穿戴的装备
                     source.setPosition(dst);
                     c.getPlayer().getInventory(MapleInventoryType.EQUIPPED).addFromDB(source);
                     if (target != null) {
@@ -1612,7 +1612,7 @@ public class MapleInventoryManipulator
                     c.getSession().close();
                 } else {
                     c.getPlayer().equipChanged();
-                    if ((Integer) LtMS.ConfigValuesMap.get("潜能系统开关") > 0 && (Potential.isPotentialExist(source) || Potential.getPotentialQuantity(target) > 0)) {
+                    if ((Integer) LtMS.ConfigValuesMap.get("潜能系统开关") > 0 && (Potential.isPotentialExist(source) || Potential.getPotentialQuantity(target) > 0 || c.getPlayer().坐骑攻击力 >0 || c.getPlayer().坐骑魔力>0)) {
                         c.getPlayer().getStat().recalcLocalStats();
                         c.getPlayer().givePotentialBuff(Potential.buffItemId, Potential.duration, true);
                     }
@@ -1927,7 +1927,7 @@ public class MapleInventoryManipulator
                     }
 
                     c.getPlayer().equipChanged();
-                    if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0 && Potential.isPotentialExist(source)) {
+                    if ((Integer)LtMS.ConfigValuesMap.get("潜能系统开关") > 0 && (Potential.isPotentialExist(source) ||  c.getPlayer().坐骑攻击力 >0 || c.getPlayer().坐骑魔力>0)) {
                         c.getPlayer().getStat().recalcLocalStats();
                         c.getPlayer().givePotentialBuff(Potential.buffItemId, Potential.duration, true);
                     }

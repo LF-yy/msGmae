@@ -1236,43 +1236,69 @@ public class MaplePacketCreator
     }
 
     //近距离攻击封包发送
-
     /**
-     * 近距离攻击封包发送
-     * @param cid    角色id
-     * @param tbyte 攻击类型
-     * @param skill 技能id
-     * @param level 攻击等级
-     * @param display   显示效果
-     * @param animation 动画效果
-     * @param speed   速度
-     * @param damage     伤害
-     * @param energy     充能
-     * @param lvl     角色等级
-     * @param mastery    精通度
-     * @param unk     未知
-     * @param charge     充能
-     * @return
+     * 构建近战攻击的数据包
+     *
+     * @param cid 角色ID
+     * @param tbyte 时间字节
+     * @param skill 技能ID
+     * @param level 技能等级
+     * @param display 显示类型
+     * @param animation 动画类型
+     * @param speed 攻击速度
+     * @param damage 攻击伤害列表
+     * @param energy 是否使用能量攻击
+     * @param lvl 技能等级
+     * @param mastery 熟练度
+     * @param unk 未知字节
+     * @param charge 充能值
+     * @return 返回构建的近战攻击数据包
      */
     public static byte[] closeRangeAttack(final int cid, final int tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final List<AttackPair> damage, final boolean energy, final int lvl, final byte mastery, final byte unk, final int charge) {
+        // 创建数据包写入器
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        // 写入攻击类型（根据是否使用能量攻击决定）
         mplew.writeShort((int)(energy ? SendPacketOpcode.ENERGY_ATTACK.getValue() : SendPacketOpcode.CLOSE_RANGE_ATTACK.getValue()));
+
+        // 写入角色ID
         mplew.writeInt(cid);
+
+        // 写入时间字节
         mplew.write(tbyte);
+
+        // 写入技能等级
         mplew.write(lvl);
+
+        // 如果技能ID大于0，则写入技能等级和技能ID
         if (skill > 0) {
             mplew.write(level);
             mplew.writeInt(skill);
         }
         else {
+            // 否则写入0
             mplew.write(0);
         }
+
+        // 写入未知字节
         mplew.write(unk);
+
+        // 写入显示类型
         mplew.write(display);
+
+        // 写入动画类型
         mplew.write(animation);
+
+        // 写入攻击速度
         mplew.write(speed);
+
+        // 写入熟练度
         mplew.write(mastery);
+
+        // 写入固定值0
         mplew.writeInt(0);
+
+        // 如果技能ID为特定值，则按照特殊格式写入攻击伤害
         if (skill == 4211006) {
             for (final AttackPair oned : damage) {
                 if (oned.attack != null) {
@@ -1286,6 +1312,7 @@ public class MaplePacketCreator
             }
         }
         else {
+            // 否则按照普通格式写入攻击伤害
             for (final AttackPair oned : damage) {
                 if (oned.attack != null) {
                     mplew.writeInt(oned.objectid);
@@ -1301,9 +1328,63 @@ public class MaplePacketCreator
                 }
             }
         }
+
+        // 返回构建的数据包
         return mplew.getPacket();
     }
+
+
+//    public static byte[] closeRangeAttack(final int cid, final int tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final List<AttackPair> damage, final boolean energy, final int lvl, final byte mastery, final byte unk, final int charge) {
+//        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+//        mplew.writeShort((int)(energy ? SendPacketOpcode.ENERGY_ATTACK.getValue() : SendPacketOpcode.CLOSE_RANGE_ATTACK.getValue()));
+//        mplew.writeInt(cid);
+//        mplew.write(tbyte);
+//        mplew.write(lvl);
+//        if (skill > 0) {
+//            mplew.write(level);
+//            mplew.writeInt(skill);
+//        }
+//        else {
+//            mplew.write(0);
+//        }
+//        mplew.write(unk);
+//        mplew.write(display);
+//        mplew.write(animation);
+//        mplew.write(speed);
+//        mplew.write(mastery);
+//        mplew.writeInt(0);
+//        if (skill == 4211006) {
+//            for (final AttackPair oned : damage) {
+//                if (oned.attack != null) {
+//                    mplew.writeInt(oned.objectid);
+//                    mplew.write(7);
+//                    mplew.write(oned.attack.size());
+//                    for (final Pair<Integer, Boolean> eachd : oned.attack) {
+//                        mplew.writeInt((int)Integer.valueOf(eachd.left));
+//                    }
+//                }
+//            }
+//        }
+//        else {
+//            for (final AttackPair oned : damage) {
+//                if (oned.attack != null) {
+//                    mplew.writeInt(oned.objectid);
+//                    mplew.write(7);
+//                    for (final Pair<Integer, Boolean> eachd : oned.attack) {
+//                        if ((boolean)Boolean.valueOf(eachd.right)) {
+//                            mplew.writeInt((int)Integer.valueOf(eachd.left) + Integer.MIN_VALUE);
+//                        }
+//                        else {
+//                            mplew.writeInt((int)Integer.valueOf(eachd.left));
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return mplew.getPacket();
+//    }
     //远程攻击封包发送
+
 
     /**
      * 远程攻击封包发送
@@ -1323,41 +1404,135 @@ public class MaplePacketCreator
      * @return
      */
     public static byte[] rangedAttack(final int cid, final byte tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final int itemid, final List<AttackPair> damage, final Point pos, final int lvl, final byte mastery, final byte unk) {
+        // 创建一个MaplePacketLittleEndianWriter实例用于写入数据
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        // 写入远程攻击封包的标识
         mplew.writeShort((int)SendPacketOpcode.RANGED_ATTACK.getValue());
+
+        // 写入角色id
         mplew.writeInt(cid);
+
+        // 写入攻击类型
         mplew.write(tbyte);
+
+        // 写入角色等级
         mplew.write(lvl);
+
+        // 如果技能id大于0，说明使用了技能，写入技能的相关信息
         if (skill > 0) {
+            // 写入技能等级
             mplew.write(level);
+
+            // 写入技能id
             mplew.writeInt(skill);
         }
         else {
+            // 如果没有使用技能，写入0
             mplew.write(0);
         }
+
+        // 写入未知数据
         mplew.write(unk);
+
+        // 写入显示效果
         mplew.write(display);
+
+        // 写入动画效果
         mplew.write(animation);
+
+        // 写入速度
         mplew.write(speed);
+
+        // 写入精通度
         mplew.write(mastery);
+
+        // 写入道具id
         mplew.writeInt(itemid);
+
+        // 遍历伤害列表，写入每个攻击对象的伤害信息
         for (final AttackPair oned : damage) {
             if (oned.attack != null) {
+                // 写入攻击对象的id
                 mplew.writeInt(oned.objectid);
+
+                // 写入固定值7，可能是攻击类型或者其他含义
                 mplew.write(7);
+
+                // 遍历每个攻击对象的伤害，写入伤害信息
                 for (final Pair<Integer, Boolean> eachd : oned.attack) {
                     if ((boolean)Boolean.valueOf(eachd.right)) {
+                        // 如果伤害是真实的，写入伤害值加上Integer.MIN_VALUE
                         mplew.writeInt((int)Integer.valueOf(eachd.left) + Integer.MIN_VALUE);
                     }
                     else {
+                        // 如果伤害是虚假的，直接写入伤害值
                         mplew.writeInt((int)Integer.valueOf(eachd.left));
                     }
                 }
             }
         }
+
+        // 写入位置信息
         mplew.writePos(pos);
+
+        // 返回封包数据
         return mplew.getPacket();
     }
+
+//    /**
+//     * 远程攻击封包发送
+//     * @param cid   角色id
+//     * @param tbyte 攻击类型
+//     * @param skill 技能id
+//     * @param level 攻击等级
+//     * @param display   显示效果
+//     * @param animation 动画效果
+//     * @param speed   速度
+//     * @param itemid     道具id
+//     * @param damage     伤害
+//     * @param pos        位置
+//     * @param lvl     角色等级
+//     * @param mastery    精通度
+//     * @param unk     未知
+//     * @return
+//     */
+//    public static byte[] rangedAttack(final int cid, final byte tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final int itemid, final List<AttackPair> damage, final Point pos, final int lvl, final byte mastery, final byte unk) {
+//        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+//        mplew.writeShort((int)SendPacketOpcode.RANGED_ATTACK.getValue());
+//        mplew.writeInt(cid);
+//        mplew.write(tbyte);
+//        mplew.write(lvl);
+//        if (skill > 0) {
+//            mplew.write(level);
+//            mplew.writeInt(skill);
+//        }
+//        else {
+//            mplew.write(0);
+//        }
+//        mplew.write(unk);
+//        mplew.write(display);
+//        mplew.write(animation);
+//        mplew.write(speed);
+//        mplew.write(mastery);
+//        mplew.writeInt(itemid);
+//        for (final AttackPair oned : damage) {
+//            if (oned.attack != null) {
+//                mplew.writeInt(oned.objectid);
+//                mplew.write(7);
+//                for (final Pair<Integer, Boolean> eachd : oned.attack) {
+//                    if ((boolean)Boolean.valueOf(eachd.right)) {
+//                        mplew.writeInt((int)Integer.valueOf(eachd.left) + Integer.MIN_VALUE);
+//                    }
+//                    else {
+//                        mplew.writeInt((int)Integer.valueOf(eachd.left));
+//                    }
+//                }
+//            }
+//        }
+//        mplew.writePos(pos);
+//        return mplew.getPacket();
+//    }
 
     //魔法攻击封包发送
 
@@ -1377,38 +1552,96 @@ public class MaplePacketCreator
      * @return
      */
     public static byte[] magicAttack(final int cid, final int tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final List<AttackPair> damage, final int charge, final int lvl, final byte unk) {
+        // 创建一个MaplePacketLittleEndianWriter对象用于写入数据
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        // 写入封包标识
         mplew.writeShort((int)SendPacketOpcode.MAGIC_ATTACK.getValue());
+        // 写入角色id
         mplew.writeInt(cid);
+        // 写入攻击类型
         mplew.write(tbyte);
+        // 写入角色等级
         mplew.write(lvl);
+        // 写入攻击等级
         mplew.write(level);
+        // 写入技能id
         mplew.writeInt(skill);
+        // 写入未知参数
         mplew.write(unk);
+        // 写入显示效果
         mplew.write(display);
+        // 写入动画效果
         mplew.write(animation);
+        // 写入速度
         mplew.write(speed);
+        // 保留字段，目前未知用途
         mplew.write(0);
+        // 保留字段，目前未知用途
         mplew.writeInt(0);
+        // 遍历伤害列表
         for (final AttackPair oned : damage) {
+            // 如果伤害对象不为空
             if (oned.attack != null) {
+                // 写入对象id
                 mplew.writeInt(oned.objectid);
+                // 写入攻击类型标识
                 mplew.write(-1);
+                // 遍历每个伤害值
                 for (final Pair<Integer, Boolean> eachd : oned.attack) {
+                    // 如果伤害值带有特殊标识
                     if ((boolean)Boolean.valueOf(eachd.right)) {
+                        // 写入经过特殊处理的伤害值
                         mplew.writeInt((int)Integer.valueOf(eachd.left) + Integer.MIN_VALUE);
                     }
                     else {
+                        // 写入普通伤害值
                         mplew.writeInt((int)Integer.valueOf(eachd.left));
                     }
                 }
             }
         }
+        // 如果充能值大于0
         if (charge > 0) {
+            // 写入充能值
             mplew.writeInt(charge);
         }
+        // 返回封包数据
         return mplew.getPacket();
     }
+//    public static byte[] magicAttack(final int cid, final int tbyte, final int skill, final int level, final byte display, final byte animation, final byte speed, final List<AttackPair> damage, final int charge, final int lvl, final byte unk) {
+//        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+//        mplew.writeShort((int)SendPacketOpcode.MAGIC_ATTACK.getValue());
+//        mplew.writeInt(cid);
+//        mplew.write(tbyte);
+//        mplew.write(lvl);
+//        mplew.write(level);
+//        mplew.writeInt(skill);
+//        mplew.write(unk);
+//        mplew.write(display);
+//        mplew.write(animation);
+//        mplew.write(speed);
+//        mplew.write(0);
+//        mplew.writeInt(0);
+//        for (final AttackPair oned : damage) {
+//            if (oned.attack != null) {
+//                mplew.writeInt(oned.objectid);
+//                mplew.write(-1);
+//                for (final Pair<Integer, Boolean> eachd : oned.attack) {
+//                    if ((boolean)Boolean.valueOf(eachd.right)) {
+//                        mplew.writeInt((int)Integer.valueOf(eachd.left) + Integer.MIN_VALUE);
+//                    }
+//                    else {
+//                        mplew.writeInt((int)Integer.valueOf(eachd.left));
+//                    }
+//                }
+//            }
+//        }
+//        if (charge > 0) {
+//            mplew.writeInt(charge);
+//        }
+//        return mplew.getPacket();
+//    }
     
     public static byte[] getNPCShop(final MapleClient c, final int sid, final List<MapleShopItem> items) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
@@ -1442,7 +1675,16 @@ public class MaplePacketCreator
     public static byte[] modifyInventory(final boolean updateTick, final ModifyInventory mod) {
         return modifyInventory(updateTick, Collections.singletonList(mod));
     }
-    
+    /**
+     * 修改库存物品的方法
+     *
+     * @param updateTick 是否更新Tick，用于指示是否在游戏中的一个特定时间点进行更新
+     * @param mods 一个包含修改库存操作的列表，每个操作描述了库存的一个更改
+     * @return 返回一个包含修改库存指令的字节数组
+     *
+     * 该方法主要用于构建一个网络包，用于在游戏服务器和客户端之间传输库存修改信息
+     * 它根据提供的修改操作列表和更新Tick标志来构造一个特定格式的字节流
+     */
     public static byte[] modifyInventory(final boolean updateTick, final List<ModifyInventory> mods) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.MODIFY_INVENTORY_ITEM.getValue());
@@ -1557,7 +1799,17 @@ public class MaplePacketCreator
     public static byte[] removeItemFromMap( int oid,  int animation,  int cid) {
         return removeItemFromMap(oid, animation, cid, 0);
     }
-
+    /**
+     * 从地图上移除物品的函数
+     *
+     * @param oid 物品的唯一标识符
+     * @param animation 移除物品时的动画效果类型
+     * @param cid 角色的标识符，用于确认移除物品的角色
+     * @param slot 物品所在的槽位，仅当动画效果类型为5时需要
+     * @return 返回包含移除物品指令的字节数组
+     *
+     * 此函数根据提供的参数构建一个移除地图上物品的指令包不同类型的动画效果需要不同的参数配置
+     */
     public static byte[] removeItemFromMap(final int oid, final int animation, final int cid, final int slot) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.REMOVE_ITEM_FROM_MAP.getValue());
@@ -1571,22 +1823,40 @@ public class MaplePacketCreator
         }
         return mplew.getPacket();
     }
-
+    /**
+     * 更新角色外观信息
+     * 该方法用于生成更新角色外观的数据包，包括角色的装备、戒指等信息
+     *
+     * @param chr 需要更新外观的角色对象
+     * @return 包含更新角色外观信息的数据包
+     */
     public static byte[] updateCharLook(MapleCharacter chr) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort(SendPacketOpcode.UPDATE_CHAR_LOOK.getValue());
         mplew.writeInt(chr.getId());
         mplew.write(1);
+        // 添加角色外观信息到数据包
         PacketHelper.addCharLook(mplew, chr, false);
+        // 获取角色的戒指信息
         Pair<List<MapleRing>, List<MapleRing>> rings = chr.getRings(false);
         List<MapleRing> allrings = (List)rings.getLeft();
         allrings.addAll((Collection)rings.getRight());
+        // 添加戒指信息到数据包
         addRingInfo(mplew, allrings);
         addRingInfo(mplew, allrings);
+        // 添加婚姻戒指外观信息到数据包
         addMarriageRingLook(mplew, chr);
         mplew.writeInt(0);
         return mplew.getPacket();
     }
+    /**
+     * 更新角色外观信息，可选择是否显示装备
+     * 该方法用于生成更新角色外观的数据包，包括角色的装备、戒指等信息，并允许选择是否显示装备
+     *
+     * @param chr 需要更新外观的角色对象
+     * @param isShowEquip 是否显示装备，true显示，false不显示
+     * @return 包含更新角色外观信息的数据包
+     */
     public static byte[] updateCharLook(MapleCharacter chr, boolean isShowEquip) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort(SendPacketOpcode.UPDATE_CHAR_LOOK.getValue());

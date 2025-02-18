@@ -115,7 +115,7 @@ public class MapleInventory implements Iterable<IItem>, Serializable
         if (item.getPosition() < 0 && !this.type.equals((Object)MapleInventoryType.EQUIPPED)) {
             return;
         }
-        this.inventory.put(Short.valueOf(item.getPosition()), item);
+        this.inventory.put(item.getPosition(), item);
     }
     
     public void move(final short sSlot, final short dSlot, final short slotMax) {

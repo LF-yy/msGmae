@@ -266,7 +266,7 @@ public enum RecvPacketOpcode implements WritableIntValueHolder
         catch (IOException ex) {
             final InputStream in = RecvPacketOpcode.class.getClassLoader().getResourceAsStream("properties/" + fileName);
             if (in == null) {
-                System.err.println("錯誤: 未加載 " + fileName + " 檔案");
+                System.out.println("错误: 未加载 " + fileName + " 档案");
                 return;
             }
             try {
@@ -274,7 +274,7 @@ public enum RecvPacketOpcode implements WritableIntValueHolder
                 in.close();
             }
             catch (IOException e) {
-                throw new RuntimeException("加載 " + fileName + " 檔案出錯", (Throwable)e);
+                throw new RuntimeException("加载 " + fileName + " 档案出错", (Throwable)e);
             }
         }
         ExternalCodeTableGetter.populateValues(props, values());

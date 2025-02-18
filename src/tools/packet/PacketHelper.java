@@ -237,15 +237,23 @@ public class PacketHelper
         mplew.writeInt(chr.getMapId());
         mplew.write(chr.getInitialSpawnpoint());
     }
-
+    /**
+     * 向数据包中添加角色外观信息
+     *
+     * @param mplew 数据包写入器，用于将角色外观信息写入数据包
+     * @param chr 角色对象，包含角色的外观和装备信息
+     * @param mega 控制是否使用mega模式的标志，影响头发信息的写入方式
+     */
     public static final void addCharLook(MaplePacketLittleEndianWriter mplew, MapleCharacter chr, boolean mega) {
         mplew.write(chr.getGender());
         mplew.write(chr.getSkinColor());
         mplew.writeInt(chr.getFace());
         mplew.write(mega ? 0 : 1);
         mplew.writeInt(chr.getHair());
+        // 创建装备和遮罩装备的映射，用于存储装备位置和对应的物品ID
         Map<Byte, Integer> myEquip = new LinkedHashMap();
         Map<Byte, Integer> maskedEquip = new LinkedHashMap();
+        // 获取角色装备的库存
         MapleInventory equip = chr.getInventory(MapleInventoryType.EQUIPPED);
         Iterator var6 = equip.list().iterator();
 
@@ -275,10 +283,9 @@ public class PacketHelper
                         mplew.write(255);
                         IItem cWeapon = equip.getItem((short)-111);
                         mplew.writeInt(cWeapon != null ? cWeapon.getItemId() : 0);
+                        // 写入默认的武器外观参数
                             mplew.writeInt(0);
                             mplew.writeLong(0L);
-
-
                         return;
                     }
 
@@ -286,6 +293,7 @@ public class PacketHelper
                 } while(item.getPosition() < -128);
 
                 byte pos = (byte)(item.getPosition() * -1);
+                // 根据装备位置和ID更新myEquip和maskedEquip映射
                 if (pos < 100 && myEquip.get(pos) == null) {
                     myEquip.put(pos, item.getItemId());
                 } else if ((pos > 100 || pos == -128) && pos != 111) {
@@ -386,6 +394,17 @@ public class PacketHelper
     public static void addItemInfo(MaplePacketLittleEndianWriter mplew, Item item) {
         addItemInfo(mplew, item, false);
     }
+    /**
+     * 添加物品信息到数据包
+     *
+     * 此方法负责将物品的详细信息写入到MaplePacketLittleEndianWriter中，包括但不限于物品的位置、类型、ID、是否是宠物或戒指等
+     * 它还处理物品的唯一ID分配、宠物和装备的特殊属性、以及物品的过期时间等信息的写入
+     *
+     * @param mplew 用于写入物品信息的数据包写入器
+     * @param item 要写入信息的物品对象
+     * @param zeroPosition 是否将位置值写为0的标志，用于特定情况下的物品位置处理
+     * @param leaveOut 指示是否跳过某些信息的写入，根据上下文决定是否使用
+     */
     public static void addItemInfo(final MaplePacketLittleEndianWriter mplew, final IItem item, final boolean zeroPosition, final boolean leaveOut) {
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         final boolean isPet = item.getPet() != null && item.getPet().getUniqueId() > -1;
@@ -397,6 +416,7 @@ public class PacketHelper
             equip = (Equip)item;
             isRing = (equip.getRing() != null && equip.getRing().getRingId() > -1);
         }
+        // 根据zeroPosition标志决定是否写入位置信息
         if (!zeroPosition) {
             if (equip != null) {
                 if (pos < 0) {
@@ -408,12 +428,15 @@ public class PacketHelper
                 mplew.write((int)pos);
             }
         }
+        // 写入物品类型，宠物则写入3，否则写入实际类型
         mplew.write((byte)((item.getPet() != null) ? 3 : item.getType()));
         mplew.writeInt(item.getItemId());
+        // 处理现金物品且非宠物的唯一ID分配
         if (ii.isCash(item.getItemId()) && !isPet && item.getUniqueId() < 0) {
             final int uniqueid = MapleItemInformationProvider.getUniqueId(item.getItemId(), null);
             item.setUniqueId(uniqueid);
         }
+        // 写入是否有唯一ID的信息
         mplew.write((int)(hasUniqueId ? 1 : 0));
         if (hasUniqueId) {
             if (isPet) {
@@ -426,11 +449,14 @@ public class PacketHelper
                 mplew.writeLong((long)item.getUniqueId());
             }
         }
+        // 如果是宠物，调用addPetItemInfo方法写入宠物特定信息
         if (item.getPet() != null) {
             addPetItemInfo(mplew, item, item.getPet());
         }
         else {
+            // 写入物品的过期时间
             addExpirationTime(mplew, item.getExpiration());
+            // 对装备类物品，写入装备的详细属性
             if (item.getType() == 1 && equip != null) {
                 mplew.write(equip.getUpgradeSlots());
                 mplew.write(equip.getLevel());
@@ -460,8 +486,8 @@ public class PacketHelper
                 }
                 mplew.writeLong(getTime(-2L));
                 mplew.writeInt(-1);
-            }
-            else {
+            } else {
+                // 对非装备类物品，写入数量、所有者等信息
                 mplew.writeShort((int)item.getQuantity());
                 mplew.writeMapleAsciiString(item.getOwner());
                 mplew.writeShort((int)item.getFlag());
@@ -569,21 +595,49 @@ public class PacketHelper
             mplew.write(0);
         }
     }
-    
+    /**
+     * 向数据包中添加与玩家商店的交互信息
+     * 此方法主要用于将玩家商店的相关信息序列化到数据包中，以便在游戏客户端和服务器之间传输
+     *
+     * @param mplew 用于写入数据的MaplePacketLittleEndianWriter对象，负责将数据打包
+     * @param shop 代表玩家商店的IMaplePlayerShop接口实现对象，包含商店信息
+     */
     public static void addInteraction(final MaplePacketLittleEndianWriter mplew, final IMaplePlayerShop shop) {
+        // 写入商店的游戏类型
         mplew.write(shop.getGameType());
+        // 写入商店的对象ID
         mplew.writeInt(((AbstractPlayerStore)shop).getObjectId());
+        // 写入商店的描述信息
         mplew.writeMapleAsciiString(shop.getDescription());
+        // 如果商店类型不是1，则写入密码是否存在的情况
         if (shop.getShopType() != 1) {
             mplew.write((int)((shop.getPassword().length() > 0) ? 1 : 0));
         }
+        // 写入商店项目的ID的最后一位数字
         mplew.write(shop.getItemId() % 10);
+        // 写入商店的当前尺寸
         mplew.write(shop.getSize());
+        // 写入商店的最大尺寸
         mplew.write(shop.getMaxSize());
+        // 如果商店类型不是1，则写入商店是否开放的状态
         if (shop.getShopType() != 1) {
             mplew.write((int)(shop.isOpen() ? 0 : 1));
         }
     }
+//    public static void addInteraction(final MaplePacketLittleEndianWriter mplew, final IMaplePlayerShop shop) {
+//        mplew.write(shop.getGameType());
+//        mplew.writeInt(((AbstractPlayerStore)shop).getObjectId());
+//        mplew.writeMapleAsciiString(shop.getDescription());
+//        if (shop.getShopType() != 1) {
+//            mplew.write((int)((shop.getPassword().length() > 0) ? 1 : 0));
+//        }
+//        mplew.write(shop.getItemId() % 10);
+//        mplew.write(shop.getSize());
+//        mplew.write(shop.getMaxSize());
+//        if (shop.getShopType() != 1) {
+//            mplew.write((int)(shop.isOpen() ? 0 : 1));
+//        }
+//    }
     
     public static void addCharacterInfo(final MaplePacketLittleEndianWriter mplew, MapleCharacter chr, final boolean isCs) {
         mplew.writeLong(-1L);

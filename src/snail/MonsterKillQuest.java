@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class MonsterKillQuest {
-    HashMap<Integer, MonsterKill> monsterKillMap = new HashMap();
+    HashMap<Integer, MonsterKill> monsterKillMap = new HashMap<>();
     int questId;
     int chrId;
     Timestamp beginTime;

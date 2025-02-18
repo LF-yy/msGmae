@@ -178,8 +178,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction
        return c.getPlayer().getSkills().keySet().stream().filter(skill ->
                {
                    ISkill skill1 = SkillFactory.getSkill(skill.getId());
-                   if(skill1!=null){
-                      return skill1.getEffect(skill.getMaxLevel()).getDuration()>0 && skill1.getEffect(skill.getMaxLevel()).getDuration() <=86400;
+                   if(skill1!=null && skill.getMaxLevel() >0){
+                      return Start.BUFFSkill.contains(skill1.getId());
                    }else{
                        return false;
                    }
@@ -3893,10 +3893,11 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         this.c.getPlayer().setCurrentRep(s);
     }
     
-    public void 组队人数() {
+    public int 组队人数() {
         if (this.getParty() != null) {
-            this.c.getPlayer().getParty().getMembers().size();
+           return this.c.getPlayer().getParty().getMembers().size();
         }
+        return 0;
     }
     public final int getChannel() {
         return this.c.getPlayer().getClient().getChannel();

@@ -32,7 +32,6 @@ import client.inventory.MaplePet;
 import client.status.MonsterStatus;
 import client.status.MonsterStatusEffect;
 import com.alibaba.fastjson.JSONObject;
-import configs.ServerConfig;
 import constants.*;
 import database.DBConPool;
 import database.DatabaseConnection;
@@ -798,12 +797,12 @@ public class MapleMap {
         }
         final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
           List<MonsterDropEntry> dropEntry = mi.retrieveDrop(mob.getId());
-        if (ListUtil.isEmpty(dropEntry)) {
-            dropEntry = Start.dropsMap.get(mob.getId());
-        }
-        if (ListUtil.isEmpty(dropEntry)) {
-            return;
-        }
+//        if (ListUtil.isNotEmpty(dropEntry) && Start.dropsMapCount.get(mob.getId()) != null &&  Start.dropsMapCount.get(mob.getId()) != dropEntry.size()) {
+//            dropEntry = Start.dropsMap.get(mob.getId());
+//        }
+//        if (ListUtil.isEmpty(dropEntry)) {
+//            return;
+//        }
         if (Start.dropsMapCount.get(mob.getId()) != null && Start.dropsMapCount.get(mob.getId()) != dropEntry.size() && Start.dropsFalg ==0){
             Start.dropsFalg = 1;
         }
@@ -833,7 +832,7 @@ public class MapleMap {
         if (rand) {
             coefficient = 2;
         }
-        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && chr.getMap().getChannel()>= Integer.parseInt(ServerProperties.getProperty("LtMS.Count"))) {
+        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && ServerConfig.双倍线路.contains(chr.getMap().getChannel())) {
             chServerrate = chServerrate*2.0F;
         }
         double jiac = 1;
@@ -1008,16 +1007,14 @@ public class MapleMap {
             showdown += (double) (int) mse.getX();
         }
         final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
-        List<MonsterDropEntry> dropEntry = mi.retrieveDrop(mob.getId());
-        if (ListUtil.isEmpty(dropEntry)) {
-            dropEntry = Start.dropsMap.get(mob.getId());
-        }
+//        List<MonsterDropEntry> dropEntry = mi.retrieveDrop(mob.getId());
+//        if (ListUtil.isEmpty(dropEntry)) {
+        List<MonsterDropEntry> dropEntry = Start.dropsMapTwo.get(mob.getId());
+//        }
         if (ListUtil.isEmpty(dropEntry)) {
             return;
         }
-        if (Start.dropsMapCount.get(mob.getId()) != null && Start.dropsMapCount.get(mob.getId()) != dropEntry.size() && Start.dropsFalg ==0){
-            Start.dropsFalg = 1;
-        }
+
         Collections.shuffle(dropEntry);
 
         boolean mesoDropped = false;
@@ -1044,7 +1041,7 @@ public class MapleMap {
         if (rand) {
             coefficient = 2;
         }
-        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && chr.getMap().getChannel()>= Integer.parseInt(ServerProperties.getProperty("LtMS.Count"))) {
+        if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && ServerConfig.双倍线路.contains(chr.getMap().getChannel())) {
             chServerrate = chServerrate*2.0F;
         }
         double jiac = 0;
@@ -1267,6 +1264,7 @@ public class MapleMap {
         } else {
             chr.打怪数量++;
         }
+
         if (mobid == 9500337 && this.mapid == 104000400) {
             进阶BOSS线程.关闭进阶BOSS线程();
         } else if (mobid == 8830000 && this.mapid == 105100300) {

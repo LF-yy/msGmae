@@ -57,27 +57,29 @@ public class CashItemFactory
     public void initialize() {
         System.out.println("[正在加载] -> 商城系统加载中请耐心等待");
         final List<Integer> itemids = new ArrayList<Integer>();
-        for (final MapleData field : this.data.getData("Commodity.img").getChildren()) {
-            final int itemId = MapleDataTool.getIntConvert("ItemId", field, 0);
-            final int SN = MapleDataTool.getIntConvert("SN", field, 0);
-            final CashItemInfo stats = new CashItemInfo(itemId, MapleDataTool.getIntConvert("Count", field, 1), MapleDataTool.getIntConvert("Price", field, 0), SN, MapleDataTool.getIntConvert("Period", field, 0), MapleDataTool.getIntConvert("Gender", field, 2), MapleDataTool.getIntConvert("OnSale", field, 0) > 0, 0);
-            if (SN > 0) {
-                this.itemStats.put(Integer.valueOf(SN), stats);
-                this.itemIdToSN.put(Integer.valueOf(stats.getId()), Integer.valueOf(SN));
-            }
-            if (itemId > 0) {
-                itemids.add(Integer.valueOf(itemId));
+        this.refreshAllModInfo();
+        if(itemMods.isEmpty()) {
+            for (final MapleData field : this.data.getData("Commodity.img").getChildren()) {
+                final int itemId = MapleDataTool.getIntConvert("ItemId", field, 0);
+                final int SN = MapleDataTool.getIntConvert("SN", field, 0);
+                final CashItemInfo stats = new CashItemInfo(itemId, MapleDataTool.getIntConvert("Count", field, 1), MapleDataTool.getIntConvert("Price", field, 0), SN, MapleDataTool.getIntConvert("Period", field, 0), MapleDataTool.getIntConvert("Gender", field, 2), MapleDataTool.getIntConvert("OnSale", field, 0) > 0, 0);
+                if (SN > 0) {
+                    this.itemStats.put(SN, stats);
+                    this.itemIdToSN.put(stats.getId(), SN);
+                }
+                if (itemId > 0) {
+                    itemids.add(itemId);
+                }
             }
         }
-        this.refreshAllModInfo();
         final Iterator<Integer> iterator2 = itemids.iterator();
         while (iterator2.hasNext()) {
-            final int i = (int)Integer.valueOf(iterator2.next());
+            final int i = (int) iterator2.next();
             this.getPackageItems(i);
         }
         final Iterator<Integer> iterator3 = this.itemStats.keySet().iterator();
         while (iterator3.hasNext()) {
-            final int i = (int)Integer.valueOf(iterator3.next());
+            final int i = (int) iterator3.next();
             this.getModInfo(i);
             this.getItem(i);
         }
@@ -85,17 +87,17 @@ public class CashItemFactory
     }
     
     public final int getSnByItemItd(final int itemid) {
-        final int sn = (int)Integer.valueOf(this.itemIdToSN.get((Object)Integer.valueOf(itemid)));
+        final int sn = (int)Integer.valueOf(this.itemIdToSN.get((Object) itemid));
         return sn;
     }
     
     public final int getSnByItemItd2(final int itemid) {
-        final int sn = (int)Integer.valueOf(this.itemIdToSn.get((Object)Integer.valueOf(itemid)));
+        final int sn = (int)Integer.valueOf(this.itemIdToSn.get((Object) itemid));
         return sn;
     }
     
     public final CashItemInfo getItem(final int sn) {
-        final CashItemInfo stats = (CashItemInfo)this.itemStats.get((Object)Integer.valueOf(sn));
+        final CashItemInfo stats = (CashItemInfo)this.itemStats.get((Object) sn);
         final CashModInfo z = this.getModInfo(sn);
         if (z != null && z.showUp) {
             return z.toCItem(stats);

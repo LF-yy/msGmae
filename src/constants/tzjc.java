@@ -5,6 +5,7 @@ import bean.LtDiabloEquipments;
 import bean.LttItemAdditionalDamage;
 import bean.SuitSystem;
 import client.MapleCharacter;
+import client.inventory.Equip;
 import client.inventory.IItem;
 import database.DBConPool;
 import gui.LtMS;
@@ -189,7 +190,9 @@ public class tzjc {
         AtomicInteger exp = new AtomicInteger(0);
         AtomicReference<Double> number = new AtomicReference<>(0.0);
         try {
+
             hasEquipped.forEach(it->{
+
                 Map<String, Integer> stringIntegerMap = sbMap.get(it.getItemId());
                 if (Objects.nonNull(stringIntegerMap) && stringIntegerMap.size()>0){
                     drop.addAndGet(stringIntegerMap.get("drop"));

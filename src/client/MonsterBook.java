@@ -275,8 +275,8 @@ public class MonsterBook implements Serializable {
                         int a;
                         if (monsterCard.getStr() > 0) {
                             a = c.getPlayer().getStr() + monsterCard.getStr();
-                            if (a > 32767) {
-                                a = 32767;
+                            if (a > 30000) {
+                                a = 30000;
                             }
 
                             c.getPlayer().setStr(a);
@@ -286,8 +286,8 @@ public class MonsterBook implements Serializable {
 
                         if (monsterCard.getDex() > 0) {
                             a = c.getPlayer().getDex() + monsterCard.getDex();
-                            if (a > 32767) {
-                                a = 32767;
+                            if (a > 30000) {
+                                a = 30000;
                             }
 
                             c.getPlayer().setDex(a);
@@ -297,8 +297,8 @@ public class MonsterBook implements Serializable {
 
                         if (monsterCard.getInt() > 0) {
                             a = c.getPlayer().getInt() + monsterCard.getInt();
-                            if (a > 32767) {
-                                a = 32767;
+                            if (a > 30000) {
+                                a = 30000;
                             }
 
                             c.getPlayer().setInt(a);
@@ -308,8 +308,8 @@ public class MonsterBook implements Serializable {
 
                         if (monsterCard.getLuk() > 0) {
                             a = c.getPlayer().getLuk() + monsterCard.getLuk();
-                            if (a > 32767) {
-                                a = 32767;
+                            if (a > 30000) {
+                                a = 30000;
                             }
 
                             c.getPlayer().setLuk(a);
@@ -319,8 +319,8 @@ public class MonsterBook implements Serializable {
 
                         if (monsterCard.getHp() > 0) {
                             a = c.getPlayer().getMaxHp() + monsterCard.getHp();
-                            if (a > 32767) {
-                                a = 32767;
+                            if (a > 30000) {
+                                a = 30000;
                             }
 
                             c.getPlayer().setMaxHp(a);
@@ -330,8 +330,8 @@ public class MonsterBook implements Serializable {
 
                         if (monsterCard.getMp() > 0) {
                             a = c.getPlayer().getMaxMp() + monsterCard.getMp();
-                            if (a > 32767) {
-                                a = 32767;
+                            if (a > 30000) {
+                                a = 30000;
                             }
 
                             c.getPlayer().setMaxMp(a);
@@ -366,8 +366,8 @@ public class MonsterBook implements Serializable {
                     int a;
                     if (monsterCard.getStr() > 0) {
                         a = c.getPlayer().getStr() + monsterCard.getStr();
-                        if (a > 32767) {
-                            a = 32767;
+                        if (a > 30000) {
+                            a = 30000;
                         }
 
                         c.getPlayer().setStr(a);
@@ -377,8 +377,8 @@ public class MonsterBook implements Serializable {
 
                     if (monsterCard.getDex() > 0) {
                         a = c.getPlayer().getDex() + monsterCard.getDex();
-                        if (a > 32767) {
-                            a = 32767;
+                        if (a > 30000) {
+                            a = 30000;
                         }
 
                         c.getPlayer().setDex(a);
@@ -388,8 +388,8 @@ public class MonsterBook implements Serializable {
 
                     if (monsterCard.getInt() > 0) {
                         a = c.getPlayer().getInt() + monsterCard.getInt();
-                        if (a > 32767) {
-                            a = 32767;
+                        if (a > 30000) {
+                            a = 30000;
                         }
 
                         c.getPlayer().setInt(a);
@@ -399,8 +399,8 @@ public class MonsterBook implements Serializable {
 
                     if (monsterCard.getLuk() > 0) {
                         a = c.getPlayer().getLuk() + monsterCard.getLuk();
-                        if (a > 32767) {
-                            a = 32767;
+                        if (a > 30000) {
+                            a = 30000;
                         }
 
                         c.getPlayer().setLuk(a);
@@ -410,8 +410,8 @@ public class MonsterBook implements Serializable {
 
                     if (monsterCard.getHp() > 0) {
                         a = c.getPlayer().getMaxHp() + monsterCard.getHp();
-                        if (a > 32767) {
-                            a = 32767;
+                        if (a > 30000) {
+                            a = 30000;
                         }
 
                         c.getPlayer().setMaxHp(a);
@@ -421,8 +421,8 @@ public class MonsterBook implements Serializable {
 
                     if (monsterCard.getMp() > 0) {
                         a = c.getPlayer().getMaxMp() + monsterCard.getMp();
-                        if (a > 32767) {
-                            a = 32767;
+                        if (a > 30000) {
+                            a = 30000;
                         }
 
                         c.getPlayer().setMaxMp(a);

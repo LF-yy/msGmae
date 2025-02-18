@@ -397,7 +397,7 @@ public class MapleStatEffect implements Serializable
                 case 35101006: {
                     ret.duration = 1800000;
                     if (sourceid == 3201002){
-                        statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, Integer.valueOf(ret.x)*10));//设置攻击速度
+                        statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, Integer.valueOf(ret.x)));//设置攻击速度
                     }else {
                         statups.add(new Pair<MapleBuffStat, Integer>(MapleBuffStat.BOOSTER, Integer.valueOf(ret.x)));//设置攻击速度
                     }
@@ -1252,62 +1252,62 @@ public class MapleStatEffect implements Serializable
                 if (statup != null) {
                     Pair<MapleBuffStat, Integer> newStatup = new Pair(statup.left, statup.right);
                     if (((MapleBuffStat)statup.getLeft()).name().equals("WATK")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pWatk > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pWatk > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pWatk;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("MATK")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pMatk > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pMatk > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pMatk;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("WDEF")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pWdef > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pWdef > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pWdef;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("MDEF")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pMdef > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pMdef > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pMdef;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("ACC")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pAcc > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pAcc > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pAcc;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("AVOID")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pAvoid > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pAvoid > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pAvoid;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("SPEED")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pSpeed > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pSpeed > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pSpeed;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("JUMP")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pJump > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pJump > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pJump;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("MAXHP")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pMaxHpPercent > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pMaxHpPercent > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pMaxHpPercent;
                         }
                     } else if (((MapleBuffStat)statup.getLeft()).name().equals("MAXMP")) {
-                        if ((Integer)newStatup.right + applyto.getStat().pMaxMpPercent > 32767) {
-                            newStatup.right = 32767;
+                        if ((Integer)newStatup.right + applyto.getStat().pMaxMpPercent > 30000) {
+                            newStatup.right = 30000;
                         } else {
                             newStatup.right = (Integer)newStatup.right + applyto.getStat().pMaxMpPercent;
                         }
@@ -1409,7 +1409,7 @@ public class MapleStatEffect implements Serializable
                         if (mountid == 0 || mountid2 == 0) {
                             return;
                         }
-
+                        //骑乘怪物
                         stat = Collections.singletonList(new Pair(MapleBuffStat.MONSTER_RIDING, 0));
                         applyto.cancelEffectFromBuffStat(MapleBuffStat.POWERGUARD);
                         applyto.cancelEffectFromBuffStat(MapleBuffStat.MANA_REFLECTION);

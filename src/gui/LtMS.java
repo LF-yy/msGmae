@@ -6504,28 +6504,28 @@ public class LtMS extends JFrame {
                                 if (ii.isCash(物品ID)) {
                                     item.setUniqueId(1);
                                 }
-                                if (力量 > 0 && 力量 <= 32767) {
+                                if (力量 > 0 && 力量 <= 30000) {
                                     item.setStr((short) (力量));
                                 }
-                                if (敏捷 > 0 && 敏捷 <= 32767) {
+                                if (敏捷 > 0 && 敏捷 <= 30000) {
                                     item.setDex((short) (敏捷));
                                 }
-                                if (智力 > 0 && 智力 <= 32767) {
+                                if (智力 > 0 && 智力 <= 30000) {
                                     item.setInt((short) (智力));
                                 }
-                                if (运气 > 0 && 运气 <= 32767) {
+                                if (运气 > 0 && 运气 <= 30000) {
                                     item.setLuk((short) (运气));
                                 }
-                                if (攻击力 > 0 && 攻击力 <= 32767) {
+                                if (攻击力 > 0 && 攻击力 <= 30000) {
                                     item.setWatk((short) (攻击力));
                                 }
-                                if (魔法力 > 0 && 魔法力 <= 32767) {
+                                if (魔法力 > 0 && 魔法力 <= 30000) {
                                     item.setMatk((short) (魔法力));
                                 }
-                                if (物理防御 > 0 && 物理防御 <= 32767) {
+                                if (物理防御 > 0 && 物理防御 <= 30000) {
                                     item.setWdef((short) (物理防御));
                                 }
-                                if (魔法防御 > 0 && 魔法防御 <= 32767) {
+                                if (魔法防御 > 0 && 魔法防御 <= 30000) {
                                     item.setMdef((short) (魔法防御));
                                 }
                                 if (HP > 0 && HP <= 30000) {
@@ -6572,28 +6572,28 @@ public class LtMS extends JFrame {
                                 if (ii.isCash(物品ID)) {
                                     item.setUniqueId(1);
                                 }
-                                if (力量 > 0 && 力量 <= 32767) {
+                                if (力量 > 0 && 力量 <= 30000) {
                                     item.setStr((short) (力量));
                                 }
-                                if (敏捷 > 0 && 敏捷 <= 32767) {
+                                if (敏捷 > 0 && 敏捷 <= 30000) {
                                     item.setDex((short) (敏捷));
                                 }
-                                if (智力 > 0 && 智力 <= 32767) {
+                                if (智力 > 0 && 智力 <= 30000) {
                                     item.setInt((short) (智力));
                                 }
-                                if (运气 > 0 && 运气 <= 32767) {
+                                if (运气 > 0 && 运气 <= 30000) {
                                     item.setLuk((short) (运气));
                                 }
-                                if (攻击力 > 0 && 攻击力 <= 32767) {
+                                if (攻击力 > 0 && 攻击力 <= 30000) {
                                     item.setWatk((short) (攻击力));
                                 }
-                                if (魔法力 > 0 && 魔法力 <= 32767) {
+                                if (魔法力 > 0 && 魔法力 <= 30000) {
                                     item.setMatk((short) (魔法力));
                                 }
-                                if (物理防御 > 0 && 物理防御 <= 32767) {
+                                if (物理防御 > 0 && 物理防御 <= 30000) {
                                     item.setWdef((short) (物理防御));
                                 }
-                                if (魔法防御 > 0 && 魔法防御 <= 32767) {
+                                if (魔法防御 > 0 && 魔法防御 <= 30000) {
                                     item.setMdef((short) (魔法防御));
                                 }
                                 if (HP > 0 && HP <= 30000) {

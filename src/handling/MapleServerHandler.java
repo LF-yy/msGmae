@@ -70,7 +70,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
     private final List<String> BlockedIP;
     private final Map<String, Pair<Long, Byte>> tracker;
     private static final EnumSet<RecvPacketOpcode> blocked;
-    
+    private static final RecvPacketOpcode[] OPCODE_VALUES = RecvPacketOpcode.values();
     public MapleServerHandler(final int world, final int channel) {
         this.BlockedIP = new ArrayList<String>();
         this.tracker = new ConcurrentHashMap<String, Pair<Long, Byte>>();
@@ -171,56 +171,100 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
         super.channelInactive(ctx);
     }
     
-    public void channelRead(final ChannelHandlerContext ctx, final Object message) {
-        final LittleEndianAccessor slea = new LittleEndianAccessor(new ByteArrayByteStream((byte[])(byte[])message));
-        if (slea.available() < 2L) {
-            return;
-        }
-        final MapleClient c = (MapleClient)ctx.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
-        if (c == null || !c.isReceiving()) {
-            return;
-        }
-        final short header_num = slea.readShort();
-        final RecvPacketOpcode[] values = RecvPacketOpcode.values();
-        final int length = values.length;
-        int i = 0;
-        while (i < length) {
-            final RecvPacketOpcode recv = values[i];
-            if (recv.getValue() == header_num) {
-                if (recv.NeedsChecking() && !c.isLoggedIn()) {
-                    return;
-                }
-//                if (c.getPlayer() != null && c.isMonitored() && !MapleServerHandler.blocked.contains((Object)recv)) {
-//                    if(LtMS.ConfigValuesMap.get("开启监测") == 1) {
-//                        FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object) recv) + " (" + Integer.toHexString((int) header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
+//    public void channelRead(final ChannelHandlerContext ctx, final Object message) {
+//        final LittleEndianAccessor slea = new LittleEndianAccessor(new ByteArrayByteStream((byte[])(byte[])message));
+//        if (slea.available() < 2L) {
+//            return;
+//        }
+//        final MapleClient c = (MapleClient)ctx.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
+//        if (c == null || !c.isReceiving()) {
+//            return;
+//        }
+//        final short header_num = slea.readShort();
+//        final RecvPacketOpcode[] values = RecvPacketOpcode.values();
+//        final int length = values.length;
+//        int i = 0;
+//        while (i < length) {
+//            final RecvPacketOpcode recv = values[i];
+//            if (recv.getValue() == header_num) {
+//                if (recv.NeedsChecking() && !c.isLoggedIn()) {
+//                    return;
+//                }
+////                if (c.getPlayer() != null && c.isMonitored() && !MapleServerHandler.blocked.contains((Object)recv)) {
+////                    if(LtMS.ConfigValuesMap.get("开启监测") == 1) {
+////                        FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object) recv) + " (" + Integer.toHexString((int) header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
+////                    }
+////               }
+//                try {
+//                    handlePacket(recv, slea, c, this.channel == -10);
+//                }catch (Exception e) {
+//                    e.printStackTrace();
+//                    if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
+//                        c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
 //                    }
-//               }
-                try {
-                    handlePacket(recv, slea, c, this.channel == -10);
-                }catch (Exception e) {
-                    //e.printStackTrace();
-                    if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
-                        c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
-                    }
-                    FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", (Throwable)e, false);
-                    FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", (Throwable)e);
-                    FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int)header_num + "\r\n" + ctx.name() + ":\r\n" +slea.toString(true));
-                }
+//                    FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", (Throwable)e, false);
+//                    FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", (Throwable)e);
+//                    FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int)header_num + "\r\n" + ctx.name() + ":\r\n" +slea.toString(true));
+//                }
+//                return;
+//            }else {
+//                ++i;
+//            }
+//        }
+//        if (ServerConfig.LOG_PACKETS) {
+//            final byte[] packet = slea.read((int)slea.available());
+//            final StringBuilder sb = new StringBuilder("發現未知用戶端数据包 - (包頭:0x" + Integer.toHexString((int)header_num) + ")");
+//            System.err.println(sb.toString());
+//            sb.append(":\r\n").append(HexTool.toString(packet)).append("\r\n").append(HexTool.toStringFromAscii(packet));
+//            FileoutputUtil.log("logs\\数据包_未知.txt", sb.toString());
+//        }
+//    }
+public void channelRead(final ChannelHandlerContext ctx, final Object message) {
+    if (!(message instanceof byte[])) {
+        System.err.println("Invalid message type: " + message.getClass().getName());
+        return;
+    }
+
+    final LittleEndianAccessor slea = new LittleEndianAccessor(new ByteArrayByteStream((byte[]) message));
+    if (slea == null || slea.available() < 2L) {
+        return;
+    }
+
+    final MapleClient c = (MapleClient) ctx.channel().attr(MapleClient.CLIENT_KEY).get();
+    if (c == null || !c.isReceiving()) {
+        return;
+    }
+
+    final short header_num = slea.readShort();
+    for (final RecvPacketOpcode recv : OPCODE_VALUES) {
+        if (recv.getValue() == header_num) {
+            if (recv.NeedsChecking() && !c.isLoggedIn()) {
                 return;
             }
-            else {
-                ++i;
+
+            try {
+                handlePacket(recv, slea, c, this.channel == -10);
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
+                    c.getPlayer().showInfo("数据包异常", true, "包头:" + recv.name() + "(0x" + Integer.toHexString((int) header_num).toUpperCase() + ")");
+                }
+                FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", e, false);
+                FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", e);
+                FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int) header_num + "\r\n" + ctx.name() + ":\r\n" + slea.toString(true));
             }
-        }
-        if (ServerConfig.LOG_PACKETS) {
-            final byte[] packet = slea.read((int)slea.available());
-            final StringBuilder sb = new StringBuilder("發現未知用戶端数据包 - (包頭:0x" + Integer.toHexString((int)header_num) + ")");
-            System.err.println(sb.toString());
-            sb.append(":\r\n").append(HexTool.toString(packet)).append("\r\n").append(HexTool.toStringFromAscii(packet));
-            FileoutputUtil.log("logs\\数据包_未知.txt", sb.toString());
+            return;
         }
     }
-    
+
+    if (ServerConfig.LOG_PACKETS) {
+        final byte[] packet = slea.read((int) slea.available());
+        final StringBuilder sb = new StringBuilder("发现未知客户端数据包 - (包头:0x" + Integer.toHexString((int) header_num) + ")");
+        System.err.println(sb.toString());
+        sb.append(":\r\n").append(HexTool.toString(packet)).append("\r\n").append(HexTool.toStringFromAscii(packet));
+        FileoutputUtil.log("logs/data_packet_unknown.txt", sb.toString());
+    }
+}
     public void userEventTriggered(final ChannelHandlerContext ctx, final Object status) throws Exception {
         final MapleClient client = (MapleClient)ctx.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
         if (client != null) {
@@ -228,7 +272,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
         }
         else {
             ctx.channel().close();
-            System.out.println("netty檢測心跳掉線。");
+            System.out.println("netty检测心跳掉线。");
         }
         super.userEventTriggered(ctx, status);
     }
