@@ -32,7 +32,7 @@ public class BeanGame
         final BeansConstants Beans = new BeansConstants();
         final int 海洋帽子几率 = Beans.get海洋帽子几率();
         final int 力度搞假 = Beans.get力度搞假();
-        final int 豆豆奖励范围 = Beans.get豆豆獎勵範圍();
+        final int 豆豆奖励范围 = Beans.get豆豆獎勵范围();
         final String[] 黄金狗几率 = Beans.get黄金狗几率();
         final String[] 大白怪 = Beans.get大白怪();
         final String[] 小白怪 = Beans.get小白怪();
@@ -54,7 +54,7 @@ public class BeanGame
         int 力度 = 0;
         int 豆豆序号 = 0;
         if (chr.getBeans() <= 0) {
-            c.getPlayer().dropMessage(1, "你沒有小鋼珠，無法使用。");
+            c.getPlayer().dropMessage(1, "你没有小鋼珠，无法使用。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }

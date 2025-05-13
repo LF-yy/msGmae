@@ -174,7 +174,7 @@ public enum RecvPacketOpcode implements WritableIntValueHolder
     LICENSE_REQUEST,
     PLAYER_UPDATE,
     ITEM_SUNZI,
-    VICIOUS_HAMMER,
+    VICIOUS_HAMMER((short) 0x10D),
     MOVE_DRAGON(202),
     BEANS_UPDATE;
     

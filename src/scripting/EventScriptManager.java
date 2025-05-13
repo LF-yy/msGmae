@@ -13,19 +13,18 @@ import java.util.LinkedHashMap;
 import handling.channel.ChannelServer;
 
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 
 public class EventScriptManager extends AbstractScriptManager {
-    private final Map<String, EventEntry> events ;
-    private final AtomicInteger runningInstanceMapId ;
+    private final ConcurrentHashMap<String, EventEntry> events = new ConcurrentHashMap<>();    private final AtomicInteger runningInstanceMapId ;
 
     public final int getNewInstanceMapId() {
         return this.runningInstanceMapId.addAndGet(1);
     }
 
     public EventScriptManager( ChannelServer cserv,  String[] scripts) {
-        this.events = new LinkedHashMap<String, EventEntry>();
         this.runningInstanceMapId = new AtomicInteger(0);
         for ( String script : scripts) {
             if (Objects.nonNull(script)) {
@@ -74,44 +73,63 @@ public class EventScriptManager extends AbstractScriptManager {
 
     public boolean loadEntry(ChannelServer cserv, String script) {
         try {
-            if (!script.equals("")) {
-                if (this.events.containsKey(script)) {
-                    this.events.remove(script);
-                }
-
-                Invocable iv = this.getInvocable("事件/" + script + ".js", (MapleClient)null);
-                if (iv != null) {
-                    this.events.put(script, new EventEntry(script, iv, new EventManager(cserv, iv, script)));
-                }
-
-                return true;
-            } else {
+            // 增强空值检查
+            if (script == null || script.isEmpty()) {
                 return false;
             }
-        } catch (Exception var4) {
-            //服务端输出信息.println_err("【错误】loadEntry错误，错误原因：" + var4);
-            var4.printStackTrace();
+
+            // 确保线程安全性
+            events.remove(script);
+
+            // 路径配置化
+            String scriptPath = "事件/" + script + ".js";
+            Invocable iv = this.getInvocable(scriptPath, null);
+
+            if (iv != null) {
+                // 创建 EventEntry 并存入线程安全的集合
+                EventEntry eventEntry = new EventEntry(script, iv, new EventManager(cserv, iv, script));
+                events.put(script, eventEntry);
+            }
+
+            return true;
+        } catch (Exception e) {
+            // 改进异常处理，记录详细日志
+            System.err.println("【错误】loadEntry 错误，脚本名称：" + script + "，错误原因：" + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
     public EventEntry getEntry(String script) {
-        Iterator var2 = this.events.values().iterator();
+        if (script == null) {
+            FilePrinter.printError("EventScriptManager.txt", "Error getEntry: script is null");
+            return null;
+        }
 
-        while(var2.hasNext()) {
-            EventEntry entry = (EventEntry)var2.next();
+        Iterator<EventEntry> iterator = this.events.values().iterator();
+
+        while (iterator.hasNext()) {
+            EventEntry entry = iterator.next();
 
             try {
-                if (entry != null && entry.script.equals(script)) {
+                if (entry != null && areScriptsEqual(entry.script, script)) {
                     return entry;
                 }
-            } catch (Exception var5) {
-                //服务端输出信息.println_err("Error getEntry event: " + entry.script + ":" + var5);
-                FilePrinter.printError("EventScriptManager.txt", "Error getEntry event: " + entry.script + ":" + var5);
+            } catch (NullPointerException e) {
+                // 记录空指针异常
+                FilePrinter.printError("EventScriptManager.txt", "NullPointerException in getEntry: entry.script=" + entry.script + ", script=" + script);
+            } catch (Exception e) {
+                // 记录其他异常
+                FilePrinter.printError("EventScriptManager.txt", "Unexpected exception in getEntry: entry.script=" + entry.script + ", script=" + script);
             }
         }
 
         return null;
+    }
+
+    // 辅助方法：比较两个字符串是否相等，避免空指针异常
+    private boolean areScriptsEqual(String script1, String script2) {
+        return script1 == null ? script2 == null : script1.equals(script2);
     }
 
     public final void cancel() {
@@ -127,13 +145,14 @@ public class EventScriptManager extends AbstractScriptManager {
         }
 
     }
-    private static class EventEntry
-    {
-        public String script;
-        public Invocable iv;
-        public EventManager em;
 
-        public EventEntry(final String script, final Invocable iv, final EventManager em) {
+    // 假设 EventEntry 和 EventManager 类已定义
+    private static class EventEntry {
+        private final String script;
+        private final Invocable iv;
+        private final EventManager em;
+
+        public EventEntry(String script, Invocable iv, EventManager em) {
             this.script = script;
             this.iv = iv;
             this.em = em;

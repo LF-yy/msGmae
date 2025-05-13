@@ -107,7 +107,7 @@ public class CharLoginHandler
 
 
         if (c.getLastLoginTime() != 0L && c.getLastLoginTime() + 5000L < System.currentTimeMillis()) {
-            errorInfo = "您登录的速度過快!\r\n請重新輸入.";
+            errorInfo = "您登录的速度過快!\r\n请重新輸入.";
             loginok = 1;
         }
         else if (loginok == 0 && ban && !c.isGm()) {
@@ -245,7 +245,7 @@ public class CharLoginHandler
     
     public static void ServerListRequest(final MapleClient c) {
         if (c.getLoginKeya() == 0) {
-            c.sendPacket(MaplePacketCreator.serverNotice(1, "請不要通過非法手段\r\n進入游戏。"));
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "请不要通過非法手段\r\n进入游戏。"));
             return;
         }
         if (!c.isCanloginpw()) {
@@ -253,7 +253,7 @@ public class CharLoginHandler
             return;
         }
         if (c.loadLogGedin(c.getAccID()) == 1 || c.loadLogGedin(c.getAccID()) > 2) {
-            c.sendPacket(MaplePacketCreator.serverNotice(1, "請不要通過非法手段\r\n進入游戏。"));
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "请不要通過非法手段\r\n进入游戏。"));
             return;
         }
         LoginServer.forceRemoveClient(c, false);
@@ -349,14 +349,14 @@ public class CharLoginHandler
             return;
         }
         if (c.getLoginKeya() == 0) {
-            c.sendPacket(MaplePacketCreator.serverNotice(1, "請不要通過非法手段\r\n進入游戏。"));
+            c.sendPacket(MaplePacketCreator.serverNotice(1, "请不要通過非法手段\r\n进入游戏。"));
             return;
         }
         ChannelServer.forceRemovePlayerByCharNameFromDataBase(c, c.loadCharacterNamesByAccId(c.getAccID()));
         LoginServer.forceRemoveClient(c, false);
         final String serverkey = RandomString();
         if (!LoginServer.CanLoginKey(c.getLoginKey(), c.getAccID()) || (LoginServer.getLoginKey(c.getAccID()) == null && !c.getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 角色列表");
+            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 角色列表");
             return;
         }
         final int server = slea.readByte();
@@ -413,7 +413,7 @@ public class CharLoginHandler
         final byte gender = c.getGender();
         final List<MapleCharacter> chars = c.loadCharacters(0);
         if (chars.size() > c.getCharacterSlots()) {
-            FileoutputUtil.logToFile("logs/Hack/Ban/角色數量異常.txt", "\r\n " + FileoutputUtil.NowTime() + " 账号 " + c.getAccountName());
+            FileoutputUtil.logToFile("logs/Hack/Ban/角色數量异常.txt", "\r\n " + FileoutputUtil.NowTime() + " 账号 " + c.getAccountName());
             c.getSession().close();
             return;
         }
@@ -560,11 +560,11 @@ public class CharLoginHandler
     
     public static void handleDeleteCharacter(final LittleEndianAccessor slea, final MapleClient c) {
         if (!LoginServer.CanLoginKey(c.getLoginKey(), c.getAccID()) || (LoginServer.getLoginKey(c.getAccID()) == null && !c.getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 刪除角色");
+            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 刪除角色");
             return;
         }
         if (!LoginServer.CanServerKey(c.getServerKey(), c.getAccID()) || (LoginServer.getServerKey(c.getAccID()) == null && !c.getServerKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(c.getAccID()) + " 伺服端key：" + c.getServerKey() + " 刪除角色");
+            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(c.getAccID()) + " 伺服端key：" + c.getServerKey() + " 刪除角色");
             return;
         }
         if (slea.available() < 7L) {
@@ -611,31 +611,47 @@ public class CharLoginHandler
         }
         c.sendPacket(LoginPacket.deleteCharResponse(characterId, (int)state));
     }
-    
+
+    /**
+     * 处理选择角色时的逻辑
+     *
+     * @param slea 小端访问器，用于读取客户端发送的数据
+     * @param c    客户端对象，表示与客户端的连接
+     */
     public static void handleSecectCharacter(final LittleEndianAccessor slea, final MapleClient c) {
+        // 检查客户端是否已经关闭会话
         if (c.getCloseSession()) {
             return;
         }
+        // 检查客户端的登录密钥是否为0
         if (c.getLoginKeya() == 0) {
             return;
         }
+        // 检查客户端是否可以登录
         if (!c.isCanloginpw()) {
             return;
         }
+        // 验证登录密钥
         if (!LoginServer.CanLoginKey(c.getLoginKey(), c.getAccID()) || (LoginServer.getLoginKey(c.getAccID()) == null && !c.getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 開始游戏");
+            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(c.getAccID()) + " 伺服端key：" + c.getLoginKey() + " 開始游戏");
             return;
         }
+        // 验证服务器密钥
         if (!LoginServer.CanServerKey(c.getServerKey(), c.getAccID()) || (LoginServer.getServerKey(c.getAccID()) == null && !c.getServerKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(c.getAccID()) + " 伺服端key：" + c.getServerKey() + " 開始游戏");
+            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(c.getAccID()) + " 伺服端key：" + c.getServerKey() + " 開始游戏");
             return;
         }
+        // 移除旧的客户端密钥
         LoginServer.RemoveClientKey(c.getAccID());
-        final String clientkey = RandomString();
+        // 生成并更新新的客户端密钥
+         String clientkey = RandomString();
         c.updateClientKey(clientkey);
         LoginServer.addClientKey(clientkey, c.getAccID());
+        // 读取角色ID
         final int charId = slea.readInt();
+        // 加载角色名称
         final List<String> charNamesa = c.loadCharacterNamesByCharId(charId);
+        // 检查角色是否在其他频道在线
         for (final ChannelServer cs : ChannelServer.getAllInstances()) {
             for (final String name : charNamesa) {
                 if (cs.getPlayerStorage().getCharacterByName(name) != null) {
@@ -645,6 +661,7 @@ public class CharLoginHandler
                 }
             }
         }
+        // 检查角色是否在现金商店在线
         for (final String name2 : charNamesa) {
             if (CashShopServer.getPlayerStorage().getCharacterByName(name2) != null) {
                 final MapleCharacter victim = CashShopServer.getPlayerStorage().getCharacterByName(name2);
@@ -654,7 +671,9 @@ public class CharLoginHandler
                 return;
             }
         }
+        // 再次加载角色名称
         final List<String> charNames = c.loadCharacterNamesByCharId(charId);
+        // 检查角色是否在其他频道在线
         for (final ChannelServer cs2 : ChannelServer.getAllInstances()) {
             for (final String name3 : charNames) {
                 final MapleCharacter character = cs2.getPlayerStorage().getCharacterByName(name3);
@@ -665,6 +684,7 @@ public class CharLoginHandler
                 }
             }
         }
+        // 检查角色是否在现金商店在线
         for (final String name4 : charNames) {
             final MapleCharacter charactercs = CashShopServer.getPlayerStorage().getCharacterByName(name4);
             if (charactercs != null) {
@@ -673,31 +693,34 @@ public class CharLoginHandler
                 charactercs.getClient().getSession().close();
             }
         }
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
-            PreparedStatement ps = null;
-            ps = con.prepareStatement("select accountid from characters where id = ?");
+        // 数据库验证角色ID和账号ID是否匹配
+        try (Connection con = DBConPool.getConnection()) {
+            PreparedStatement ps = con.prepareStatement("select accountid from characters where id = ?");
             ps.setInt(1, charId);
             final ResultSet rs = ps.executeQuery();
             if (!rs.next() || rs.getInt("accountid") != c.getAccID()) {
                 rs.close();
                 ps.close();
-                con.close();
                 return;
             }
             rs.close();
             ps.close();
-            con.close();
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
+        // 取消空闲任务
         if (c.getIdleTask() != null) {
             c.getIdleTask().cancel(true);
         }
+        // 更新登录状态
         c.updateLoginState(1, c.getSessionIPAddress());
+        // 发送服务器IP信息
         c.sendPacket(MaplePacketCreator.getServerIP(c, Integer.parseInt(ChannelServer.getInstance(c.getChannel()).getSocket().split(":")[1]), charId));
+        // 设置系统属性
         System.setProperty(String.valueOf(charId), "1");
     }
+
 
     public static boolean IP登陆数(final String a) {
         boolean ret = true;

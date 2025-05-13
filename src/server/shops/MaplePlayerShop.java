@@ -40,7 +40,7 @@ public class MaplePlayerShop extends AbstractPlayerStore
             final int gainmeso = pItem.price * quantity;
             if (c.getPlayer().getMeso() >= gainmeso) {
                 if (!c.getPlayer().canHold(newItem.getItemId())) {
-                    c.getPlayer().dropMessage(1, "您的背包滿了.");
+                    c.getPlayer().dropMessage(1, "您的背包满了.");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -59,11 +59,11 @@ public class MaplePlayerShop extends AbstractPlayerStore
                     }
                 }
                 else {
-                    c.getPlayer().dropMessage(1, "你的装备栏已經滿了。");
+                    c.getPlayer().dropMessage(1, "你的装备栏已经满了。");
                 }
             }
             else {
-                c.getPlayer().dropMessage(1, "你沒有足夠的金币。");
+                c.getPlayer().dropMessage(1, "你没有足夠的金币。");
             }
             this.getMCOwner().getClient().sendPacket(PlayerShopPacket.shopItemUpdate((IMaplePlayerShop)this));
         }

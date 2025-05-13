@@ -2,6 +2,7 @@ package handling.channel.handler;
 
 import client.MapleQuestStatus;
 import gui.LtMS;
+import handling.world.World;
 import tools.Pair;
 import java.util.List;
 import java.util.Iterator;
@@ -144,7 +145,7 @@ public class NPCHandler
             return;
         }
         if (chr.getAntiMacro().inProgress()) {
-            chr.dropMessage(5, "被使用測謊儀時無法操作。");
+            chr.dropMessage(5, "被使用測謊儀時无法操作。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -164,7 +165,7 @@ public class NPCHandler
             return;
         }
         if (chr.getAntiMacro().inProgress()) {
-            chr.dropMessage(5, "被使用測謊儀時無法操作。");
+            chr.dropMessage(5, "被使用測謊儀時无法操作。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -189,7 +190,7 @@ public class NPCHandler
                         chr.gainItem(1112004);
                     }
                     else {
-                        chr.dropMessage(5, "您已領取過該任務的獎勵。");
+                        chr.dropMessage(5, "您已領取過该任務的獎勵。");
                     }
                 }
                 if (npc == 0 && quest > 0) {
@@ -265,7 +266,7 @@ public class NPCHandler
             return;
         }
         if (chr.getAntiMacro().inProgress()) {
-            chr.dropMessage(5, "被使用測謊儀時無法操作。");
+            chr.dropMessage(5, "被使用測謊儀時无法操作。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -299,7 +300,7 @@ public class NPCHandler
 //                if (chr.getMapId() == 910000000 && chr.getMeso() < 1000) {
 //                    storage.store(item);
 //                    chr.saveToDB(false, false);
-//                    chr.dropMessage(1, "你沒有足夠的金币放仓库道具。");
+//                    chr.dropMessage(1, "你没有足夠的金币放仓库道具。");
 //                    break;
 //                }
 //                if (item.getQuantity() < 1) {
@@ -404,7 +405,7 @@ public class NPCHandler
                     return;
                 }
                 if (chr.getMeso() < 100 || (chr.getMapId() == 910000000 && chr.getMeso() < 500)) {
-                    chr.dropMessage(1, "你沒有足夠的金币放仓库道具。");
+                    chr.dropMessage(1, "你没有足夠的金币放仓库道具。");
                     break;
                 }
                 final IItem item2 = chr.getInventory(type2).getItem((short)slot2).copy();
@@ -448,7 +449,6 @@ public class NPCHandler
                 storage.sendStored(c, GameConstants.getInventoryType(itemId));
                 storage.saveToDB();
                 chr.道具存档2();
-                //todo 添加额外的一张记录表 实时同步对比,以新记录表的数据为基准,将多余的物品删除,并记录日志
                 FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作存入物品:" + item2.getItemId()  + ","+MapleItemInformationProvider.getInstance().getName(item2.getItemId())+ " 數量：" + (int)item2.getQuantity());
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作存入物品:" + item2.getItemId() + " 數量：" + (int)item2.getQuantity()));
                 break;
@@ -462,37 +462,39 @@ public class NPCHandler
                 int meso = slea.readInt();
                 final int storageMesos = storage.getMeso();
                 final int playerMesos = chr.getMeso();
-                if (!c.getPlayer().CanStorage()) {
+                if (c.getPlayer().CanStorage()) {
+                    if ((meso > 0 && storageMesos >= meso) || (meso < 0 && playerMesos >= -meso)) {
+                        if (meso < 0 && (storageMesos - meso) < 0) { // storing with overflow
+                            meso = -(Integer.MAX_VALUE - storageMesos);
+                            if ((-meso) > playerMesos) { // should never happen just a failsafe
+                                return;
+                            }
+                        } else if (meso > 0 && (playerMesos + meso) < 0) { // taking out with overflow
+                            meso = (Integer.MAX_VALUE - playerMesos);
+                            if ((meso) > storageMesos) { // should never happen just a failsafe
+                                return;
+                            }
+                        }
+                        storage.setMeso(storageMesos - meso);
+                        storage.saveToDB();
+                        chr.gainMeso(meso, false, true, false);
+                        FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 帳号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作金幣數量:" + meso);
+                        World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + " 帳号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作金幣數量:" + meso));
+
+                        if (meso >= 50000000 || meso <= -50000000) {
+                            FileoutputUtil.logToFile("logs/Data/仓库大額金幣操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 帳号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库大額金幣操作數量:" + meso);
+                            World.Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语] " + " 帳号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库大額金幣操作數量:" + meso));
+                        }
+
+                    } else {
+                        AutobanManager.getInstance().addPoints(c, 1000, 0, "Trying to store or take out unavailable amount of mesos (" + meso + "/" + storage.getMeso() + "/" + c.getPlayer().getMeso() + ")");
+                        return;
+                    }
+                    storage.sendMeso(c);
+                } else {
                     c.getPlayer().dropMessage(1, "操作过快请稍后在尝试。");
                     storage.sendMeso(c);
-                    break;
                 }
-                if ((meso > 0 && storageMesos >= meso) || (meso < 0 && playerMesos >= -meso)) {
-                    if (meso < 0 && storageMesos - meso < 0) {
-                        meso = -(Integer.MAX_VALUE - storageMesos);
-                        if (-meso > playerMesos) {
-                            return;
-                        }
-                    }
-                    else if (meso > 0 && playerMesos + meso < 0) {
-                        meso = Integer.MAX_VALUE - playerMesos;
-                        if (meso > storageMesos) {
-                            return;
-                        }
-                    }
-                    storage.setMeso(storageMesos - meso);
-                    storage.saveToDB();
-                    chr.gainMeso(meso, false, true, false);
-                    FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作金币数量:" + meso);
-                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作金币数量:" + meso));
-                    if (meso >= 50000000 || meso <= -50000000) {
-                        FileoutputUtil.logToFile("logs/Data/仓库大额金币操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库大额金币操作数量:" + meso);
-                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库大额金币操作数量:" + meso));
-                    }
-                    storage.sendMeso(c);
-                    break;
-                }
-                AutobanManager.getInstance().addPoints(c, 1000, 0L, "Trying to store or take out unavailable amount of mesos (" + meso + "/" + storage.getMeso() + "/" + c.getPlayer().getMeso() + ")");
             }
             case 8: {
                 storage.close();

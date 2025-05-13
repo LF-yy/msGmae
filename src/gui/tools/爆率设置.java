@@ -1132,8 +1132,8 @@ public class 爆率设置 extends javax.swing.JFrame {
         if (result1 && result2) {
             PreparedStatement ps1 = null;
             ResultSet rs = null;
+            Connection con = DatabaseConnection.getConnection();
             try {
-                Connection con = DatabaseConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement("INSERT INTO drop_data_global (continent,dropType,itemid,minimum_quantity,maximum_quantity,questid,chance) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 ps.setInt(1, 1);
                 ps.setInt(2, 1);
@@ -1150,6 +1150,12 @@ public class 爆率设置 extends javax.swing.JFrame {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 System.out.println("[信息]:世界爆物添加失败。"+ex.getMessage());
+            }finally {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+
+                }
             }
         } else {
             JOptionPane.showMessageDialog(null, "[信息]:请输入<物品代码>，<物品爆率> 。");

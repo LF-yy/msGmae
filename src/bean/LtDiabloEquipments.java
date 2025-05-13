@@ -470,9 +470,9 @@ public class LtDiabloEquipments {
                             totalMesoRate += ltDiabloEquipments.mesoRate;
                             totalMesoRateCount += ltDiabloEquipments.mesoRateCount;
                             if (ltDiabloEquipments.getSkillId()!=0 && Objects.nonNull(skillDamage.get(ltDiabloEquipments.getSkillId()))){
-                                skillDamage.put(ltDiabloEquipments.getSkillId(),ltDiabloEquipments.getSkillId()/100.00+skillDamage.get(ltDiabloEquipments.getSkillId()));
+                                skillDamage.put(ltDiabloEquipments.getSkillId(),ltDiabloEquipments.getSkillDamage()/100.00+skillDamage.get(ltDiabloEquipments.getSkillId()));
                             }else if (ltDiabloEquipments.getSkillId()!=0 && Objects.isNull(skillDamage.get(ltDiabloEquipments.getSkillId()))){
-                                skillDamage.put(ltDiabloEquipments.getSkillId(),ltDiabloEquipments.getSkillId()/100.00+1);
+                                skillDamage.put(ltDiabloEquipments.getSkillId(),ltDiabloEquipments.getSkillDamage()/100.00+1);
                             }
                         }
                     }
@@ -513,12 +513,10 @@ public class LtDiabloEquipments {
             return null;
         }
         for (LtDiabloEquipments ltDiabloEquipments : list) {
-            if (ltDiabloEquipments.getLevel() < level){
-                return null;
-            }
+
             int randomNum  =  Randomizer.nextInt(1000000);
                        // 如果满足条件，记录 entryName
-            if ( randomNum >= ltDiabloEquipments.getProbabilityMin() && randomNum <= ltDiabloEquipments.getProbabilityMax()) {
+            if ( randomNum >= ltDiabloEquipments.getProbabilityMin() && randomNum <= (ltDiabloEquipments.getProbabilityMax()+ltDiabloEquipments.level)) {
                 matchedEntryNames.add(ltDiabloEquipments.entryName);
                 if(ltDiabloEquipments.getSkillType() == 4){
                     break;
@@ -592,8 +590,8 @@ public class LtDiabloEquipments {
 //                            System.out.println("2");
                             damage +=  (ltDiabloEquipments.getSkillDamage()/100.0);
                             aSkill.setDamage(damage);
-                            aSkill.setAttackCount(aSkill.getAttackCount()+ltDiabloEquipments.getSkillDs());
-                            aSkill.setMobCount(aSkill.getMobCount()+ltDiabloEquipments.getSkillSl());
+                            aSkill.setAttackCount(ltDiabloEquipments.getSkillDs());
+                            aSkill.setMobCount(ltDiabloEquipments.getSkillSl());
                             c.getPlayer().setUserASkill(ltDiabloEquipments.skillId,aSkill);
 //                            System.out.println(ltDiabloEquipments.skillId+" "+aSkill.getDamage());
 
@@ -1087,4 +1085,5 @@ public class LtDiabloEquipments {
     public void setMesoRateCount(short mesoRateCount) {
         this.mesoRateCount = mesoRateCount;
     }
+
 }

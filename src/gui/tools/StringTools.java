@@ -17,7 +17,7 @@ public class StringTools {
     public static int rand(int lbound, int ubound) {
         return (int) ((Math.random() * (ubound - lbound + 1)) + lbound);
     }
-    private static final String PASSWORD_CRYPT_KEY = "bbs.13mxd.com";
+    private static final String PASSWORD_CRYPT_KEY = "www.baidu.com";
     private final static String DES = "DES";
 
     public final static String encrypt(String password) {

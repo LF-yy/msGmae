@@ -156,7 +156,7 @@ public class OnlyID
         }
         catch (SQLException ex) {
             //System.out.println("[EXCEPTION] 复制装备出現錯誤." + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     

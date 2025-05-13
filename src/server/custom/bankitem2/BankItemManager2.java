@@ -68,10 +68,9 @@ public class BankItemManager2
     
     public List<BankItem2> getItems(final int cid) {
         final List<BankItem2> items = new ArrayList<BankItem2>();
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try {
+        try (Connection con1 = DatabaseConnection.getConnection()){
             ps = con1.prepareStatement("select * from bank_item2 where cid = ?");
             ps.setInt(1, cid);
             rs = ps.executeQuery();
@@ -129,9 +128,8 @@ public class BankItemManager2
         if (item == null) {
             return -1;
         }
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
-        try {
+        try(Connection con1 = DatabaseConnection.getConnection()) {
             ps = con1.prepareStatement("insert into bank_item2 (id,cid,itemid,count,type) values (?,?,?,?,?)");
             ps.setLong(1, item.getId());
             ps.setInt(2, item.getCid());
@@ -159,9 +157,8 @@ public class BankItemManager2
     
     public int delete(final long id) {
         int ret = -1;
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
-        try {
+        try(Connection con1 = DatabaseConnection.getConnection()) {
             ps = con1.prepareStatement("delete from bank_item2 where id = ?");
             ps.setLong(1, id);
             ret = ps.executeUpdate();
@@ -185,9 +182,8 @@ public class BankItemManager2
     
     public int update(final BankItem2 bankItem) {
         int ret = -1;
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
-        try {
+        try (Connection con1 = DatabaseConnection.getConnection()){
             ps = con1.prepareStatement("update bank_item2 set cid = ? ,itemid = ? ,count = ? where id = ?");
             ps.setInt(1, bankItem.getCid());
             ps.setInt(2, bankItem.getItemid());

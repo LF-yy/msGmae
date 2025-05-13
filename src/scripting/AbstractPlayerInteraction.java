@@ -1625,7 +1625,10 @@ public abstract class AbstractPlayerInteraction
     public void teachSkill(final int id, final byte level, final byte masterlevel) {
         this.getPlayer().changeSkillLevel(SkillFactory.getSkill(id), level, masterlevel);
     }
-
+    public void 技能进阶(final int id,final byte masterlevel) {
+        final ISkill skil = SkillFactory.getSkill(id);
+        this.getPlayer().changeSkillLevel(skil, this.getPlayer().getSkillLevel(skil), masterlevel);
+    }
     public void teachSkill(final int id, byte level) {
         final ISkill skil = SkillFactory.getSkill(id);
         if (this.getPlayer().getSkillLevel(skil) > level) {
@@ -2127,24 +2130,24 @@ public abstract class AbstractPlayerInteraction
     public final boolean canwncs() {
         for (final int i : GameConstants.blockedMaps) {
             if (this.c.getPlayer().getMapId() == i) {
-                this.c.getPlayer().dropMessage(5, "當前地图無法使用.");
+                this.c.getPlayer().dropMessage(5, "當前地图无法使用.");
                 return false;
             }
         }
         if (this.c.getPlayer().getMapId() == 749060605 || this.c.getPlayer().getMapId() == 229010000 || this.c.getPlayer().getMapId() == 910000000) {
-            this.c.getPlayer().dropMessage(5, "當前地图無法使用.");
+            this.c.getPlayer().dropMessage(5, "當前地图无法使用.");
             return false;
         }
         if (this.c.getPlayer().getLevel() < 10 && this.c.getPlayer().getJob() != 200) {
-            this.c.getPlayer().dropMessage(5, "你的等級不足10級無法使用.");
+            this.c.getPlayer().dropMessage(5, "你的等級不足10級无法使用.");
             return false;
         }
         if (this.c.getPlayer().hasBlockedInventory(true) || this.c.getPlayer().getMap().getSquadByMap() != null || this.c.getPlayer().getEventInstance() != null || this.c.getPlayer().getMap().getEMByMap() != null || this.c.getPlayer().getMapId() >= 990000000) {
-            this.c.getPlayer().dropMessage(5, "請稍後再試");
+            this.c.getPlayer().dropMessage(5, "请稍后再試");
             return false;
         }
         if ((this.c.getPlayer().getMapId() >= 680000210 && this.c.getPlayer().getMapId() <= 680000502) || (this.c.getPlayer().getMapId() / 1000 == 980000 && this.c.getPlayer().getMapId() != 980000000) || this.c.getPlayer().getMapId() / 100 == 1030008 || this.c.getPlayer().getMapId() / 100 == 922010 || this.c.getPlayer().getMapId() / 10 == 13003000) {
-            this.c.getPlayer().dropMessage(5, "請稍後再試.");
+            this.c.getPlayer().dropMessage(5, "请稍后再試.");
             return false;
         }
         return true;
@@ -3781,6 +3784,7 @@ public abstract class AbstractPlayerInteraction
             ret = rs.getInt("Point");
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {}
         return ret;
@@ -3879,6 +3883,7 @@ public abstract class AbstractPlayerInteraction
             ret = rs.getInt("Point");
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {}
         return ret;
@@ -3927,6 +3932,7 @@ public abstract class AbstractPlayerInteraction
             ps2.setInt(3, Channale);
             ps2.execute();
             ps2.close();
+            con.close();
         }
         catch (SQLException sql) {
             System.err.println("獲取錯誤!!55" + (Object)sql);
@@ -3954,6 +3960,7 @@ public abstract class AbstractPlayerInteraction
             }
             ps.close();
             rs.close();
+            con.close();
         }
         catch (SQLException e) {
             System.err.println("获取充值记录失败" + (Object)e);
@@ -3973,6 +3980,7 @@ public abstract class AbstractPlayerInteraction
             }
             limitCheck.close();
             rs.close();
+            con.close();
         }
         catch (SQLException ex) {}
         return 破功等级;
@@ -3985,6 +3993,7 @@ public abstract class AbstractPlayerInteraction
             final PreparedStatement ps = con.prepareStatement("UPDATE characters SET PGSXDJ =PGSXDJ+ " + 等级 + " WHERE id = " + cid + "");
             ps.executeUpdate();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {}
     }

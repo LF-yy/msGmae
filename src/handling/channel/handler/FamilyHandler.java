@@ -65,7 +65,7 @@ public class FamilyHandler
             case 0: {
                 final MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(slea.readMapleAsciiString());
                 if (FieldLimitType.VipRock.check(c.getPlayer().getMap().getFieldLimit()) || !c.getPlayer().isAlive()) {
-                    c.getPlayer().dropMessage(5, "召喚失敗，因為您當前的位置或者状态是不准許召喚。");
+                    c.getPlayer().dropMessage(5, "召喚失敗，因为您當前的位置或者状态是不准許召喚。");
                     success = false;
                     break;
                 }
@@ -78,27 +78,27 @@ public class FamilyHandler
                     c.getPlayer().changeMap(victim.getMap(), victim.getMap().getPortal(0));
                     break;
                 }
-                c.getPlayer().dropMessage(5, "召喚失敗，因為您當前的位置或者状态是不准許召喚。");
+                c.getPlayer().dropMessage(5, "召喚失敗，因为您當前的位置或者状态是不准許召喚。");
                 success = false;
                 break;
             }
             case 1: {
                 final MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(slea.readMapleAsciiString());
                 if (FieldLimitType.VipRock.check(c.getPlayer().getMap().getFieldLimit()) || !c.getPlayer().isAlive()) {
-                    c.getPlayer().dropMessage(5, "召喚失敗，因為您當前的位置或者状态是不准許召喚。");
+                    c.getPlayer().dropMessage(5, "召喚失敗，因为您當前的位置或者状态是不准許召喚。");
                 }
                 else if (victim == null || (victim.isGM() && !c.getPlayer().isGM())) {
                     c.getPlayer().dropMessage(1, "無效的角色名稱或者跟您不同頻道。");
                 }
                 else if (victim.getTeleportName().length() > 0) {
-                    c.getPlayer().dropMessage(1, "另一個玩家已經請求您召喚的玩家請稍後再嘗試。");
+                    c.getPlayer().dropMessage(1, "另一个玩家已经请求您召喚的玩家请稍后再嘗試。");
                 }
                 else if (victim.getFamilyId() == c.getPlayer().getFamilyId() && !FieldLimitType.VipRock.check(victim.getMap().getFieldLimit()) && victim.getId() != c.getPlayer().getId()) {
                     victim.getClient().sendPacket(FamilyPacket.familySummonRequest(c.getPlayer().getName(), c.getPlayer().getMap().getMapName()));
                     victim.setTeleportName(c.getPlayer().getName());
                 }
                 else {
-                    c.getPlayer().dropMessage(5, "召喚失敗，因為您當前的位置或者状态是不准許召喚。");
+                    c.getPlayer().dropMessage(5, "召喚失敗，因为您當前的位置或者状态是不准許召喚。");
                 }
                 return;
             }
@@ -168,28 +168,28 @@ public class FamilyHandler
         if (name != null) {
             final MapleCharacter addChr = c.getChannelServer().getPlayerStorage().getCharacterByName(name);
             if (addChr == null) {
-                c.getPlayer().dropMessage(1, "您邀請的玩家角色名字不正確或者尚未登入。");
+                c.getPlayer().dropMessage(1, "您邀请的玩家角色名字不正確或者尚未登入。");
             }
             else if (addChr.getFamilyId() == c.getPlayer().getFamilyId() && addChr.getFamilyId() > 0) {
-                c.getPlayer().dropMessage(1, "已經在相同的家族裡。");
+                c.getPlayer().dropMessage(1, "已经在相同的家族裡。");
             }
             else if (addChr.getMapId() != c.getPlayer().getMapId()) {
                 c.getPlayer().dropMessage(1, "不再相同的地图裡。");
             }
             else if (addChr.getSeniorId() != 0) {
-                c.getPlayer().dropMessage(1, "您邀請的玩家角色已經在別的家族裡。");
+                c.getPlayer().dropMessage(1, "您邀请的玩家角色已经在別的家族裡。");
             }
             else if (addChr.getLevel() >= c.getPlayer().getLevel()) {
-                c.getPlayer().dropMessage(1, "您需要邀請比您低等的玩家。");
+                c.getPlayer().dropMessage(1, "您需要邀请比您低等的玩家。");
             }
             else if (addChr.getLevel() < c.getPlayer().getLevel() - 20) {
-                c.getPlayer().dropMessage(1, "您邀請的玩家等級必須相差20等以內。");
+                c.getPlayer().dropMessage(1, "您邀请的玩家等級必須相差20等以內。");
             }
             else if (addChr.getLevel() < 10) {
-                c.getPlayer().dropMessage(1, "您必須邀請10級以上的玩家。");
+                c.getPlayer().dropMessage(1, "您必須邀请10級以上的玩家。");
             }
             else if (c.getPlayer().getJunior1() > 0 && c.getPlayer().getJunior2() > 0) {
-                c.getPlayer().dropMessage(1, "您家族已經有兩個人了，請找您的後代繼續邀請別人吧！");
+                c.getPlayer().dropMessage(1, "您家族已经有兩个人了，请找您的後代繼續邀请別人吧！");
             }
             else if (c.getPlayer().isGM() || !addChr.isGM()) {
                 addChr.getClient().sendPacket(FamilyPacket.sendFamilyInvite(c.getPlayer().getId(), (int)c.getPlayer().getLevel(), (int)c.getPlayer().getJob(), c.getPlayer().getName()));
@@ -228,11 +228,11 @@ public class FamilyHandler
                 tt.useFamilyBuff(cost);
             }
             else {
-                tt.dropMessage(5, "召喚失敗，因為您當前的位置或者状态是不准許召喚。");
+                tt.dropMessage(5, "召喚失敗，因为您當前的位置或者状态是不准許召喚。");
             }
         }
         else {
-            c.getPlayer().dropMessage(5, "召喚失敗，因為您當前的位置或者状态是不准許召喚。");
+            c.getPlayer().dropMessage(5, "召喚失敗，因为您當前的位置或者状态是不准許召喚。");
         }
         c.getPlayer().setTeleportName("");
     }

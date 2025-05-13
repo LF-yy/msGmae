@@ -75,10 +75,10 @@ public class MapleTrade
             ((MapleCharacter)this.chr.get()).saveToDB(false, false);
         }
         catch (Exception ex) {
-            FileoutputUtil.logToFile("logs/交易存檔保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + ((MapleCharacter)this.chr.get()).getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + ((MapleCharacter)this.chr.get()).getClient().getAccountName() + " 账号ID " + ((MapleCharacter)this.chr.get()).getClient().getAccID() + " 角色名 " + ((MapleCharacter)this.chr.get()).getName() + " 角色ID " + ((MapleCharacter)this.chr.get()).getId());
-            FileoutputUtil.outError("logs/交易存檔保存数据異常.txt", (Throwable)ex);
+            FileoutputUtil.logToFile("logs/交易存檔保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + ((MapleCharacter)this.chr.get()).getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + ((MapleCharacter)this.chr.get()).getClient().getAccountName() + " 账号ID " + ((MapleCharacter)this.chr.get()).getClient().getAccID() + " 角色名 " + ((MapleCharacter)this.chr.get()).getName() + " 角色ID " + ((MapleCharacter)this.chr.get()).getId());
+            FileoutputUtil.outError("logs/交易存檔保存数据异常.txt", (Throwable)ex);
             System.err.println("封鎖出現錯誤 " + (Object)ex);
-            FileoutputUtil.outError("logs/交易異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/交易异常.txt", (Throwable)ex);
         }
     }
     
@@ -304,7 +304,7 @@ public class MapleTrade
             if (local.getChr().getClient().getAccID() == partner.getChr().getClient().getAccID()) {
                 local.getChr().ban("修改数据包 - 同账号角色交易", true, true, false);
                 partner.getChr().ban("修改数据包 - 同账号角色交易", true, true, false);
-                FileoutputUtil.logToFile("logs/Hack/ban/交易異常.txt", "时间: " + FileoutputUtil.NowTime() + " IP: " + local.getChr().getClient().getSessionIPAddress() + " MAC: " + local.getChr().getNowMacs() + " " + local.getChr().getName() + " 和 " + partner.getChr().getName() + " 為同個账号的角色且進行交易\r\n");
+                FileoutputUtil.logToFile("logs/Hack/ban/交易异常.txt", "时间: " + FileoutputUtil.NowTime() + " IP: " + local.getChr().getClient().getSessionIPAddress() + " MAC: " + local.getChr().getNowMacs() + " " + local.getChr().getName() + " 和 " + partner.getChr().getName() + " 为同个账号的角色且進行交易\r\n");
                 local.getChr().getClient().getSession().close();
                 partner.getChr().getClient().getSession().close();
             }
@@ -331,7 +331,7 @@ public class MapleTrade
             c.getClient().sendPacket(MaplePacketCreator.getTradeStart(c.getClient(), c.getTrade(), (byte)0));
         }
         else {
-            c.getClient().sendPacket(MaplePacketCreator.serverNotice(5, "您目前已經在交易了"));
+            c.getClient().sendPacket(MaplePacketCreator.serverNotice(5, "您目前已经在交易了"));
         }
     }
     
@@ -372,7 +372,7 @@ public class MapleTrade
             c1.getClient().sendPacket(MaplePacketCreator.getTradeStart(c1.getClient(), c1.getTrade(), (byte)1));
         }
         else {
-            c1.getClient().sendPacket(MaplePacketCreator.serverNotice(5, "交易已經被关闭."));
+            c1.getClient().sendPacket(MaplePacketCreator.serverNotice(5, "交易已经被关闭."));
         }
     }
     
@@ -384,7 +384,7 @@ public class MapleTrade
                 if (other != null) {
                     other.getTrade().cancel(other.getClient());
                     other.setTrade(null);
-                    other.dropMessage(5, c.getName() + " 拒絕了你的邀請.");
+                    other.dropMessage(5, c.getName() + " 拒絕了你的邀请.");
                 }
             }
             trade.cancel(c.getClient());

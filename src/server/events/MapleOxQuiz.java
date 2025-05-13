@@ -79,7 +79,7 @@ public class MapleOxQuiz extends MapleEvent
                     }
                 }
                 if (toSend.getCharactersSize() - number <= 1 || timesAsked == 10) {
-                    toSend.broadcastMessage(MaplePacketCreator.serverNotice(6, "本次活動已經結束。"));
+                    toSend.broadcastMessage(MaplePacketCreator.serverNotice(6, "本次活動已经結束。"));
                     MapleOxQuiz.this.unreset();
                     for (MapleCharacter chr : toSend.getCharactersThreadsafe()) {
                         if (chr != null && !chr.isGM() && chr.isAlive()) {
@@ -108,7 +108,7 @@ public class MapleOxQuiz extends MapleEvent
                                     chr.updateSingleStat(MapleStat.HP, 0);
                                 }
                                 else {
-                                    chr.dropMessage(6, "目前已經第:" + timesAsked + "題/距離活動結束還有:" + enditem + "題");
+                                    chr.dropMessage(6, "目前已经第:" + timesAsked + "題/距離活動結束還有:" + enditem + "題");
                                     chr.gainExp(3000, true, true, false);
                                 }
                             }

@@ -15,30 +15,7 @@ public abstract class Timer
     private ScheduledThreadPoolExecutor ses;
     protected  String file;
     protected String name;
-    
-//    public void start() {
-//        if (this.ses != null && !this.ses.isShutdown() && !this.ses.isTerminated()) {
-//            return;
-//        }
-//        this.file = "Logs/Log_" + this.name + "_Except.rtf";
-//        final String tname = this.name + Randomizer.nextInt();
-//        final ThreadFactory thread = new ThreadFactory() {
-//            private final AtomicInteger threadNumber = new AtomicInteger(1);
-//
-//            @Override
-//            public Thread newThread(final Runnable r) {
-//                final Thread t = new Thread(r);
-//                t.setName(tname + "-Worker-" + this.threadNumber.getAndIncrement());
-//                return t;
-//            }
-//        };
-//        ses = new ScheduledThreadPoolExecutor(7, thread);
-//        ses.setKeepAliveTime(10L, TimeUnit.MINUTES);
-//        ses.allowCoreThreadTimeOut(true);
-//        ses.setCorePoolSize(7);
-//        ses.setMaximumPoolSize(14);
-//        ses.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-//    }
+
 public void start() {
     synchronized (this) {
         if (ses != null && !ses.isShutdown() && !ses.isTerminated()) {

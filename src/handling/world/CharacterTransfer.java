@@ -309,8 +309,8 @@ public class CharacterTransfer implements Externalizable
         this.prefix = chr.getPrefix();
         this.gachexp = chr.getGachExp();
         this.PGSXDJ = chr.getPGSXDJ();
-        this.backupInventory = chr.getBackupInventory();
         this.max_damage = chr.读取伤害上限值();
+        this.backupInventory = chr.getBackupInventory();
         this.isShowChair = chr.isShowChair();
         this.isShowEquip = chr.isShowEquip();
         this.skillSkin = chr.getSkillSkin();

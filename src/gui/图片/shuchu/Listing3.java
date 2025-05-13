@@ -39,22 +39,25 @@ public class Listing3 {
 
     }
 
+    private static volatile boolean isRunning = true;
+    //优化
     private static void startWriterThread() {
-        (new Thread(new Runnable() {
-            public void run() {
-                byte[] outArray = new byte[2000];
+        new Thread(() -> {
+            byte[] outArray = new byte[2000];
+            Thread.currentThread().setName("WriterThread");
 
-                while(true) {
-                    try {
-                        Listing3.pipedOS.write(outArray, 0, 2000);
-                    } catch (IOException var3) {
-                        //服务端输出信息.println_err("写操作错误");
-                        System.exit(1);
-                    }
-
-                    //服务端输出信息.println_out("\t 已经发送2000字节...");
+            while (isRunning) {
+                try {
+                    Listing3.pipedOS.write(outArray, 0, 2000);
+                } catch (IOException e) {
+                    // 更合理的异常处理：打印日志并退出当前线程
+                    e.printStackTrace();
+                    isRunning = false; // 关闭循环
+                    return;
                 }
+
+                // 服务端输出信息.println_out("\t 已经发送2000字节...");
             }
-        })).start();
+        }).start();
     }
 }

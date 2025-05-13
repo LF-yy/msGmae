@@ -75,7 +75,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException e) {
             System.err.println("error 'getIdByName' " + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -94,7 +94,7 @@ public class MapleCharacterUtil
             con.close();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             try {
                 if (ps != null) {
                     ps.close();
@@ -104,7 +104,7 @@ public class MapleCharacterUtil
                 }
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
         finally {
@@ -118,7 +118,7 @@ public class MapleCharacterUtil
 
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
         return prompt;
@@ -138,14 +138,14 @@ public class MapleCharacterUtil
             con.close();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             try {
                 if (ps != null) {
                     ps.close();
                 }
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
         finally {
@@ -155,7 +155,7 @@ public class MapleCharacterUtil
                 }
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
         return true;
@@ -185,7 +185,7 @@ public class MapleCharacterUtil
         }
         catch (Exception e) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return null;
         }
     }
@@ -201,7 +201,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException ex) {
             //Ex.printStackTrace();
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -219,7 +219,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException e) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
@@ -237,7 +237,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return validcode;
     }
@@ -257,7 +257,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return type;
     }
@@ -277,7 +277,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return item;
     }
@@ -297,7 +297,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return item;
     }
@@ -317,7 +317,7 @@ public class MapleCharacterUtil
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacterUtil.txt", (Throwable)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return item;
     }

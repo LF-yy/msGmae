@@ -27,7 +27,7 @@ public class BeansConstants
     private final String[] 五职业獎勵;
     private final String[] 女皇獎勵;
     private final int 力度搞假;
-    private final int 豆豆獎勵範圍;
+    private final int 豆豆獎勵范围;
     
     public BeansConstants() {
         this.itempb_cfg = new Properties();
@@ -54,11 +54,11 @@ public class BeansConstants
         this.五职业獎勵 = this.itempb_cfg.getProperty("wzyjl").split(",");
         this.女皇獎勵 = this.itempb_cfg.getProperty("nhjl").split(",");
         this.力度搞假 = Integer.parseInt(this.itempb_cfg.getProperty("ldgj"));
-        this.豆豆獎勵範圍 = Integer.parseInt(this.itempb_cfg.getProperty("ddjlfw"));
+        this.豆豆獎勵范围 = Integer.parseInt(this.itempb_cfg.getProperty("ddjlfw"));
     }
     
-    public int get豆豆獎勵範圍() {
-        return this.豆豆獎勵範圍;
+    public int get豆豆獎勵范围() {
+        return this.豆豆獎勵范围;
     }
     
     public int get力度搞假() {

@@ -113,7 +113,7 @@ public class PortalScriptManager
     public final void executePortalScript(final MaplePortal portal, final MapleClient c) {
         final PortalScript script = this.getPortalScript(portal.getScriptName());
         if (c != null && c.getPlayer() != null && c.getPlayer().hasGmLevel(2)) {
-            c.getPlayer().dropMessage("您已經建立與傳送門腳本: " + portal.getScriptName() + ".js 的关联。");
+            c.getPlayer().dropMessage("您已经建立與傳送門腳本: " + portal.getScriptName() + ".js 的关联。");
         }
         if (c != null && c.getPlayer() != null ) {
             if (!c.canClickPortal()) {
@@ -124,7 +124,7 @@ public class PortalScriptManager
                     script.enter(new PortalPlayerInteraction(c, portal));
                 }
                 catch (Exception e) {
-                    System.err.println("進入傳送腳本失敗: " + portal.getScriptName() + ":" + (Object)e);
+                    System.err.println("进入傳送腳本失敗: " + portal.getScriptName() + ":" + (Object)e);
                 }
             }
         }

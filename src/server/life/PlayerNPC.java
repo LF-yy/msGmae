@@ -67,7 +67,7 @@ public final class PlayerNPC extends MapleNPC
         }
         catch (SQLException ex) {
             Logger.getLogger(PlayerNPC.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -100,7 +100,7 @@ public final class PlayerNPC extends MapleNPC
             }
         }
         catch (Exception se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
         for (final PlayerNPC npc : toAdd) {
             npc.addToServer();
@@ -174,7 +174,7 @@ public final class PlayerNPC extends MapleNPC
             }
         }
         catch (Exception se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     
@@ -183,7 +183,7 @@ public final class PlayerNPC extends MapleNPC
             this.saveToDB(con);
         }
         catch (Exception se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     
@@ -227,7 +227,7 @@ public final class PlayerNPC extends MapleNPC
             ps.close();
         }
         catch (Exception se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     

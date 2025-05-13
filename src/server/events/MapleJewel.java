@@ -51,7 +51,7 @@ public class MapleJewel extends MapleEvent
         };
         this.getClass();
         this.fitnessSchedule = instance.schedule((Runnable)r, 600000L);
-        this.broadcast(MaplePacketCreator.serverNotice(0, "活動已經開始，請通過中間的入口開始游戏。"));
+        this.broadcast(MaplePacketCreator.serverNotice(0, "活動已经開始，请通過中間的入口開始游戏。"));
     }
     
     public boolean isTimerStarted() {

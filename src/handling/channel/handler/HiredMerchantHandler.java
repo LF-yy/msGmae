@@ -91,7 +91,7 @@ public class HiredMerchantHandler
             return 0;
         }
         catch (SQLException se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             return -1;
         }
     }
@@ -120,7 +120,7 @@ public class HiredMerchantHandler
                         c.getPlayer().setConversation(0);
                     }
                     else if (c.getPlayer().getMeso() + pack.getMesos() >= Integer.MAX_VALUE) {
-                        c.getPlayer().dropMessage(1, "您的錢領取過後將会過多，請先將多餘的錢放置仓库!");
+                        c.getPlayer().dropMessage(1, "您的钱領取過後將会過多，请先將多餘的钱放置仓库!");
                         c.getPlayer().setConversation(0);
                     }
                     else if (pack.getItems().size() <= 0) {
@@ -133,7 +133,7 @@ public class HiredMerchantHandler
                         }
                         if (deletePackage(c.getPlayer().getId(), c.getPlayer().getAccountID(), pack.getPackageid())) {
                             c.getPlayer().gainMeso(pack.getMesos(), true);
-                            c.getPlayer().dropMessage(1, "你已經從精灵商人領取了" + pack.getMesos() + "金币");
+                            c.getPlayer().dropMessage(1, "你已经從精灵商人領取了" + pack.getMesos() + "金币");
                             c.getPlayer().setConversation(0);
                         }
                         else {
@@ -259,7 +259,7 @@ public class HiredMerchantHandler
             return true;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return false;
         }
     }
@@ -293,7 +293,7 @@ public class HiredMerchantHandler
         }
         catch (SQLException e) {
             //e.printStackTrace();
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return null;
         }
     }

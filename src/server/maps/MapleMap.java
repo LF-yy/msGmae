@@ -796,50 +796,22 @@ public class MapleMap {
             showdown += (double) (int) mse.getX();
         }
         final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
-          List<MonsterDropEntry> dropEntry = mi.retrieveDrop(mob.getId());
+//          List<MonsterDropEntry> dropEntry = chr.retrieveDrop(mob.getId());
 //        if (ListUtil.isNotEmpty(dropEntry) && Start.dropsMapCount.get(mob.getId()) != null &&  Start.dropsMapCount.get(mob.getId()) != dropEntry.size()) {
 //            dropEntry = Start.dropsMap.get(mob.getId());
 //        }
 //        if (ListUtil.isEmpty(dropEntry)) {
 //            return;
 //        }
-        if (Start.dropsMapCount.get(mob.getId()) != null && Start.dropsMapCount.get(mob.getId()) != dropEntry.size() && Start.dropsFalg ==0){
-            Start.dropsFalg = 1;
-        }
-        Collections.shuffle(dropEntry);
+//        if (Start.dropsMapCount.get(mob.getId()) != null && Start.dropsMapCount.get(mob.getId()) != dropEntry.size() && Start.dropsFalg ==0){
+//            Start.dropsFalg = 1;
+//        }
+//        Collections.shuffle(dropEntry);
 
         boolean mesoDropped = false;
-        boolean rand = false;
-        int coefficient = 1;
-        //4人组队爆率加成机制
-        int cMap = chr.getMapId();
-        try {
-            if (Objects.nonNull(chr.getClient().getPlayer().getParty()) && chr.getClient().getPlayer().getParty().getMembers().size() >= 4) {
-                for (MaplePartyCharacter cc : chr.getClient().getPlayer().getParty().getMembers()) {
-                    if (cc == null) {
-                        continue;
-                    }
-                    if (cMap == cc.getMapid()) {
-                        rand = true;
-                    } else {
-                        rand = false;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            //e.printStackTrace();
-        }
-        if (rand) {
-            coefficient = 2;
-        }
+
         if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && ServerConfig.双倍线路.contains(chr.getMap().getChannel())) {
             chServerrate = chServerrate*2.0F;
-        }
-        double jiac = 1;
-        if (LtMS.ConfigValuesMap.get("开启破功爆率加成") > 0) {
-            //破功爆率加成机制
-            int 获得破功 = chr.getClient().getPlayer().取破攻等级();
-            jiac = 获得破功 >= 100 ? (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算")) * 0.01 + 1 : 1;
         }
         //修改指定地图爆率
         double dropCoefficient = 1.0;
@@ -851,16 +823,16 @@ public class MapleMap {
             dropCoefficient += chr.get地图缓存1() / 100.0;
         }
         final double lastDrop = (chr.getStat().dropBuff - 100.0 <= 0.0) ? 100.0 : chr.getStat().dropBuff;
-     double itemDropm =   ((chServerrate * chr.getDropMod() * coefficient
+     double itemDropm =   ((chServerrate * chr.getDropMod()
                 * (showdown / 100)
                 * lastDrop / 100.0 * chr.getDropRateChr()
-                + (chr.getItemDropm() / 100.00) +jiac + (chr.getDropm()>1 ? (chr.getDropm()-1) : 0)));
+                + (chr.getItemDropm() / 100.00) + (chr.getDropm()>1 ? (chr.getDropm()-1) : 0)));
 
         HideAttribute hideAttribute = Start.hideAttributeMap.get(chr.getId());
         if(hideAttribute.totalDropRate>0){
             itemDropm += (double) (hideAttribute.totalDropRate / 100.0);
         }
-        for (MonsterDropEntry de2 : dropEntry) {
+        for (MonsterDropEntry de2 : chr.retrieveDrop(mob.getId())) {
             if (de2.itemId == mob.getStolen()) {
                 continue;
             }
@@ -905,19 +877,18 @@ public class MapleMap {
                     if (pGainMesoPercent > 0) {
                         mesos += mesos * pGainMesoPercent / 100;
                     }
-
                     double lastMeso = chr.getStat().realMesoBuff - 100.0 <= 0.0 ? 100.0 : chr.getStat().realMesoBuff - 100.0;
                     if (chr.isDropOnMyBag() && !mob.getStats().isFfaLoot() && !chr.isDropItemFilter(0)) {
-                        int meso = (int) ((double) mesos * chr.getExpRateChr() * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * (double) cmServerrate+chr.getDropm());
+                        int meso = (int) ((double) mesos * chr.getExpRateChr() * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * (double) cmServerrate+chr.getDropm()*(LtMS.ConfigValuesMap.get("砍爆率") / 100.0));
                         mdrop = new MapleMapItem(meso, mob.getPosition(), mob, chr, droptype, false);
                         chr.getMap().broadcastMessage(MaplePacketCreator.dropItemFromMapObject(mdrop, mob.getPosition(), mob.getPosition(), (byte) 1));
                         mdrop.setPickedUp(true);
                         chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mdrop.getObjectId(), 2, chr.getId()), mdrop.getPosition());
                         chr.gainMeso(meso, true);
                     } else if (chr.isDropOnMyFoot() && !mob.getStats().isFfaLoot()) {
-                        this.spawnMobMesoDrop((int) ((double) mesos * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * chr.getDropm() * (double) cmServerrate), chr.getPosition(), mob, chr, false, droptype);
+                        this.spawnMobMesoDrop((int) ((double) mesos * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * chr.getDropm() * (double) cmServerrate*(LtMS.ConfigValuesMap.get("砍爆率") / 100.0)), chr.getPosition(), mob, chr, false, droptype);
                     } else {
-                        this.spawnMobMesoDrop((int) ((double) mesos * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * chr.getDropm() * (double) cmServerrate), this.calcDropPos(pos, mob.getTruePosition()), mob, chr, false, droptype);
+                        this.spawnMobMesoDrop((int) ((double) mesos * (lastMeso / 100.0) * ((double) (chr.getVipExpRate() / 100) + 1.0) * (double) chr.getDropMod() * (double) chr.getMesoRateChr() * chr.getDropm() * (double) cmServerrate*(LtMS.ConfigValuesMap.get("砍爆率") / 100.0)), this.calcDropPos(pos, mob.getTruePosition()), mob, chr, false, droptype);
                     }
                 }
             } else {
@@ -951,10 +922,8 @@ public class MapleMap {
             }
             ++d;
         }
-        List<MonsterGlobalDropEntry> globalEntry = new ArrayList<MonsterGlobalDropEntry>((Collection<? extends MonsterGlobalDropEntry>) mi.getGlobalDrop());
-        Collections.shuffle(globalEntry);
         //全局掉落
-        for ( MonsterGlobalDropEntry de3 : globalEntry) {
+        for ( MonsterGlobalDropEntry de3 : mi.getGlobalDrop()) {
             if (Randomizer.nextInt(999999) < de3.chance * chServerrate && de3.continent < 0 ) {
                 if (droptype == 3) {
                     pos.x = mobpos + ((d % 2 == 0) ? (40 * (d + 1) / 2) : (-(40 * (d / 2))));
@@ -1007,10 +976,9 @@ public class MapleMap {
             showdown += (double) (int) mse.getX();
         }
         final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
-//        List<MonsterDropEntry> dropEntry = mi.retrieveDrop(mob.getId());
-//        if (ListUtil.isEmpty(dropEntry)) {
+
         List<MonsterDropEntry> dropEntry = Start.dropsMapTwo.get(mob.getId());
-//        }
+
         if (ListUtil.isEmpty(dropEntry)) {
             return;
         }
@@ -1018,52 +986,16 @@ public class MapleMap {
         Collections.shuffle(dropEntry);
 
         boolean mesoDropped = false;
-        boolean rand = false;
-        int coefficient = 1;
-        //4人组队爆率加成机制
-        int cMap = chr.getMapId();
-        try {
-            if (Objects.nonNull(chr.getClient().getPlayer().getParty()) && chr.getClient().getPlayer().getParty().getMembers().size() >= 4) {
-                for (MaplePartyCharacter cc : chr.getClient().getPlayer().getParty().getMembers()) {
-                    if (cc == null) {
-                        continue;
-                    }
-                    if (cMap == cc.getMapid()) {
-                        rand = true;
-                    } else {
-                        rand = false;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            //e.printStackTrace();
-        }
-        if (rand) {
-            coefficient = 2;
-        }
+
         if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && ServerConfig.双倍线路.contains(chr.getMap().getChannel())) {
             chServerrate = chServerrate*2.0F;
         }
-        double jiac = 0;
-        if (LtMS.ConfigValuesMap.get("开启破功爆率加成") > 0) {
-            //破功爆率加成机制
-            int 获得破功 = chr.getClient().getPlayer().取破攻等级();
-            jiac = 获得破功 >= 100 ? (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算")) * 0.01 + 1 : 1;
-        }
         //修改指定地图爆率
-        double dropCoefficient = 1.0;
-        if (Start.dropCoefficientMap.get(chr.getMapId()) != null) {
-            dropCoefficient = Start.dropCoefficientMap.get(chr.getMapId()) / 100.0;
-        }
-        //动态爆率调整
-        if (chr.get地图缓存1() > 0 && chr.get地图缓存2() == chr.getMapId()) {
-            dropCoefficient += chr.get地图缓存1() / 100.0;
-        }
         final double lastDrop = (chr.getStat().dropBuff - 100.0 <= 0.0) ? 100.0 : chr.getStat().dropBuff;
-        double itemDropm =   ((chServerrate * chr.getDropMod() * coefficient
+        double itemDropm =   ((chServerrate * chr.getDropMod()
                 * (showdown / 100)
                 * lastDrop / 100.0 * chr.getDropRateChr()
-                + (chr.getItemDropm() / 100.00) +jiac +(chr.getDropm()>1 ? (chr.getDropm()-1) : 0)));
+                + (chr.getItemDropm() / 100.00) +(chr.getDropm()>1 ? (chr.getDropm()-1) : 0)));
 
         HideAttribute hideAttribute = Start.hideAttributeMap.get(chr.getId());
         if(hideAttribute.totalDropRate>0){
@@ -1102,7 +1034,7 @@ public class MapleMap {
             if (drop>= 999999) {
                 drop = 1000000;
             }
-            if (Randomizer.nextInt(999999) >= ((de2.itemId == 1012168 || de2.itemId == 1012169 || de2.itemId == 1012170 || de2.itemId == 1012171) ? de2.chance : drop * (LtMS.ConfigValuesMap.get("砍爆率") / 100.0)) * dropCoefficient) {
+            if (Randomizer.nextInt(999999) >= ((de2.itemId == 1012168 || de2.itemId == 1012169 || de2.itemId == 1012170 || de2.itemId == 1012171) ? de2.chance : drop * (LtMS.ConfigValuesMap.get("砍爆率") / 100.0))) {
                 continue;
             }
             if (mesoDropped && droptype != 3 && de2.itemId == 0) {
@@ -1179,33 +1111,6 @@ public class MapleMap {
             }
             ++d;
         }
-        List<MonsterGlobalDropEntry> globalEntry = new ArrayList<MonsterGlobalDropEntry>((Collection<? extends MonsterGlobalDropEntry>) mi.getGlobalDrop());
-        Collections.shuffle(globalEntry);
-        //全局掉落
-        for ( MonsterGlobalDropEntry de3 : globalEntry) {
-            if (Randomizer.nextInt(999999) < de3.chance * chServerrate && de3.continent < 0 ) {
-                if (droptype == 3) {
-                    pos.x = mobpos + ((d % 2 == 0) ? (40 * (d + 1) / 2) : (-(40 * (d / 2))));
-                }
-                else {
-                    pos.x = mobpos + ((d % 2 == 0) ? (25 * (d + 1) / 2) : (-(25 * (d / 2))));
-                }
-                if (de3.itemId == 0) {
-                    continue;
-                }
-                IItem idrop;
-                if (GameConstants.getInventoryType(de3.itemId) == MapleInventoryType.EQUIP) {
-                    idrop = ii.randomizeStats((Equip)ii.getEquipById(de3.itemId));
-                }
-                else {
-                    int i = Randomizer.nextInt(de3.Maximum - de3.Minimum <= 0 ? 1 : de3.Maximum - de3.Minimum);
-                    idrop = new Item(de3.itemId, (short)0, (short)((de3.Maximum != 1) ? Math.max(i, 0)+ de3.Minimum : 1), (byte)0);
-                }
-                this.spawnMobDrop(idrop, this.calcDropPos(pos, mob.getPosition()), mob, chr, (byte)(de3.onlySelf ? 0 : droptype), de3.questid);
-                ++d;
-            }
-        }
-
     }
 
     public void removeMonster(final MapleMonster monster) {
@@ -1579,7 +1484,6 @@ public class MapleMap {
                             break;
                         }
                     }
-                    Connection con = DBConPool.getConnection();
                     if (chr.getParty() != null) {
                         Iterator var42 = chr.getParty().getMembers().iterator();
 
@@ -1615,8 +1519,8 @@ public class MapleMap {
     }
 }
     private void 增加积分(MapleCharacter chr, int mount) {
-        Connection con = DBConPool.getConnection();
-        try {
+
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
             ps.setInt(1, chr.getAccountID());
             ResultSet rs = ps.executeQuery();
@@ -2691,10 +2595,9 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
     }
     
     public void spawnMobMesoDrop(int meso, final Point position, final MapleMapObject dropper, final MapleCharacter owner, final boolean playerDrop, final byte droptype) {
-//        if(owner.isDropOnMyBag() ){
-//            owner.gainMeso(meso, true);
-//            return;
-//        }
+        if(meso==0){
+            return;
+        }
     final MapleMapItem mdrop = new MapleMapItem(meso, position, dropper,owner, droptype, playerDrop);
         this.spawnAndAddRangedMapObject((MapleMapObject)mdrop, (DelayedPacketCreation)new DelayedPacketCreation() {
             @Override
@@ -2777,7 +2680,7 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
     }
     public void spawnMobDrop( IItem idrop, final Point dropPos, final MapleMonster mob, MapleCharacter chr, final byte droptype, final short questid) {
 
-        if (GameConstants.getInventoryType(idrop.getItemId()) == MapleInventoryType.EQUIP) {
+        if (GameConstants.getInventoryType(idrop.getItemId()) == MapleInventoryType.EQUIP && mob.getStats().isBoss()) {
             //暗黑破坏神之冒险之神
             Equip equip = (Equip)idrop;
             //随机生成属性
@@ -2803,8 +2706,7 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
                     idrop.setOwner(s);
                     if (Start.sendMsgList.contains(s)) {
                         Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("[稀有词条]", " : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！", (IItem) idrop, (byte) 1, chr.getClient().getChannel()));
-
-                        Bot.sendGroupMessage("[稀有词条] : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！");
+                        //Bot.sendGroupMessage("[稀有词条] : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！");
                     }
                 }
             }
@@ -3064,20 +2966,36 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
             this.activateItemReactors(drop, owner.getClient());
         }
     }
-    
+
+    /**
+     * 激活地图上的物品反应器
+     * 当满足特定条件时，此方法会激活地图上的反应器，通常用于特定物品掉落时触发的事件
+     *
+     * @param drop 地图上掉落的物品
+     * @param c 触发反应器的玩家客户端
+     */
     private void activateItemReactors(final MapleMapItem drop, final MapleClient c) {
+        // 获取掉落物品的信息
         final IItem item = drop.getItem();
+
+        // 锁定反应器相关的读操作，以防止数据竞争问题
         ((ReentrantReadWriteLock)this.mapObjectLocks.get((Object)MapleMapObjectType.REACTOR)).readLock().lock();
         try {
+            // 遍历地图上的所有反应器
             for ( MapleMapObject o : ((LinkedHashMap<Integer, MapleMapObject>)this.mapObjects.get((Object)MapleMapObjectType.REACTOR)).values()) {
-                final MapleReactor react = (MapleReactor)o;
+                 MapleReactor react = (MapleReactor)o;
+
+                // 检查反应器是否满足激活条件
                 if (react.getReactorType() == 100 && GameConstants.isCustomReactItem(react.getReactorId(), item.getItemId(), (int)Integer.valueOf(react.getReactItem().getLeft())) && (int)Integer.valueOf(react.getReactItem().getRight()) == item.getQuantity() && react.getArea().contains(drop.getPosition()) && !react.isTimerActive()) {
+                    // 调度任务以在5秒后激活反应器
                     MapTimer.getInstance().schedule((Runnable)new ActivateItemReactor(drop, react, c), 5000L);
+                    // 设置反应器的计时器为活动状态，以防止重复触发
                     react.setTimerActive(true);
                     break;
                 }
             }
         }
+        // 释放读锁
         finally {
             ((ReentrantReadWriteLock)this.mapObjectLocks.get((Object)MapleMapObjectType.REACTOR)).readLock().unlock();
         }
@@ -4663,7 +4581,7 @@ public void respawn(final boolean force) {
             }
         }
         catch (Exception e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             //e.printStackTrace();
         }
     }
@@ -5040,7 +4958,7 @@ public void respawn(final boolean force) {
     
     public boolean canSpawn() {
     //刷新怪物的时间
-        createMobInterval = (short) (LtMS.ConfigValuesMap.get("地图刷新频率") >0  ?  LtMS.ConfigValuesMap.get("地图刷新频率") : 5000); // 轮回有輪迴時怪物重生時間間隔為 0 轮回石碑
+        createMobInterval = (short) (LtMS.ConfigValuesMap.get("地图刷新频率") >0  ?  LtMS.ConfigValuesMap.get("地图刷新频率") : 5000); // 轮回有輪迴時怪物重生時間間隔为 0 轮回石碑
 //        return lastSpawnTime > 0 && isSpawns && lastSpawnTime + createMobInterval < System.currentTimeMillis();
          if (this.haveStone) {
             if (this.getStoneLevel() == 1) {
@@ -5299,6 +5217,7 @@ public void respawn(final boolean force) {
         }
 
     }
+
     public void 给时钟(final int minutes, boolean refresh, final boolean kickOut) {
         if (refresh) {
             this.broadcastMessage(MaplePacketCreator.getClock(minutes * 60));
@@ -5311,7 +5230,6 @@ public void respawn(final boolean force) {
                 if (exist_time != 0L) {
                     this.broadcastMessage(MaplePacketCreator.getClock((int)(exist_time / 1000L)));
                 }
-
                 return;
             }
 
@@ -5335,6 +5253,10 @@ public void respawn(final boolean force) {
                         while(var2.hasNext()) {
                             MapleCharacter chr = (MapleCharacter)var2.next();
                             chr.changeMap(MapleMap.this.returnMapId);
+                            MapleMap.this.broadcastMessage(MaplePacketCreator.stopClock());
+                            MapleMap.this.clock_s = false;
+                            MapleMap.this.clock_s_thread_map.remove(cThread);
+                            return;
                         }
                     }
 

@@ -1,6 +1,7 @@
 package handling.channel.handler;
 
 import client.inventory.IItem;
+import gui.LtMS;
 import tools.FileoutputUtil;
 import server.MapleInventoryManipulator;
 import server.shops.MaplePlayerShopItem;
@@ -72,19 +73,32 @@ public class PlayerInteractionHandler
     public static byte SKIP = 61;
     public static byte MOVE_OMOK = 62;
     public static byte SELECT_CARD = 67;
-    
+    /**
+     * 处理玩家交互功能
+     *
+     * @param slea LittleEndianAccessor对象，用于读取数据
+     * @param c MapleClient对象，表示客户端连接
+     * @param chr MapleCharacter对象，表示角色
+     */
     public static void PlayerInteraction(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
+        // 检查角色是否为空
         if (chr == null) {
             return;
         }
+        // 检查角色是否正在进行反宏检测
         if (chr.getAntiMacro().inProgress()) {
             chr.dropMessage(5, "被使用测谎仪时无法使用。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
+        // 读取动作类型
         final byte action = slea.readByte();
+        if(LtMS.ConfigValuesMap.get("开启封包调试")>0){
+            System.out.println("雇佣商店操作:"+(int)action);
+        }
         switch (action) {
             case 26: {
+                // 处理玩家商店相关的操作
                 final IMaplePlayerShop ips = chr.getPlayerShop();
                 if (ips != null) {
                     ips.removeAllVisitors(5, 1);
@@ -93,6 +107,7 @@ public class PlayerInteractionHandler
                 break;
             }
             case 0: {
+                // 处理创建类型的操作
                 final byte createType = slea.readByte();
                 if (createType == 3) {
                     MapleTrade.startTrade(chr);
@@ -101,36 +116,61 @@ public class PlayerInteractionHandler
                 if (createType != 1 && createType != 2 && createType != 4 && createType != 5) {
                     break;
                 }
+                // 检查周围是否有其他商店
                 if (!chr.getMap().getMapObjectsInRange(chr.getPosition(), 40000.0, Arrays.asList(MapleMapObjectType.SHOP, MapleMapObjectType.HIRED_MERCHANT)).isEmpty()) {
                     chr.dropMessage(1, "此处无法建立商店");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
+                // 检查是否可以进行小游戏
                 if ((createType == 1 || createType == 2) && FieldLimitType.Minigames.check(chr.getMap().getFieldLimit())) {
                     chr.dropMessage(1, "此处无法使用小游戏.");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
+                // 读取商店描述和密码
                 final String desc = slea.readMapleAsciiString();
                 String pass = "";
                 if (slea.readByte() > 0 && (createType == 1 || createType == 2)) {
                     pass = slea.readMapleAsciiString();
                 }
+                // 处理小游戏或商店的创建
                 if (createType == 1 || createType == 2) {
+                    // 读取数据流中的一个字节作为游戏-piece类型
                     final int piece = slea.readByte();
+
+                    // 根据createType的值计算itemId，如果createType为1，则itemId为4080000加上piece的值，否则为4080100
                     final int itemId = (createType == 1) ? (4080000 + piece) : 4080100;
+
+                    // 检查玩家是否拥有指定itemId的物品，或者玩家所在地图ID是否在910000001到910000022之间，如果条件成立，则返回
                     if (!chr.haveItem(itemId) || (c.getPlayer().getMapId() >= 910000001 && c.getPlayer().getMapId() <= 910000022)) {
                         return;
                     }
+                    // 创建一个MapleMiniGame实例，传入玩家角色、itemId、游戏描述、通过条件和createType
                     final MapleMiniGame game = new MapleMiniGame(chr, itemId, desc, pass, (int)createType);
+
+                    // 设置游戏的piece类型
                     game.setPieceType(piece);
+
+                    // 将游戏实例设置为玩家的商店
                     chr.setPlayerShop((IMaplePlayerShop)game);
+
+                    // 设置游戏可用
                     game.setAvailable(true);
+
+                    // 设置游戏开放
                     game.setOpen(true);
+
+                    // 发送游戏信息到客户端
                     game.send(c);
+
+                    // 将游戏实例作为地图对象添加到玩家所在地图
                     chr.getMap().addMapObject((MapleMapObject)game);
+
+                    // 更新游戏状态
                     game.update();
                 }else {
+                    // 处理雇佣商人或玩家商店的创建
                     final IItem shop = c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((short)(byte)slea.readShort());
                     if (shop == null || shop.getQuantity() <= 0 || shop.getItemId() != slea.readInt() || c.getPlayer().getMapId() < 910000001 || c.getPlayer().getMapId() > 910000022) {
                         return;
@@ -167,13 +207,18 @@ public class PlayerInteractionHandler
                 break;
             }
             case 2: {
+                // 邀请交易
+                // 通过角色ID邀请地图上的角色进行交易
                 MapleTrade.inviteTrade(chr, chr.getMap().getCharacterById(slea.readInt()));
                 break;
             }
             case 3: {
+                // 拒绝交易
+                // 拒绝来自其他角色的交易邀请
                 MapleTrade.declineTrade(chr);
                 break;
             }
+
             case 13: {
                 final byte type = slea.readByte();
                 final byte csInvite = slea.readByte();
@@ -209,7 +254,7 @@ public class PlayerInteractionHandler
                                 c.sendPacket(PlayerShopPacket.getHiredMerch(chr, merchant, false));
                             }
                             else if (!merchant.isOpen() || !merchant.isAvailable()) {
-                                chr.dropMessage(1, "这个商店在整理或者是沒在贩卖东西。");
+                                chr.dropMessage(1, "这个商店在整理或者是没在贩卖东西。");
                             }
                             else if (ips2.getFreeSlot() == -1) {
                                 chr.dropMessage(1, "商店人数已经满了，请稍后再进入。");
@@ -287,13 +332,13 @@ public class PlayerInteractionHandler
                                 c.sendPacket(PlayerShopPacket.getHiredMerch(chr, merchant2, false));
                             }
                             else if (!merchant2.isOpen() || !merchant2.isAvailable()) {
-                                chr.dropMessage(1, "这个商店在整理或者是沒在贩卖东西。");
+                                chr.dropMessage(1, "这个商店在整理或者是没在贩卖东西。");
                             }
                             else if (ips3.getFreeSlot() == -1) {
                                 chr.dropMessage(1, "商店人数已经满了，请稍后再进入。");
                             }
                             else if (merchant2.isInBlackList(chr.getName())) {
-                                chr.dropMessage(1, "被加入黑名單了，所以不能进入。");
+                                chr.dropMessage(1, "被加入黑名单了，所以不能进入。");
                             }
                             else {
                                 chr.setPlayerShop(ips3);
@@ -302,7 +347,7 @@ public class PlayerInteractionHandler
                             }
                         }
                         else if (ips3 instanceof MaplePlayerShop && ((MaplePlayerShop)ips3).isBanned(chr.getName())) {
-                            chr.dropMessage(1, "被加入黑名單了，所以不能進入。");
+                            chr.dropMessage(1, "被加入黑名单了，所以不能进入。");
                         }
                         else if (ips3.getFreeSlot() < 0 || ips3.getVisitorSlot(chr) > -1 || !ips3.isOpen() || !ips3.isAvailable()) {
                             c.sendPacket(PlayerShopPacket.getMiniGameFull());
@@ -546,7 +591,7 @@ public class PlayerInteractionHandler
                     return;
                 }
                 if ((long)shop4.getMeso() + check3 > 2147483647L) {
-                    c.getPlayer().dropMessage(1, "您购买的商店營業額已經超標，請通知店主來收錢。");
+                    c.getPlayer().dropMessage(1, "您购买的商店營業額已经超標，请通知店主來收钱。");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -831,7 +876,7 @@ public class PlayerInteractionHandler
                     break;
                 }
                 if (slea.readByte() != game2.getTurn()) {
-                    game2.broadcastToVisitors(PlayerShopPacket.shopChat("不能放在通過 " + chr.getName() + ". 失敗者: " + game2.getLoser() + " 遊客: " + (int)game2.getVisitorSlot(chr) + " 是否為真: " + game2.getTurn(), (int)game2.getVisitorSlot(chr)));
+                    game2.broadcastToVisitors(PlayerShopPacket.shopChat("不能放在通過 " + chr.getName() + ". 失敗者: " + game2.getLoser() + " 遊客: " + (int)game2.getVisitorSlot(chr) + " 是否为真: " + game2.getTurn(), (int)game2.getVisitorSlot(chr)));
                     return;
                 }
                 final int slot3 = slea.readByte();

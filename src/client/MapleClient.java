@@ -200,7 +200,7 @@ public class MapleClient
     
     private List<CharNameAndId> loadCharactersInternal(final int serverId) {
         final List<CharNameAndId> chars = new LinkedList<CharNameAndId>();
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT id, name FROM characters WHERE accountid = ? AND world = ?")) {
             ps.setInt(1, this.accountId);
             ps.setInt(2, serverId);
@@ -215,7 +215,7 @@ public class MapleClient
         }
         catch (SQLException e) {
             System.err.println("error loading characters internal" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return chars;
     }
@@ -249,7 +249,7 @@ public class MapleClient
     
     public boolean isBannedIP(final String ip) {
         boolean ret = false;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM ipbans WHERE ? LIKE CONCAT(ip, '%')")) {
             ps.setString(1, ip);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -264,14 +264,14 @@ public class MapleClient
         }
         catch (SQLException ex) {
             System.err.println("Error checking ip bans" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
     
     public boolean hasBannedIP() {
         boolean ret = false;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM ipbans WHERE ? LIKE CONCAT(ip, '%')")) {
             ps.setString(1, this.getSessionIPAddress());
             try (final ResultSet rs = ps.executeQuery()) {
@@ -285,7 +285,7 @@ ps.close();
         }
         catch (SQLException ex) {
             System.err.println("Error checking ip bans" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
@@ -308,7 +308,7 @@ ps.close();
     
     public int login(final String account, final String password, final boolean isIPBanned) {
         int loginok = 5;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT id, banned, password, salt, macs, 2ndpassword, gm, vip, greason, tempban, gender, SessionIP FROM accounts WHERE name = ?")) {
             ps.setString(1, account);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -390,7 +390,7 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("ERROR" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         if (loginok == 0) {
             this.canloginpw = true;
@@ -402,7 +402,7 @@ ps.close();
     public void loadVip(final int accountID) {
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             ps = con.prepareStatement("SELECT vip FROM accounts WHERE id = ?");
             ps.setInt(1, accountID);
             rs = ps.executeQuery();
@@ -416,7 +416,7 @@ ps.close();
         }
         catch (SQLException e) {
             FilePrinter.printError("MapleClient.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             try {
                 if (ps != null && !ps.isClosed()) {
                     ps.close();
@@ -426,7 +426,7 @@ ps.close();
                 }
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
         finally {
@@ -439,7 +439,7 @@ ps.close();
                 }
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
     }
@@ -449,7 +449,7 @@ ps.close();
             final MessageDigest digester = MessageDigest.getInstance("SHA-1");
             digester.update(this.secondPassword.getBytes("UTF-8"), 0, this.secondPassword.length());
             final String hash = HexTool.toString(digester.digest()).replace((CharSequence)" ", (CharSequence)"").toLowerCase();
-            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            try (Connection con = DBConPool.getConnection();
                  final PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `2ndpassword` = ? WHERE id = ?")) {
                 ps.setString(1, hash);
                 ps.setInt(2, this.accountId);
@@ -460,17 +460,17 @@ ps.close();
             }
             catch (SQLException ex) {
                 FilePrinter.printError("MapleClient.txt", (Throwable)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
         }
         catch (NoSuchAlgorithmException | UnsupportedEncodingException ex4) {
             Logger.getLogger(MapleClient.class.getName()).log(Level.SEVERE, null, (Throwable)ex4);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex4);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex4);
         }
     }
     
     private void unban() {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET banned = 0 and banreason = '' WHERE id = ?")) {
             ps.setInt(1, this.accountId);
             ps.executeUpdate();
@@ -479,12 +479,12 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public static byte unban(final String charname) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT accountid from characters where name = ?");
             ps.setString(1, charname);
             final ResultSet rs = ps.executeQuery();
@@ -505,7 +505,7 @@ ps.close();
 
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -2;
         }
         return 0;
@@ -522,18 +522,17 @@ ps.close();
     public void updateLoginState(final int newstate, final String SessionID) {
         MapleClient.loginMutex.lock();
         try {
-            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
-                 final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET loggedin = ?, SessionIP = ?, lastlogin = CURRENT_TIMESTAMP() WHERE id = ?")) {
+            try (Connection con = DBConPool.getConnection()) {
+                 PreparedStatement ps = con.prepareStatement("UPDATE accounts SET loggedin = ?, SessionIP = ?, lastlogin = CURRENT_TIMESTAMP() WHERE id = ?");
                 ps.setInt(1, newstate);
                 ps.setString(2, SessionID);
                 ps.setInt(3, this.getAccID());
                 ps.executeUpdate();
                 ps.close();
-                con.close();
             }
             catch (SQLException e) {
                 System.err.println("更新登入状态錯誤" + (Object)e);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             }
             if (newstate == 0 || newstate == 3) {
                 this.loggedIn = false;
@@ -550,7 +549,7 @@ ps.close();
     }
     
     public void updateGender() {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `gender` = ? WHERE id = ?")) {
             ps.setInt(1, (int)this.gender);
             ps.setInt(2, this.accountId);
@@ -560,12 +559,12 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("更新性別錯誤" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public final byte getLoginState() {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT loggedin, lastlogin, `birthday` + 0 AS `bday` FROM accounts WHERE id = ?");
             ps.setInt(1, this.getAccID());
             byte state;
@@ -588,7 +587,7 @@ ps.close();
         }
         catch (SQLException e) {
             this.loggedIn = false;
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             throw new DatabaseException("登入状态獲取失敗", (Throwable)e);
         }
     }
@@ -689,8 +688,8 @@ ps.close();
                     this.player.saveToDB(true, fromCS);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.logToFile("logs/下線保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getAccountName() + " 账号ID " + this.getAccID() + " 角色名 " + this.player.getName() + " 角色ID " + this.player.getId());
-                    FileoutputUtil.outError("logs/下線保存数据異常.txt", (Throwable)ex);
+                    FileoutputUtil.logToFile("logs/下線保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getAccountName() + " 账号ID " + this.getAccID() + " 角色名 " + this.player.getName() + " 角色ID " + this.player.getId());
+                    FileoutputUtil.outError("logs/下線保存数据异常.txt", (Throwable)ex);
                 }
                 if (shutdown) {
                     this.player = null;
@@ -788,8 +787,8 @@ ps.close();
             this.engines.clear();
         }
         catch (Exception ex2) {
-            FileoutputUtil.logToFile("logs/下線處理異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getAccountName() + " 账号ID " + this.getAccID() + " 角色名 " + this.player.getName() + " 角色ID " + this.player.getId());
-            FileoutputUtil.outError("logs/下線處理異常.txt", (Throwable)ex2);
+            FileoutputUtil.logToFile("logs/下線處理异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getAccountName() + " 账号ID " + this.getAccID() + " 角色名 " + this.player.getName() + " 角色ID " + this.player.getId());
+            FileoutputUtil.outError("logs/下線處理异常.txt", (Throwable)ex2);
         }
     }
     
@@ -802,7 +801,7 @@ ps.close();
     
     public final String getLastIPAddress() {
         String sessionIP = null;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT SessionIP FROM accounts WHERE id = ?")) {
             ps.setInt(1, this.accountId);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -815,7 +814,7 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Failed in checking IP address for client.");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return (sessionIP == null) ? "" : sessionIP;
     }
@@ -851,7 +850,7 @@ ps.close();
     
     public final int deleteCharacter(final int cid) {
         String name = null;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = null;
             ps = con.prepareStatement("select name from characters where id = ?");
             ps.setInt(1, cid);
@@ -864,7 +863,7 @@ ps.close();
             con.close();
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         FileoutputUtil.logToFile("Logs/Data/角色刪除.txt", FileoutputUtil.NowTime() + " 账号: " + this.accountName + "(" + this.accountId + ") 角色: " + cid + " (" + name + ") IP: " + this.getSessionIPAddress() + " \r\n");
         final Set<Integer> channels = ChannelServer.getAllChannels();
@@ -874,7 +873,7 @@ ps.close();
                 ChannelServer.getInstance((int)ch).removePlayer(chr);
             }
         }
-        try (Connection con2 = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con2 = DBConPool.getConnection()) {
             try (final PreparedStatement ps2 = con2.prepareStatement("SELECT guildid, guildrank, familyid, name FROM characters WHERE id = ? AND accountid = ?")) {
                 ps2.setInt(1, cid);
                 ps2.setInt(2, this.accountId);
@@ -927,7 +926,7 @@ ps.close();
         }
         catch (Exception e) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)e, "deleteCharacter");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return 1;
         }
     }
@@ -953,7 +952,7 @@ ps.close();
     }
     
     public void updateSecondPassword() {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `2ndpassword` = ? WHERE id = ?");
             ps.setString(1, LoginCrypto.hexSha1(this.secondPassword));
             ps.setInt(2, this.accountId);
@@ -961,7 +960,7 @@ ps.close();
             ps.close();
         }
         catch (SQLException e) {
-            FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)e);
             System.err.println("error updating login state" + (Object)e);
         }
     }
@@ -1096,7 +1095,7 @@ ps.close();
     }
     
     public static int findAccIdForCharacterName(final String charName) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             int ret;
             try (final PreparedStatement ps = con.prepareStatement("SELECT accountid FROM characters WHERE name = ?")) {
                 ps.setString(1, charName);
@@ -1111,7 +1110,7 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("findAccIdForCharacterName SQL error");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -1137,7 +1136,7 @@ ps.close();
     }
     
     public void setVip(final int x) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("Update Accounts set vip = ? Where id = ?");
             ps.setInt(1, x);
             ps.setInt(2, this.getAccID());
@@ -1146,13 +1145,13 @@ ps.close();
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "SetVip");
-            System.err.println("[vip]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[vip]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "SetVip");
             System.err.println("[setvip]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     public void useSkill(MapleCharacter from,final int skill, final int level) {
@@ -1197,7 +1196,7 @@ ps.close();
         if (this.charslots != 3) {
             return this.charslots;
         }
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT charslots FROM character_slots WHERE accid = ? AND worldid = ?")) {
             ps.setInt(1, this.accountId);
             ps.setInt(2, this.world);
@@ -1216,7 +1215,7 @@ ps.close();
             }
         }
         catch (SQLException sqlE) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)sqlE);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)sqlE);
         }
         return this.charslots;
     }
@@ -1226,7 +1225,7 @@ ps.close();
             return false;
         }
         ++this.charslots;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("UPDATE character_slots SET charslots = ? WHERE worldid = ? AND accid = ?")) {
             ps.setInt(1, this.charslots);
             ps.setInt(2, this.world);
@@ -1234,14 +1233,14 @@ ps.close();
             ps.executeUpdate();
         }
         catch (SQLException sqlE) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)sqlE);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)sqlE);
             return false;
         }
         return true;
     }
     
     public static byte unbanIPMacs(final String charname) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT accountid from characters where name = ?");
             ps.setString(1, charname);
             ResultSet rs = ps.executeQuery();
@@ -1289,14 +1288,14 @@ ps.close();
             return ret;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             System.err.println("Error while unbanning" + (Object)e);
             return -2;
         }
     }
     
     public static byte unbanIP(final String charname) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT accountid from characters where name = ?");
             ps.setString(1, charname);
             ResultSet rs = ps.executeQuery();
@@ -1330,14 +1329,14 @@ ps.close();
             return ret;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             System.err.println("Error while unbanning" + (Object)e);
             return -2;
         }
     }
     
     public static byte unHellban(final String charname) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT accountid from characters where name = ?");
             ps.setString(1, charname);
             ResultSet rs = ps.executeQuery();
@@ -1372,14 +1371,14 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -2;
         }
     }
     
     public static List<Integer> getLoggedIdsFromDB(final int state) {
         final List<Integer> ret = new ArrayList<Integer>();
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT id from accounts where loggedin = ?");
             ps.setInt(1, state);
             final ResultSet rs = ps.executeQuery();
@@ -1388,7 +1387,7 @@ ps.close();
             }
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
@@ -1417,7 +1416,7 @@ ps.close();
         if (macData.equalsIgnoreCase("00-00-00-00-00-00") || macData.length() != 17) {
             return false;
         }
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("INSERT INTO macbans (mac) VALUES (?)")) {
             ps.setString(1, macData);
             ps.executeUpdate();
@@ -1425,7 +1424,7 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Error banning MACs" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return false;
         }
         return true;
@@ -1440,7 +1439,7 @@ ps.close();
             return false;
         }
         boolean ret = false;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM macbans WHERE mac = ?")) {
             ps.setString(1, mac);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -1453,7 +1452,7 @@ ps.close();
         }
         catch (SQLException ex) {
             System.err.println("Error checking mac bans" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
@@ -1463,7 +1462,7 @@ ps.close();
             return false;
         }
         boolean ret = false;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM macbans WHERE mac IN (");
             for (int i = 0; i < this.macs.size(); ++i) {
                 sql.append("?");
@@ -1488,14 +1487,14 @@ ps.close();
         }
         catch (SQLException ex) {
             System.err.println("Error checking mac bans" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
     
     private void loadMacsIfNescessary() throws SQLException {
         if (this.macs.isEmpty()) {
-            try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+            try (Connection con = DBConPool.getConnection();
                  final PreparedStatement ps = con.prepareStatement("SELECT macs FROM accounts WHERE id = ?")) {
                 ps.setInt(1, this.accountId);
                 try (final ResultSet rs = ps.executeQuery()) {
@@ -1517,7 +1516,7 @@ ps.close();
             }
             catch (SQLException ex) {
                 //Ex.printStackTrace();
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
         }
     }
@@ -1539,7 +1538,7 @@ ps.close();
     }
     
     public static void banMacs(final String[] macs) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final List<String> filtered = new LinkedList<String>();
             PreparedStatement ps = con.prepareStatement("SELECT filter FROM macfilters");
             final ResultSet rs = ps.executeQuery();
@@ -1569,31 +1568,32 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Error banning MACs" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public List<String> loadCharacterNamesByCharId(final int charId) {
         final List<String> chars = new LinkedList<String>();
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
-             final PreparedStatement ps = con.prepareStatement("SELECT id,name FROM characters WHERE accountid= (SELECT accountid FROM characters where id=?)")) {
+        try (Connection con = DBConPool.getConnection() ) {
+            PreparedStatement ps = con.prepareStatement("SELECT id,name FROM characters WHERE accountid= (SELECT accountid FROM characters where id=?)");
             ps.setInt(1, charId);
             try (final ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     chars.add(rs.getString("name"));
                 }
             }
+            ps.close();
         }
         catch (SQLException e) {
             System.err.println("error loading characters internal" + (Object)e);
-            FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)e);
         }
         return chars;
     }
     
     public int loadLogGedin(final int accountID) {
         int login = 0;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT loggedin FROM accounts WHERE id = ?");
             ps.setInt(1, accountID);
             final ResultSet rs = ps.executeQuery();
@@ -1604,7 +1604,7 @@ ps.close();
             }
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return login;
     }
@@ -1627,7 +1627,7 @@ ps.close();
     
     public String loadLoginKey() {
         String loginkey = null;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT loginkey FROM accounts WHERE id = ?");
             ps.setInt(1, this.getAccID());
             final ResultSet rs = ps.executeQuery();
@@ -1638,7 +1638,7 @@ ps.close();
             }
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return loginkey;
     }
@@ -1653,7 +1653,7 @@ ps.close();
     
     public String loadServerKey() {
         String serverkey = null;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT serverkey FROM accounts WHERE id = ?");
             ps.setInt(1, this.getAccID());
             final ResultSet rs = ps.executeQuery();
@@ -1664,49 +1664,50 @@ ps.close();
             }
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return serverkey;
     }
     
     public void updateLoginKey(final String loginkey) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET loginkey = ? WHERE id = ?");
             ps.setString(1, loginkey);
             ps.setInt(2, this.getAccID());
             ps.executeUpdate();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public void updateServerKey(final String serverkey) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET serverkey = ? WHERE id = ?");
             ps.setString(1, serverkey);
             ps.setInt(2, this.getAccID());
             ps.executeUpdate();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public void updateClientKey(final String clientkey) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET clientkey = ? WHERE id = ?");
             ps.setString(1, clientkey);
             ps.setInt(2, this.getAccID());
             ps.executeUpdate();
+            ps.close();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public static byte setTGJF(final String charname, final int x) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT accountid from characters where name = ?");
             ps.setString(1, charname);
             final ResultSet rs = ps.executeQuery();
@@ -1726,14 +1727,14 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -2;
         }
         return 0;
     }
     
     public static int getTGJF(final int accid) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT TGJF FROM accounts WHERE id = ?");
             ps.setInt(1, accid);
             int ret;
@@ -1746,25 +1747,25 @@ ps.close();
             return ret;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
     
     public void updateMacs(final String macs) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts SET macs = ? WHERE id = ?");
             ps.setString(1, macs);
             ps.setInt(2, this.getAccID());
             ps.executeUpdate();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public static byte setTJJF(final String charname, final int x) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT accountid from characters where name = ?");
             ps.setString(1, charname);
             final ResultSet rs = ps.executeQuery();
@@ -1784,14 +1785,14 @@ ps.close();
         }
         catch (SQLException e) {
             System.err.println("Error while unbanning" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -2;
         }
         return 0;
     }
     
     public static int getTJJF(final int accid) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT TJJF FROM accounts WHERE id = ?");
             ps.setInt(1, accid);
             int ret;
@@ -1804,7 +1805,7 @@ ps.close();
             return ret;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -1812,7 +1813,7 @@ ps.close();
     public boolean dangerousIp(final String lip) {
         final String ip = lip.substring(1, lip.lastIndexOf(58));
         boolean ret = false;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+        try (Connection con = DBConPool.getConnection();
              final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM dangerousip WHERE ? LIKE CONCAT(ip, '%')")) {
             ps.setString(1, ip);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -1824,26 +1825,26 @@ ps.close();
         }
         catch (SQLException ex) {
             System.err.println("Error dangerousIp " + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
     
     public void setDangerousIp(final String lip) {
         final String ip = lip.substring(1, lip.lastIndexOf(58));
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("INSERT INTO dangerousip (ip) VALUES (?)");
             ps.setString(1, ip);
             ps.executeUpdate();
             ps.close();
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
     public int getMacsCout(final byte loggedin, final String macs) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select count(*) from accounts where loggedin > ? and macs = ?");
             ps.setByte(1, loggedin);
             ps.setString(2, macs);
@@ -1860,7 +1861,7 @@ ps.close();
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -1874,7 +1875,7 @@ ps.close();
     }
     
     public void unLockDisconnect() {
-        this.getSession().writeAndFlush((Object)MaplePacketCreator.serverNotice(1, "當前账号在別處登入\r\n若不是你本人操作請及時更改密碼。"));
+        this.getSession().writeAndFlush((Object)MaplePacketCreator.serverNotice(1, "當前账号在別處登入\r\n若不是你本人操作请及時更改密碼。"));
         this.disconnect(this.serverTransition, this.getChannel() == -10);
         this.getSession().close();
         this.closeseesion = true;
@@ -1909,7 +1910,7 @@ ps.close();
     
     public List<String> loadCharacterNamesByAccId(final int accId) {
         final List<String> Acc = new LinkedList<String>();
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT name FROM characters WHERE accountid = ?");
             ps.setInt(1, accId);
             final ResultSet rs = ps.executeQuery();
@@ -1925,7 +1926,7 @@ ps.close();
     
     public List<Integer> loadCharacterIDsByAccId(final int accId) {
         final List<Integer> Acc = new LinkedList<Integer>();
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             final PreparedStatement ps = con.prepareStatement("SELECT id FROM characters WHERE accountid = ?");
             ps.setInt(1, accId);
             final ResultSet rs = ps.executeQuery();
@@ -1951,6 +1952,7 @@ ps.close();
             }
             rs.close();
             ps.close();
+            con.close();
         }
         catch (SQLException ex) {
             System.err.println("Error checking ip Check" + (Object)ex);

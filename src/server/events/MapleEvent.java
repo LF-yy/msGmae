@@ -187,16 +187,16 @@ public abstract class MapleEvent
     
     public static String scheduleEvent(final MapleEventType event, final ChannelServer cserv) {
         if (cserv.getEvent() != -1 || cserv.getEvent(event) == null) {
-            return "該活動已經被禁止安排了.";
+            return "该活動已经被禁止安排了.";
         }
         for (final int i : cserv.getEvent(event).mapid) {
             if (cserv.getMapFactory().getMap(i).getCharactersSize() > 0) {
-                return "該活動已經在執行中.";
+                return "该活動已经在執行中.";
             }
         }
         cserv.setEvent(cserv.getEvent(event).mapid[0]);
         cserv.getEvent(event).reset();
-        Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, "活動 " + String.valueOf((Object)event) + " 即將在頻道 " + cserv.getChannel() + " 舉行 , 參加指令@event 要參加的玩家請到頻道 " + cserv.getChannel()));
+        Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, "活動 " + String.valueOf((Object)event) + " 即將在頻道 " + cserv.getChannel() + " 舉行 , 參加指令@event 要參加的玩家请到頻道 " + cserv.getChannel()));
         return "";
     }
 

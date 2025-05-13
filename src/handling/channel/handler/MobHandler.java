@@ -42,16 +42,23 @@ import util.ListUtil;
 public class MobHandler
 {
 
+    //怪物移动
     public static void MoveMonster(final LittleEndianAccessor slea, final MapleClient c) {
         //如开启吸怪直接返回
-       UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
 
         MapleCharacter chr = c.getPlayer();
 
         if (chr == null || chr.getMap() == null) {
             return;
         }
+
         MapleMap map = chr.getMap();
+        Integer i1 = Start.吸怪角色.get(c.getChannel()+"-"+map.getId());
+        if (i1!=null && i1 !=chr.getId()){
+          //  System.out.println("我不是吸怪的人我走了");
+            return;
+        }
+        UserAttraction userAttraction = NPCConversationManager.getAttractList(c.getPlayer().getId());
         int objectId = slea.readInt();
         MapleMonster monster = chr.getMap().getMonsterByOid(objectId);
         if (monster == null) {
@@ -72,21 +79,15 @@ public class MobHandler
         final short moveid = slea.readShort();
         final boolean useSkill = slea.readByte() > 0;
         final byte skill = slea.readByte();
-        //System.out.println("skill : " + skill);
         final int unk2 = slea.readInt();
         int realskill = 0;
         int level = 0;
-        //todo 重做 改增益效果
         if (useSkill && monster.getStats().isBoss()) {
-//            final byte size = monster.getNoSkills();
             final byte size = (byte) Start.ltMonsterSkillBuffSkill.size();
             boolean used = false;
             if (size > 0) {
                 List<LtMonsterSkill> collect = Start.ltMonsterSkillBuffSkill.stream().filter(ltMonsterSkill -> ltMonsterSkill.getMonsterId() == monster.getId()).collect(Collectors.toList());
-//                final Pair<Integer, Integer> skillToUse = (Pair<Integer, Integer>)monster.getSkills().get((int)Randomizer.nextInt((int)size));
-//                realskill = (int)Integer.valueOf(skillToUse.getLeft());
-//                level = (int)Integer.valueOf(skillToUse.getRight());
-//                final Pair<Integer, Integer> skillToUse = (Pair<Integer, Integer>)monster.getSkills().get((int)Randomizer.nextInt((int)size));
+
                 LtMonsterSkill ltMonsterSkill = Start.ltMonsterSkillBuffSkill.get((int) Randomizer.nextInt((int) size));
                 if (ListUtil.isNotEmpty(collect) && collect.size() > 0) {
                     ltMonsterSkill = collect.get((int) Randomizer.nextInt((int) size));
@@ -128,7 +129,6 @@ public class MobHandler
             if (chr.isShowErr()) {
                 chr.showInfo("移動", true, "怪物移動錯誤Move_life : AIOBE Type2");
             }
-           // FileoutputUtil.log("logs\\Log_Movement.txt", "怪物移動錯誤 AIOBE Type2 : 玩家: " + c.getPlayer().getName() + "(編號" + c.getPlayer().getId() + ") 怪物ID " + monster.getId() + "\r\n錯誤信息:" + (Object)e + "\r\n封包:\r\n" + slea.toString(true));
             return;
         }
 

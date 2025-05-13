@@ -77,7 +77,7 @@ public class MapleKeyLayout implements Serializable
             ps.close();
         }
         catch (Exception se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
 }

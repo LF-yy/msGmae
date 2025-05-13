@@ -291,7 +291,9 @@ public class MobSkill
                         player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [变身]");
                         break;
                     case 187:
-                        player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [致死]");
+                        if( monster.getLevel()>=230) {
+                            player.dropMessage(5, "" + monster.stats.getName() + " 使用技能 [致死]");
+                        }
                         break;
                     case 200:
                     case 201:
@@ -523,11 +525,11 @@ public class MobSkill
                 if (monster == null) {
                     break;
                 }
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理反射状态。"));
                 break;
             }
             case 144: {
@@ -538,11 +540,11 @@ public class MobSkill
                 if (monster == null) {
                     break;
                 }
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了魔法反射状态。"));
                 break;
             }
             case 145: {
@@ -555,11 +557,11 @@ public class MobSkill
                 if (monster == null) {
                     break;
                 }
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
-                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系統提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
+                monster.getMap().broadcastMessage(MaplePacketCreator.yellowChat("[系统提示] 注意 " + monster.getStats().getName() + " 开启了物理和魔法反射状态。"));
                 break;
             }
             //灼烧
@@ -606,7 +608,9 @@ public class MobSkill
                     }
                     //致死
                 case 187:
+                    if (monster.getLevel()>=230) {
                         player.killSelf();
+                    }
                     break;
                 case 200:
                 case 201:

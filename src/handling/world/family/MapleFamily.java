@@ -118,7 +118,7 @@ public final class MapleFamily implements Serializable
         }
         catch (SQLException se) {
             //System.err.println("unable to read family information from sql");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             //e.printStackTrace();
         }
     }
@@ -169,7 +169,7 @@ public final class MapleFamily implements Serializable
         }
         catch (SQLException se) {
             //System.err.println("unable to read family information from sql");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
         return ret;
     }
@@ -195,7 +195,7 @@ public final class MapleFamily implements Serializable
         }
         catch (SQLException se) {
             //System.err.println("Error saving family to SQL");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     
@@ -436,7 +436,7 @@ public final class MapleFamily implements Serializable
         }
         catch (SQLException se) {
             System.err.println("SQLException: " + se.getLocalizedMessage());
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             //e.printStackTrace();
         }
     }
@@ -458,7 +458,7 @@ public final class MapleFamily implements Serializable
             return ret;
         }
         catch (Exception e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return 0;
         }
     }

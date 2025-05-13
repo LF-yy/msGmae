@@ -42,11 +42,11 @@ public class SkilledCommand
         }
     }
     
-    public static class 黑單 extends FakeReport
+    public static class 黑单 extends FakeReport
     {
         @Override
         public String getMessage() {
-            return new StringBuilder().append("!黑單 <玩家名稱> - 將玩家設定為無法回報的黑名單").toString();
+            return new StringBuilder().append("!黑单 <玩家名稱> - 將玩家設定为无法回报的黑名单").toString();
         }
     }
     
@@ -65,20 +65,20 @@ public class SkilledCommand
             }
             final MapleCharacter target = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(input);
             if (target.isGM()) {
-                c.getPlayer().dropMessage(1, "無法黑單GM唷");
+                c.getPlayer().dropMessage(1, "无法黑单GM唷");
                 return true;
             }
             final int accID = target.getAccountID();
             PiPiConfig.setBlackList(accID, input);
-            final String msg = "[GM 密语] GM " + c.getPlayer().getName() + " 在回報系統黑單了 " + input;
+            final String msg = "[GM 密语] GM " + c.getPlayer().getName() + " 在回报系统黑单了 " + input;
             Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, msg));
-            FileoutputUtil.logToFile("Logs/Data/玩家回報黑單.txt", "\r\n  " + FileoutputUtil.NowTime() + " GM " + c.getPlayer().getName() + " 在回報系統黑單了 " + input);
+            FileoutputUtil.logToFile("Logs/Data/玩家回报黑单.txt", "\r\n  " + FileoutputUtil.NowTime() + " GM " + c.getPlayer().getName() + " 在回报系统黑单了 " + input);
             return true;
         }
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("!FakeReport <玩家名稱> - 將玩家設定為無法回報的黑名單").toString();
+            return new StringBuilder().append("!FakeReport <玩家名稱> - 將玩家設定为无法回报的黑名单").toString();
         }
     }
     
@@ -96,7 +96,7 @@ public class SkilledCommand
         
         @Override
         public String getMessage() {
-            return new StringBuilder().append("!heal - 補滿血魔").toString();
+            return new StringBuilder().append("!heal - 補满血魔").toString();
         }
     }
     

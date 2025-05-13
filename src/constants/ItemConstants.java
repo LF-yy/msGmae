@@ -1233,7 +1233,7 @@ public class ItemConstants
             return 飛鏢(itemid) || 子彈(itemid);
         }
         
-        public static boolean 單手武器(final int itemid) {
+        public static boolean 单手武器(final int itemid) {
             return 武器(itemid) && !雙手武器(itemid);
         }
         
@@ -1520,7 +1520,7 @@ public class ItemConstants
             return (itemid / 100 == 10121 && itemid % 100 >= 64 && itemid % 100 <= 74 && itemid % 100 != 65 && itemid % 100 != 66) || (itemid / 10 == 112212 && itemid % 10 >= 2 && itemid % 10 <= 6) || (itemid >= 1122224 && itemid <= 1122245) || itemid / 10 == 101244;
         }
         
-        public static boolean 無法潜能道具(final int itemid) {
+        public static boolean 无法潜能道具(final int itemid) {
             return false;
         }
         

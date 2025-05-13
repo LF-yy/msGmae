@@ -974,21 +974,6 @@ public class MapleItemInformationProvider
             final int succ = GameConstants.isTablet(scrollId.getItemId()) ? GameConstants.getSuccessTablet(scrollId.getItemId(), (int)nEquip.getLevel()) : ((GameConstants.isEquipScroll(scrollId.getItemId()) || GameConstants.isPotentialScroll(scrollId.getItemId())) ? 0 : ((int)Integer.valueOf(stats.get((Object)"success"))));
             final int curse = GameConstants.isTablet(scrollId.getItemId()) ? GameConstants.getCurseTablet(scrollId.getItemId(), (int)nEquip.getLevel()) : ((GameConstants.isEquipScroll(scrollId.getItemId()) || GameConstants.isPotentialScroll(scrollId.getItemId())) ? 0 : ((int)Integer.valueOf(stats.get((Object)"cursed"))));
             final int success = succ + ((vegas == 5610000 && succ == 10) ? 20 : ((vegas == 5610001 && succ == 60) ? 30 : 0));
-//            if (ItemConstants.isEquipScroll(scroll)) { //装备强化卷轴
-//                return scrollEnhance(equip, scroll, chr);
-//            } else
-//                if (ItemConstants.isPotentialScroll(scroll)) { //潜能附加
-//                return scrollPotential((Item)equip, (Item)scrollId, chr);
-//                }
-//            else if (ItemConstants.isPotentialAddScroll(scroll)) { //附加潜能
-//                return scrollPotentialAdd(equip, scroll, chr);
-            //if (ItemConstants.isLimitBreakScroll(scroll)) { //突破攻击上限石头
-//                return scrollLimitBreak(equip, scroll, chr);
-//            } else if (ItemConstants.isResetScroll(scroll)) { //还原卷轴
-//                return scrollResetEquip(equip, scroll, chr);
-//            } else if (ItemConstants.isSealedScroll(scroll)) {
-//                return scrollSealedEquip(equip, scroll, chr);
-//            }
             if (GameConstants.isPotentialScroll(scrollId.getItemId()) || GameConstants.isEquipScroll(scrollId.getItemId()) || Randomizer.nextInt(100) <= success || scrollId.getItemId() ==2049124) {
                 switch (scrollId.getItemId()) {
                     case 2049000:
@@ -2172,7 +2157,7 @@ public class MapleItemInformationProvider
             }
             catch (SQLException ex) {
                 System.out.println("读取发型数据失败：" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM wz_facedata ORDER BY `faceid`");
                  final ResultSet rs = ps.executeQuery()) {
@@ -2183,12 +2168,12 @@ public class MapleItemInformationProvider
             }
             catch (SQLException ex) {
                 System.out.println("读取脸型数据失败：" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
         }
         catch (SQLException ex2) {
             System.out.println("读取脸型数据失败：" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     

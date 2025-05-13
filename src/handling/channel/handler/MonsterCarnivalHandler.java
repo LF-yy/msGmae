@@ -28,7 +28,7 @@ public class MonsterCarnivalHandler
             case 0: {
                 final List<Pair<Integer, Integer>> mobs = c.getPlayer().getMap().getMobsToSpawn();
                 if (num >= mobs.size() || c.getPlayer().getAvailableCP() < (int)Integer.valueOf(((Pair<Integer, Integer>)mobs.get(num)).right)) {
-                    c.getPlayer().dropMessage(5, "你沒有足夠的 CP.");
+                    c.getPlayer().dropMessage(5, "你没有足夠的 CP.");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -56,7 +56,7 @@ public class MonsterCarnivalHandler
                 }
                 final MCSkill skil = MapleCarnivalFactory.getInstance().getSkill((int)Integer.valueOf(skillid.get(num)));
                 if (skil == null || c.getPlayer().getAvailableCP() < skil.cpLoss) {
-                    c.getPlayer().dropMessage(5, "你沒有足夠的 CP.");
+                    c.getPlayer().dropMessage(5, "你没有足夠的 CP.");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -97,7 +97,7 @@ public class MonsterCarnivalHandler
             case 2: {
                 final MCSkill skil2 = MapleCarnivalFactory.getInstance().getGuardian(num);
                 if (skil2 == null || c.getPlayer().getAvailableCP() < skil2.cpLoss) {
-                    c.getPlayer().dropMessage(5, "你沒有足夠的 CP.");
+                    c.getPlayer().dropMessage(5, "你没有足夠的 CP.");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }

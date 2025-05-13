@@ -159,8 +159,8 @@ public final class Gashapon
             System.out.println("Error GashaponChance" + (Object)ex);
             FilePrinter.printError("GashaponChance.txt", (Throwable)ex, "GashaponChance has SQL Exception");
         }
-        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率更改為" + chance));
-        FileoutputUtil.logToFile("logs/GM_LOG/GM更改轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率更改為" + chance);
+        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率更改为" + chance));
+        FileoutputUtil.logToFile("logs/GM_LOG/GM更改轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率更改为" + chance);
     }
     
     public void ChangeQuantity(MapleCharacter chr, final int itemid, final int quantity) {
@@ -175,8 +175,8 @@ public final class Gashapon
             System.out.println("Error GashaponChance" + (Object)ex);
             FilePrinter.printError("GashaponChance.txt", (Throwable)ex, "GashaponChance has SQL Exception");
         }
-        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 數量更改為" + quantity));
-        FileoutputUtil.logToFile("logs/GM_LOG/GM更改轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 數量更改為" + quantity);
+        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 數量更改为" + quantity));
+        FileoutputUtil.logToFile("logs/GM_LOG/GM更改轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  更改物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 數量更改为" + quantity);
     }
     
     public void AddItem(MapleCharacter chr, final int itemid, final int chance, final boolean msg, final int quantity) {
@@ -194,7 +194,7 @@ public final class Gashapon
             System.out.println("Error GashaponAddItem" + (Object)ex);
             FilePrinter.printError("GashaponAddItem.txt", (Throwable)ex, "GashaponAddItem has SQL Exception");
         }
-        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] " + chr.getName() + "  新增轉蛋物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率設定為" + chance + " 是否上綠廣:" + (msg ? "是" : "否") + " 數量設定為" + quantity));
-        FileoutputUtil.logToFile("logs/GM_LOG/GM新增轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  新增轉蛋物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率設定為" + chance + " 是否上綠廣:" + (msg ? "是" : ("否 數量設定為" + quantity)));
+        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] " + chr.getName() + "  新增轉蛋物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率設定为" + chance + " 是否上綠廣:" + (msg ? "是" : "否") + " 數量設定为" + quantity));
+        FileoutputUtil.logToFile("logs/GM_LOG/GM新增轉蛋物機率.txt", "\r\n" + FileoutputUtil.NowTime() + "GM: " + chr.getName() + "  新增轉蛋物品:" + MapleItemInformationProvider.getInstance().getName(itemid) + " 機率設定为" + chance + " 是否上綠廣:" + (msg ? "是" : ("否 數量設定为" + quantity)));
     }
 }

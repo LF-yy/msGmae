@@ -53,7 +53,7 @@ public class MapleMount implements Serializable
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleMount.txt", (Throwable)ex, "saveMount");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     

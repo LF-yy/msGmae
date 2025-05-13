@@ -51,7 +51,7 @@ public class MapleGuildAlliance implements Serializable
         }
         catch (SQLException se) {
             System.err.println("unable to read guild information from sql");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     
@@ -69,7 +69,7 @@ public class MapleGuildAlliance implements Serializable
         }
         catch (SQLException se) {
             System.err.println("unable to read guild information from sql");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
         return ret;
     }
@@ -115,7 +115,7 @@ public class MapleGuildAlliance implements Serializable
         }
         catch (SQLException SE) {
             System.err.println("SQL THROW");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SE);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SE);
         }
         return ret;
     }
@@ -135,7 +135,7 @@ public class MapleGuildAlliance implements Serializable
         }
         catch (SQLException SE) {
             System.err.println("SQL THROW" + (Object)SE);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SE);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SE);
             return false;
         }
         return true;
@@ -184,7 +184,7 @@ public class MapleGuildAlliance implements Serializable
         }
         catch (SQLException SE) {
             System.err.println("SQL THROW");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SE);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SE);
         }
     }
     

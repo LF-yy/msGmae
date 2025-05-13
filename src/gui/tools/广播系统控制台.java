@@ -6,7 +6,7 @@
 package gui.tools;
 
 import database.DatabaseConnection;
-import gui.LtMS;
+import gui.;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

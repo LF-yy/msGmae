@@ -624,6 +624,12 @@ public class 商店管理控制台 extends javax.swing.JFrame {
             ps.close();
         } catch (SQLException ex) {
             System.err.println("读取动态数据库出错：" + ex.getMessage());
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables

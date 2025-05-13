@@ -22,6 +22,9 @@ import handling.world.guild.MapleBBSThread;
 import handling.world.guild.MapleGuildCharacter;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import handling.world.guild.MapleGuild;
 import client.BuddyList.BuddyAddResult;
@@ -96,9 +99,9 @@ public class World
             final int channelUsers = cs.getConnectedClients();
             totalUsers += channelUsers;
             ret.append(channelUsers);
-            ret.append(" 個玩家\n");
+            ret.append(" 个玩家\n");
         }
-        ret.append("總共線上人數: ");
+        ret.append("總共線上人数: ");
         ret.append(totalUsers);
         ret.append("\n");
         return ret.toString();
@@ -587,7 +590,7 @@ public class World
                 ps.close();
             }
             catch (SQLException e) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             }
         }
     }
@@ -2176,33 +2179,38 @@ public class World
     public static void 踢全体玩家下线() {
         int number = 0;
         int gm_number = 0;
-        ArrayList<MapleCharacter> arraylist = new ArrayList();
-        Iterator var3 = ChannelServer.getAllInstances().iterator();
-
-        while(var3.hasNext()) {
-            ChannelServer cserv = (ChannelServer)var3.next();
-            Iterator var5 = cserv.getPlayerStorage().getAllCharacters().iterator();
-
-            while(var5.hasNext()) {
-                MapleCharacter mch = (MapleCharacter)var5.next();
-                if (!mch.isGM()) {
-                    mch.saveToDB(false, false);
-                    arraylist.add(mch);
-                    ++number;
-                } else {
-                    ++gm_number;
+        CopyOnWriteArrayList<MapleCharacter> playersToKick = new CopyOnWriteArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(10); // 根据实际情况调整线程池大小
+        try {
+            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+                for (MapleCharacter mch : cserv.getPlayerStorage().getAllCharacters()) {
+                    if (!mch.isGM()) {
+                        mch.saveToDB(false, false);
+                        playersToKick.add(mch);
+                        ++number;
+                    } else {
+                        ++gm_number;
+                    }
                 }
             }
+            for (MapleCharacter mch : playersToKick) {
+                executor.submit(() -> {
+                    try {
+                        mch.getClient().sendPacket(MaplePacketCreator.serverBlocked(2));
+                    } catch (Exception e) {
+                        System.err.println("Failed to kick player: " + mch.getName() + ", Error: " + e.getMessage());
+                    }
+                });
+            }
+
+            // 输出日志信息
+            System.out.println("[系统提示]共将" + number + "个玩家踢下线，还有" + gm_number + "个管理员在线。");
+
+        } catch (Exception e) {
+            System.err.println("Error during kicking players: " + e.getMessage());
+        } finally {
+            executor.shutdown();
         }
-
-        var3 = arraylist.iterator();
-
-        while(var3.hasNext()) {
-            MapleCharacter mch = (MapleCharacter)var3.next();
-            mch.getClient().sendPacket(MaplePacketCreator.serverBlocked(2));
-        }
-
-        //服务端输出信息.println_out("[系统提示]共将" + number + "个玩家踢下线，还有" + gm_number + "个管理员在线。");
     }
 
     public static boolean backupInventoryItems(int chrid) {

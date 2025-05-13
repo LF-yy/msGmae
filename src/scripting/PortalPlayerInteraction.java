@@ -23,7 +23,7 @@ public class PortalPlayerInteraction extends AbstractPlayerInteraction
             this.warp(910000000, "st00");
         }
         else {
-            this.playerMessage(5, "你需要10級才可以進入自由市場");
+            this.playerMessage(5, "你需要10級才可以进入自由市場");
         }
     }
     

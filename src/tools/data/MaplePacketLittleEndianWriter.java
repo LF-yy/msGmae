@@ -170,7 +170,7 @@ public class MaplePacketLittleEndianWriter
             for (int numRead = 0; offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0; offset += numRead) {}
             is.close();
             if (offset < bytes.length) {
-                System.err.println("無法完整讀取檔案:" + file.getName());
+                System.err.println("无法完整讀取檔案:" + file.getName());
                 return;
             }
             this.writeInt(bytes.length);

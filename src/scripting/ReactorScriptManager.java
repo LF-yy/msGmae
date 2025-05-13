@@ -83,13 +83,13 @@ public class ReactorScriptManager extends AbstractScriptManager
                 }
             }
             catch (SQLException ignore) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ignore);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ignore);
                 return ret;
             }
         }
         catch (SQLException e) {
             System.err.println("Could not retrieve drops for reactor " + rid + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return ret;
         }
         finally {
@@ -102,7 +102,7 @@ public class ReactorScriptManager extends AbstractScriptManager
                 }
             }
             catch (SQLException ignore2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ignore2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ignore2);
                 return ret;
             }
         }

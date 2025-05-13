@@ -45,7 +45,7 @@ public class PetHandler
         }
         final long time = System.currentTimeMillis();
         if (chr.getNextConsume() > time) {
-            chr.dropMessage(5, "You may not use this item yet.");
+            chr.dropMessage(5, "角色当前无法使用选择的物品");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }

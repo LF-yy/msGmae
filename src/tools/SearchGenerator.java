@@ -209,21 +209,21 @@ public class SearchGenerator
                 break;
             }
             default: {
-                sb.append("對不起, 這個檢索類型不被支援");
+                sb.append("對不起, 这个檢索類型不被支援");
                 break;
             }
         }
         if (ret.size() > 0) {
             for (final String singleRetItem : ret) {
                 if (sb.length() > 3500) {
-                    sb.append("\r\n後面還有很多搜尋結果, 但已經無法顯示更多");
+                    sb.append("\r\n後面還有很多搜尋結果, 但已经无法顯示更多");
                     break;
                 }
                 sb.append(singleRetItem);
             }
         }
         final StringBuilder sbs = new StringBuilder();
-        if (!sb.toString().isEmpty() && !sb.toString().equalsIgnoreCase("對不起, 這個檢索指令不被支援")) {
+        if (!sb.toString().isEmpty() && !sb.toString().equalsIgnoreCase("對不起, 这个檢索指令不被支援")) {
             sbs.append("<<類型: ").append(type.name()).append(" | 搜尋信息: ").append(search).append(">>");
         }
         sbs.append((CharSequence)sb);

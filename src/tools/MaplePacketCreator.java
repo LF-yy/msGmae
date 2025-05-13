@@ -1317,6 +1317,7 @@ public class MaplePacketCreator
                 if (oned.attack != null) {
                     mplew.writeInt(oned.objectid);
                     mplew.write(7);
+
                     for (final Pair<Integer, Boolean> eachd : oned.attack) {
                         if ((boolean)Boolean.valueOf(eachd.right)) {
                             mplew.writeInt((int)Integer.valueOf(eachd.left) + Integer.MIN_VALUE);
@@ -5472,36 +5473,100 @@ public class MaplePacketCreator
         mplew.writeShort((int)SendPacketOpcode.SPAWN_KITE_ERROR.getValue());
         return mplew.getPacket();
     }
-    
+
+    /**
+     * 生成展示特殊攻击的网络包
+     * 该方法用于创建一个特殊攻击的展示包，主要用于在游戏中展示角色的特殊攻击效果
+     *
+     * @param chrId 角色ID，用于标识发动特殊攻击的角色
+     * @param pot_x 特殊攻击位置的X坐标，用于确定攻击发生的横坐标位置
+     * @param pot_y 特殊攻击位置的Y坐标，用于确定攻击发生的纵坐标位置
+     * @param display 展示效果的类型，用于定义特殊攻击的视觉效果
+     * @param skillId 技能ID，用于标识使用特殊攻击的技能
+     * @return 返回包含特殊攻击信息的数据包
+     */
     public static byte[] showSpecialAttack(final int chrId, final int pot_x, final int pot_y, final int display, final int skillId) {
+        // 创建一个MaplePacketLittleEndianWriter对象，用于构建网络包
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        // 写入特殊攻击展示的opcode，标识这是一个特殊攻击展示包
         mplew.writeShort((int)SendPacketOpcode.SHOW_SPECIAL_ATTACK.getValue());
+
+        // 写入角色ID，标识发动特殊攻击的角色
         mplew.writeInt(chrId);
+
+        // 写入特殊攻击位置的X坐标
         mplew.writeInt(pot_x);
+
+        // 写入特殊攻击位置的Y坐标
         mplew.writeInt(pot_y);
+
+        // 写入展示效果的类型
         mplew.writeInt(display);
+
+        // 写入技能ID，标识使用特殊攻击的技能
         mplew.writeInt(skillId);
+
+        // 返回构建好的特殊攻击展示包
         return mplew.getPacket();
     }
-    
+
+    /**
+     * 生成Beans游戏消息的字节流
+     * 该方法用于创建一个特定的游戏内消息，主要用于向客户端发送关于Beans的游戏信息
+     *
+     * @param cid 角色ID，用于标识游戏内的特定角色
+     * @param x 位置坐标，表示角色或物品在游戏地图上的X轴位置
+     * @param laba 消息内容，包含游戏消息的具体文本信息
+     * @return 返回包含游戏消息的字节流
+     */
     public static byte[] BeansGameMessage(final int cid, final int x, final String laba) {
+        // 创建一个MaplePacketLittleEndianWriter实例，用于编写Little-Endian字节序的包
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        // 写入SendPacketOpcode.TIP_BEANS的值，标识这是一个Beans提示消息
         mplew.writeShort((int)SendPacketOpcode.TIP_BEANS.getValue());
+
+        // 写入角色ID，用于指定消息的目标角色
         mplew.writeInt(cid);
+
+        // 写入位置坐标，表示消息相关的角色或物品的位置
         mplew.write(x);
+
+        // 写入消息内容，使用MapleAsciiString格式编码字符串
         mplew.writeMapleAsciiString(laba);
+
+        // 返回包含游戏消息的字节流
         return mplew.getPacket();
     }
-    
+
+    /**
+     * 更新角色的豆豆数量
+     * 该方法用于创建一个更新角色豆豆数量的网络数据包
+     *
+     * @param chr 角色对象，包含角色的详细信息
+     * @return 返回一个包含更新信息的字节数组
+     */
     public static byte[] updateBeans(MapleCharacter chr) {
+        // 创建一个网络数据包写入器
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+
+        // 写入更新豆豆的操作码
         mplew.writeShort((int)SendPacketOpcode.UPDATE_BEANS.getValue());
+
+        // 写入角色的唯一标识符
         mplew.writeInt(chr.getId());
+
+        // 写入角色当前的豆豆数量
         mplew.writeInt(chr.getBeans());
+
+        // 未知字段，可能用于未来扩展或保留用途，当前写入0
         mplew.writeInt(0);
+
+        // 返回包含所有更新信息的字节数组
         return mplew.getPacket();
     }
-    
+
     public static byte[] 能量储存器(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.UPDATE_BEANS.getValue());
@@ -5510,7 +5575,7 @@ public class MaplePacketCreator
         mplew.writeInt(0);
         return mplew.getPacket();
     }
-    
+
     public static byte[] openBeans(final int beansCount, final int type) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.OPEN_BEANS.getValue());

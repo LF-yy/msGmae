@@ -606,40 +606,53 @@ public class MapleMapFactory
     public void setChannel(final int channel) {
         this.channel = channel;
     }
-    //添加野外BOSS刷新
-    public void addAreaBossSpawn( MapleMap map) {
-        //野外boss刷新
-        int monsterid = -1;
-        int mobtime = -1;
-        String msg = null;
-        Point pos1 = null;
-        Point pos2 = null;
-        Point pos3 = null;
-        List<LtMobSpawnBoss> ltMobSpawnBosses = Start.ltMobSpawnBoss.get(map.getId());
-        if (ltMobSpawnBosses!= null && ltMobSpawnBosses.size() > 0) {
-            for (LtMobSpawnBoss ltMobSpawnBoss : ltMobSpawnBosses) {
-                    monsterid = ltMobSpawnBoss.getMobid();
-                        mobtime = ltMobSpawnBoss.getTime();
-                        msg = ltMobSpawnBoss.getName();
-                        pos1 = new Point(ltMobSpawnBoss.getX(), ltMobSpawnBoss.getY());
-                        pos2 = new Point(ltMobSpawnBoss.getX1(), ltMobSpawnBoss.getY1());
-                        pos3 = new Point(ltMobSpawnBoss.getX2(), ltMobSpawnBoss.getY2());
-                if (monsterid > 0 ) {
-                    MapleMonster monster = MapleLifeFactory.getMonster(monsterid);
-                    if(Objects.isNull(monster)){
-                        return;
-                    }
-                    if (pos1 != null && pos2 != null && pos3 != null && mobtime > 0) {
-                        map.addAreaMonsterSpawn(monster, pos1, pos2, pos3, mobtime, msg);
-                    }
-                }
-                monsterid= 0;
-            }
-        }else{
+
+    // 添加野外BOSS刷新
+    public void addAreaBossSpawn(MapleMap map) {
+        // 检查 Start.ltMobSpawnBoss 是否为空
+        if (Start.ltMobSpawnBoss == null || !Start.ltMobSpawnBoss.containsKey(map.getId())) {
             return;
         }
+
+        List<LtMobSpawnBoss> ltMobSpawnBosses = Start.ltMobSpawnBoss.get(map.getId());
+        if (ltMobSpawnBosses == null || ltMobSpawnBosses.isEmpty()) {
+            return;
+        }
+
+        Point point = new Point(); // 复用 Point 对象
+        for (LtMobSpawnBoss ltMobSpawnBoss : ltMobSpawnBosses) {
+            int monsterid = ltMobSpawnBoss.getMobid();
+            int mobtime = ltMobSpawnBoss.getTime();
+            String msg = ltMobSpawnBoss.getName();
+
+            // 验证 monsterid 和 mobtime 是否有效
+            if (monsterid <= 0 || mobtime <= 0) {
+                continue; // 跳过无效的 BOSS 数据
+            }
+
+            // 获取怪物对象
+            MapleMonster monster = MapleLifeFactory.getMonster(monsterid);
+            if (monster == null) {
+                System.err.println("Failed to load monster with ID: " + monsterid);
+                continue; // 跳过加载失败的怪物
+            }
+
+            // 设置位置点
+            if (setPoint(point, ltMobSpawnBoss.getX(), ltMobSpawnBoss.getY()) &&
+                    setPoint(point, ltMobSpawnBoss.getX1(), ltMobSpawnBoss.getY1()) &&
+                    setPoint(point, ltMobSpawnBoss.getX2(), ltMobSpawnBoss.getY2())) {
+                map.addAreaMonsterSpawn(monster, point, point, point, mobtime, msg);
+            }
+        }
     }
-    
+    // 辅助方法：设置 Point 并验证坐标有效性
+    private boolean setPoint(Point point, Integer x, Integer y) {
+        if (x == null || y == null) {
+            return false; // 坐标无效
+        }
+        point.setLocation(x, y);
+        return true;
+    }
     private MapleNodes loadNodes(final int mapid, final MapleData mapData) {
         MapleNodes nodeInfo = (MapleNodes)MapleMapFactory.mapInfos.get((Object)Integer.valueOf(mapid));
         if (nodeInfo == null) {
@@ -809,7 +822,7 @@ public class MapleMapFactory
         }
         catch (SQLException e) {
             System.err.println("Error loading custom life..." + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -817,7 +830,7 @@ public class MapleMapFactory
     private static AbstractLoadedMapleLife loadLife(final int id, final int f, final boolean hide, final int fh, final int cy, final int rx0, final int rx1, final int x, final int y, final String type, final int mtime) {
         final AbstractLoadedMapleLife myLife = MapleLifeFactory.getLife(id, type);
         if (myLife == null) {
-            System.err.println("自訂 npc " + id + " 異常...");
+            System.err.println("自訂 npc " + id + " 异常...");
             return null;
         }
         myLife.setCy(cy);

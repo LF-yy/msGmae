@@ -23,7 +23,7 @@ public class ConsoleCommandProcessor
         splitted[0] = splitted[0].toLowerCase();
         final ConsoleCommandObject co = (ConsoleCommandObject)ConsoleCommandProcessor.commands.get((Object)splitted[0]);
         if (co == null) {
-            sendDisplayMessage("沒有這個指令.");
+            sendDisplayMessage("没有这个指令.");
             return true;
         }
         final int ret = co.execute(splitted);

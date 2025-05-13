@@ -85,7 +85,7 @@ public class InterServerHandler
 //            return;
 //        }
 //        if (chr.getAntiMacro().inProgress()) {
-//            c.getPlayer().dropMessage(1, "被使用測謊儀時無法操作。");
+//            c.getPlayer().dropMessage(1, "被使用測謊儀時无法操作。");
 //            c.sendPacket(MaplePacketCreator.enableActions());
 //            return;
 //        }
@@ -93,8 +93,8 @@ public class InterServerHandler
 //            chr.saveToDB(false, false);
 //        }
 //        catch (Exception ex) {
-//            FileoutputUtil.logToFile("logs/進入商城保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
-//            FileoutputUtil.outError("logs/進入商城保存数据異常.txt", (Throwable)ex);
+//            FileoutputUtil.logToFile("logs/进入商城保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
+//            FileoutputUtil.outError("logs/进入商城保存数据异常.txt", (Throwable)ex);
 //        }
 //        final ChannelServer ch = ChannelServer.getInstance(c.getChannel());
 //        chr.dispelBuff();
@@ -177,7 +177,7 @@ public class InterServerHandler
                 for (final String name : charNamesa) {
                     if (cs.getPlayerStorage().getCharacterByName(name) != null) {
                         FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + "登錄1");
-                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
                         c.getSession().close();
                         return;
                     }
@@ -186,7 +186,7 @@ public class InterServerHandler
             for (final String name2 : charNamesa) {
                 if (CashShopServer.getPlayerStorage().getCharacterByName(name2) != null) {
                     FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + "登錄1");
-                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
                     c.getSession().close();
                     return;
                 }
@@ -197,7 +197,7 @@ public class InterServerHandler
                     final MapleCharacter character = cs2.getPlayerStorage().getCharacterByName(name3);
                     if (character != null) {
                         FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + "登錄3");
-                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+                        Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
                         c.getSession().close();
                         character.getClient().getSession().close();
                     }
@@ -207,15 +207,15 @@ public class InterServerHandler
                 final MapleCharacter charactercs = CashShopServer.getPlayerStorage().getCharacterByName(name4);
                 if (charactercs != null) {
                     FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + "登錄4");
-                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
                     c.getSession().close();
                     charactercs.getClient().getSession().close();
                 }
             }
             if (System.getProperty(String.valueOf(playerid)) == null || !System.getProperty(String.valueOf(playerid)).equals((Object) "1")) {
-                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
-                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
-                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
                 FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName());
                 c.getSession().close();
                 return;
@@ -229,20 +229,20 @@ public class InterServerHandler
             player = MapleCharacter.ReconstructChr(transfer, c, true);
         }
         if (!LoginServer.CanLoginKey(player.getLoginKey(), player.getAccountID()) || (LoginServer.getLoginKey(player.getAccountID()) == null && !player.getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(player.getAccountID()) + " 伺服端key：" + player.getLoginKey() + " 進入游戏1");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(player.getAccountID()) + " 伺服端key：" + player.getLoginKey() + " 进入游戏1");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
         if (!LoginServer.CanServerKey(player.getServerKey(), player.getAccountID()) || (LoginServer.getServerKey(player.getAccountID()) == null && !player.getServerKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(player.getAccountID()) + " 伺服端key：" + player.getServerKey() + " 進入游戏2");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(player.getAccountID()) + " 伺服端key：" + player.getServerKey() + " 进入游戏2");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
         if (!LoginServer.CanClientKey(player.getClientKey(), player.getAccountID()) || (LoginServer.getClientKey(player.getAccountID()) == null && !player.getClientKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端進入KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(player.getAccountID()) + " 伺服端key：" + player.getClientKey() + " 進入游戏3");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(player.getAccountID()) + " 伺服端key：" + player.getClientKey() + " 进入游戏3");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
@@ -259,11 +259,13 @@ public class InterServerHandler
         boolean allowLogin = false;
         if (state == 1 || state == 6 || state == 0) {
             allowLogin = !World.isCharacterListConnected(c.loadCharacterNames(c.getWorld()));
+
+            System.out.println("16");
         }
         if (!allowLogin) {
             c.setPlayer(null);
             c.getSession().close();
-            FileoutputUtil.logToFile("logs/Data/進入游戏掉線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " allowLogin");
+            FileoutputUtil.logToFile("logs/Data/进入游戏掉線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " allowLogin");
             return;
         }
         c.updateLoginState(2, c.getSessionIPAddress());
@@ -272,25 +274,25 @@ public class InterServerHandler
         c.sendPacket(MaplePacketCreator.getCharInfo(player));
         if (MapleCharacter.getCharacterNameById2(playerid) == null) {
             FileoutputUtil.logToFile("logs/Data/角色不存在.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + "登錄");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄不存在角色 账号 " + c.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄不存在角色 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
         if (!LoginServer.CanLoginKey(player.getLoginKey(), player.getAccountID()) || (LoginServer.getLoginKey(player.getAccountID()) == null && !player.getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(player.getAccountID()) + " 伺服端key：" + player.getLoginKey() + " 進入游戏4");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(player.getAccountID()) + " 伺服端key：" + player.getLoginKey() + " 进入游戏4");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
         if (!LoginServer.CanServerKey(player.getServerKey(), player.getAccountID()) || (LoginServer.getServerKey(player.getAccountID()) == null && !player.getServerKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(player.getAccountID()) + " 伺服端key：" + player.getServerKey() + " 進入游戏5");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(player.getAccountID()) + " 伺服端key：" + player.getServerKey() + " 进入游戏5");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
         if (!LoginServer.CanClientKey(player.getClientKey(), player.getAccountID()) || (LoginServer.getClientKey(player.getAccountID()) == null && !player.getClientKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端進入KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(player.getAccountID()) + " 伺服端key：" + player.getClientKey() + " 進入游戏6");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登錄 账号 " + c.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(player.getAccountID()) + " 伺服端key：" + player.getClientKey() + " 进入游戏6");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登錄 账号 " + c.getAccountName()));
             c.getSession().close();
             return;
         }
@@ -317,6 +319,7 @@ public class InterServerHandler
                     c.getPlayer().changeChannel(newChannel);
                 }
 
+                System.out.println("22");
                 return;
             }
 
@@ -373,7 +376,6 @@ public class InterServerHandler
                 }
             }
         }
-
         player.刷新身上装备镶嵌汇总数据();
         player.reloadPotentialMap();
         NPCScriptManager.getInstance().dispose(c);
@@ -512,19 +514,19 @@ public class InterServerHandler
         player.spawnSavedPets();
         final boolean ChrdangerousIp = player.chrdangerousIp(c.getSession().remoteAddress().toString());
         if (ChrdangerousIp) {
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險IP上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險IP上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險IP上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 危險IP上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 危險IP上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 危險IP上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
             FileoutputUtil.logToFile("logs/Data/危險IP登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId());
         }
         final boolean ChrdangerousName = player.ChrDangerousAcc(player.getClient().getAccountName());
         if (ChrdangerousName) {
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 危險角色上線 IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId()));
             FileoutputUtil.logToFile("logs/Data/危險账号登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getAccountName() + " 账号ID " + c.getAccID() + " 角色名 " + player.getName() + " 角色ID " + player.getId());
         }
-        if (player.isGM() && !CommandProcessor.isMyGM(player)) {
+        if (player.isGM() && !CommandProcessor.isMyGM(player) && LtMS.ConfigValuesMap.get("非法GM登录")>0) {
             FileoutputUtil.logToFile("logs/Data/非法GM号登入.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName());
             c.getPlayer().ban("非法GM登入", true, true, false);
             return;
@@ -538,7 +540,9 @@ public class InterServerHandler
         player.裂隙层数 = player.getBossLog1("裂隙层数",1)+1;
         player.是否储备经验 = player.getBossLog1("开启储备经验",1)>0;
         player.飞升等级 = player.getBossLog1("飞升等级",1);
-
+        player.药品编号 = player.getBossLog1("药品编号",1);
+        player.血量临界值 = player.getBossLog1("血量临界值",1);
+        player.药品恢复值 = player.getBossLog1("药品恢复值",1);
     }
     
     public static void ChangeChannel(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
@@ -560,6 +564,8 @@ public class InterServerHandler
                         c.getPlayer().dropMessage(5, "该频道需要持有道具 [" + MapleItemInformationProvider.getInstance().getName(itemId) + "] 才可进入！");
                         c.sendPacket(MaplePacketCreator.enableActions());
                     } else {
+                        //清空爆率
+                        c.getPlayer().drops.clear();
                         chr.changeChannel(channel);
                     }
                 }

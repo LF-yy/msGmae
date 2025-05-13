@@ -105,7 +105,7 @@ public class MaplePet implements Serializable
         }
         catch (SQLException ex) {
             FilePrinter.printError("MaplePet.txt", (Throwable)ex, "loadFromDb");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             return null;
         }
     }
@@ -135,7 +135,7 @@ public class MaplePet implements Serializable
         }
         catch (SQLException ex) {
             FilePrinter.printError("MaplePet.txt", (Throwable)ex, "saveToDb");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -161,7 +161,7 @@ public class MaplePet implements Serializable
         }
         catch (SQLException ex) {
             FilePrinter.printError("MaplePet.txt", (Throwable)ex, "createPet");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             return null;
         }
         final MaplePet pet = new MaplePet(itemid, uniqueid);
@@ -238,7 +238,6 @@ public class MaplePet implements Serializable
             this.fullness = (byte)100;
         }else{
             this.fullness = (byte)fullness;
-
         }
         this.changed = true;
     }
@@ -336,7 +335,7 @@ public class MaplePet implements Serializable
         }
         catch (SQLException se) {
             System.err.println("[MaplePet] 從数据庫中加載寵物信息出錯");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     

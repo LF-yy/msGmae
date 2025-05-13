@@ -29,8 +29,8 @@ public class FixShopItemsPrice
             con.close();
         }
         catch (SQLException e) {
-            System.err.println("無法載入商店");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            System.err.println("无法載入商店");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return shopItemsId;
     }
@@ -43,7 +43,7 @@ public class FixShopItemsPrice
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 if (ii.getPrice(itemId) != (double)rs.getLong("price") && rs.getLong("price") != 0L && ii.getPrice(itemId) > 1.0) {
-                    System.out.println("道具: " + MapleItemInformationProvider.getInstance().getName(itemId) + "道具ID: " + itemId + " 商店: " + rs.getInt("shopid") + " 原價格: " + rs.getLong("price") + " 新價格:" + (long)ii.getPrice(itemId));
+                    System.out.println("道具: " + MapleItemInformationProvider.getInstance().getName(itemId) + "道具ID: " + itemId + " 商店: " + rs.getInt("shopid") + " 原价格: " + rs.getLong("price") + " 新价格:" + (long)ii.getPrice(itemId));
                     final PreparedStatement pp = con.prepareStatement("UPDATE shopitems SET price = ? WHERE itemid = ? AND shopid = ?");
                     pp.setLong(1, (long)ii.getPrice(itemId));
                     pp.setInt(2, itemId);
@@ -58,7 +58,7 @@ public class FixShopItemsPrice
         }
         catch (SQLException e) {
             System.out.println("處理商品失敗, 道具ID:" + itemId);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
@@ -69,12 +69,12 @@ public class FixShopItemsPrice
         MapleItemInformationProvider.getInstance().load();
         System.out.println("正在讀取商店所有商品......");
         final List<Integer> list = i.loadFromDB();
-        System.out.println("正在處理商店商品價格......");
+        System.out.println("正在處理商店商品价格......");
         final Iterator<Integer> iterator = list.iterator();
         while (iterator.hasNext()) {
             final int ii = (int)Integer.valueOf(iterator.next());
             i.changePrice(ii);
         }
-        System.out.println("處理商店商品價格異常結束。");
+        System.out.println("處理商店商品价格异常結束。");
     }
 }

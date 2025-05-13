@@ -142,20 +142,7 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
     
-    public static byte[] ViciousHammer(final boolean start, final int hammered) {
-        final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
-        mplew.writeShort((int)SendPacketOpcode.VICIOUS_HAMMER.getValue());
-        if (start) {
-            mplew.write(49);
-            mplew.writeInt(0);
-            mplew.writeInt(hammered);
-        }
-        else {
-            mplew.write(53);
-            mplew.writeInt(0);
-        }
-        return mplew.getPacket();
-    }
+
     
     public static byte[] changePetFlag(final int uniqueId, final boolean added, final int flagAdded) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
@@ -770,11 +757,35 @@ public class MTSCSPacket
         return mplew.getPacket();
     }
 
-    public static byte[] ViciousHammerM(byte a, int b) {
+    /**
+     * 生成恶意之锤技能的攻击数据包
+     *
+     * @return 包含技能攻击信息的数据包
+     */
+    public static byte[] ViciousHammerM(boolean start, int hammered) {
         MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort(SendPacketOpcode.VICIOUS_HAMMER.getValue());
-        mplew.write(a);
-        mplew.writeInt(b);
+        mplew.write(start ? 55 : 63);
+        mplew.writeInt(0);
+        mplew.writeInt(hammered);
+
         return mplew.getPacket();
     }
+
+    /**
+     * 生成恶意之锤技能启动或结束时的数据包
+     *
+     * @param start 标志技能是否启动，true表示启动，false表示结束
+     * @param hammered 在技能启动时，表示被锤击的次数
+     * @return 包含技能启动或结束信息的数据包
+     */
+    public static byte[] ViciousHammer( boolean start,  int hammered) {
+        MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
+        mplew.writeShort(SendPacketOpcode.VICIOUS_HAMMER.getValue());
+        mplew.write(start ? 51 : 59);
+        mplew.writeInt(0);
+        mplew.writeInt(hammered);
+        return mplew.getPacket();
+    }
+
 }

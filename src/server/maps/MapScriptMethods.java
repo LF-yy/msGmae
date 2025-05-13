@@ -27,7 +27,7 @@ public class MapScriptMethods
             return;
         }
         if (c.getPlayer().hasGmLevel(5)) {
-            c.getPlayer().dropMessage("[系統提示]您已經建立與地图腳本:" + scriptName + "的連接。(FirstUser)");
+            c.getPlayer().dropMessage("[系统提示]您已经建立與地图腳本:" + scriptName + "的连接。(FirstUser)");
         }
         switch (onFirstUserEnter.fromString(scriptName)) {
             case dojang_Eff: {
@@ -46,7 +46,7 @@ public class MapScriptMethods
                 break;
             }
             case GhostF: {
-                c.getPlayer().getMap().startMapEffect("這個地图感覺陰森森的..有種莫名的奇怪感覺..", 5120025);
+                c.getPlayer().getMap().startMapEffect("这个地图感覺陰森森的..有種莫名的奇怪感覺..", 5120025);
                 break;
             }
             case moonrabbit_mapEnter: {
@@ -59,7 +59,7 @@ public class MapScriptMethods
                     case 103000801: {}
                     case 103000802: {}
                     case 103000804: {
-                        c.getPlayer().getMap().startMapEffect("請打敗超級綠水靈!", 5120017);
+                        c.getPlayer().getMap().startMapEffect("请打敗超級綠水靈!", 5120017);
                         break;
                     }
                 }
@@ -68,23 +68,23 @@ public class MapScriptMethods
             case StageMsg_romio: {
                 switch (c.getPlayer().getMapId()) {
                     case 926100000: {
-                        c.getPlayer().getMap().startMapEffect("通過調查實驗室，請找到隱藏的門!", 5120021);
+                        c.getPlayer().getMap().startMapEffect("通過調查實驗室，请找到隱藏的門!", 5120021);
                         break;
                     }
                     case 926100001: {
-                        c.getPlayer().getMap().startMapEffect("通過這個黑暗中找到自己的方式!", 5120021);
+                        c.getPlayer().getMap().startMapEffect("通過这个黑暗中找到自己的方式!", 5120021);
                         break;
                     }
                     case 926100100: {
-                        c.getPlayer().getMap().startMapEffect("把燒杯填滿!", 5120021);
+                        c.getPlayer().getMap().startMapEffect("把燒杯填满!", 5120021);
                         break;
                     }
                     case 926100200: {
-                        c.getPlayer().getMap().startMapEffect("通過每個門获得用於實驗中的文件!", 5120021);
+                        c.getPlayer().getMap().startMapEffect("通過每个門获得用於實驗中的文件!", 5120021);
                         break;
                     }
                     case 926100203: {
-                        c.getPlayer().getMap().startMapEffect("請打敗所有怪物!", 5120021);
+                        c.getPlayer().getMap().startMapEffect("请打敗所有怪物!", 5120021);
                         break;
                     }
                     case 926100300: {
@@ -92,7 +92,7 @@ public class MapScriptMethods
                         break;
                     }
                     case 926100401: {
-                        c.getPlayer().getMap().startMapEffect("請保護我的愛人!", 5120021);
+                        c.getPlayer().getMap().startMapEffect("请保護我的愛人!", 5120021);
                         break;
                     }
                 }
@@ -101,23 +101,23 @@ public class MapScriptMethods
             case StageMsg_juliet: {
                 switch (c.getPlayer().getMapId()) {
                     case 926110000: {
-                        c.getPlayer().getMap().startMapEffect("通過調查實驗室，請找到隱藏的門!", 5120022);
+                        c.getPlayer().getMap().startMapEffect("通過調查實驗室，请找到隱藏的門!", 5120022);
                         break;
                     }
                     case 926110001: {
-                        c.getPlayer().getMap().startMapEffect("通過這個黑暗中找到自己的方式!", 5120022);
+                        c.getPlayer().getMap().startMapEffect("通過这个黑暗中找到自己的方式!", 5120022);
                         break;
                     }
                     case 926110100: {
-                        c.getPlayer().getMap().startMapEffect("把燒杯填滿!", 5120022);
+                        c.getPlayer().getMap().startMapEffect("把燒杯填满!", 5120022);
                         break;
                     }
                     case 926110200: {
-                        c.getPlayer().getMap().startMapEffect("通過每個門获得用於實驗中的文件!", 5120022);
+                        c.getPlayer().getMap().startMapEffect("通過每个門获得用於實驗中的文件!", 5120022);
                         break;
                     }
                     case 926110203: {
-                        c.getPlayer().getMap().startMapEffect("請打敗所有怪物!", 5120022);
+                        c.getPlayer().getMap().startMapEffect("请打敗所有怪物!", 5120022);
                         break;
                     }
                     case 926110300: {
@@ -125,7 +125,7 @@ public class MapScriptMethods
                         break;
                     }
                     case 926110401: {
-                        c.getPlayer().getMap().startMapEffect("請保護我的愛人!", 5120022);
+                        c.getPlayer().getMap().startMapEffect("请保護我的愛人!", 5120022);
                         break;
                     }
                 }
@@ -134,7 +134,7 @@ public class MapScriptMethods
             case party6weatherMsg: {
                 switch (c.getPlayer().getMapId()) {
                     case 930000000: {
-                        c.getPlayer().getMap().startMapEffect("進入傳送點，我要對你們施放變身魔法了！", 5120023);
+                        c.getPlayer().getMap().startMapEffect("进入傳送點，我要對你們施放變身魔法了！", 5120023);
                         break;
                     }
                     case 930000100: {
@@ -142,7 +142,7 @@ public class MapScriptMethods
                         break;
                     }
                     case 930000200: {
-                        c.getPlayer().getMap().startMapEffect("對荊棘施放稀釋的毒液4個！", 5120023);
+                        c.getPlayer().getMap().startMapEffect("對荊棘施放稀釋的毒液4个！", 5120023);
                         break;
                     }
                     case 930000300: {
@@ -150,7 +150,7 @@ public class MapScriptMethods
                         break;
                     }
                     case 930000400: {
-                        c.getPlayer().getMap().startMapEffect("找我對話拿淨化之珠其中一個队員集滿10個怪物株給我！", 5120023);
+                        c.getPlayer().getMap().startMapEffect("找我對話拿淨化之珠其中一个队員集满10个怪物株給我！", 5120023);
                         break;
                     }
                     case 930000500: {
@@ -171,7 +171,7 @@ public class MapScriptMethods
                         break;
                     }
                     case 925100100: {
-                        c.getPlayer().getMap().startMapEffect("我們必須證明自己！請給我海盜獎牌!", 5120020);
+                        c.getPlayer().getMap().startMapEffect("我們必須證明自己！请給我海盜獎牌!", 5120020);
                         break;
                     }
                     case 925100200: {
@@ -187,7 +187,7 @@ public class MapScriptMethods
                         break;
                     }
                     case 925100500: {
-                        c.getPlayer().getMap().startMapEffect("打倒這隻BOSS即可過關。", 5120020);
+                        c.getPlayer().getMap().startMapEffect("打倒这隻BOSS即可過關。", 5120020);
                         break;
                     }
                 }
@@ -369,7 +369,7 @@ public class MapScriptMethods
             return;
         }
         if (c.getPlayer().hasGmLevel(5)) {
-            c.getPlayer().dropMessage("[系統提示]您已經建立與地图腳本:" + scriptName + "的連接。(User)");
+            c.getPlayer().dropMessage("[系统提示]您已经建立與地图腳本:" + scriptName + "的连接。(User)");
         }
         String data = "";
         switch (onUserEnter.fromString(scriptName)) {
@@ -412,7 +412,7 @@ public class MapScriptMethods
                 break;
             }
             case Ghost: {
-                c.getPlayer().getMap().startMapEffect("這個地图感覺陰森森的..有種莫名的奇怪感覺..", 5120025);
+                c.getPlayer().getMap().startMapEffect("这个地图感覺陰森森的..有種莫名的奇怪感覺..", 5120025);
                 break;
             }
             case PRaid_D_Enter:

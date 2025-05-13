@@ -52,7 +52,7 @@ public class MapleLieDetector
                     if (attempt >= 3) {
                         final MapleCharacter search_chr = searchchr.getMap().getCharacterByName(tester);
                         if (search_chr != null && search_chr.getId() != searchchr.getId()) {
-                            search_chr.dropMessage(5, searchchr.getName() + " 沒有通過測謊儀。");
+                            search_chr.dropMessage(5, searchchr.getName() + " 没有通過測謊儀。");
                         }
                         MapleLieDetector.this.end();
                         searchchr.getClient().getSession().writeAndFlush((Object)MaplePacketCreator.LieDetectorResponse((byte)7, (byte)0));

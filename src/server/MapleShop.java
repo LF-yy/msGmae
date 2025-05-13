@@ -51,15 +51,15 @@ public class MapleShop
             c.getPlayer().setShop(this);
             c.sendPacket(MaplePacketCreator.getNPCShop(c, customNpc, this.items));
         }
-
     }
+
     public void buy(final MapleClient c, final int itemId, short quantity) {
         if (quantity <= 0) {
             AutobanManager.getInstance().addPoints(c, 1000, 0L, "Buying " + (int)quantity + " " + itemId);
             return;
         }
         if (!GameConstants.isMountItemAvailable(itemId, (int)c.getPlayer().getJob())) {
-            c.getPlayer().dropMessage(1, "你不可以買這道具。");
+            c.getPlayer().dropMessage(1, "你不可以買这道具。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -81,7 +81,7 @@ public class MapleShop
                     }
                 }
                 else {
-                    c.getPlayer().dropMessage(1, "你的道具栏滿了。");
+                    c.getPlayer().dropMessage(1, "你的道具栏满了。");
                 }
                 c.sendPacket(MaplePacketCreator.confirmShopTransaction((byte)0));
             }
@@ -101,15 +101,15 @@ public class MapleShop
                 }
             }
             else {
-                c.getPlayer().dropMessage(1, "你的道具栏滿了。");
+                c.getPlayer().dropMessage(1, "你的道具栏满了。");
             }
             c.sendPacket(MaplePacketCreator.confirmShopTransaction((byte)0));
         }
     }
     
     public void sell(final MapleClient c, final MapleInventoryType type, final byte slot, short quantity) {
-        if (quantity >= 32767 || quantity == 0 || quantity<0) {
-            quantity = 1;
+        if (quantity > 30000 || quantity == 0 || quantity<0) {
+            return;
         }
         final IItem item = c.getPlayer().getInventory(type).getItem((short)slot);
         if (item == null) {
@@ -119,7 +119,7 @@ public class MapleShop
             quantity = item.getQuantity();
         }
         short iQuant = item.getQuantity();
-        if (iQuant >= 32767) {
+        if (iQuant > 30000) {
             iQuant = 1;
         }
         final MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
@@ -183,7 +183,7 @@ public class MapleShop
             int recvMesos = (int)Math.max(Math.ceil(price * (double)quantity), 0.0);
             if (price != -1.0 && recvMesos > 0) {
                 if (recvMesos > PiPiConfig.商店一次拍賣获得最大金币) {
-                    recvMesos = 1;
+                    return;
                 }
                 c.getPlayer().gainMeso(recvMesos, false);
             }
@@ -262,7 +262,7 @@ public class MapleShop
         }
         catch (SQLException e) {
             System.err.println("Could not load shop" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return ret;
     }

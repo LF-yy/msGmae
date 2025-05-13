@@ -51,10 +51,10 @@ public class DumpHairFace
                     DumpHairFace.chrNames.put(Integer.valueOf(chrid), name);
                 }
                 catch (NullPointerException e) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
                 }
                 catch (RuntimeException e2) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
                 }
             }
             final Iterator<Integer> iterator2 = DumpHairFace.chrNames.keySet().iterator();
@@ -71,14 +71,14 @@ public class DumpHairFace
                     System.out.println("鍵值: " + key + " 名稱: " + (String)DumpHairFace.chrNames.get((Object)Integer.valueOf(key)));
                 }
                 catch (SQLException ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                     System.out.println("保存鍵值錯誤：" + key);
                 }
             }
             DumpHairFace.chrNames.clear();
         }
         catch (SQLException es) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)es);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)es);
         }
     }
     

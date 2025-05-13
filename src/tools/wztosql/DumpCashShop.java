@@ -39,7 +39,7 @@ public class DumpCashShop
             ps.close();
             con.close();
         }catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
@@ -154,7 +154,7 @@ public class DumpCashShop
             }
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     

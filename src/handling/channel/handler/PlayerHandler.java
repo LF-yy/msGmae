@@ -139,9 +139,9 @@ public class PlayerHandler
 //        final MapleInventoryType type = GameConstants.getInventoryType(itemId);
 //        IItem toUse = chr.getInventory(type).findById(itemId);
 //        if (toUse == null && itemId >= 3010000 && itemId < 9999999) {
-//            FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品");
-//            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + c.getPlayer().getName() + " 因為修改封包而被管理员永久停權。"));
-//            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密語]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並沒有該物品"));
+//            FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並没有该物品");
+//            //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系统] " + c.getPlayer().getName() + " 因为修改封包而被管理员永久停權。"));
+//            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密語]  " + c.getPlayer().getName() + "(" + c.getPlayer().getId() + ") 修改椅子(" + itemId + ")封包，坐上椅子時封鎖。 身上並没有该物品"));
 //            c.getPlayer().ban("修改封包", true, true, false);
 //            //c.getSession().close();
 //            return;
@@ -277,7 +277,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                     chr.addRockMap();
                 }
                 else {
-                    chr.dropMessage(1, "你不能儲存這張地图");
+                    chr.dropMessage(1, "你不能儲存这張地图");
                 }
             }
         }
@@ -289,7 +289,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                 chr.addRegRockMap();
             }
             else {
-                chr.dropMessage(1, "你不能儲存這張地图");
+                chr.dropMessage(1, "你不能儲存这張地图");
             }
         }
         c.sendPacket(MTSCSPacket.getTrockRefresh(chr, vip, addrem == 0));
@@ -368,8 +368,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         if ((Integer)LtMS.ConfigValuesMap.get("VIP无敌开关") > 0 && chr.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无敌道具ID"))) {
             return;
         }
-        //概率闪避伤害
-
+        // 检查输入流中是否有足够的数据（至少5个字节）来读取
         if (slea.available() < 5L) {
             return;
         }
@@ -377,10 +376,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         final byte type = slea.readByte();
         slea.skip(1);
         int damage = slea.readInt();
-        //怪物必中,无MISS
-        if(damage<=0){
-            damage =1;
-        }
+
 
         HideAttribute hideAttribute = Start.hideAttributeMap.get(chr.getId());
 
@@ -412,7 +408,10 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                 }
             }
         }
-
+        //怪物必中,无MISS
+        if(damage<=0){
+            damage =1;
+        }
         int oid = 0;
         int monsteridfrom = 0;
         final int reflect = 0;
@@ -448,15 +447,19 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             final long now = System.currentTimeMillis();
 
                 if (type != -1 && monsteridfrom != 0 && attacker.getStats().isBoss()) {
-                    // System.out.println("怪物"+chr.getName()+" 怪物ID:"+monsteridfrom+" 怪物攻击者ID:"+oid+" 攻击类型:"+type+" 攻击方向:"+direction);
                     List<LtMonsterSkill> ltMonsterSkills = Start.ltMonsterSkillAttackSkill.get(monsteridfrom);
                     if (ListUtil.isNotEmpty(ltMonsterSkills) && attacker.getMp() > 0) {
                         List<LtMonsterSkill> collect = ltMonsterSkills.stream().filter(ltMonsterSkill -> ltMonsterSkill.getSkillId() == type).collect(Collectors.toList());
                         if (ListUtil.isNotEmpty(collect)) {
                             MobSkill skill = MobSkillFactory.getMobSkill(collect.get(0).getSkillId(), collect.get(0).getLevel());
+
                             if (skill != null && damage > 0) {
                                 final long ls = c.getPlayer().getLastSkillUsed(skill.getSkillId());
                                 if (ls == 0L || (now - ls > collect.get(0).getSkillcd())) {
+                                    if (collect.get(0).getDeadlyAttack()!=null && collect.get(0).getDeadlyAttack()) {
+                                        isDeadlyAttack = true;
+                                        mpattack = stats.getMp() - 1;
+                                    }
                                     c.getPlayer().setUsedSkills(collect.get(0).getSkillId(), now, collect.get(0).getSkillcd());
                                     skill.applyEffect(chr, attacker, false);
                                 }
@@ -892,16 +895,22 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         }
     }
     
-    public static final void closeRangeAttack(final LittleEndianAccessor slea,  MapleClient c, MapleCharacter chr, final boolean energy) {
+    public static  void closeRangeAttack( LittleEndianAccessor slea,  MapleClient c, MapleCharacter chr, final boolean energy) {
         if (chr == null || (energy && chr.getBuffedValue(MapleBuffStat.ENERGY_CHARGE) == null && chr.getBuffedValue(MapleBuffStat.BODY_PRESSURE) == null && !GameConstants.isKOC((int)chr.getJob()))) {
             return;
         }
+        // 判断角色是否拥有镜像效果
         final boolean mirror = chr.getBuffedValue(MapleBuffStat.MIRROR_IMAGE) != null;
         if (!chr.isAlive() || chr.getMap() == null) {
             chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
         }
-        final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
+        //判断角色血量是否小于15000,且背包中是否要10900编号药品,如果成立则消耗一瓶药
+        if (chr.getHp() < chr.血量临界值 && chr.getInventory(MapleInventoryType.USE).countById(chr.药品编号) > 1) {
+            MapleInventoryManipulator.removeById(c, MapleInventoryType.USE, chr.药品编号, 2, true, false);
+            chr.setHp(chr.getHp()+chr.药品恢复值);
+        }
+         AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgM(slea), chr, 1);
         double maxdamage = (double)chr.getStat().getCurrentMaxBaseDamage();
         chr.sendSkillSkin(attack.skill);
         if (chr.getSuperTransformation() && attack.skill != 0) {
@@ -925,17 +934,17 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                 return;
             }
             if (chr.getMapId() == 109010000 || chr.getMapId() == 109030001 || chr.getMapId() == 109060000 || chr.getMapId() == 109040000) {
-                chr.dropMessage(5, "該地图無法使用技能");
+                chr.dropMessage(5, "该地图无法使用技能");
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
             if (attack.skill == 1221011 && chr.getMapId() >= 211060000 && chr.getMapId() <= 211070200) {
-                chr.dropMessage(5, "該地图無法該使用技能");
+                chr.dropMessage(5, "该地图无法该使用技能");
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
             if (attack.skill == 21120006 && (chr.getMapId() == 211060100 || chr.getMapId() == 211060300 || chr.getMapId() == 211060500 || chr.getMapId() == 211060700 || chr.getMapId() == 211060900)) {
-                chr.dropMessage(5, "該地图無法該使用技能");
+                chr.dropMessage(5, "该地图无法该使用技能");
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
@@ -953,7 +962,12 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
            // System.out.println("2:"+maxdamage);
             //段数
             attackCount = ((effect.getAttackCount() > effect.getBulletCount()) ? effect.getAttackCount() : effect.getBulletCount());
-           // System.out.println("段数:"+attackCount);
+
+//            System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
+//            System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
+//            System.out.println("段数:"+ effect.getAttackCount());
+//            System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
+
             //技能冷却时间处理
             if (effect.getCooldown() > 0 && !chr.isGM()) {
                 if(Objects.isNull(Start.ltSkillWucdTable.get(attack.skill))) {
@@ -1054,15 +1068,9 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                 maxdamage = 500000.0;
             }
         }
-//        System.out.println("伤害3:"+maxdamage);
         chr.checkFollow();
         //发起攻击封包推送
-//        System.out.println("开始计算额外伤害(物理)");
         if(chr.getUserASkill()!=null && chr.getUserASkill().size()>0 && Objects.nonNull(effect) && chr.getUserASkill().get(effect.getSourceId())!=null){
-//            System.out.println("开始计算额外伤害(物理)");
-//            chr.getUserASkill().forEach((s,ak)->{
-//                System.out.println("开始计算额外伤害(物理)"+ak.getSkillId()+"---"+ak.getName());
-//            });
             DamageParse.计算伤害(chr,effect,chr.getUserASkill().get(effect.getSourceId()),attack);
         }
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
@@ -1104,7 +1112,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             }
         }
 
-        //身外化身处理
+//        //身外化身处理
 //        final WeakReference<MapleCharacter>[] clones = chr.getClones();
 //        for (int i = 0; i < clones.length; ++i) {
 //            if (clones[i].get() != null) {
@@ -1134,7 +1142,13 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
         }
-        final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgR(slea), chr, 2);
+        //判断角色血量是否小于15000,且背包中是否要10900编号药品,如果成立则消耗一瓶药
+        if (chr.getHp() < chr.血量临界值 && chr.getInventory(MapleInventoryType.USE).countById(chr.药品编号) > 1) {
+            MapleInventoryManipulator.removeById(c, MapleInventoryType.USE, chr.药品编号, 2, true, false);
+            chr.setHp(chr.getHp()+chr.药品恢复值);
+        }
+
+         AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgR(slea), chr, 2);
         chr.sendSkillSkin(attack.skill);
         if (chr.getSuperTransformation() && attack.skill != 0) {
             long nowTime = System.currentTimeMillis();
@@ -1153,7 +1167,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         ISkill skill = null;
         if (attack.skill != 0) {
             if (chr.getMapId() == 109010000 || chr.getMapId() == 109030001 || chr.getMapId() == 109060000 || chr.getMapId() == 109040000) {
-                chr.dropMessage(5, "該地图無法使用技能");
+                chr.dropMessage(5, "该地图无法使用技能");
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
@@ -1164,12 +1178,12 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                 return;
             }
             if (attack.skill == 1221011 && chr.getMapId() >= 211060000 && chr.getMapId() <= 211070200) {
-                chr.dropMessage(5, "該地图無法該使用技能");
+                chr.dropMessage(5, "该地图无法该使用技能");
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
             if (attack.skill == 21120006 && (chr.getMapId() == 211060100 || chr.getMapId() == 211060300 || chr.getMapId() == 211060500 || chr.getMapId() == 211060700 || chr.getMapId() == 211060900)) {
-                chr.dropMessage(5, "該地图無法該使用技能");
+                chr.dropMessage(5, "该地图无法该使用技能");
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
@@ -1334,6 +1348,9 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             }
         }
         chr.checkFollow();
+        if(chr.getUserASkill()!=null && chr.getUserASkill().size()>0 && Objects.nonNull(effect) && chr.getUserASkill().get(effect.getSourceId())!=null){
+            DamageParse.计算伤害(chr,effect,chr.getUserASkill().get(effect.getSourceId()),attack);
+        }
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.rangedAttack(chr.getId(), attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, visProjectile, attack.allDamage, attack.position, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk), chr.getPosition());
         if (LtMS.ConfigValuesMap.get("攻击日志") >0) {
             try {
@@ -1341,6 +1358,10 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             } catch (Exception e) {
             }
         }
+//        System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
+//        System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
+//        System.out.println("段数:"+ effect.getAttackCount());
+//        System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
         DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
         //触发特效技能
         List<SuperSkills> superSkills = Start.superSkillsMap.get(chr.getId());
@@ -1401,7 +1422,12 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             chr.getCheatTracker().registerOffense(CheatingOffense.ATTACKING_WHILE_DEAD);
             return;
         }
-        final AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgMa(slea), chr, 3);
+        //判断角色血量是否小于15000,且背包中是否要10900编号药品,如果成立则消耗一瓶药
+        if (chr.getHp() < chr.血量临界值 && chr.getInventory(MapleInventoryType.USE).countById(chr.药品编号) > 1) {
+            MapleInventoryManipulator.removeById(c, MapleInventoryType.USE, chr.药品编号, 2, true, false);
+            chr.setHp(chr.getHp()+chr.药品恢复值);
+        }
+         AttackInfo attack = DamageParse.Modify_AttackCrit(DamageParse.parseDmgMa(slea), chr, 3);
         //发包变更技能皮肤
         chr.sendSkillSkin(attack.skill);
         if (chr.getSuperTransformation() && attack.skill != 0) {
@@ -1422,17 +1448,17 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             return;
         }
         if (chr.getMapId() == 109010000 || chr.getMapId() == 109030001 || chr.getMapId() == 109060000 || chr.getMapId() == 109040000) {
-            chr.dropMessage(5, "該地图無法使用技能");
+            chr.dropMessage(5, "该地图无法使用技能");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
         if (attack.skill == 1221011 && chr.getMapId() >= 211060000 && chr.getMapId() <= 211070200) {
-            chr.dropMessage(5, "該地图無法該使用技能");
+            chr.dropMessage(5, "该地图无法该使用技能");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
         if (attack.skill == 21120006 && (chr.getMapId() == 211060100 || chr.getMapId() == 211060300 || chr.getMapId() == 211060500 || chr.getMapId() == 211060700 || chr.getMapId() == 211060900)) {
-            chr.dropMessage(5, "該地图無法該使用技能");
+            chr.dropMessage(5, "该地图无法该使用技能");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -1456,9 +1482,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         chr.checkFollow();
         //词条加成额外计算
         if(chr.getUserASkill()!=null && chr.getUserASkill().size()>0 && chr.getUserASkill().get(effect.getSourceId())!=null){
-//            System.out.println("开始计算额外伤害");
             chr.getUserASkill().forEach((s,ak)->{
-//                System.out.println("开始计算额外伤害魔法)"+ak.getSkillId()+"---"+ak.getName());
             });
             DamageParse.计算伤害(chr,effect,chr.getUserASkill().get(effect.getSourceId()),attack);
         }
@@ -1469,6 +1493,10 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             } catch (Exception e) {
             }
         }
+//        System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
+//        System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
+//        System.out.println("段数:"+ effect.getAttackCount());
+//        System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
         DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
         //触发特效技能
         if (ListUtil.isNotEmpty(c.getPlayer().triggeredEquipmentsList) && skill !=null) {
@@ -1992,7 +2020,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             }
             catch (Exception ex) {
                 System.err.println("[handleLogout] 處理登出出錯" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (c != null) {
                 c.setAccID(id);

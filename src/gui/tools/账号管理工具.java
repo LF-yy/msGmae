@@ -57,7 +57,6 @@ public class 账号管理工具 extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jTabbedPane8 = new javax.swing.JTabbedPane();
@@ -2222,6 +2221,15 @@ public class 账号管理工具 extends javax.swing.JFrame {
             ps.setInt(1, 0);
             ps.setString(2, account);
             ps.execute();
+
+            ps = con.prepareStatement("SELECT * FROM accounts Where name = ? limit 1");
+            ps.setString(1, account);
+            ResultSet rs = ps.executeQuery();
+            String macs = rs.getString("macs");
+            String ip = rs.getString("SessionIP");
+                ps.executeUpdate(" delete from macbans where mac ='" +macs+"'");
+                ps.executeUpdate(" delete from ipbans where ipbanid ='" + ip+"'");
+            rs.close();
             ps.close();
              con.close();
 
@@ -2293,8 +2301,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
         for (int i = ((DefaultTableModel) (this.账号信息.getModel())).getRowCount() - 1; i >= 0; i--) {
             ((DefaultTableModel) (this.账号信息.getModel())).removeRow(i);
         }
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
 
             ResultSet rs = null;
@@ -2335,6 +2343,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
             }
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
         读取显示账号();
     }//GEN-LAST:event_在线账号ActionPerformed
@@ -2368,8 +2382,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
             return;
         }
         String account = 账号操作.getText();
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps;
 
             ps = con.prepareStatement("Update accounts set banned = ? Where name = ?");
@@ -2379,6 +2393,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
             ps.close();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "错误!\r\n" + ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
         账号提示语言.setText("[信息]:封锁账号 " + this.账号操作.getText() + " 成功。");
         刷新账号信息();
@@ -2391,8 +2411,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
             return;
         }
         String account = 账号操作.getText();
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps;
 
             ps = con.prepareStatement("Update accounts set loggedin = ? Where name = ?");
@@ -2402,6 +2422,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
             ps.close();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "错误!\r\n" + ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
         账号提示语言.setText("[信息]:解卡账号 " + this.账号操作.getText() + " 成功。");
         刷新账号信息();
@@ -2423,8 +2449,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
         for (int i = ((DefaultTableModel) (this.角色信息.getModel())).getRowCount() - 1; i >= 0; i--) {
             ((DefaultTableModel) (this.角色信息.getModel())).removeRow(i);
         }
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
 
             ResultSet rs = null;
@@ -2460,6 +2486,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "[信息]:显示游戏所有管理员角色信息。");
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
     }//GEN-LAST:event_显示管理角色ActionPerformed
 
@@ -2800,8 +2832,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
         for (int i = ((DefaultTableModel) (this.角色信息.getModel())).getRowCount() - 1; i >= 0; i--) {
             ((DefaultTableModel) (this.角色信息.getModel())).removeRow(i);
         }
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
 
             ResultSet rs = null;
@@ -2835,6 +2867,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
         } catch (SQLException ex) {
             Logger.getLogger(Start.class
                     .getName()).log(Level.SEVERE, null, ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
     }//GEN-LAST:event_离线角色ActionPerformed
 
@@ -2843,8 +2881,8 @@ public class 账号管理工具 extends javax.swing.JFrame {
         for (int i = ((DefaultTableModel) (this.角色信息.getModel())).getRowCount() - 1; i >= 0; i--) {
             ((DefaultTableModel) (this.角色信息.getModel())).removeRow(i);
         }
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
 
             ResultSet rs = null;
@@ -2877,6 +2915,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
 
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
     }//GEN-LAST:event_在线角色ActionPerformed
 
@@ -3273,9 +3317,9 @@ public class 账号管理工具 extends javax.swing.JFrame {
     }//GEN-LAST:event_家族GPActionPerformed
 
     private void jButton34ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton34ActionPerformed
+        Connection con = DatabaseConnection.getConnection();
         try {
 
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("UPDATE guilds SET GP =" + 家族GP.getText().toString() + " WHERE guildid = " + 家族ID.getText().toString() + "");
             ps.executeUpdate();
             ps.close();
@@ -3283,6 +3327,12 @@ public class 账号管理工具 extends javax.swing.JFrame {
             刷新家族信息();
         } catch (SQLException ex) {
             ex.getStackTrace();
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
     }//GEN-LAST:event_jButton34ActionPerformed
 
@@ -3354,6 +3404,9 @@ public class 账号管理工具 extends javax.swing.JFrame {
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM characters");
             rs = ps.executeQuery();
+            rs.close();
+            ps.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -3380,6 +3433,9 @@ public class 账号管理工具 extends javax.swing.JFrame {
                     rs.getString("GP")
                 });
             }
+            rs.close();
+            ps.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -3425,6 +3481,9 @@ public class 账号管理工具 extends javax.swing.JFrame {
                     NPCConversationManager.MAC取账号(rs.getString("mac"))
                 });
             }
+            rs.close();
+            ps.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -3449,6 +3508,9 @@ public class 账号管理工具 extends javax.swing.JFrame {
                     NPCConversationManager.IP取账号(rs.getString("ip"))
                 });
             }
+            rs.close();
+            ps.close();
+            con.close();
         } catch (SQLException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }

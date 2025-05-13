@@ -7,7 +7,6 @@ import client.inventory.MapleInventoryType;
 import constants.GameConstants;
 import constants.ServerConfig;
 import constants.tzjc;
-import database.DBConPool;
 import database.DatabaseConnection;
 import gui.tools.*;
 import handling.RecvPacketOpcode;
@@ -31,6 +30,7 @@ import server.quest.MapleQuest;
 import tools.FilePrinter;
 import tools.FileoutputUtil;
 import tools.MaplePacketCreator;
+import tools.packet.MTSCSPacket;
 import tools.wztosql.*;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -339,7 +339,7 @@ public class LtMS extends JFrame {
                 时长.setValue(运行秒数 / 60);
                 时长.setString(运行秒数 / 86400 + "天" + 运行秒数 / 3600 % 24 + "时" + 运行秒数 / 60 % 60 + "分" + 运行秒数 % 60 + "秒");
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     //e.printStackTrace();
                 }
@@ -369,9 +369,6 @@ public class LtMS extends JFrame {
     }
 
     public void updatePlayerList() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
                 updateplayer = Timer.GuiTimer.getInstance().register(new Runnable() {
                     @Override
                     public void run() {
@@ -409,8 +406,6 @@ public class LtMS extends JFrame {
                         在线人数.setString(cloumn + "/999");
                     }
                 }, 1000 * 10);
-            }
-        }).start();
     }
 
     public static void GetConfigValues() {
@@ -448,23 +443,35 @@ public class LtMS extends JFrame {
         UIManager.put("TabbedPane.contentOpaque", true);
     }
 
+    /**
+     * 启动一个线程来读取输入流并在控制台中输出
+     * 该方法主要用于后台运行一个线程，该线程从给定的输入流中读取数据，并将读取到的内容追加到输出窗口中
+     *
+     * @param inStream 输入流，通常为系统标准输入流或与之类似的流，从该流中读取数据
+     */
     void startConsoleReaderThread(InputStream inStream) {
+        // 创建一个BufferedReader来从输入流中读取数据
         final BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+
+        // 创建并启动一个新的线程来处理输入流的读取和输出
         new Thread(new Runnable() {
             public void run() {
                 StringBuffer sb = new StringBuffer();
                 try {
                     String s;
+                    // 循环读取输入流中的每一行数据，直到输入流结束
                     while ((s = br.readLine()) != null) {
                         boolean caretAtEnd = false;
                         sb.setLength(0);
+                        // 将读取到的数据追加到输出窗口中，并在末尾添加换行符
                         LtMS.this.输出窗口.append(new StringBuilder().append("").append(s).toString() + '\n');
+                        // 当前代码段中未使用caretAtEnd变量，可能是未来功能的预留接口
                         if (!caretAtEnd) {
                         }
                     }
                 } catch (IOException e) {
+                    // 如果在读取过程中发生IOException，显示错误对话框并退出程序
                     JOptionPane.showMessageDialog(null, "从BufferedReader读取错误：" + e);
-
                     System.exit(1);
                 }
             }
@@ -5802,7 +5809,7 @@ public class LtMS extends JFrame {
             cserv.setExpRate(exp);
 
         }
-        System.out.println("經驗已修改為" + exp + "。");
+        System.out.println("經驗已修改为" + exp + "。");
         JOptionPane.showMessageDialog(null, "成功。");
         // TODO add your handling code here:
     }//GEN-LAST:event_经验确认ActionPerformed
@@ -5818,7 +5825,7 @@ public class LtMS extends JFrame {
             cserv.setDropRate(drop);
 
         }
-        System.out.println("物品倍率已修改為" + drop + "。");
+        System.out.println("物品倍率已修改为" + drop + "。");
         JOptionPane.showMessageDialog(null, "修改成功。");
         // TODO add your handling code here:
     }//GEN-LAST:event_物品确认ActionPerformed
@@ -5830,7 +5837,7 @@ public class LtMS extends JFrame {
             cserv.setMesoRate(meso);
 
         }
-        System.out.println("金幣倍率已修改為" + meso + "。");
+        System.out.println("金幣倍率已修改为" + meso + "。");
         JOptionPane.showMessageDialog(null, "修改成功。");
     }//GEN-LAST:event_金币确认ActionPerformed
 
@@ -7174,6 +7181,8 @@ public class LtMS extends JFrame {
             String 输出 = "";
             for (ChannelServer cserv1 : ChannelServer.getAllInstances()) {
                 for (MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
+                    mch.getClient().getSession().write(MTSCSPacket.ViciousHammer(false, (byte) 0));
+                    mch.getClient().sendPacket(MaplePacketCreator.enableActions());
                     switch (a) {
                         case 0:
                             //顶端公告

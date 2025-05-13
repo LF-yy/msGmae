@@ -120,7 +120,7 @@ public class CommandProcessor
                 splitted[0] = splitted[0].toLowerCase();
                 final CommandObject co = (CommandObject)CommandProcessor.commands.get((Object)splitted[0]);
                 if (co == null || co.getType() != type) {
-                    sendDisplayMessage(c, "沒有這個指令,可以使用 @幫助/@help 來查看指令.", type);
+                    sendDisplayMessage(c, "没有这个指令,可以使用 @幫助/@help 來查看指令.", type);
                     return true;
                 }
                 try {
@@ -194,7 +194,7 @@ public class CommandProcessor
                                     dropHelp(c, 0);
                                     return true;
                                 }
-                                sendDisplayMessage(c, "沒有這個指令.", type);
+                                sendDisplayMessage(c, "没有这个指令.", type);
                                 return true;
                             }
                             else {
@@ -209,11 +209,11 @@ public class CommandProcessor
                                     CanUseCommand = true;
                                 }
                                 if (!CanUseCommand) {
-                                    sendDisplayMessage(c, "你沒有權限可以使用指令.", type);
+                                    sendDisplayMessage(c, "你没有權限可以使用指令.", type);
                                     return true;
                                 }
                                 if (PiPiConfig.getCommandLock() && !c.getPlayer().isGod()) {
-                                    sendDisplayMessage(c, "目前無法使用指令.", type);
+                                    sendDisplayMessage(c, "目前无法使用指令.", type);
                                     return true;
                                 }
                                 if (c.getPlayer() != null) {
@@ -269,7 +269,7 @@ public class CommandProcessor
                 System.out.println("＜实习生＞ " + c.getPlayer().getName() + " 使用了指令: " + line);
             }
             else if (c.getPlayer().getGMLevel() != 100) {
-                sendDisplayMessage(c, "你沒有權限可以使用指令.", type);
+                sendDisplayMessage(c, "你没有權限可以使用指令.", type);
             }
         }
     }
@@ -290,14 +290,14 @@ public class CommandProcessor
         }
         catch (SQLException ex) {
             FilePrinter.printError("CommandProccessor.txt", (Throwable)ex, "logGMCommandToDB");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             try {
                 if (ps != null) {
                     ps.close();
                 }
             }
             catch (SQLException e) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             }
         }
         finally {
@@ -307,7 +307,7 @@ public class CommandProcessor
                 }
             }
             catch (SQLException e2) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
     }

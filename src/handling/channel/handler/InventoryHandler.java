@@ -648,7 +648,7 @@ public class InventoryHandler
                                 }
                             }
                             else {
-                                chr.dropMessage(5, "你有一個栏位滿了，請空出來再打開" + box + "！");
+                                chr.dropMessage(5, "你有一个栏位满了，请空出來再打開" + box + "！");
                                 c.sendPacket(MaplePacketCreator.enableActions());
                             }
                             break;
@@ -660,7 +660,7 @@ public class InventoryHandler
                 }
             }
             else {
-                chr.dropMessage(6, "你有一個栏位滿了 請空出來再打開");
+                chr.dropMessage(6, "你有一个栏位满了 请空出來再打開");
             }
         }
         return false;
@@ -688,7 +688,7 @@ public class InventoryHandler
         }
         final long time = System.currentTimeMillis();
         if (chr.getNextConsume() > time) {
-            chr.dropMessage(5, "你不可以使用這個道具。");
+            chr.dropMessage(5, "你不可以使用这个道具。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -987,7 +987,7 @@ public class InventoryHandler
                         break;
                     }
                     map.broadcastMessage(MaplePacketCreator.catchMonster(mob.getId(), itemid, (byte)0));
-                    chr.dropMessage(5, "因怪物的生命值過高，所以無法捕捉！");
+                    chr.dropMessage(5, "因怪物的生命值過高，所以无法捕捉！");
                     break;
                 }
                 case 2270002: {
@@ -999,7 +999,7 @@ public class InventoryHandler
                         break;
                     }
                     map.broadcastMessage(MaplePacketCreator.catchMonster(mob.getId(), itemid, (byte)0));
-                    chr.dropMessage(5, "因怪物的生命值過高，所以無法捕捉！");
+                    chr.dropMessage(5, "因怪物的生命值過高，所以无法捕捉！");
                     break;
                 }
                 case 2270000: {
@@ -1025,7 +1025,7 @@ public class InventoryHandler
                         break;
                     }
                     map.broadcastMessage(MaplePacketCreator.catchMonster(mob.getId(), itemid, (byte)0));
-                    chr.dropMessage(5, "因怪物的生命值過高，所以無法捕捉！");
+                    chr.dropMessage(5, "因怪物的生命值過高，所以无法捕捉！");
                     break;
                 }
             }
@@ -1097,12 +1097,12 @@ public class InventoryHandler
                         MapleInventoryManipulator.removeById(c, MapleInventoryType.USE, 2430008, 1, false, false);
                         break;
                     }
-                    c.getPlayer().dropMessage(5, "全部地都在使用中，請稍後再嘗試一次。");
+                    c.getPlayer().dropMessage(5, "全部地都在使用中，请稍后再嘗試一次。");
                     break;
                 }
                 case 2430112: {
                     if (c.getPlayer().getInventory(MapleInventoryType.USE).getNumFreeSlot() < 1) {
-                        c.getPlayer().dropMessage(5, "請空出一些栏位。");
+                        c.getPlayer().dropMessage(5, "请空出一些栏位。");
                         break;
                     }
                     if (c.getPlayer().getInventory(MapleInventoryType.USE).countById(2430112) >= 25) {
@@ -1110,7 +1110,7 @@ public class InventoryHandler
                             MapleInventoryManipulator.addById(c, 2049400, (short)1);
                             break;
                         }
-                        c.getPlayer().dropMessage(5, "請空出一些栏位。");
+                        c.getPlayer().dropMessage(5, "请空出一些栏位。");
                         break;
                     }
                     else {
@@ -1122,7 +1122,7 @@ public class InventoryHandler
                             MapleInventoryManipulator.addById(c, 2049401, (short)1);
                             break;
                         }
-                        c.getPlayer().dropMessage(5, "請空出一些栏位。.");
+                        c.getPlayer().dropMessage(5, "请空出一些栏位。.");
                         break;
                     }
                 }
@@ -1291,12 +1291,12 @@ public class InventoryHandler
         if (mountid > 0) {
             mountid += (GameConstants.isAran((int)c.getPlayer().getJob()) ? 20000000 : 0);
             if (c.getPlayer().getSkillLevel(mountid) > 0) {
-                c.getPlayer().dropMessage(5, "已經有了這個技能了。");
+                c.getPlayer().dropMessage(5, "已经有了这个技能了。");
             }
             else if (expiration_days > 0L) {
                 MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, (short)slot, (short)1, false);
                 c.getPlayer().changeSkillLevel(SkillFactory.getSkill(mountid), (byte)1, (byte)1, System.currentTimeMillis() + expiration_days * 24L * 60L * 60L * 1000L);
-                c.getPlayer().dropMessage(5, "已經學会了這個技能了。");
+                c.getPlayer().dropMessage(5, "已经學会了这个技能了。");
             }
         }
         c.sendPacket(MaplePacketCreator.enableActions());
@@ -1411,12 +1411,12 @@ public class InventoryHandler
                 }
             }
             else {
-                chr.dropMessage(5, "你有一個栏位滿了，請空出來再打開" + box + "！");
+                chr.dropMessage(5, "你有一个栏位满了，请空出來再打開" + box + "！");
                 c.sendPacket(MaplePacketCreator.enableActions());
             }
         }
         else {
-            chr.dropMessage(5, "請確認是否有" + keyname);
+            chr.dropMessage(5, "请確認是否有" + keyname);
             c.sendPacket(MaplePacketCreator.enableActions());
         }
     }
@@ -1449,13 +1449,13 @@ public class InventoryHandler
                     }
                 }
                 c.getPlayer().setBeans(c.getPlayer().getBeans() + gain);
-                c.getPlayer().dropMessage(1, "請更換頻道進入商城刷新小鋼珠數量。");
+                c.getPlayer().dropMessage(1, "请更换頻道进入商城刷新小鋼珠數量。");
                 used = true;
                 break;
             }
             case 5042000: {
                 if (GameConstants.isNotToMap(c.getPlayer().getMapId())) {
-                    c.getPlayer().dropMessage(1, "當前地图無法使用。");
+                    c.getPlayer().dropMessage(1, "當前地图无法使用。");
                     break;
                 }
                 final MapleMap map = c.getChannelServer().getMapFactory().getMap(701000200);
@@ -1465,7 +1465,7 @@ public class InventoryHandler
             }
             case 5042001: {
                 if (GameConstants.isNotToMap(c.getPlayer().getMapId())) {
-                    c.getPlayer().dropMessage(1, "當前地图無法使用。");
+                    c.getPlayer().dropMessage(1, "當前地图无法使用。");
                     break;
                 }
                 final MapleMap map = c.getChannelServer().getMapFactory().getMap(741000000);
@@ -1476,7 +1476,7 @@ public class InventoryHandler
             case 5043000:
             case 5043001: {
                 if (c.getPlayer().getMapId() == 180000001) {
-                    c.getPlayer().dropMessage(1, "當前地图無法使用。");
+                    c.getPlayer().dropMessage(1, "當前地图无法使用。");
                     break;
                 }
                 final short questid = slea.readShort();
@@ -1515,7 +1515,7 @@ public class InventoryHandler
             case 5040001:
             case 5041000: {
                 if (GameConstants.isNotToMap(c.getPlayer().getMapId())) {
-                    c.getPlayer().dropMessage(1, "當前地图無法使用瞬移石。");
+                    c.getPlayer().dropMessage(1, "當前地图无法使用瞬移石。");
                     break;
                 }
                 used = UseTeleRock(slea, c, itemId);
@@ -1928,21 +1928,23 @@ public class InventoryHandler
                 break;
             }
             case 5570000: {
-                slea.readInt();
-                final Equip item3 = (Equip)c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((short)(byte)slea.readInt());
-                if (item3 == null) {
-                    break;
+                //金锤子
+                slea.readInt(); // Inventory type, Hammered eq is always EQ.
+                final Equip item = (Equip) c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) slea.readInt());
+                // another int here, D3 49 DC 00
+                if (item != null) {
+                    if (GameConstants.canHammer(item.getItemId()) && MapleItemInformationProvider.getInstance().getSlots(item.getItemId()) > 0 && item.getViciousHammer() < 2) {
+                        item.setViciousHammer((byte) (item.getViciousHammer() + 1));
+                        item.setUpgradeSlots((byte) (item.getUpgradeSlots() + 1));
+                        c.getPlayer().dropMessage(1, "成功提升装备升级次数");
+                        c.getPlayer().forceReAddItem(item, MapleInventoryType.EQUIP);
+                        c.getSession().write(MTSCSPacket.ViciousHammer(true, item.getViciousHammer()));
+                        used = true;
+                    } else {
+                        c.getPlayer().dropMessage(5, "您不能在这个物品上使用它.");
+                        c.getSession().write(MTSCSPacket.ViciousHammer(true, (byte) 0));
+                    }
                 }
-                if (GameConstants.canHammer(item3.getItemId()) && MapleItemInformationProvider.getInstance().getSlots(item3.getItemId()) > 0 && item3.getViciousHammer() <= 2) {
-                    item3.setViciousHammer((byte)(item3.getViciousHammer() + 1));
-                    item3.setUpgradeSlots((byte)(item3.getUpgradeSlots() + 1));
-                    c.getPlayer().forceReAddItem((IItem)item3, MapleInventoryType.EQUIP);
-                    used = true;
-                    cc = true;
-                    break;
-                }
-                c.getPlayer().dropMessage(5, "可能不能使用在這個道具上。");
-                cc = true;
                 break;
             }
             case 5610000:
@@ -2031,7 +2033,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2071,7 +2073,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2111,7 +2113,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2153,7 +2155,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2193,7 +2195,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2232,7 +2234,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2302,7 +2304,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2563,7 +2565,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!name.equals((Object)c.getPlayer().getName())) {
-                    c.getPlayer().dropMessage(1, "我的角色名字請填自己。");
+                    c.getPlayer().dropMessage(1, "我的角色名字请填自己。");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -2573,7 +2575,7 @@ public class InventoryHandler
                     return;
                 }
                 if (c.getPlayer().getGMLevel() < victim2.getGMLevel()) {
-                    c.getPlayer().dropMessage(1, "無法對此玩家使用。");
+                    c.getPlayer().dropMessage(1, "无法對此玩家使用。");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -2616,7 +2618,7 @@ public class InventoryHandler
                     break;
                 }
                 if (!c.getPlayer().getCheatTracker().canAvatarSmega2()) {
-                    c.getPlayer().dropMessage(6, "很抱歉為了防止刷廣,所以你每10秒只能用一次.");
+                    c.getPlayer().dropMessage(6, "很抱歉为了防止刷廣,所以你每10秒只能用一次.");
                     break;
                 }
                 if ((!c.getPlayer().getCanTalk() || c.getChannelServer().getMegaphoneMuteState()) && !c.getPlayer().isGM()) {
@@ -2648,21 +2650,21 @@ public class InventoryHandler
             case 5450000: {
                 for (final int j : GameConstants.blockedMaps) {
                     if (c.getPlayer().getMapId() == j) {
-                        c.getPlayer().dropMessage(5, "你不能在這張地图裡使用，如果卡住請使用 @ea 來解卡。");
+                        c.getPlayer().dropMessage(5, "你不能在这張地图裡使用，如果卡住请使用 @ea 來解卡。");
                         c.sendPacket(MaplePacketCreator.enableActions());
                         return;
                     }
                 }
                 if (c.getPlayer().getLevel() < 10) {
-                    c.getPlayer().dropMessage(5, "你還沒有10等以上");
+                    c.getPlayer().dropMessage(5, "你還没有10等以上");
                     break;
                 }
                 if (c.getPlayer().getMap().getSquadByMap() != null || c.getPlayer().getEventInstance() != null || c.getPlayer().getMap().getEMByMap() != null || c.getPlayer().getMapId() >= 990000000) {
-                    c.getPlayer().dropMessage(5, "你不能在這張地图裡使用，如果卡住請使用 @ea 來解卡。");
+                    c.getPlayer().dropMessage(5, "你不能在这張地图裡使用，如果卡住请使用 @ea 來解卡。");
                     break;
                 }
                 if ((c.getPlayer().getMapId() >= 680000210 && c.getPlayer().getMapId() <= 680000502) || (c.getPlayer().getMapId() / 1000 == 980000 && c.getPlayer().getMapId() != 980000000) || c.getPlayer().getMapId() / 100 == 1030008 || c.getPlayer().getMapId() / 100 == 922010 || c.getPlayer().getMapId() / 10 == 13003000) {
-                    c.getPlayer().dropMessage(5, "你不能在這張地图裡使用，如果卡住請使用 @ea 來解卡。");
+                    c.getPlayer().dropMessage(5, "你不能在这張地图裡使用，如果卡住请使用 @ea 來解卡。");
                     break;
                 }
                 MapleShopFactory.getInstance().getShop(57).sendShop(c);
@@ -2744,15 +2746,17 @@ public class InventoryHandler
                 c.getPlayer().dropMessage(1, "Auto change channel failed.");
                 return;
             }
-            c.getPlayer().dropMessage(5, "自动更换频道,请稍后.");
-            c.getPlayer().changeChannel((c.getChannel() == ChannelServer.getChannelCount()) ? 1 : (c.getChannel() + 1));
+            if (LtMS.ConfigValuesMap.get("现金道具使用切换频道")>0) {
+                c.getPlayer().dropMessage(5, "自动更换频道,请稍后.");
+                c.getPlayer().changeChannel((c.getChannel() == ChannelServer.getChannelCount()) ? 1 : (c.getChannel() + 1));
+            }
         }
     }
     
     public static void PlayerPickup(final LittleEndianAccessor slea, final MapleClient c, MapleCharacter chr) {
         //拾取物品
         if (World.isShutDown) {
-            c.getPlayer().dropMessage(1, "目前無法撿物品。");
+            c.getPlayer().dropMessage(1, "目前无法撿物品。");
             c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -2794,7 +2798,7 @@ public class InventoryHandler
                 chr.getCheatTracker().registerOffense(CheatingOffense.ITEMVAC_CLIENT, String.valueOf(Distance));
             }
             else if (chr.getPosition().distanceSq((Point2D)mapitem.getPosition()) > 640000.0) {
-                chr.getCheatTracker().registerOffense(CheatingOffense.ITEMVAC_SERVER, " 範圍: " + chr.getPosition().distanceSq((Point2D)mapitem.getPosition()));
+                chr.getCheatTracker().registerOffense(CheatingOffense.ITEMVAC_SERVER, " 范围: " + chr.getPosition().distanceSq((Point2D)mapitem.getPosition()));
             }
             if (mapitem.getMeso() > 0) {
                 final MapleMapObject obd = chr.getMap().getMapObject(oid, MapleMapObjectType.ITEM);
@@ -2821,7 +2825,7 @@ public class InventoryHandler
             }
             else if (MapleItemInformationProvider.getInstance().isPickupBlocked(mapitem.getItem().getItemId())) {
                 c.sendPacket(MaplePacketCreator.enableActions());
-                c.getPlayer().dropMessage(5, "此物品無法被撿起.");
+                c.getPlayer().dropMessage(5, "此物品无法被撿起.");
             }
             else if (useItem(c, mapitem.getItemId())) {
                 final MapleMapObject obd = chr.getMap().getMapObject(oid, MapleMapObjectType.ITEM);
@@ -2851,7 +2855,7 @@ public class InventoryHandler
             }
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/撿取道具異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/撿取道具异常.txt", (Throwable)ex);
         }
         finally {
             lock.unlock();
@@ -3050,7 +3054,7 @@ public class InventoryHandler
                 MapleInventoryManipulator.removeById(c, MapleInventoryType.USE, itemid, 1, true, false);
             }
             else {
-                c.getPlayer().dropMessage(1, "找不到該物品");
+                c.getPlayer().dropMessage(1, "找不到该物品");
             }
         }
         c.sendPacket(MaplePacketCreator.enableActions());
@@ -3062,7 +3066,7 @@ public class InventoryHandler
                 c.sendPacket(MaplePacketCreator.getOwlOpen());
             }
             else {
-                c.getPlayer().dropMessage(5, "貓頭鷹只能在自由市場內使用");
+                c.getPlayer().dropMessage(5, "猫头鹰只能在自由市场内使用");
                 c.sendPacket(MaplePacketCreator.enableActions());
             }
         }
@@ -3183,13 +3187,13 @@ public class InventoryHandler
                         c.sendPacket(PlayerShopPacket.getHiredMerch(c.getPlayer(), merchant, false));
                     }
                     else if (!merchant.isOpen() || !merchant.isAvailable()) {
-                        c.getPlayer().dropMessage(1, "這個商店在整理或者是沒在販賣東西。");
+                        c.getPlayer().dropMessage(1, "这个商店在整理或者是没在贩卖东西。");
                     }
                     else if (merchant.getFreeSlot() == -1) {
-                        c.getPlayer().dropMessage(1, "商店人數已經滿了，請稍後再進入。");
+                        c.getPlayer().dropMessage(1, "商店人数已经满了，请稍后再进入。");
                     }
                     else if (merchant.isInBlackList(c.getPlayer().getName())) {
-                        c.getPlayer().dropMessage(1, "被加入黑名單了，所以不能進入。");
+                        c.getPlayer().dropMessage(1, "被加入黑名单了，所以不能进入。");
                     }
                     else {
                         c.getPlayer().setPlayerShop((IMaplePlayerShop)merchant);

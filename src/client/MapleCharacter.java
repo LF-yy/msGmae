@@ -477,7 +477,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public short package_boss_damage_percent;
     public short package_total_damage_percent;
 
-    private static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+    public static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     private static List<PackageOfEquipments.MyPackage> packageList = Collections.synchronizedList(new ArrayList());
     private ScheduledFuture<?> 仙人模式线程;
@@ -498,18 +498,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     private boolean backupInventory = false;
     private ArrayList<Integer> dropItemFilterList = new ArrayList();
-    public int extra_damage_id = 10016;
-    public byte extra_damage_display = 10;
-    public byte extra_damage_tbyte = 17;
-    public byte extra_damage_animation = -128;
-    public byte extra_damage_speed = 2;
-    public byte extra_damage_unk = 0;
     public long lastItemSortTime = 0L;
     public long lastSuperTransformationTime = 0L;
     public long lastPetLootTime = 0L;
-    public long loadDuration = 0L;
-    public long lastComboTime = 0L;
-    public int nextMapId = 0;
     public long max_damage;
     private boolean isShowChair = true;
     private boolean isShowEquip = true;
@@ -555,6 +546,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 飞升等级;
     public int 坐骑攻击力;
     public int 坐骑魔力;
+    public int 药品编号 = 2000000;
+    public int 血量临界值 = 50;
+    public int 药品恢复值 = 50;
+    public Map<Integer, ArrayList<MonsterDropEntry>> drops = new ConcurrentHashMap<>();
     public int getDonate() {
         return donate;
     }
@@ -944,9 +939,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public long 获取角色战斗力() {
         MapleGuild.战斗力信息 player = new MapleGuild.战斗力信息();
-        Connection con = DBConPool.getConnection();
 
-        try {
+
+        try (Connection con = DBConPool.getConnection()){
             con.setTransactionIsolation(1);
             con.setAutoCommit(false);
             PreparedStatement ps = con.prepareStatement("select * from characters WHERE `id` = ?");
@@ -985,6 +980,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 player.setMax_damage(rs.getLong("max_damage"));
                 player.solveForce();
             }
+            rs.close();
         } catch (SQLException var8) {
             //服务端输出信息.println_err("获取角色战斗力出错！,错误位置：MapleCharacter.获取角色战斗力，原因：" + var8);
         }
@@ -1163,7 +1159,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException e) {
             System.err.println("Error getting character default" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return ret;
     }
@@ -1393,7 +1389,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         ret.client = client;
         ret.id = charid;
         long time0 = System.currentTimeMillis();
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        Connection con;
+        try{
+             con = DBConPool.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             try {
@@ -1401,10 +1399,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.setInt(1, charid);
                 rs = ps.executeQuery();
                 if (!rs.next()) {
-//                    System.out.println("Loading the Char Failed (char not found)==>查询角色ID: = "+charid );
-//                    System.out.println("Loading the Char Failed (char not found)==>查询语句:"+ps.toString() );
-//                    System.out.println("Loading the Char Failed (char not found)===>查询到的结果数:"+rs.getRow());
-//                    System.out.println("Loading the Char Failed (char not found)===>异常点:loadCharFromDB");
+                    System.out.println("Loading the Char Failed (char not found)==>查询角色ID: = "+charid );
+                    System.out.println("Loading the Char Failed (char not found)==>查询语句:"+ps.toString() );
+                    System.out.println("Loading the Char Failed (char not found)===>查询到的结果数:"+rs.getRow());
+                    System.out.println("Loading the Char Failed (char not found)===>异常点:loadCharFromDB");
                     return null;
                 }
                 ret.Vip_Medal = (rs.getShort("VipMedal") > 0);
@@ -1492,8 +1490,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret.prefix = rs.getString("prefix");
                 ret.gachexp = rs.getInt("gachexp");
                 ret.PGSXDJ = rs.getInt("PGSXDJ");
-
-
                 ret.max_damage = rs.getLong("max_damage");
                 if (ret.max_damage < 199999L) {
                     ret.max_damage = 199999L;
@@ -1789,10 +1785,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     rs.close();
                     ret.skillSkin.loadChrSkill();
                     ret.loadMountListFromDB();
-                    EquipFieldEnhancement.getInstance().loadCharFromDB(charid, con);
-                   ret.loadMonsterKillQuestFromDB(con);
-                   ret.loadDropItemFilterListFromDB(con);
-                   ret.loadSellWhenPickUpItemListFromDB(con);
+                    EquipFieldEnhancement.getInstance().loadCharFromDB(charid);
+                   ret.loadMonsterKillQuestFromDB();
+                   ret.loadDropItemFilterListFromDB();
+                   ret.loadSellWhenPickUpItemListFromDB();
                     ret.stats.recalcLocalStats(true);
                 }
                 else {
@@ -1814,21 +1810,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                 }
                 catch (SQLException ex) {}
+                con.close();
             }
-            con.close();
-        }
-        catch (SQLException exxx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)exxx);
+
+        }catch (SQLException exxx) {
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)exxx);
         }
         System.out.println("角色載入完成用时:"+(System.currentTimeMillis()-time0)+"ms");
         return ret;
     }
-    public void loadDropItemFilterListFromDB(Connection con) {
-        try {
-            if (con == null || con.isClosed()) {
-                con = DBConPool.getConnection();
-            }
-
+    public void loadDropItemFilterListFromDB() {
+        try (Connection con = DBConPool.getConnection()){
             ArrayList<Integer> ret = new ArrayList();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_drop_item_filter WHERE character_id = ?");
             ps.setInt(1, this.id);
@@ -1926,34 +1918,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void deleteMonsterKillQuest(int questId) {
         if (this.monsterKillQuestMap.containsKey(questId)) {
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var3 = null;
-
-                try {
+            try (Connection con = DBConPool.getConnection()){
                     PreparedStatement ps = con.prepareStatement("DELETE FROM snail_monster_kill_quest WHERE character_id =? AND quest_id = ?");
                     ps.setInt(1, this.id);
                     ps.setInt(2, questId);
                     ps.executeUpdate();
                     ps.close();
                     this.monsterKillQuestMap.remove(questId);
-                } catch (Throwable var13) {
-                    var3 = var13;
-                    throw var13;
-                } finally {
-                    if (con != null) {
-                        if (var3 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var12) {
-                                var3.addSuppressed(var12);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
 
-                }
             } catch (SQLException var15) {
                 //服务端输出信息.println_err("【错误】deleteMonsterKillQuest错误，原因：" + var15);
                 var15.printStackTrace();
@@ -1986,15 +1958,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return monsterKillQuest;
     }
 
-    public void saveMonsterKillQuestToDB(Connection con) {
-        try {
+    public void saveMonsterKillQuestToDB() {
+        try (Connection con = DBConPool.getConnection()){
             boolean isNewConnection = false;
-            if (con == null || con.isClosed()) {
-                con = DBConPool.getNewConnection();
+
                 isNewConnection = true;
                 con.setTransactionIsolation(1);
                 con.setAutoCommit(false);
-            }
+
 
             PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_monster_kill_quest");
             PreparedStatement ps1 = con.prepareStatement("UPDATE snail_monster_kill_quest SET `count` = ?,finish_count = ?,`state` = ? WHERE id = ?");
@@ -2093,12 +2064,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     }
 
-    public void loadMonsterKillQuestFromDB(Connection con) {
-        try {
-            if (con == null || con.isClosed()) {
-                con = DBConPool.getConnection();
-            }
-
+    public void loadMonsterKillQuestFromDB( ) {
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("SELECT DISTINCT quest_id FROM snail_monster_kill_quest WHERE character_id = ? ORDER BY quest_id");
             ps.setInt(1, this.id);
             ResultSet rs = ps.executeQuery();
@@ -2149,15 +2116,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.dropItemFilterList = dropItemFilterList;
     }
 
-    public void loadDropItemFilterListFromDB() {
-        this.loadDropItemFilterListFromDB((Connection)null);
-    }
 
-    public void saveDropItemFilterListToDB(Connection con) {
-        try {
-            if (con == null) {
-                con = DBConPool.getConnection();
-            }
+
+    public void saveDropItemFilterListToDB() {
+        try (Connection con = DBConPool.getConnection()){
+
 
             ArrayList<Integer> ret = new ArrayList(this.dropItemFilterList);
             PreparedStatement ps = con.prepareStatement("DELETE FROM snail_drop_item_filter WHERE character_id = ?");
@@ -2192,33 +2155,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
 
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var4 = null;
-
-                try {
+            try (Connection con = DBConPool.getConnection()){
                     PreparedStatement ps = con.prepareStatement("DELETE FROM snail_drop_item_filter WHERE character_id = ? and item_id = ?");
                     ps.setInt(1, this.id);
                     ps.setInt(2, itemId);
                     ps.executeUpdate();
                     ps.close();
-                } catch (Throwable var14) {
-                    var4 = var14;
-                    throw var14;
-                } finally {
-                    if (con != null) {
-                        if (var4 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var13) {
-                                var4.addSuppressed(var13);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
 
-                }
             } catch (SQLException var16) {
                 //服务端输出信息.println_err("【错误】addDropItemFilter错误，原因：" + var16);
                 var16.printStackTrace();
@@ -2230,33 +2173,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (!this.dropItemFilterList.contains(itemId)) {
             this.dropItemFilterList.add(itemId);
 
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var3 = null;
+            try (Connection con = DBConPool.getConnection()){
 
-                try {
                     PreparedStatement ps = con.prepareStatement("INSERT INTO snail_drop_item_filter (character_id, item_id) VALUES (?, ?)");
                     ps.setInt(1, this.id);
                     ps.setInt(2, itemId);
                     ps.executeUpdate();
                     ps.close();
-                } catch (Throwable var13) {
-                    var3 = var13;
-                    throw var13;
-                } finally {
-                    if (con != null) {
-                        if (var3 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var12) {
-                                var3.addSuppressed(var12);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
 
-                }
             } catch (SQLException var15) {
                 //服务端输出信息.println_err("【错误】addDropItemFilter错误，原因：" + var15);
                 var15.printStackTrace();
@@ -2408,17 +2332,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.execute();
             }
             ps.close();
-        }
-        catch (SQLException ex2) {}
-        catch (DatabaseException e) {
+        } catch (Exception e) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)e, "[角色存檔] 儲存角色資料失敗");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             try {
                 con.rollback();
             }
             catch (SQLException ex) {
-                FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             try {
                 if (pse != null) {
@@ -2438,7 +2360,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             catch (SQLException e2) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)e2, "[角色存檔] 錯誤自動返回儲存功能");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e2);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e2);
             }
         }
         finally {
@@ -2460,7 +2382,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             catch (SQLException e3) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)e3, "[角色存檔] 錯誤自動返回儲存功能");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e3);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e3);
             }
         }
     }
@@ -2487,17 +2409,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
             this.setBossLog1("打Boss数量", 1, this.打Boss数量);
             this.setBossLog1("打怪数量", 1, this.打怪数量);
-//        this.setBossLog("打怪数量",1,this.打怪数量);
-//        this.setBossLog("打怪数量",1,this.打怪数量);
-//        this.setBossLog("打怪数量",1, (int) this.cunqianguan);
-//        BOSS记录累计.forEach((a,b)->{
-//            this.setBossLog(a+"",1,b);
-//        });
-//        BOSS记录.forEach((a,b)->{
-//            this.setBossLog(a+"",0,b);
-//        });
-//        BOSS记录累计.clear();
-//        BOSS记录.clear();
+
             this.追加伤害 = (this.打Boss数量 > 0 ? (long) Math.floor(this.打Boss数量 / LtMS.ConfigValuesMap.get("打BOSS追加伤害")) : 0L) + (this.打怪数量 > 0 ? (long) Math.floor(this.打怪数量 / LtMS.ConfigValuesMap.get("打小怪追加")) : 0L);
             this.打怪数量 = 0;
             this.打Boss数量 = 0;
@@ -2508,7 +2420,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             PreparedStatement pse = null;
             ResultSet rs = null;
             try {
-                con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
+                con = DBConPool.getNewConnection();
                 con.setTransactionIsolation(1);
                 con.setAutoCommit(false);
                 ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpApUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, monsterbookcover = ?, dojo_pts = ?, dojoRecord = ?, pets = ?, subcategory = ?, marriageId = ?, currentrep = ?, totalrep = ?, charmessage = ?, expression = ?, constellation = ?, blood = ?, month = ?, jf = ?, zdjf = ?, rwjf = ?, zs = ?, cz = ?, dy = ?, rmb = ?, yb =?,  playerPoints = ?, playerEnergy = ?, jf1 = ?, jf2 = ?, jf3 = ?, jf4 = ?, jf5 = ?, jf6 = ?, jf7 = ?, jf8 = ?, jf9 = ?, jf10 = ?, day = ?, beans = ?, prefix = ?, PGSXDJ = ?,gachexp = ?, name = ?, VipMedal = ?, saved_faces = ?, saved_hairs = ? , max_damage = ? , exp_reserve = ?, imprison = ?, guildpoints = ?, stage = ?, break_level = ?, exp_rate = ?, meso_rate = ?, drop_rate = ? WHERE id = ?");
@@ -2893,11 +2805,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 //                if (this.getGMLevel() > 0) {
                 //                    this.dropMessage(5, "存档位置4.3累计耗时：" + (System.currentTimeMillis() - time));
                 //                }
-                this.saveMountListToDB(con);
+                this.saveMountListToDB();
                 if (this.getGMLevel() > 0) {
                     this.dropMessage(5, "最终存档累计耗时：" + (System.currentTimeMillis() - time));
                 }
-                this.saveMonsterKillQuestToDB(con);
+                this.saveMonsterKillQuestToDB();
 
                 con.commit();
             } catch (UnsupportedOperationException ex2) {
@@ -2906,26 +2818,30 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 retValue = 0;
                 FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
                 FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔]儲存角色失敗");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) e);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable) e);
                 FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) e);
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
                     FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
                     FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) ex);
-                    FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存資料庫");
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) ex);
+                    FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存资料库");
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable) ex);
                 }
                 try {
                     LtPeakLevel ltPeakLevel = Start.ltPeakLevelMap.get(this.getId());
                     if(Objects.nonNull(ltPeakLevel) ){
                         Start.upsertLtPeakLevel(this.getId(),ltPeakLevel.getLevel(),ltPeakLevel.getLevel_ex());
+                    }else{
+                        if(this.level>=250) {
+                            Start.upsertLtPeakLevel(this.getId(), 0, 0);
+                        }
                     }
                 } catch (Exception ex) {
                     FileoutputUtil.logToFile("logs/巅峰等级数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
                     FileoutputUtil.outError("logs/巅峰等级数据出錯.txt", (Throwable) ex);
-                    FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存資料庫");
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) ex);
+                    FilePrinter.printError("MapleCharacter.txt", (Throwable) e, "[角色存檔] 儲存失敗，繼續使用暫存檔不儲存资料库");
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable) ex);
                 }
                 try {
                     if (ps != null) {
@@ -2947,7 +2863,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
                     FilePrinter.printError("MapleCharacter.txt", (Throwable) es, "[角色存檔] 錯誤自動返回儲存功能");
                     FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) es);
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) es);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable) es);
                 }
             } finally {
                 try {
@@ -2970,7 +2886,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     FileoutputUtil.logToFile("logs/保存角色数据出錯.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
                     FilePrinter.printError("MapleCharacter.txt", (Throwable) es2, "[角色存檔] 錯誤自動返回儲存功能");
                     FileoutputUtil.outError("logs/保存角色数据出錯.txt", (Throwable) es2);
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable) es2);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable) es2);
                 }
                 this.saveData = 0;
                 this.setClone(false);
@@ -3054,7 +2970,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             catch (SQLException ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "[saveInventory]");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
         }
         else {
@@ -3063,7 +2979,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             catch (SQLException ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "[saveInventory]");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
         }
     }
@@ -3455,7 +3371,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.stats.recalcLocalStats();
         if (this.getDebugMessage()) {
             for (final Pair<MapleBuffStat, Integer> buf : statups) {
-                this.dropMessage(6, "[系統提示]\u0010" + ((MapleBuffStat)buf.getLeft()).toString() + "(0x" + HexTool.toString(((MapleBuffStat)buf.getLeft()).getValue()) + ")");
+                this.dropMessage(6, "[系统提示]\u0010" + ((MapleBuffStat)buf.getLeft()).toString() + "(0x" + HexTool.toString(((MapleBuffStat)buf.getLeft()).getValue()) + ")");
             }
         }
     }
@@ -3815,54 +3731,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         if (!find) {
-            System.out.println("No matching monsters found for effect with source ID: "+ effect.getSourceId());
+            //System.out.println("No matching monsters found for effect with source ID: "+ effect.getSourceId());
         }
-//        if (effect.getSourceId() == 3020032) {
-//            boolean find = false;
-//            Iterator var23 = ChannelServer.getAllInstances().iterator();
-//
-//            while(var23.hasNext()) {
-//                ChannelServer cs = (ChannelServer)var23.next();
-//                Iterator var25 = cs.getMapFactory().getAllMapThreadSafe().iterator();
-//
-//                while(var25.hasNext()) {
-//                    MapleMap map = (MapleMap)var25.next();
-//                    if (map != null) {
-//                        Iterator var14 = map.getAllMonstersThreadsafe().iterator();
-//
-//                        label112:
-//                        while(true) {
-//                            MapleMonster monster;
-//                            do {
-//                                do {
-//                                    if (!var14.hasNext()) {
-//                                        break label112;
-//                                    }
-//
-//                                    monster = (MapleMonster)var14.next();
-//                                } while(monster == null);
-//                            } while(monster.getId() != 9900000 && monster.getId() != 9900001 && monster.getId() != 9900002);
-//
-//                            if (monster.getOwner() == this.getId()) {
-//                                map.killMonster(monster, true);
-//                                map.setStoneLevel(0);
-//                                map.setHaveStone(false);
-//                                find = true;
-//                                break;
-//                            }
-//                        }
-//                    }
-//
-//                    if (find) {
-//                        break;
-//                    }
-//                }
-//
-//                if (find) {
-//                    break;
-//                }
-//            }
-//        }
     }
     
     public void cancelBuffStats(final MapleBuffStat... stat) {
@@ -4522,22 +4392,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (to == null || this ==null || this.getAntiMacro() ==null) {
             return;
         }
-//        if (pto != null && GameConstants.isNotTo(to.getId(), pto.getName())) {
-//            if (this.getParty() == null || this.getParty().getMembers().size() == 1) {
-//                this.changeMap(211060000);
-//                return;
-//            }
-//            final int cMap = this.getMapId();
-//            for (final MaplePartyCharacter chr : this.getParty().getMembers()) {
-//                final MapleCharacter curChar = this.getClient().getChannelServer().getPlayerStorage().getCharacterById(chr.getId());
-//                if (curChar != null && (curChar.getMapId() == cMap || curChar.getEventInstance() == this.getEventInstance())) {
-//                    curChar.changeMap(211060000);
-//                }
-//            }
-//        }
-//        else {
             if (this.getAntiMacro().inProgress()) {
-                this.dropMessage(5, "被使用測謊儀時無法操作。");
+                this.dropMessage(5, "被使用測謊儀時无法操作。");
                 this.client.sendPacket(MaplePacketCreator.enableActions());
                 return;
             }
@@ -4584,7 +4440,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             if (pyramid && this.pyramidSubway != null) {
                 this.pyramidSubway.onChangeMap(this, to.getId());
             }
-//        }
+        //清空爆率
+        this.drops.clear();
     }
     
     public void leaveMap() {
@@ -4640,7 +4497,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
             if (normal) {
-                this.dropMessage("由於您的轉職等級非普通轉職等級，技能點異常後果自負。");
+                this.dropMessage("由於您的轉職等級非普通轉職等級，技能點异常後果自負。");
             }
             this.job = (short)newJob;
             if (newJob == 200 && this.level > 8 && this.getOneTimeLog("九級補點數") < 1) {
@@ -4867,7 +4724,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (this.getMapId() != 109020001) {
             final MapleStatEffect statss = this.getStatForBuff(MapleBuffStat.SOUL_STONE);
             if (statss != null) {
-                this.dropMessage(5, "你已經透過靈魂之石復活了。");
+                this.dropMessage(5, "你已经透過靈魂之石復活了。");
                 this.getStat().setHp(this.getStat().getMaxHp() / 100 * statss.getX());
                 this.setStance(0);
                 this.changeMap(this.getMap(), this.getMap().getPortal(0));
@@ -4920,7 +4777,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.updateSingleStat(MapleStat.EXP, this.exp);
             this.client.getSession().write((Object)MaplePacketCreator.enableActions());
             if (!this.stats.checkEquipDurabilitys(this, -100)) {
-                this.dropMessage(5, "該装备耐久度已經使用完畢，必須修理才可以繼續使用。");
+                this.dropMessage(5, "该装备耐久度已经使用完畢，必須修理才可以繼續使用。");
             }
         }
         if (this.pyramidSubway != null) {
@@ -5611,7 +5468,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception ex) {
             //Ex.printStackTrace();
-            FileoutputUtil.outError("logs/殺死怪物計次異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/殺死怪物計次异常.txt", (Throwable)ex);
         }
     }
     
@@ -5899,7 +5756,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             final MapleMap warpMap = this.client.getChannelServer().getMapFactory().getMap(Return_Map);
             if (warpMap != null) {
                 this.changeMap(warpMap, warpMap.getPortal(0));
-                this.dropMessage("由於你的等級超過20，已經不符合新手需求，將把您傳出訓練場。");
+                this.dropMessage("由於你的等級超過20，已经不符合新手需求，將把您傳出訓練場。");
             }
         }
     }
@@ -5949,7 +5806,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException ex) {
             System.err.println("Error while tempbanning" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -6016,7 +5873,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException ex) {
             System.err.println("Error while banning" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             return false;
         }
     }
@@ -6071,14 +5928,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException ex) {
             System.err.println("Error while banning" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             return false;
         }
         try {
             this.client.disconnect(true, false);
         }
         catch (Exception ex2) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
         return true;
     }
@@ -6096,7 +5953,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return id != 0 && this.OfflineBanById(id, reason);
     }
@@ -6152,7 +6009,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception ex) {
             System.err.println("封鎖出現錯誤 " + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             return false;
         }
     }
@@ -6474,7 +6331,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException e) {
             System.err.println("ERROR writing famelog for char " + this.getName() + " to " + to.getName() + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
@@ -6546,11 +6403,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setSmega() {
         if (this.smega) {
             this.smega = false;
-            this.dropMessage(5, "由於您关闭了顯示廣播，所以您看不見任何的廣播，如果要打開請打@TSmega。");
+            this.dropMessage(5, "由於您关闭了顯示廣播，所以您看不見任何的廣播，如果要打開请打@TSmega。");
         }
         else {
             this.smega = true;
-            this.dropMessage(5, "目前已經打開顯示廣播，若要再次关闭請打@TSmega。");
+            this.dropMessage(5, "目前已经打開顯示廣播，若要再次关闭请打@TSmega。");
         }
     }
     
@@ -6561,11 +6418,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public void setGashponmega() {
         if (this.gashponmega) {
             this.gashponmega = false;
-            this.dropMessage(5, "由於您关闭了轉蛋廣播，所以您看不見任何的轉蛋廣播，如果要打開請打@Gashponmega。");
+            this.dropMessage(5, "由於您关闭了轉蛋廣播，所以您看不見任何的轉蛋廣播，如果要打開请打@Gashponmega。");
         }
         else {
             this.gashponmega = true;
-            this.dropMessage(5, "目前已經打開顯示轉蛋廣播，若要再次关闭請打@Gashponmega。");
+            this.dropMessage(5, "目前已经打開顯示轉蛋廣播，若要再次关闭请打@Gashponmega。");
         }
     }
     
@@ -6772,7 +6629,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException se) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)se, "saveFamilyStatus");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     
@@ -6790,7 +6647,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 final int Acash = this.getAcash();
                 if (Acash + quantity < 0) {
                     if (show) {
-                        this.dropMessage(-1, "目前点卷已滿，無法获得更多的点卷");
+                        this.dropMessage(-1, "目前点卷已满，无法获得更多的点卷");
                     }
                     return;
                 }
@@ -6800,7 +6657,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             case 2: {
                 if (this.maplepoints + quantity < 0) {
                     if (show) {
-                        this.dropMessage(-1, "目前抵用卷已滿，無法获得更多的抵用卷.");
+                        this.dropMessage(-1, "目前抵用卷已满，无法获得更多的抵用卷.");
                     }
                     return;
                 }
@@ -6811,7 +6668,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 final int Points = this.getPoints();
                 if (Points + quantity < 0) {
                     if (show) {
-                        this.dropMessage(-1, "目前元宝已滿，無法获得更多的元宝");
+                        this.dropMessage(-1, "目前元宝已满，无法获得更多的元宝");
                     }
                     return;
                 }
@@ -7127,7 +6984,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             catch (SQLException e) {
                 FilePrinter.printError("MapleCharcter.txt", (Throwable)e, "Error while retriving cooldown from SQL storage");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             }
         }
     }
@@ -7633,7 +7490,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             //服务端输出信息.println_err("【错误】saveMoneyToDB错误，原因：" + var4);
             var4.printStackTrace();
         }
-
     }
     public void dispelDebuff(final MapleDisease debuff) {
         if (this.hasDisease(debuff)) {
@@ -7684,7 +7540,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException e) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)e, "Unable to show note");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
@@ -7707,7 +7563,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException e) {
             System.err.println("Unable to delete note" + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
@@ -7981,6 +7837,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
             rs.close();
             ps.close();
+            con.close();
             return count;
         }
         catch (Exception Ex) {
@@ -7990,8 +7847,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int 创建破功() {
-        Connection con = DatabaseConnection.getConnection();
-        try {
+        try (Connection con = DBConPool.getConnection()){
             final int count = 0;
             final PreparedStatement ps = con.prepareStatement("Insert into z_pg(CharID,PG) values (?,?)");
             ps.setInt(1, this.accountid);
@@ -8025,8 +7881,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return TimeLogCenter.getInstance().getBossLoga(this.getAccountID(), bossid);
     }
     public void 添加破功(final int pg) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             final PreparedStatement ps = con.prepareStatement("UPDATE z_pg SET PG = ? WHERE CharID = ?");
             ps.setInt(1, pg + this.获得破功());
             ps.setInt(2, this.accountid);
@@ -8060,9 +7915,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.getBossLog1(boss, 0);
     }
     public synchronized int getBossLog(final String boss, final int type) {
-        try {
+        try( Connection con = DatabaseConnection.getConnection()) {
             int count = 0;
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ? and type = ?");
             ps.setInt(1, this.id);
             ps.setString(2, boss);
@@ -8089,14 +7943,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
 
     public synchronized int getBossLog1(final String boss, final int type) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
+        try (Connection con = DBConPool.getConnection()){
             int count = 0;
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ? and type = ?");
             ps.setInt(1, this.id);
@@ -8125,12 +7978,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
-        }finally {
-            try {
-                con.close();
-            } catch (Exception e){}
         }
     }
     public synchronized void setBossLog(final String boss) {
@@ -8161,11 +8010,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
-
-
 
     public synchronized void setBossLog1(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog1(boss, type);
@@ -8179,7 +8026,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
 
@@ -8196,7 +8043,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return true;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return false;
         }
     }
@@ -8212,7 +8059,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     public int getPublicRecord(final String boss, final int type) {
@@ -8258,7 +8105,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }finally {
             try {
@@ -8283,7 +8130,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     public void resetBossLog1(final String boss) {
@@ -8301,13 +8148,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     public int getBossLogAcc(final String boss) {
-        try {
+        try(Connection con = DBConPool.getConnection();) {
             int count = 0;
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE accountid = ? AND bossid = ?");
             ps.setInt(1, this.accountid);
             ps.setString(2, boss);
@@ -8346,7 +8192,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -8367,14 +8213,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
 
     public void userWithdrawalBalance(int accountid, int money) {
-        try {
+        try (Connection con = DBConPool.getConnection()){
             int count = 0;
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM lt_user_withdrawal_balance WHERE accounts_id = ? ");
             ps.setInt(1, accountid);
             final ResultSet rs = ps.executeQuery();
@@ -8418,7 +8263,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -8441,7 +8286,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
             return -1;
         }
     }
@@ -8460,7 +8305,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return money;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -8486,7 +8331,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
 
@@ -8499,7 +8344,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -8512,7 +8357,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -8534,7 +8379,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
             return -1;
         }
     }
@@ -8548,7 +8393,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -8561,7 +8406,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -8583,7 +8428,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
             return -1;
         }
     }
@@ -8606,7 +8451,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
             return -1;
         }
     }
@@ -8705,7 +8550,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception e) {
             System.err.println("錯誤 'getIdByName' " + (Object)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -9497,8 +9342,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.saveToDB(false, false,true);
         }
         catch (Exception ex) {
-            FileoutputUtil.logToFile("logs/ForcechangeChannel保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
-            FileoutputUtil.outError("logs/ForcechangeChannel保存数据異常.txt", (Throwable)ex);
+            FileoutputUtil.logToFile("logs/ForcechangeChannel保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
+            FileoutputUtil.outError("logs/ForcechangeChannel保存数据异常.txt", (Throwable)ex);
         }
         if (toch == null || toch.isShutdown()) {
             this.client.sendPacket(MaplePacketCreator.serverBlocked(1));
@@ -9528,8 +9373,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.saveToDB(false, false,true);
         }
         catch (Exception ex) {
-            FileoutputUtil.logToFile("logs/更換頻道保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
-            FileoutputUtil.outError("logs/更換頻道保存数据異常.txt", (Throwable)ex);
+            FileoutputUtil.logToFile("logs/更换頻道保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.getClient().getAccountName() + " 账号ID " + this.getClient().getAccID() + " 角色名 " + this.getName() + " 角色ID " + this.getId());
+            FileoutputUtil.outError("logs/更换頻道保存数据异常.txt", (Throwable)ex);
         }
         if (channel == this.client.getChannel() || toch == null || toch.isShutdown()) {
             this.client.sendPacket(MaplePacketCreator.serverBlocked(1));
@@ -9553,20 +9398,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.client.sendPacket(MaplePacketCreator.getChannelChange(this.client, Integer.parseInt(toch.getSocket().split(":")[1])));
         this.getMap().removePlayer(this);
         if (!LoginServer.CanLoginKey(this.getLoginKey(), this.getAccountID()) || (LoginServer.getLoginKey(this.getAccountID()) == null && !this.getLoginKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + this.client.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(this.getAccountID()) + " 伺服端key：" + this.getLoginKey() + " 更換頻道10");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端登錄KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + this.client.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(this.getAccountID()) + " 伺服端key：" + this.getLoginKey() + " 更换頻道10");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
             this.client.getSession().close();
             return;
         }
         if (!LoginServer.CanServerKey(this.getServerKey(), this.getAccountID()) || (LoginServer.getServerKey(this.getAccountID()) == null && !this.getServerKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + this.client.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(this.getAccountID()) + " 伺服端key：" + this.getServerKey() + " 更換頻道11");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + this.client.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(this.getAccountID()) + " 伺服端key：" + this.getServerKey() + " 更换頻道11");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
             this.client.getSession().close();
             return;
         }
         if (!LoginServer.CanClientKey(this.getClientKey(), this.getAccountID()) || (LoginServer.getClientKey(this.getAccountID()) == null && !this.getClientKey().isEmpty())) {
-            FileoutputUtil.logToFile("logs/Data/客戶端進入KEY異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + this.client.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(this.getAccountID()) + " 伺服端key：" + this.getClientKey() + " 更換頻道12");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + this.client.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(this.getAccountID()) + " 伺服端key：" + this.getClientKey() + " 更换頻道12");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
             this.client.getSession().close();
             return;
         }
@@ -9574,8 +9419,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (final ChannelServer cs : ChannelServer.getAllInstances()) {
             for (final String name : charNamesa) {
                 if (cs.getPlayerStorage().getCharacterByName(name) != null) {
-                    FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更換頻道1");
-                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+                    FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更换頻道1");
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
                     this.client.getSession().close();
                     return;
                 }
@@ -9583,8 +9428,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         for (final String name2 : charNamesa) {
             if (CashShopServer.getPlayerStorage().getCharacterByName(name2) != null) {
-                FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更換頻道2");
-                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+                FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更换頻道2");
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
                 this.client.getSession().close();
                 return;
             }
@@ -9594,8 +9439,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             for (final String name3 : charNames) {
                 final MapleCharacter character = cs2.getPlayerStorage().getCharacterByName(name3);
                 if (character != null) {
-                    FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更換頻道3");
-                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+                    FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更换頻道3");
+                    Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
                     this.client.getSession().close();
                     character.getClient().getSession().close();
                 }
@@ -9604,8 +9449,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         for (final String name4 : charNames) {
             final MapleCharacter charactercs = CashShopServer.getPlayerStorage().getCharacterByName(name4);
             if (charactercs != null) {
-                FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更換頻道4");
-                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法更換頻道 账号 " + this.client.getAccountName()));
+                FileoutputUtil.logToFile("logs/Data/非法登錄.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + this.client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + this.client.getAccountName() + "更换頻道4");
+                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法更换頻道 账号 " + this.client.getAccountName()));
                 this.client.getSession().close();
                 charactercs.getClient().getSession().close();
             }
@@ -10148,9 +9993,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public int 取破攻等级() {
         int 破功等级 = 0;
-        try {
+        try (Connection con = DBConPool.getConnection()){
             final int cid = this.getId();
-            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM characters WHERE id=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -10586,20 +10430,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getAcash]無法連接資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getAcash]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "getAcash");
                 System.err.println("[getAcash]" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -10615,13 +10459,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[Acash]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[Acash]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "SetAcash");
             System.err.println("[setAcash]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -10657,20 +10501,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getCZJF]無法連接資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getCZJF]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "getCZJF");
                 System.err.println("[getCZJF]" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -10686,13 +10530,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[CZJF]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[CZJF]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "SetCZJF");
             System.err.println("[setCZJF]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -10728,20 +10572,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getTGJF]無法連接資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getTGJF]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "getTGJF");
                 System.err.println("[getTGJF]" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -10757,13 +10601,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[TGJF]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[TGJF]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "SetTGJFF");
             System.err.println("[setTGJF]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -10799,20 +10643,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getTJJF]無法連接資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getTJJF]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "getTJJF");
                 System.err.println("[getTJJF]" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -10828,13 +10672,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[TJJF]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[TJJF]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "SetTJJFF");
             System.err.println("[setTJJF]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -10917,7 +10761,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (Exception ex) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "RemoveHired");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -11137,7 +10981,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             rs.close();
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return name;
     }
@@ -11157,7 +11001,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             rs.close();
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return name;
     }
@@ -11181,7 +11025,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             rs.close();
         }
         catch (Exception ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return id;
     }
@@ -11241,7 +11085,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps = con.prepareStatement(sql.toString());
                 ps.execute();
                 if (showMessage) {
-                    final String MSG = "「在線獎勵」获得在線點數 " + MP + " 若要領取請輸入 @在線點數/@jcds";
+                    final String MSG = "「在線獎勵」获得在線點數 " + MP + " 若要領取请輸入 @在線點數/@jcds";
                     chr.dropMessage(MSG);
                 }
             }
@@ -11250,13 +11094,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         catch (SQLException ex) {
-            System.err.println("[setMP]無法連接資料庫 " + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[setMP]无法连接资料库 " + (Object)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "setMP");
             System.err.println("[setMP]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -11269,13 +11113,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[setMP]無法連接資料庫 " + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[setMP]无法连接资料库 " + (Object)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "setMP");
             System.err.println("[setMP]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -11307,19 +11151,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getMP] 無法連接資料庫" + (Object)SQL);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getMP] 无法连接资料库" + (Object)SQL);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "getMP");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -11369,7 +11213,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return vip;
     }
@@ -11379,6 +11223,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void startMapEffect(final String msg, final int itemId) {
+        this.startMapEffect(msg, itemId, 10000);
+    }
+    public void 发送居中告示(final String msg, final int itemId) {
         this.startMapEffect(msg, itemId, 10000);
     }
     
@@ -11424,7 +11271,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
         catch (SQLException ex) {
             System.err.println("Error dangerousIp " + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
@@ -11438,7 +11285,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -11450,7 +11297,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.executeUpdate();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -11490,7 +11337,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             rs.close();
         }
         catch (Exception e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             //e.printStackTrace();
         }
         return meso;
@@ -11507,7 +11354,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             rs.close();
         }
         catch (Exception e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             //e.printStackTrace();
         }
         return meso;
@@ -11524,7 +11371,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             rs.close();
         }
         catch (Exception e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             //e.printStackTrace();
         }
         return meso;
@@ -11548,7 +11395,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11571,15 +11418,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (Exception Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
             return -1;
         }
     }
     
     public boolean ChrDangerousAcc(final String acc) {
         boolean ret = false;
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
-             final PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM dangerousacc WHERE ? LIKE CONCAT(acc, '%')")) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM dangerousacc WHERE ? LIKE CONCAT(acc, '%')");
             ps.setString(1, acc);
             try (final ResultSet rs = ps.executeQuery()) {
                 rs.next();
@@ -11587,10 +11434,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     ret = true;
                 }
             }
+            ps.close();
         }
         catch (SQLException ex) {
             System.err.println("Error dangerousname " + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return ret;
     }
@@ -11603,7 +11451,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -11650,20 +11498,20 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getDDJF]無法連接資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getDDJF]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 FilePrinter.printError("MapleCharacter.txt", (Throwable)ex, "getDDJF");
                 System.err.println("[getDDJF]" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -11679,13 +11527,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[DDJF]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[DDJF]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             FilePrinter.printError("MapleCharacter.txt", (Throwable)ex2, "SetDDJFF");
             System.err.println("[setDDJF]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -11707,7 +11555,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -11729,7 +11577,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11752,7 +11600,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11775,7 +11623,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11795,7 +11643,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11815,7 +11663,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
             return -1;
         }
     }
@@ -11838,7 +11686,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return 0;
         }
     }
@@ -11861,7 +11709,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11891,7 +11739,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11926,17 +11774,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -11960,7 +11808,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -11982,7 +11830,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -12015,17 +11863,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -12041,7 +11889,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     
@@ -12054,7 +11902,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     
@@ -12067,7 +11915,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     
@@ -12099,17 +11947,17 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -12164,19 +12012,19 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 rs.close();
             }
             catch (SQLException SQL) {
-                System.err.println("[getPoints]無法連接資料庫");
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)SQL);
+                System.err.println("[getPoints]无法连接资料库");
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)SQL);
             }
             catch (Exception ex) {
                 System.err.println("[getPoints]" + (Object)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
             if (error) {
                 try {
                     Thread.sleep((long)delay);
                 }
                 catch (Exception ex) {
-                    FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                    FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                 }
             }
         } while (error && nowtime < maxtimes);
@@ -12192,12 +12040,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException ex) {
-            System.err.println("[Points]無法連接資料庫");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            System.err.println("[Points]无法连接资料库");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         catch (Exception ex2) {
             System.err.println("[setPoints]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     
@@ -12234,7 +12082,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return money;
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             return -1;
         }
     }
@@ -12298,11 +12146,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
 
     public void setMoneyAll(int amount, String reason) {
-        try {
-            Connection con = DBConPool.getConnection();
-            Throwable var4 = null;
+        try (Connection con = DBConPool.getConnection()){
 
-            try {
                 PreparedStatement ps = con.prepareStatement("Update Accounts set moneyb = moneyb + ? Where id = ?");
                 ps.setInt(1, amount);
                 ps.setInt(2, this.getClient().getAccID());
@@ -12314,22 +12159,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ps.setString(4, FileoutputUtil.NowTime());
                 ps.executeUpdate();
                 ps.close();
-            } catch (Throwable var14) {
-                var4 = var14;
-                throw var14;
-            } finally {
-                if (con != null) {
-                    if (var4 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var13) {
-                            var4.addSuppressed(var13);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
-            }
         } catch (SQLException var16) {
             FileoutputUtil.outError("logs/资料库异常.txt", var16);
         }
@@ -12353,8 +12182,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         //todu 优先读取缓存
         ResultSet rs;
         int money =0;
-        try (Connection con = DBConPool.getConnection();
-             PreparedStatement ps = con.prepareStatement("select sum(amount) as amount  from  lt_donate where username = ? ")) {
+        try (Connection con = DBConPool.getConnection()) {
+            PreparedStatement ps = con.prepareStatement("select sum(amount) as amount  from  lt_donate where username = ? ");
             ps.setString(1, this.getClient().getAccountName());
             ps.execute();
             rs = ps.executeQuery();
@@ -12378,7 +12207,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (SQLException Wx) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Wx);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Wx);
         }
     }
     
@@ -12418,7 +12247,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     
@@ -12439,7 +12268,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return ret_count;
         }
         catch (SQLException Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -12510,11 +12339,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePoints() {
         try {
             int gamePoints = 0;
-            Connection con = DatabaseConnection.getConnection();
-            try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
+            try (Connection con = DBConPool.getConnection()) {
+                 PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
                 ps.setInt(1, this.getClient().getAccID());
                 ps.setInt(2, (int)this.getWorld());
-                try (final ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery();
                     if (rs.next()) {
                         gamePoints = rs.getInt("gamePoints");
                         final Timestamp updateTime = rs.getTimestamp("updateTime");
@@ -12524,25 +12353,23 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         }
                         if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
                             gamePoints = 0;
-                            try (final PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePoints = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
+                                PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePoints = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
                                 psu.setInt(1, this.getClient().getAccID());
                                 psu.setInt(2, (int)this.getWorld());
                                 psu.executeUpdate();
                                 psu.close();
-                            }
                         }
                     }
                     else {
-                        try (final PreparedStatement psu2 = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePoints) VALUES (?, ?, ?)")) {
+                            PreparedStatement psu2 = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePoints) VALUES (?, ?, ?)");
                             psu2.setInt(1, this.getClient().getAccID());
                             psu2.setInt(2, (int)this.getWorld());
                             psu2.setInt(3, 0);
                             psu2.executeUpdate();
                             psu2.close();
-                        }
                     }
                     rs.close();
-                }
+
                 ps.close();
             }
             return gamePoints;
@@ -12556,8 +12383,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePointsPD() {
         try {
             int gamePointsPD = 0;
-            Connection con = DatabaseConnection.getConnection();
-            try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
+            try (Connection con = DBConPool.getConnection();final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, this.getClient().getAccID());
                 ps.setInt(2, (int)this.getWorld());
                 try (final ResultSet rs = ps.executeQuery()) {
@@ -12609,6 +12435,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void gainGamePoints(final int amount) {
         this.set在线时间(this.在线时间 + amount);
+        this.setBossLog("在线时间");
         this.updateGamePoints(this.get在线时间());
     }
     
@@ -12622,8 +12449,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void updateGamePointsPD(final int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try(Connection con = DBConPool.getConnection();) {
             try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointspd = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, amount);
                 ps.setInt(2, this.getClient().getAccID());
@@ -12639,8 +12465,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void updateGamePoints(final int amount) {
         try {
-            Connection con = DatabaseConnection.getConnection();
-            try (final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePoints = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
+            try (Connection con = DBConPool.getConnection();final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePoints = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, amount);
                 ps.setInt(2, this.getClient().getAccID());
                 ps.setInt(3, (int)this.getWorld());
@@ -12656,8 +12481,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getGamePointsRQ() {
         try {
             int gamePointsRQ = 0;
-            Connection con = DatabaseConnection.getConnection();
-            try (final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
+            try (Connection con = DBConPool.getConnection();final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?")) {
                 ps.setInt(1, this.getClient().getAccID());
                 ps.setInt(2, (int)this.getWorld());
                 try (final ResultSet rs = ps.executeQuery()) {
@@ -12670,7 +12494,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         }
                         if (sqlcal.get(5) + 1 <= Calendar.getInstance().get(5) || sqlcal.get(2) + 1 <= Calendar.getInstance().get(2) || sqlcal.get(1) + 1 <= Calendar.getInstance().get(1)) {
                             gamePointsRQ = 0;
-                            try (final PreparedStatement psu = con.prepareStatement("UPDATE accounts_info SET gamePointsrq = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
+                            try (Connection con1 = DBConPool.getConnection();final PreparedStatement psu = con1.prepareStatement("UPDATE accounts_info SET gamePointsrq = 0, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?")) {
                                 psu.setInt(1, this.getClient().getAccID());
                                 psu.setInt(2, (int)this.getWorld());
                                 psu.executeUpdate();
@@ -12678,7 +12502,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         }
                     }
                     else {
-                        try (final PreparedStatement psu2 = con.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePointsrq) VALUES (?, ?, ?)")) {
+                        try (Connection con2 = DBConPool.getConnection();final PreparedStatement psu2 = con2.prepareStatement("INSERT INTO accounts_info (accId, worldId, gamePointsrq) VALUES (?, ?, ?)")) {
                             psu2.setInt(1, this.getClient().getAccID());
                             psu2.setInt(2, (int)this.getWorld());
                             psu2.setInt(3, 0);
@@ -12705,8 +12529,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void updateGamePointsRQ(final int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try(Connection con = DBConPool.getConnection();) {
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointsrq = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
             ps.setInt(1, amount);
             ps.setInt(2, this.getClient().getAccID());
@@ -12720,9 +12543,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getGamePointsPS() {
-        try {
+        try (Connection con = DBConPool.getConnection()){
             int gamePointsRQ = 0;
-            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_info WHERE accId = ? AND worldId = ?");
             ps.setInt(1, this.getClient().getAccID());
             ps.setInt(2, (int)this.getWorld());
@@ -12771,8 +12593,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void updateGamePointsPS(final int amount) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             final PreparedStatement ps = con.prepareStatement("UPDATE accounts_info SET gamePointsps = ?, updateTime = CURRENT_TIMESTAMP() WHERE accId = ? AND worldId = ?");
             ps.setInt(1, amount);
             ps.setInt(2, this.getClient().getAccID());
@@ -12828,6 +12649,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps2.setInt(3, Channale);
             ps2.execute();
             ps2.close();
+            con.close();
         }
         catch (SQLException sql) {
             System.err.println("Getcharactera!!55" + (Object)sql);
@@ -12836,8 +12658,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public int Getcharactera(final String Name, final int Channale) {
         int ret = -1;
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM charactera WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -12894,6 +12715,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps2.setInt(3, Channale);
             ps2.execute();
             ps2.close();
+            con.close();
         }
         catch (SQLException sql) {
             System.err.println("personal!!55" + (Object)sql);
@@ -12902,9 +12724,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public int Getpersonal(final String Name, final int Channale) {
         int ret = -1;
-        try {
-            Connection con = DatabaseConnection.getConnection();
-            final PreparedStatement ps = con.prepareStatement("SELECT * FROM personal WHERE channel = ? and Name = ?");
+        try (Connection con = DBConPool.getConnection()){final PreparedStatement ps = con.prepareStatement("SELECT * FROM personal WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
             final ResultSet rs = ps.executeQuery();
@@ -13196,8 +13016,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int point = 0;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try(Connection con = DBConPool.getConnection();) {
             ps = con.prepareStatement("SELECT rmb FROM accounts WHERE name = ?");
             ps.setString(1, this.getClient().getAccountName());
             rs = ps.executeQuery();
@@ -13226,8 +13045,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void setRMB(final int point) {
         PreparedStatement ps = null;
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps = con.prepareStatement("UPDATE accounts SET rmb = ? WHERE name = ?");
             ps.setInt(1, point);
             ps.setString(2, this.getClient().getAccountName());
@@ -13251,8 +13069,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int point = 0;
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps = con.prepareStatement("SELECT jbjf FROM accounts WHERE name = ?");
             ps.setString(1, this.getClient().getAccountName());
             rs = ps.executeQuery();
@@ -13281,8 +13098,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void setjifen(final int point) {
         PreparedStatement ps = null;
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps = con.prepareStatement("UPDATE accounts SET jbjf = ? WHERE name = ?");
             ps.setInt(1, point);
             ps.setString(2, this.getClient().getAccountName());
@@ -13304,8 +13120,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public void gainRMB(final int point) {
         PreparedStatement ps = null;
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps = con.prepareStatement("UPDATE accounts SET rmb = rmb + ? WHERE name = ?");
             ps.setInt(1, point);
             ps.setString(2, this.getClient().getAccountName());
@@ -13448,9 +13263,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getEventCount(final String eventId, final int type) {
-        try {
+        try (Connection con = DBConPool.getConnection()){
             int count = 0;
-            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts_event WHERE accId = ? AND eventId = ?");
             ps.setInt(1, this.getClient().getAccID());
             ps.setString(2, eventId);
@@ -13539,8 +13353,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public List<Integer> getiApprentice(final int charaid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+        try(Connection con1 = DBConPool.getConnection();) {
             final List<Integer> charid = new ArrayList<Integer>();
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where worker = ? ");
             ps.setInt(1, charaid);
@@ -13558,8 +13371,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getiLearnTeacher(final int charaid, final int tybe) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+        try(Connection con1 = DBConPool.getConnection();) {
             int charid = 0;
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where characterid = ? ");
             ps.setInt(1, charaid);
@@ -13586,8 +13398,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setLearnteacher(final int workid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+        try (Connection con1 = DBConPool.getConnection()){
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where  characterid = ?");
             ps.setInt(1, workid);
             final ResultSet rs = ps.executeQuery();
@@ -13613,8 +13424,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setApprentice(final int workid, final int apprentid) {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+        try (Connection con1 = DBConPool.getConnection()){
             String caozuo = "";
             final PreparedStatement ps = con1.prepareStatement("select * from Learnteacher where  characterid = ?");
             ps.setInt(1, apprentid);
@@ -13664,8 +13474,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public String getCharaName(final int id) {
         String data = "";
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE id = ?");
             ps.setInt(1, id);
             try (final ResultSet rs = ps.executeQuery()) {
@@ -13686,8 +13495,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public int getNowdaylog() {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+        try (Connection con1 = DBConPool.getConnection()){
             int ret_count = 0;
             final PreparedStatement ps = con1.prepareStatement("select * from nowdaylog where characterid = ? ");
             ps.setInt(1, this.id);
@@ -13708,8 +13516,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void setNowdaylog() {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+        try (Connection con1 = DBConPool.getConnection()){
             int nownuber = 0;
             String caozuo = "";
             final PreparedStatement ps = con1.prepareStatement("select * from nowdaylog where  characterid = ?");
@@ -13735,8 +13542,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     public void RestNowdaylog() {
-        Connection con1 = DatabaseConnection.getConnection();
-        try {
+//        Connection con1 = DatabaseConnection.getConnection();
+        try (Connection con1 = DBConPool.getConnection()){
             String caozuo = "";
             final PreparedStatement ps = con1.prepareStatement("select * from nowdaylog where  characterid = ?");
             ps.setInt(1, this.id);
@@ -13755,9 +13562,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     
     public static int 取限制等级() {
         int 限制等级 = 0;
-        try {
+        try (Connection con = DBConPool.getConnection()){
             final int cid = 4001128;
-            Connection con = DatabaseConnection.getConnection();
             final PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -13771,9 +13577,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int 取限制等级1(final int cid) {
-        try {
+        try(Connection con = DBConPool.getConnection();) {
             int 限制等级 = LtMS.ConfigValuesMap.get("等级初始上限");
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM shijiexianzhidengji WHERE huoyaotongid=" + cid + "");
 
             final ResultSet rs = limitCheck.executeQuery();
@@ -13798,13 +13603,12 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return 限制等级;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return LtMS.ConfigValuesMap.get("等级初始上限");
         }
     }
     public void 经验入池(final int cid,final long exp) {
-        try {
-            Connection con = DatabaseConnection.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement limitCheck = con.prepareStatement("SELECT * FROM lt_jingyanchi WHERE userId=" + cid + "");
             final ResultSet rs = limitCheck.executeQuery();
             if (rs.next()) {
@@ -13825,7 +13629,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             limitCheck.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
     public void updateOfflineTime1() {
@@ -14622,171 +14426,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                     }
                 }
             }
-//
-//            c.useSkill(c.getPlayer(),3121002,c.getPlayer().getSkillLevel(3121002));
-//            c.useSkill(c.getPlayer(),3221002,c.getPlayer().getSkillLevel(3221002));
-//            switch (c.getPlayer().getJob()){
-//                case 100:
-//                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
-//                    break;
-//                //英雄
-//                case 110:
-//                case 111:
-//                case 112:
-//                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
-//                    c.useSkill(c.getPlayer(),1121000,c.getPlayer().getSkillLevel(1121000));
-//                    c.useSkill(c.getPlayer(),1101004,c.getPlayer().getSkillLevel(1101004));
-//                    c.useSkill(c.getPlayer(),1101006,c.getPlayer().getSkillLevel(1101006));
-//                    //c.useSkill(c.getPlayer(),1111002,c.getPlayer().getSkillLevel(1111002));
-//                    c.useSkill(c.getPlayer(),1121002,c.getPlayer().getSkillLevel(1121002));
-//                    break;
-//                //圣骑士
-//                case 120:
-//                case 121:
-//                case 122:
-//                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
-//                    c.useSkill(c.getPlayer(),1221000,c.getPlayer().getSkillLevel(1221000));
-//                    c.useSkill(c.getPlayer(),1201005,c.getPlayer().getSkillLevel(1201005));
-//                    c.useSkill(c.getPlayer(),1221002,c.getPlayer().getSkillLevel(1221002));
-//
-//                    break;
-//                //龙骑
-//                case 130:
-//                case 131:
-//                case 132:
-//                    c.useSkill(c.getPlayer(),1001003,c.getPlayer().getSkillLevel(1001003));
-//                    c.useSkill(c.getPlayer(),1301005,c.getPlayer().getSkillLevel(1301005));
-//                    c.useSkill(c.getPlayer(),1321000,c.getPlayer().getSkillLevel(1321000));
-//                    c.useSkill(c.getPlayer(),1301004,c.getPlayer().getSkillLevel(1301004));
-//                    c.useSkill(c.getPlayer(),1321002,c.getPlayer().getSkillLevel(1321002));
-//                    c.useSkill(c.getPlayer(),1301007,c.getPlayer().getSkillLevel(1301007));
-//                    c.useSkill(c.getPlayer(),1301006,c.getPlayer().getSkillLevel(1301006));
-//                    c.useSkill(c.getPlayer(),1311008,c.getPlayer().getSkillLevel(1311008));
-//                    c.useSkill(c.getPlayer(),1321007,c.getPlayer().getSkillLevel(1321007));
-//
-//                    //法師
-//                case 200:
-//                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
-//                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
-//                    break;
-//
-//                //火毒
-//                case 210:
-//                case 211:
-//                case 212:
-//                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
-//                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
-//                    c.useSkill(c.getPlayer(),2121000,c.getPlayer().getSkillLevel(2121000));
-//                    c.useSkill(c.getPlayer(),2101001,c.getPlayer().getSkillLevel(2101001));
-//                    c.useSkill(c.getPlayer(),2111005,c.getPlayer().getSkillLevel(2111005));
-//                    break;
-//
-//                //冰雷
-//                case 220:
-//                case 221:
-//                case 222:
-//                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
-//                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
-//                    c.useSkill(c.getPlayer(),2221000,c.getPlayer().getSkillLevel(2221000));
-//                    c.useSkill(c.getPlayer(),2201001,c.getPlayer().getSkillLevel(2201001));
-//                    c.useSkill(c.getPlayer(),2211005,c.getPlayer().getSkillLevel(2211005));
-//                    break;
-//                //主教
-//                case 230:
-//                case 231:
-//                case 232:
-//                    c.useSkill(c.getPlayer(),2001002,c.getPlayer().getSkillLevel(2001002));
-//                    c.useSkill(c.getPlayer(),2001003,c.getPlayer().getSkillLevel(2001003));
-//                    c.useSkill(c.getPlayer(),2321000,c.getPlayer().getSkillLevel(2321000));
-//                    c.useSkill(c.getPlayer(),2311003,c.getPlayer().getSkillLevel(2311003));
-//                    c.useSkill(c.getPlayer(),2301003,c.getPlayer().getSkillLevel(2301003));
-//                    c.useSkill(c.getPlayer(),2301004,c.getPlayer().getSkillLevel(2301004));
-//                    break;
-//                //射手
-//                case 300:
-//                    c.useSkill(c.getPlayer(),3001003,c.getPlayer().getSkillLevel(3001003));
-//                    break;
-//                //神射
-//                case 310:
-//                case 311:
-//                case 312:
-//                    c.useSkill(c.getPlayer(),3001003,c.getPlayer().getSkillLevel(3001003));
-//                    c.useSkill(c.getPlayer(),3121000,c.getPlayer().getSkillLevel(3121000));
-//                    c.useSkill(c.getPlayer(),3101002,c.getPlayer().getSkillLevel(3101002));
-//                    c.useSkill(c.getPlayer(),3101004,c.getPlayer().getSkillLevel(3101004));
-//                    c.useSkill(c.getPlayer(),3121008,c.getPlayer().getSkillLevel(3121008));
-//
-//                    break;
-//                //弩
-//                case 320:
-//                case 321:
-//                case 322:
-//                    c.useSkill(c.getPlayer(),3001003,c.getPlayer().getSkillLevel(3001003));
-//                    c.useSkill(c.getPlayer(),3221000,c.getPlayer().getSkillLevel(3221000));
-//                    c.useSkill(c.getPlayer(),3201002,c.getPlayer().getSkillLevel(3201002));
-//                    c.useSkill(c.getPlayer(),3201004,c.getPlayer().getSkillLevel(3201004));
-//
-//                    break;
-//                //飞侠
-//                case 400:
-//                    break;
-//                //刀飞
-//                case 410:
-//                case 411:
-//                case 412:
-//                    c.useSkill(c.getPlayer(),4121000,c.getPlayer().getSkillLevel(4121000));
-//                    c.useSkill(c.getPlayer(),4101003,c.getPlayer().getSkillLevel(4101003));
-//                    c.useSkill(c.getPlayer(),4101004,c.getPlayer().getSkillLevel(4101004));
-//                    c.useSkill(c.getPlayer(),4111001,c.getPlayer().getSkillLevel(4111001));
-//                    c.useSkill(c.getPlayer(),4111002,c.getPlayer().getSkillLevel(4111002));
-//                    //c.useSkill(c.getPlayer(),4121006,c.getPlayer().getSkillLevel(4121006));
-//
-//                    break;
-//                //标飞
-//                case 420:
-//                case 421:
-//                case 422:
-//                    c.useSkill(c.getPlayer(),4221000,c.getPlayer().getSkillLevel(4221000));
-//                    c.useSkill(c.getPlayer(),4201002,c.getPlayer().getSkillLevel(4201002));
-//                    c.useSkill(c.getPlayer(),4201003,c.getPlayer().getSkillLevel(4201003));
-//                    c.useSkill(c.getPlayer(),4211005,c.getPlayer().getSkillLevel(4211005));
-//
-//                    break;
-//                //海盗
-//                case 500:
-//                    break;
-//                //拳手
-//                case 510:
-//                case 511:
-//                case 512:
-//                    c.useSkill(c.getPlayer(),5121000,c.getPlayer().getSkillLevel(5121000));
-//                    c.useSkill(c.getPlayer(),5101006,c.getPlayer().getSkillLevel(5101006));
-//
-//                    break;
-//                //船长
-//                case 520:
-//                case 521:
-//                case 522:
-//                    c.useSkill(c.getPlayer(),5221000,c.getPlayer().getSkillLevel(5221000));
-//                    c.useSkill(c.getPlayer(),5201003,c.getPlayer().getSkillLevel(5201003));
-//
-//                    break;
-//                //战童
-//                case 2000:
-//                    break;
-//                //战神
-//                case 2100:
-//                case 2110:
-//                case 2111:
-//                case 2112:
-//                    c.useSkill(c.getPlayer(),21001003,c.getPlayer().getSkillLevel(21001003));
-//                    c.useSkill(c.getPlayer(),21100005,c.getPlayer().getSkillLevel(21100005));
-//                    c.useSkill(c.getPlayer(),21111001,c.getPlayer().getSkillLevel(21111001));
-//                    c.useSkill(c.getPlayer(),21121003,c.getPlayer().getSkillLevel(21121003));
-//                    c.useSkill(c.getPlayer(),21121000,c.getPlayer().getSkillLevel(21121000));
-//
-//                    break;
-//            }
 
         } catch (Exception e) {
             //e.printStackTrace();
@@ -14821,8 +14460,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int getHyPay(int type) {
         int pay = 0;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("select * from hypay where accname = ?");
             ps.setString(1, this.getClient().getAccountName());
             ResultSet rs = ps.executeQuery();
@@ -14847,8 +14485,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 psu.executeUpdate();
                 psu.close();
             }
-
-            DBConPool.close(ps);
+            ps.close();
             rs.close();
         } catch (SQLException var7) {
             //服务端输出信息.println_err("获充值信息发生错误: " + var7);
@@ -14864,8 +14501,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (hypay <= 0) {
             return 0;
         } else {
-            try {
-                Connection con = DBConPool.getConnection();
+            try (Connection con = DBConPool.getConnection()){
                 PreparedStatement ps = con.prepareStatement("UPDATE hypay SET pay = ? ,payUsed = ? ,payReward = ? where accname = ?");
                 ps.setInt(1, pay + hypay);
                 ps.setInt(2, payUsed);
@@ -14888,8 +14524,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (hypay > pay) {
             return -1;
         } else {
-            try {
-                Connection con = DBConPool.getConnection();
+            try(Connection con = DBConPool.getConnection();) {
                 PreparedStatement ps = con.prepareStatement("UPDATE hypay SET pay = ? ,payUsed = ? ,payReward = ? where accname = ?");
                 ps.setInt(1, pay - hypay);
                 ps.setInt(2, payUsed + hypay);
@@ -14912,8 +14547,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         } else if (pay > payReward) {
             return -1;
         } else {
-            try {
-                Connection con = DBConPool.getConnection();
+            try (Connection con = DBConPool.getConnection()){
                 PreparedStatement ps = con.prepareStatement("UPDATE hypay SET payReward = ? where accname = ?");
                 ps.setInt(1, payReward - pay);
                 ps.setString(2, this.getClient().getAccountName());
@@ -14978,8 +14612,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this._equippedFuMoMap.clear();
         String sqlQuery1 = "select b.mxmxd_dakong_fumo from inventoryitems a, inventoryequipment b where a.inventoryitemid = b.inventoryitemid and a.characterid = ? and a.inventorytype = -1 and b.mxmxd_dakong_fumo != '' and b.mxmxd_dakong_fumo is not NULL";
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement(sqlQuery1);
             ps.setInt(1, this.id);
             ResultSet rs = ps.executeQuery();
@@ -15230,9 +14863,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (mount <= 0) {
             return false;
         } else {
-            Connection con = DBConPool.getConnection();
 
-            try {
+            try (Connection con = DBConPool.getConnection()){
                 PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
                 ps.setInt(1, this.getAccountID());
                 ResultSet rs = ps.executeQuery();
@@ -15265,9 +14897,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (mount <= 0) {
             return false;
         } else {
-            Connection con = DBConPool.getConnection();
 
-            try {
+            try (Connection con = DBConPool.getConnection()){
                 PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
                 ps.setInt(1, this.getAccountID());
                 ResultSet rs = ps.executeQuery();
@@ -15297,10 +14928,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int 获得积分_数据库() {
-        Connection con = DBConPool.getConnection();
         int point = 0;
 
-        try {
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("Select * FROM snail_boss_points WHERE accountid = ?");
             ps.setInt(1, this.getAccountID());
             ResultSet rs = ps.executeQuery();
@@ -15461,8 +15091,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public int getOneTimeLogi(String log) {
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             int ret_count = 0;
             try {
                 PreparedStatement ps = con.prepareStatement("select count(*) from onetimelogi where ip = ? and log = ?");
@@ -15496,8 +15125,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setOneTimeLogi(String log) {
 //        if (!this.isClone()) {
-            try {
-                Connection con = DBConPool.getConnection();
+            try (Connection con = DBConPool.getConnection()){
                 Throwable var3 = null;
 
                 try {
@@ -15855,45 +15483,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.max_damage;
     }
 
-//    public void 增加经验储备(long inc_exp) {
-//        long now_exp = this.exp_reserve;
-//        if (now_exp <= 0L) {
-//            now_exp = 0L;
-//        }
-//
-//        if (inc_exp > 0L) {
-//            now_exp += inc_exp;
-//            this.exp_reserve = now_exp;
-//        }
-//
-//    }
-//
-//    public void 扣除经验储备(long inc_exp) {
-//        long now_exp = this.exp_reserve;
-//        if (now_exp <= 199999L) {
-//            now_exp = 199999L;
-//        }
-//
-//        if (inc_exp > 0L) {
-//            now_exp -= inc_exp;
-//            if (now_exp <= 0L) {
-//                now_exp = 0L;
-//            }
-//
-//            this.exp_reserve = now_exp;
-//        }
-//
-//    }
-
-//    public long 读取经验储备() {
-//        return this.exp_reserve;
-//    }
-
     public int Getcharacterz(String Name, int Channale) {
         int ret = -1;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("SELECT * FROM characterz WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -15928,8 +15521,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         PreparedStatement ps1 = null;
         ResultSet rs = null;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps1 = con.prepareStatement("SELECT * FROM jiezoudashi ");
             rs = ps1.executeQuery();
             if (rs.next()) {
@@ -15950,8 +15542,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         PreparedStatement ps1 = null;
         ResultSet rs = null;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps1 = con.prepareStatement("SELECT * FROM jiezoudashi ");
             rs = ps1.executeQuery();
             if (rs.next()) {
@@ -16509,8 +16100,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public static String 取假人属性(int a, String b) {
         String data = "";
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try(Connection con = DBConPool.getConnection();) {
             PreparedStatement ps = con.prepareStatement("SELECT " + b + " FROM characters WHERE id = ?");
             ps.setInt(1, a);
             ResultSet rs = ps.executeQuery();
@@ -16548,8 +16138,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int Getrobot(String Name, int Channale) {
         int ret = -1;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("SELECT * FROM robot WHERE channel = ? and Name = ?");
             ps.setInt(1, Channale);
             ps.setString(2, Name);
@@ -16597,8 +16186,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         int ret = this.判断修炼(a);
         ++ret;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             ps = con.prepareStatement("SELECT * FROM jiezoudashi ");
             rs = ps.executeQuery();
             if (rs.next()) {
@@ -16617,8 +16205,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 判断修炼(String a) {
         int data = 0;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try(Connection con = DBConPool.getConnection();) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM jiezoudashi WHERE Name = '" + a + "'");
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -16635,8 +16222,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public int 判断修炼2(String a) {
         int ret = 0;
 
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             PreparedStatement ps = con.prepareStatement("SELECT * FROM jiezoudashi WHERE Name = `" + a + "`");
             Throwable var5 = null;
 
@@ -16687,8 +16273,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         do {
             ++nowtime;
 
-            try {
-                Connection con = DBConPool.getConnection();
+            try (Connection con = DBConPool.getConnection()){
                 Throwable var8 = null;
 
                 try {
@@ -16803,15 +16388,11 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.mountList.clear();
     }
 
-    public boolean saveMountListToDB(Connection con) {
+    public boolean saveMountListToDB() {
         if (this.mountList.isEmpty()) {
             return false;
         } else {
-            try {
-                if (con == null || con.isClosed()) {
-                    con = DBConPool.getNewConnection();
-                }
-
+            try (Connection con = DBConPool.getConnection()){
                 PreparedStatement ps = con.prepareStatement("DELETE FROM snail_chr_mount_list WHERE chrid = ?");
                 ps.setInt(1, this.getId());
                 ps.executeUpdate();
@@ -16847,10 +16428,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     public void loadMountListFromDB() {
         this.mountList.clear();
-
-        try {
-            Connection con = DBConPool.getConnection();
-            try {
+            try (Connection con = DBConPool.getConnection()){
                 PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_chr_mount_list WHERE chrid = ?");
                 ps.setInt(1, this.getId());
                 ResultSet rs = ps.executeQuery();
@@ -16861,16 +16439,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
                 ps.close();
                 rs.close();
-            } catch (Exception var15) {
-            } finally {
-                if (con != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var14) {
-                        }
-                }
-
-            }
         } catch (Exception var17) {
             //服务端输出信息.println_err("【错误】loadMountListFromDB 错误，错误原因：" + var17);
             var17.printStackTrace();
@@ -16919,14 +16487,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             ps.setInt(3, Channale);
             ps.execute();
             ps.close();
+            con.close();
         } catch (SQLException var18) {
             //服务端输出信息.println_err("Getcharacterz!!55" + var18);
         }
 
     }
     public int getBossLogi(String bossid) {
-        try {
-            Connection con = DBConPool.getConnection();
+        try (Connection con = DBConPool.getConnection()){
             int ret_count = 0;
             try {
                 PreparedStatement ps = con.prepareStatement("select count(*) from bosslogi where ip = ? and bossid = ? and lastattempt >= DATE_SUB(curdate(),INTERVAL 0 DAY)");
@@ -16966,33 +16534,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public void setBossLogi(String bossid) {
 //        if (!this.isClone()) {
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var3 = null;
+            try (Connection con = DBConPool.getConnection()){
 
-                try {
                     PreparedStatement ps = con.prepareStatement("insert into bosslogi (ip, bossid) values (?,?)");
                     ps.setString(1, this.getClient().getSessionIPAddress());
                     ps.setString(2, bossid);
                     ps.executeUpdate();
                     ps.close();
-                } catch (Throwable var13) {
-                    var3 = var13;
-                    throw var13;
-                } finally {
-                    if (con != null) {
-                        if (var3 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var12) {
-                                var3.addSuppressed(var12);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
 
-                }
             } catch (Exception var15) {
                 FileoutputUtil.outError("logs/资料库异常.txt", var15);
             }
@@ -17040,7 +16589,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             now_exp += inc_exp;
             this.exp_reserve = now_exp;
         }
-        if(Objects.nonNull(LtMS.ConfigValuesMap.get("开启巅峰等级")) && LtMS.ConfigValuesMap.get("开启巅峰等级")>0 && this.开启巅峰等级 >0){
+        if(Objects.nonNull(LtMS.ConfigValuesMap.get("开启巅峰等级")) && LtMS.ConfigValuesMap.get("开启巅峰等级")>0 && this.开启巅峰等级 >=0){
             LtPeakLevel ltPeakLevel = Start.ltPeakLevelMap.get(this.getId());
             if(Objects.nonNull(ltPeakLevel) && now_exp >= ltPeakLevel.getLevel_ex()){
                 this.exp_reserve -= ltPeakLevel.getLevel_ex();
@@ -17214,9 +16763,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         MapleCharacter ret = new MapleCharacter(channelserver);
         ret.client = new MapleClient((MapleAESOFB)null, (MapleAESOFB)null, new MockIOSession());
         ret.setId(charid);
-        if (Game.调试2.equals("开")) {
-            //服务端输出信息.println_out("开始从数据库读取角色" + charid + "的数据：");
-        }
 
         try {
             PreparedStatement ps = null;
@@ -17699,7 +17245,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                             rs.close();
                             ret.skillSkin.loadChrSkill();
                             ret.loadMountListFromDB();
-                            ret.loadMonsterKillQuestFromDB(con);
+                            ret.loadMonsterKillQuestFromDB();
                             ret.stats.recalcLocalStats(true);
                             return ret;
                         }
@@ -17839,33 +17385,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (!this.sellWhenPickUpItemList.contains(itemId)) {
             this.sellWhenPickUpItemList.add(itemId);
 
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var3 = null;
+            try (Connection con = DBConPool.getConnection()){
 
-                try {
                     PreparedStatement ps = con.prepareStatement("INSERT INTO snail_sell_pickup_items (character_id, item_id) VALUES (?, ?)");
                     ps.setInt(1, this.id);
                     ps.setInt(2, itemId);
                     ps.executeUpdate();
                     ps.close();
-                } catch (Throwable var13) {
-                    var3 = var13;
-                    throw var13;
-                } finally {
-                    if (con != null) {
-                        if (var3 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var12) {
-                                var3.addSuppressed(var12);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
 
-                }
             } catch (SQLException var15) {
                 //服务端输出信息.println_err("【错误】addSellWhenPickUpItem错误，原因：" + var15);
                 var15.printStackTrace();
@@ -17884,33 +17411,14 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 }
             }
 
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var4 = null;
+            try (Connection con = DBConPool.getConnection()){
 
-                try {
                     PreparedStatement ps = con.prepareStatement("DELETE FROM snail_sell_pickup_items WHERE character_id = ? and item_id = ?");
                     ps.setInt(1, this.id);
                     ps.setInt(2, itemId);
                     ps.executeUpdate();
                     ps.close();
-                } catch (Throwable var14) {
-                    var4 = var14;
-                    throw var14;
-                } finally {
-                    if (con != null) {
-                        if (var4 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var13) {
-                                var4.addSuppressed(var13);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
 
-                }
             } catch (SQLException var16) {
                 //服务端输出信息.println_err("【错误】addSellWhenPickUpItem错误，原因：" + var16);
                 var16.printStackTrace();
@@ -17918,12 +17426,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
 
     }
-    public void loadSellWhenPickUpItemListFromDB(Connection con) {
-        try {
-            if (con == null || con.isClosed()) {
-                con = DBConPool.getConnection();
-            }
-
+    public void loadSellWhenPickUpItemListFromDB() {
+        try (Connection con = DBConPool.getConnection()){
             ArrayList<Integer> ret = new ArrayList<>();
             PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_sell_pickup_items WHERE character_id = ?");
             ps.setInt(1, this.id);
@@ -17947,15 +17451,10 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
 
     }
-    public void loadSellWhenPickUpItemListFromDB() {
-        this.loadSellWhenPickUpItemListFromDB((Connection)null);
-    }
 
-    public void saveSellWhenPickUpItemListToDB(Connection con) {
-        try {
-            if (con == null) {
-                con = DBConPool.getConnection();
-            }
+    public void saveSellWhenPickUpItemListToDB( ) {
+        try (Connection con = DBConPool.getConnection()){
+
 
             ArrayList<Integer> ret = new ArrayList(this.sellWhenPickUpItemList);
             PreparedStatement ps = con.prepareStatement("DELETE FROM snail_sell_pickup_items WHERE character_id = ?");
@@ -17981,11 +17480,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
 
     public void setOneTimeStringLog(String logName, String logVal) {
-        try {
-            Connection con = DBConPool.getConnection();
-            Throwable var4 = null;
+        try (Connection con = DBConPool.getConnection()){
 
-            try {
                 PreparedStatement ps = con.prepareStatement("SELECT id FROM snail_onetime_string_log WHERE characterid = ? AND log_name = ?");
                 ps.setInt(1, this.id);
                 ps.setString(2, logName);
@@ -18005,23 +17501,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
                 ps.close();
                 rs.close();
-            } catch (Throwable var15) {
-                var4 = var15;
-                throw var15;
-            } finally {
-                if (con != null) {
-                    if (var4 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var14) {
-                            var4.addSuppressed(var14);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
 
-            }
         } catch (SQLException var17) {
             //服务端输出信息.println_err("【错误】setOneTimeStringLog错误，原因：" + var17);
             var17.printStackTrace();
@@ -18029,12 +17509,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     }
     public String getOneTimeStringLog(String logName) {
-        try {
-            Connection con = DBConPool.getConnection();
-            Throwable var3 = null;
+        try (Connection con = DBConPool.getConnection()){
 
-            String var7;
-            try {
                 PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_onetime_string_log WHERE characterid = ? AND log_name = ?");
                 ps.setInt(1, this.id);
                 ps.setString(2, logName);
@@ -18050,26 +17526,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                 ret = rs.getString("log_val");
                 ps.close();
                 rs.close();
-                var7 = ret;
-            } catch (Throwable var18) {
-                var3 = var18;
-                throw var18;
-            } finally {
-                if (con != null) {
-                    if (var3 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var17) {
-                            var3.addSuppressed(var17);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
-
-            }
-
-            return var7;
+            return ret;
         } catch (SQLException var20) {
             //服务端输出信息.println_err("【错误】getOneTimeStringLog错误，原因：" + var20);
             var20.printStackTrace();
@@ -18362,5 +17819,31 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             this.addMPHP(-(this.getHp()+this.stats.getHphd()), 0);
         }
        // this.updateSingleStat(MapleStat.HP, 0);
+    }
+
+    public final ArrayList<MonsterDropEntry> retrieveDrop(final int monsterId) {
+        if (this.drops.containsKey(monsterId)) {
+            return this.drops.get(monsterId);
+        }
+        final ArrayList<MonsterDropEntry> ret = new ArrayList<>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try (Connection con = DBConPool.getConnection()){
+            ps = con.prepareStatement("SELECT * FROM drop_data WHERE dropperid = ?");
+            ps.setInt(1, monsterId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                ret.add(new MonsterDropEntry(rs.getInt("itemid"), rs.getInt("chance"), rs.getInt("minimum_quantity"), rs.getInt("maximum_quantity"), rs.getShort("questid")));
+            }
+            rs.close();
+            ps.close();
+            con.close();
+        }
+        catch (SQLException e) {
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
+            return ret;
+        }
+        this.drops.put(monsterId, ret);
+        return ret;
     }
 }

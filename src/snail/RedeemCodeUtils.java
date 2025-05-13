@@ -421,69 +421,101 @@ public class RedeemCodeUtils {
         }
     }
 
-    public static int getItemId(String type, String code) {
-        if (type.equals("")) {
-            return -1;
-        } else if (code.equals("")) {
-            return -1;
-        } else {
-            code = code.replaceAll("-", "");
-            code = code.replaceAll("\r", "");
-            code = code.replaceAll("\n", "");
-            code = code.replaceAll(" ", "");
-            int itemId = -1;
+//    public static int getItemId(String type, String code) {
+//        if (type.equals("")) {
+//            return -1;
+//        } else if (code.equals("")) {
+//            return -1;
+//        } else {
+//            code = code.replaceAll("-", "");
+//            code = code.replaceAll("\r", "");
+//            code = code.replaceAll("\n", "");
+//            code = code.replaceAll(" ", "");
+//            int itemId = -1;
+//
+//            try {
+//                Connection con = DBConPool.getConnection();
+//                Throwable var4 = null;
+//
+//                try {
+//                    PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_codelist WHERE type = ?");
+//                    ps.setString(1, type);
+//                    ResultSet rs = ps.executeQuery();
+//
+//                    while(true) {
+//                        if (rs.next()) {
+//                            String code0 = rs.getString("code");
+//                            code0 = code0.replaceAll("-", "");
+//                            code0 = code0.replaceAll("\r", "");
+//                            code0 = code0.replaceAll("\n", "");
+//                            code0 = code0.replaceAll(" ", "");
+//                            if (!code0.equals(code)) {
+//                                continue;
+//                            }
+//
+//                            itemId = rs.getInt("itemid");
+//                        }
+//
+//                        ps.close();
+//                        rs.close();
+//                        return itemId;
+//                    }
+//                } catch (Throwable var16) {
+//                    var4 = var16;
+//                    throw var16;
+//                } finally {
+//                    if (con != null) {
+//                        if (var4 != null) {
+//                            try {
+//                                con.close();
+//                            } catch (Throwable var15) {
+//                                var4.addSuppressed(var15);
+//                            }
+//                        } else {
+//                            con.close();
+//                        }
+//                    }
+//
+//                }
+//            } catch (SQLException var18) {
+//                //服务端输出信息.println_err("【错误】RedeemCodeUtils.getItemId执行错误，错误原因：" + var18);
+//                var18.printStackTrace();
+//                return -1;
+//            }
+//        }
+//    }
+public static int getItemId(String type, String code) {
+    if (type == null || type.isEmpty() || code == null || code.isEmpty()) {
+        return -1;
+    }
 
-            try {
-                Connection con = DBConPool.getConnection();
-                Throwable var4 = null;
+    // 清理 code 字符串
+    code = code.replaceAll("[-\\s]", "");
 
-                try {
-                    PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_codelist WHERE type = ?");
-                    ps.setString(1, type);
-                    ResultSet rs = ps.executeQuery();
+    int itemId = -1;
 
-                    while(true) {
-                        if (rs.next()) {
-                            String code0 = rs.getString("code");
-                            code0 = code0.replaceAll("-", "");
-                            code0 = code0.replaceAll("\r", "");
-                            code0 = code0.replaceAll("\n", "");
-                            code0 = code0.replaceAll(" ", "");
-                            if (!code0.equals(code)) {
-                                continue;
-                            }
+    String sql = "SELECT itemid FROM snail_codelist WHERE type = ? AND REPLACE(REPLACE(REPLACE(REPLACE(code, '-', ''), '\r', ''), '\n', ''), ' ', '') = ?";
 
-                            itemId = rs.getInt("itemid");
-                        }
+    try (Connection con = DBConPool.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
 
-                        ps.close();
-                        rs.close();
-                        return itemId;
-                    }
-                } catch (Throwable var16) {
-                    var4 = var16;
-                    throw var16;
-                } finally {
-                    if (con != null) {
-                        if (var4 != null) {
-                            try {
-                                con.close();
-                            } catch (Throwable var15) {
-                                var4.addSuppressed(var15);
-                            }
-                        } else {
-                            con.close();
-                        }
-                    }
+        ps.setString(1, type);
+        ps.setString(2, code);
 
-                }
-            } catch (SQLException var18) {
-                //服务端输出信息.println_err("【错误】RedeemCodeUtils.getItemId执行错误，错误原因：" + var18);
-                var18.printStackTrace();
-                return -1;
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                itemId = rs.getInt("itemid");
             }
         }
+
+    } catch (SQLException e) {
+        // 建议使用日志框架替代 printStackTrace
+        e.printStackTrace();
+        return -1;
     }
+
+    return itemId;
+}
 
     public static int getItemMount(String type, String code) {
         if (type.equals("")) {

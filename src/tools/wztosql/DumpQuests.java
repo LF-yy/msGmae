@@ -78,7 +78,7 @@ public class DumpQuests
             con.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -90,7 +90,7 @@ public class DumpQuests
             con.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -105,7 +105,7 @@ public class DumpQuests
             return ret;
         }
         catch (SQLException ex) {
-            FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)ex);
             return false;
         }
     }

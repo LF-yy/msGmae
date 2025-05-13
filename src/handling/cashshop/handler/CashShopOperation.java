@@ -80,19 +80,19 @@ public class CashShopOperation
         }
         if (!LoginServer.CanLoginKey(client.getPlayer().getLoginKey(), client.getPlayer().getAccountID()) || (LoginServer.getLoginKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getLoginKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端登录KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(client.getPlayer().getAccountID()) + " LtMs079服务端key：" + client.getPlayer().getLoginKey() + " 进入商城1");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
         if (!LoginServer.CanServerKey(client.getPlayer().getServerKey(), client.getPlayer().getAccountID()) || (LoginServer.getServerKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getServerKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端頻道KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(client.getPlayer().getAccountID()) + " LtMs079服务端key：" + client.getPlayer().getServerKey() + " 进入商城2");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
         if (!LoginServer.CanClientKey(client.getPlayer().getClientKey(), client.getPlayer().getAccountID()) || (LoginServer.getClientKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getClientKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(client.getPlayer().getAccountID()) + " CongMS服务端key：" + client.getPlayer().getClientKey() + " 进入商城3");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
@@ -102,26 +102,26 @@ public class CashShopOperation
         sendCashShopUpdate(client);
         client.getPlayer();
         if (MapleCharacter.getCharacterNameById2(playerid) == null) {
-            FileoutputUtil.logToFile("logs/Data/角色不存在.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + client.getAccountName() + "進入商城");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录不存在角色 账号 " + client.getAccountName()));
+            FileoutputUtil.logToFile("logs/Data/角色不存在.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号 " + client.getAccountName() + "进入商城");
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录不存在角色 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
         if (!LoginServer.CanLoginKey(client.getPlayer().getLoginKey(), client.getPlayer().getAccountID()) || (LoginServer.getLoginKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getLoginKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getLoginKey(client.getPlayer().getAccountID()) + " 服务端key：" + client.getPlayer().getLoginKey() + " 进入商城1");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
         if (!LoginServer.CanServerKey(client.getPlayer().getServerKey(), client.getPlayer().getAccountID()) || (LoginServer.getServerKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getServerKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getServerKey(client.getPlayer().getAccountID()) + " 服务端key：" + client.getPlayer().getServerKey() + " 进入商城2");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
             return;
         }
         if (!LoginServer.CanClientKey(client.getPlayer().getClientKey(), client.getPlayer().getAccountID()) || (LoginServer.getClientKey(client.getPlayer().getAccountID()) == null && !client.getPlayer().getClientKey().isEmpty())) {
             FileoutputUtil.logToFile("logs/Data/客戶端进入KEY异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + client.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + client.getAccountName() + " 客戶端key：" + LoginServer.getClientKey(client.getPlayer().getAccountID()) + " 服务端key：" + client.getPlayer().getClientKey() + " 进入商城3");
-            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系統] 非法登录 账号 " + client.getAccountName()));
+            Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM 密语系统] 非法登录 账号 " + client.getAccountName()));
             client.getSession().close();
         }
     }

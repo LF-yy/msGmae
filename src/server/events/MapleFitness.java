@@ -52,7 +52,7 @@ public class MapleFitness extends MapleEvent
         };
         this.getClass();
         this.fitnessSchedule = instance.schedule((Runnable)r, 600000L);
-        this.broadcast(MaplePacketCreator.serverNotice(0, "活動已經開始，請通過中間的入口開始游戏。"));
+        this.broadcast(MaplePacketCreator.serverNotice(0, "活動已经開始，请通過中間的入口開始游戏。"));
     }
     
     public boolean isTimerStarted() {
@@ -104,28 +104,28 @@ public class MapleFitness extends MapleEvent
                     MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "你還有10秒左右的时间，那些你不能擊敗的玩家，我希望你下次贏得勝利，回頭見。"));
                 }
                 else if (timeLeft > 11000L && timeLeft < 101000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "好吧，你剩下沒有多少时间了，請抓緊时间衝向終點。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "好吧，你剩下没有多少时间了，请抓緊时间衝向終點。"));
                 }
                 else if (timeLeft > 101000L && timeLeft < 241000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "這已經是最後了不要放棄，豐富的大獎等著你！"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "这已经是最後了不要放棄，豐富的大獎等著你！"));
                 }
                 else if (timeLeft > 241000L && timeLeft < 301000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "這跳完就剩下一階了加油！"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "这跳完就剩下一階了加油！"));
                 }
                 else if (timeLeft > 301000L && timeLeft < 361000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "請小心掉落。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "请小心掉落。"));
                 }
                 else if (timeLeft > 361000L && timeLeft < 501000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "請小心HP歸零。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "请小心HP歸零。"));
                 }
                 else if (timeLeft > 501000L && timeLeft < 601000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "請小心猴子。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "请小心猴子。"));
                 }
                 else if (timeLeft > 601000L && timeLeft < 661000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "第二階的技巧請利用猴子。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "第二階的技巧请利用猴子。"));
                 }
                 else if (timeLeft > 661000L && timeLeft < 701000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "請小心HP歸零。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "请小心HP歸零。"));
                 }
                 else if (timeLeft > 701000L && timeLeft < 781000L) {
                     MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "大家知道 [終極忍耐] 很好玩的！"));
@@ -134,7 +134,7 @@ public class MapleFitness extends MapleEvent
                     MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "有可能会小LAG一下不過不需要擔心。"));
                 }
                 else if (timeLeft > 841000L) {
-                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "[終極忍耐] 總共有四階，如果你碰巧在游戏過程中死亡，你会從游戏中消失，所以請注意這一點。"));
+                    MapleFitness.this.broadcast(MaplePacketCreator.serverNotice(0, "[終極忍耐] 總共有四階，如果你碰巧在游戏過程中死亡，你会從游戏中消失，所以请注意这一點。"));
                 }
             }
         }, 90000L);

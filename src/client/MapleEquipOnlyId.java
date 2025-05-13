@@ -41,7 +41,7 @@ public class MapleEquipOnlyId
 
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             //e.printStackTrace();
         }
         return ret;

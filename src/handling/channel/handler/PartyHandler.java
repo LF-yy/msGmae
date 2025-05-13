@@ -36,11 +36,11 @@ public class PartyHandler
                 }
             }
             else {
-                c.getPlayer().dropMessage(5, "已拒絕組队邀請。");
+                c.getPlayer().dropMessage(5, "已拒絕組队邀请。");
             }
         }
         else {
-            c.getPlayer().dropMessage(5, "不能加入組队，因為已經有組队了。");
+            c.getPlayer().dropMessage(5, "不能加入組队，因为已经有組队了。");
         }
     }
     
@@ -65,7 +65,7 @@ public class PartyHandler
                         c.sendPacket(MaplePacketCreator.partyCreated(party.getId()));
                         break;
                     }
-                    c.getPlayer().dropMessage(5, "不能創建組队，因為已經有組队了。");
+                    c.getPlayer().dropMessage(5, "不能創建組队，因为已经有組队了。");
                     break;
                 }
             }
@@ -97,16 +97,16 @@ public class PartyHandler
             case 3: {
                 final int partyid = slea.readInt();
                 if (c.getPlayer().getMapId() == 914000300 && c.getPlayer().getMapId() == 914000220 && c.getPlayer().getMapId() == 914000210 && c.getPlayer().getMapId() == 914000200 && c.getPlayer().getMapId() == 914000100 && c.getPlayer().getMapId() == 914000000) {
-                    c.getPlayer().dropMessage(5, "該地图不能加入組队。");
+                    c.getPlayer().dropMessage(5, "该地图不能加入組队。");
                     break;
                 }
                 if (c.getPlayer().getParty() != null) {
-                    c.getPlayer().dropMessage(5, "不能加入組队，因為已經有組队了。");
+                    c.getPlayer().dropMessage(5, "不能加入組队，因为已经有組队了。");
                     break;
                 }
                 party = Party.getParty(partyid);
                 if (party == null) {
-                    c.getPlayer().dropMessage(5, "已拒絕組队邀請。");
+                    c.getPlayer().dropMessage(5, "已拒絕組队邀请。");
                     break;
                 }
                 if (party.getMembers().size() < 6) {
@@ -160,7 +160,7 @@ public class PartyHandler
                         }
                     }
                     else {
-                        c.getPlayer().dropMessage(5, "當前地图無法變更队長");
+                        c.getPlayer().dropMessage(5, "當前地图无法變更队長");
                     }
                     break;
                 }

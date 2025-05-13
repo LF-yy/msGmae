@@ -78,16 +78,16 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
         this.channel = channel;
     }
     
-    public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) throws Exception {
+    public void xexceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) throws Exception {
     }
     
     public void channelActive(final ChannelHandlerContext ctx) throws Exception {
         final String address = ctx.channel().remoteAddress().toString().split(":")[0];
         if (WorldConstants.ADMIN_ONLY) {
-            System.out.println("[登錄服務] " + address + " 已連接");
+            System.out.println("[登錄服務] " + address + " 已连接");
         }
         if (this.BlockedIP.contains((Object)address)) {
-            FileoutputUtil.logToFile("logs/Data/連接斷線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + address + " 連接斷線1");
+            FileoutputUtil.logToFile("logs/Data/连接斷線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + address + " 连接斷線1");
             ctx.channel().close();
             return;
         }
@@ -108,7 +108,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             if (count >= 10) {
                 this.BlockedIP.add(address);
                 this.tracker.remove((Object)address);
-                FileoutputUtil.logToFile("logs/Data/連接斷線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + address + " 連接斷線2");
+                FileoutputUtil.logToFile("logs/Data/连接斷線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + address + " 连接斷線2");
                 ctx.channel().close();
                 return;
             }
@@ -129,7 +129,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
         else {
             if (this.channel <= 0) {
                 System.out.println("[連結錯誤] 未知類型: " + this.channel);
-                FileoutputUtil.logToFile("logs/Data/連接斷線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + address + " 連接斷線3");
+                FileoutputUtil.logToFile("logs/Data/连接斷線.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + address + " 连接斷線3");
                 ctx.channel().close();
                 return;
             }
@@ -166,59 +166,10 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             }
         }
         catch (Exception e) {
-            FileoutputUtil.outError("logs/斷開連接異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/斷開连接异常.txt", (Throwable)e);
         }
         super.channelInactive(ctx);
     }
-    
-//    public void channelRead(final ChannelHandlerContext ctx, final Object message) {
-//        final LittleEndianAccessor slea = new LittleEndianAccessor(new ByteArrayByteStream((byte[])(byte[])message));
-//        if (slea.available() < 2L) {
-//            return;
-//        }
-//        final MapleClient c = (MapleClient)ctx.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
-//        if (c == null || !c.isReceiving()) {
-//            return;
-//        }
-//        final short header_num = slea.readShort();
-//        final RecvPacketOpcode[] values = RecvPacketOpcode.values();
-//        final int length = values.length;
-//        int i = 0;
-//        while (i < length) {
-//            final RecvPacketOpcode recv = values[i];
-//            if (recv.getValue() == header_num) {
-//                if (recv.NeedsChecking() && !c.isLoggedIn()) {
-//                    return;
-//                }
-////                if (c.getPlayer() != null && c.isMonitored() && !MapleServerHandler.blocked.contains((Object)recv)) {
-////                    if(LtMS.ConfigValuesMap.get("开启监测") == 1) {
-////                        FilePrinter.print("Monitored/" + c.getPlayer().getName() + ".txt", String.valueOf((Object) recv) + " (" + Integer.toHexString((int) header_num) + ") Handled: \r\n" + slea.toString() + "\r\n");
-////                    }
-////               }
-//                try {
-//                    handlePacket(recv, slea, c, this.channel == -10);
-//                }catch (Exception e) {
-//                    e.printStackTrace();
-//                    if (c.getPlayer() != null && c.getPlayer().isShowErr()) {
-//                        c.getPlayer().showInfo("数据包異常", true, "包頭:" + recv.name() + "(0x" + Integer.toHexString((int)header_num).toUpperCase() + ")");
-//                    }
-//                    FileoutputUtil.outputFileError("logs/Except/Log_Code_Except.txt", (Throwable)e, false);
-//                    FileoutputUtil.outputFileError("logs/Except/Log_Packet_Except.txt", (Throwable)e);
-//                    FileoutputUtil.log("logs/Except/Log_Packet_Except.txt", "Packet: " + (int)header_num + "\r\n" + ctx.name() + ":\r\n" +slea.toString(true));
-//                }
-//                return;
-//            }else {
-//                ++i;
-//            }
-//        }
-//        if (ServerConfig.LOG_PACKETS) {
-//            final byte[] packet = slea.read((int)slea.available());
-//            final StringBuilder sb = new StringBuilder("發現未知用戶端数据包 - (包頭:0x" + Integer.toHexString((int)header_num) + ")");
-//            System.err.println(sb.toString());
-//            sb.append(":\r\n").append(HexTool.toString(packet)).append("\r\n").append(HexTool.toStringFromAscii(packet));
-//            FileoutputUtil.log("logs\\数据包_未知.txt", sb.toString());
-//        }
-//    }
 public void channelRead(final ChannelHandlerContext ctx, final Object message) {
     if (!(message instanceof byte[])) {
         System.err.println("Invalid message type: " + message.getClass().getName());
@@ -265,15 +216,29 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
         FileoutputUtil.log("logs/data_packet_unknown.txt", sb.toString());
     }
 }
+    /**
+     * 当用户事件被触发时执行的方法
+     * 该方法主要用于处理客户端的心跳检测事件
+     *
+     * @param ctx 通道处理上下文，包含了通道、管道等信息
+     * @param status 事件的状态对象，用于传递事件特定的信息
+     * @throws Exception 抛出异常表示处理事件过程中可能出现的错误
+     */
     public void userEventTriggered(final ChannelHandlerContext ctx, final Object status) throws Exception {
+        // 获取MapleClient实例，用于后续的操作
         final MapleClient client = (MapleClient)ctx.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
+
+        // 如果客户端实例不为空，则发送心跳包
         if (client != null) {
             client.sendPing();
         }
+        // 如果客户端实例为空，则关闭通道并打印日志
         else {
             ctx.channel().close();
             System.out.println("netty检测心跳掉线。");
         }
+
+        // 调用父类的方法以处理其他潜在的事件
         super.userEventTriggered(ctx, status);
     }
 
@@ -286,7 +251,7 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
      * @throws Exception
      */
     public static void handlePacket(final RecvPacketOpcode header, final LittleEndianAccessor slea,  MapleClient c, final boolean cs) throws Exception {
-        if(LtMS.ConfigValuesMap.get("开启封包调试") == 1 && header != RecvPacketOpcode.NPC_ACTION){
+        if(LtMS.ConfigValuesMap.get("开启封包调试") == 1 && header != RecvPacketOpcode.NPC_ACTION && c !=null ){//&& c.getPlayer() !=null && c.getPlayer().isGM()
             System.out.println("封包编码:"+ header+",账号:"+c.getAccountName()+",角色:"+(c.getPlayer()!=null? c.getPlayer().getName() : "无角色") );
         }
         switch (header) {
@@ -344,7 +309,7 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
                 CharLoginHandler.handleDeleteCharacter(slea, c);
                 break;
             }
-            //字符选择
+            //字符选择 选择角色
             case CHAR_SELECT: {
                 CharLoginHandler.handleSecectCharacter(slea, c);
                 break;
@@ -358,11 +323,15 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
                 break;
             }
             case PLAYER_LOGGEDIN: {
+                // 读取玩家ID
                 final int playerid = slea.readInt();
+                // 如果是现金商店上下文
                 if (cs) {
+                    // 执行现金商店登录操作
                     CashShopOperation.EnterCashShop(playerid, c);
                     break;
                 }
+                // 执行普通登录操作
                 InterServerHandler.LoggedIn(playerid, c);
                 break;
             }
@@ -913,6 +882,7 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
                 break;
             }
             case PET_AUTO_POT: {
+                // 处理宠物自动使用药剂的情况
                 PetHandler.Pet_AutoPotion(slea, c, c.getPlayer());
                 break;
             }
@@ -1164,12 +1134,9 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
                 }
                 break;
             case VICIOUS_HAMMER:
-                int mod;
-                if (ServerConfig.version == 79) {
-                    mod = slea.readByte();
-                    mod = (byte)(mod + 8);
-                    c.sendPacket(MTSCSPacket.ViciousHammerM((byte)mod, 0));
-                }
+                slea.skip(4);
+                slea.skip(4);
+                c.getSession().write(MTSCSPacket.ViciousHammer(false,0));
                 break;
             case MOVE_DRAGON:
                 break;

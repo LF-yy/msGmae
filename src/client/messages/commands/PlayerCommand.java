@@ -381,28 +381,6 @@ public class PlayerCommand
             c.removeClickedNPC();
             NPCScriptManager.getInstance().dispose(c);
             c.sendPacket(MaplePacketCreator.enableActions());
-            //4人组队爆率加成机制
-            boolean rand = false;
-            double coefficient = 1;
-            final int cMap = c.getPlayer().getMapId();
-            if (Objects.nonNull(c.getPlayer().getParty()) && c.getPlayer().getParty().getMembers().size()>=4) {
-                for (final MaplePartyCharacter cc : c.getPlayer().getParty().getMembers()) {
-                    if (cMap == cc.getMapid()) {
-                        rand = true;
-                    } else {
-                        rand = false;
-                    }
-                }
-            }
-            if (rand){
-                coefficient = LtMS.ConfigValuesMap.get("4人组队爆率加成") / 100;
-            }
-            double jiac = 0.001;
-            if (LtMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
-                //破功爆率加成机制
-                int 获得破功 = c.getPlayer().取破攻等级();
-                jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"))/100;
-            }
             double DROP_RATE = 1.0F;
         if (LtMS.ConfigValuesMap.get("双爆频道开关") == 1 && ServerConfig.双倍线路.contains(c.getPlayer().getMap().getChannel())) {
             DROP_RATE = c.getChannelServer().getDropRate()*2.0F;
@@ -412,7 +390,7 @@ public class PlayerCommand
             //double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
             DecimalFormat df = new DecimalFormat("#.00");
             String formatExp = df.format(c.getPlayer().getEXPMod()  * c.getChannelServer().getExpRate() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
-            String formatDrop = df.format((jiac)+ coefficient  * c.getPlayer().getDropMod() * (c.getPlayer().getStat().dropBuff / 100.0) * DROP_RATE + (int)(c.getPlayer().getItemDropm()/100) + (c.getPlayer().getDropm() > 1 ? c.getPlayer().getDropm() -1 : 0) );//
+            String formatDrop =""+( c.getPlayer().getDropMod() * (c.getPlayer().getStat().dropBuff / 100.0) * DROP_RATE + (int)(c.getPlayer().getItemDropm()/100) + (c.getPlayer().getDropm() > 1 ? c.getPlayer().getDropm() -1 : 0) );//
             String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0)  * c.getChannelServer().getMesoRate());
 
             c.sendPacket(MaplePacketCreator.sendHint(
@@ -424,7 +402,7 @@ public class PlayerCommand
                             + "当前剩余 " + c.getPlayer().getCSPoints(1) + " 点券 " + c.getPlayer().getCSPoints(2) + " 抵用券\r\n"
                             + "当前延迟 " + c.getPlayer().getClient().getLatency() + " 毫秒\r\n"
                             + "角色坐标 " + "X:"+c.getPlayer().getPosition().x+"-Y:"+c.getPlayer().getPosition().y
-                            + "\n\n+系统爆率加成:"+(c.getPlayer().getDropm() > 1 ? c.getPlayer().getDropm() -1 : "0")+ "+破功爆率加成: " + new BigDecimal(jiac).setScale(2, RoundingMode.HALF_UP) + "+4人组队爆率加成"+coefficient+"*爆率卡加成:"+c.getPlayer().getDropMod()+"*爆率buff加成:"+(c.getPlayer().getStat().dropBuff / 100.0)+"*频道爆率加:"+DROP_RATE+"+物品爆率加成:"+new BigDecimal((c.getPlayer().getItemDropm()/100)).setScale(2, RoundingMode.HALF_UP)
+                            + "\n\n+系统爆率加成:"+(c.getPlayer().getDropm() > 1 ? c.getPlayer().getDropm() -1 : "0")+"*爆率卡加成:"+c.getPlayer().getDropMod()+"*爆率buff加成:"+(c.getPlayer().getStat().dropBuff / 100.0)+"*频道爆率加:"+DROP_RATE+"+物品爆率加成:"+new BigDecimal((c.getPlayer().getItemDropm()/100)).setScale(2, RoundingMode.HALF_UP)
                     + "", 350, 5));
             return true;
         }

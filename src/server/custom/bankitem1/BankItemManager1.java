@@ -68,10 +68,9 @@ public class BankItemManager1
     
     public List<BankItem1> getItems(final int cid) {
         final List<BankItem1> items = new ArrayList<BankItem1>();
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try {
+        try(Connection con1 = DatabaseConnection.getConnection()) {
             ps = con1.prepareStatement("select * from bank_item1 where cid = ?");
             ps.setInt(1, cid);
             rs = ps.executeQuery();

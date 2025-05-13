@@ -63,7 +63,7 @@ public class MapleOxQuizFactory
         }
         catch (Exception e) {
             FilePrinter.printError("MapleOxQuizEntry.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         this.initialized = true;
     }
@@ -79,7 +79,7 @@ public class MapleOxQuizFactory
         }
         catch (Exception e) {
             FilePrinter.printError("MapleOxQuizEntry.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return ret;
     }
@@ -129,7 +129,7 @@ public class MapleOxQuizFactory
         }
         catch (Exception e) {
             FilePrinter.printError("MapleOxQuizEntry.txt", (Throwable)e);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     

@@ -25,7 +25,7 @@ public class 提取类名称 {
             BeanInfo bi = Introspector.getBeanInfo(Book.class);
             PropertyDescriptor[] pds = bi.getPropertyDescriptors();
             MethodDescriptor[] mds = bi.getMethodDescriptors();
-            System.out.println("------------propertities-------------");
+          //  System.out.println("------------propertities-------------");
 
             int i;
             String methodName;
@@ -34,7 +34,7 @@ public class 提取类名称 {
                 System.out.println(methodName);
             }
 
-            System.out.println("------------methods-------------");
+           // System.out.println("------------methods-------------");
 
             for(i = 0; i < mds.length; ++i) {
                 methodName = mds[i].getName();

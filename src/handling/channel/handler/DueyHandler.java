@@ -176,7 +176,7 @@ public class DueyHandler
             return true;
         }
         catch (SQLException se) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             FilePrinter.printError("DueyHandler.txt", (Throwable)se, "addMesoToDB");
             return false;
         }
@@ -202,7 +202,7 @@ public class DueyHandler
         }
         catch (SQLException se) {
             FilePrinter.printError("DueyHandler.txt", (Throwable)se, "addItemToDB");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             return false;
         }
     }
@@ -226,7 +226,7 @@ public class DueyHandler
         }
         catch (SQLException se) {
             FilePrinter.printError("DueyHandler.txt", (Throwable)se, "loadItems");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             return null;
         }
     }
@@ -252,7 +252,7 @@ public class DueyHandler
         }
         catch (SQLException se) {
             FilePrinter.printError("DueyHandler.txt", (Throwable)se, "loadSingleItem");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
             return null;
         }
     }
@@ -265,7 +265,7 @@ public class DueyHandler
         }
         catch (SQLException se) {
             FilePrinter.printError("DueyHandler.txt", (Throwable)se, "reciveMsg");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     
@@ -278,7 +278,7 @@ public class DueyHandler
         }
         catch (SQLException se) {
             FilePrinter.printError("DueyHandler.txt", (Throwable)se, "removeItemFromDB");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)se);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
         }
     }
     

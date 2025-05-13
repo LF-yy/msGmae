@@ -128,7 +128,7 @@ public class MTSCart implements Serializable
             ps.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -153,7 +153,7 @@ public class MTSCart implements Serializable
             ps.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -172,7 +172,7 @@ public class MTSCart implements Serializable
             ps.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     

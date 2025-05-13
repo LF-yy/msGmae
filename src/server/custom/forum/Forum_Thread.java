@@ -152,8 +152,7 @@ public class Forum_Thread
     }
     
     public static ArrayList<Forum_Thread> loadAllThread() {
-        Connection con = DatabaseConnection.getConnection();
-        try {
+        try (Connection con = DatabaseConnection.getConnection()){
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_thread  order by lastreply desc");
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -167,10 +166,6 @@ public class Forum_Thread
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
             return null;
-        }finally {
-            try {
-                con.close();
-            } catch (SQLException e) {}
         }
     }
     
@@ -194,8 +189,7 @@ public class Forum_Thread
     }
     
     public static Forum_Thread getThreadByNameToSql(final int sid, final String name) {
-        Connection con = DatabaseConnection.getConnection();
-        try {
+        try (Connection con = DatabaseConnection.getConnection()){
             final PreparedStatement ps = con.prepareStatement("SELECT * FROM forum_thread WHERE sid = ? AND tname = ? order by lastReply desc");
             ps.setInt(1, sid);
             ps.setString(2, name);
@@ -206,10 +200,6 @@ public class Forum_Thread
         }
         catch (SQLException ex) {
             FileoutputUtil.outputFileError("logs/鏁版嵁搴撳紓甯?txt", (Throwable)ex);
-        }finally {
-            try {
-                con.close();
-            } catch (SQLException e) {}
         }
         return null;
     }

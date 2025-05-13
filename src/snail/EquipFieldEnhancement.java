@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package snail;
 
 import database.DBConPool;
@@ -15,9 +10,10 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EquipFieldEnhancement {
-    private Map<Integer, Map<Integer, EquipField>> chrEquipFieldMap = new HashMap();
+    private Map<Integer, Map<Integer, EquipField>> chrEquipFieldMap = new ConcurrentHashMap<>();
     private static EquipFieldEnhancement instance = new EquipFieldEnhancement();
 
     public EquipFieldEnhancement() {
@@ -298,10 +294,6 @@ public class EquipFieldEnhancement {
 
     public boolean loadCharFromDB(int chrId, Connection con) {
         try {
-            if (con == null || con.isClosed()) {
-                con = DBConPool.getConnection();
-            }
-
             PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_equipment_field_enhancement WHERE characterid = ?");
             ps.setInt(1, chrId);
             ResultSet rs = ps.executeQuery();
@@ -317,6 +309,7 @@ public class EquipFieldEnhancement {
             this.chrEquipFieldMap.put(chrId, equipFieldMap);
             rs.close();
             ps.close();
+            con.close();
             return true;
         } catch (SQLException var6) {
             //服务端输出信息.println_err("【错误】EquipFieldEnhancement.loadCharFromDB错误，原因：" + var6);

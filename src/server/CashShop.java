@@ -179,7 +179,7 @@ public class CashShop implements Serializable
         }
         catch (SQLException sqle) {
             //sql//e.printStackTrace();
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)sqle);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)sqle);
         }
     }
     
@@ -216,7 +216,7 @@ public class CashShop implements Serializable
             this.save(null);
         }
         catch (SQLException sqle) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)sqle);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)sqle);
            // sql//e.printStackTrace();
         }
         return gifts;

@@ -373,23 +373,23 @@ public class MapleQuestAction implements Serializable
                     }
                 }
                 if (c.getInventory(MapleInventoryType.EQUIP).getNumFreeSlot() < eq) {
-                    c.dropMessage(1, "請確認裝备栏是否滿了。");
+                    c.dropMessage(1, "请確認裝备栏是否满了。");
                     return false;
                 }
                 if (c.getInventory(MapleInventoryType.USE).getNumFreeSlot() < use) {
-                    c.dropMessage(1, "請確認消耗栏是否滿了。");
+                    c.dropMessage(1, "请確認消耗栏是否满了。");
                     return false;
                 }
                 if (c.getInventory(MapleInventoryType.SETUP).getNumFreeSlot() < setup) {
-                    c.dropMessage(1, "請確認裝飾栏是否滿了。");
+                    c.dropMessage(1, "请確認裝飾栏是否满了。");
                     return false;
                 }
                 if (c.getInventory(MapleInventoryType.ETC).getNumFreeSlot() < etc) {
-                    c.dropMessage(1, "請確認其他栏是否滿了。");
+                    c.dropMessage(1, "请確認其他栏是否满了。");
                     return false;
                 }
                 if (c.getInventory(MapleInventoryType.CASH).getNumFreeSlot() < cash) {
-                    c.dropMessage(1, "請確認特殊栏是否滿了。");
+                    c.dropMessage(1, "请確認特殊栏是否满了。");
                     return false;
                 }
                 return true;

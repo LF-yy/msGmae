@@ -68,10 +68,9 @@ public class BankItemManager
     
     public List<BankItem> getItems(final int cid) {
         final List<BankItem> items = new ArrayList<BankItem>();
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try {
+        try (Connection con1 = DatabaseConnection.getConnection()){
             ps = con1.prepareStatement("select * from bank_item where cid = ?");
             ps.setInt(1, cid);
             rs = ps.executeQuery();
@@ -127,9 +126,8 @@ public class BankItemManager
         if (item == null) {
             return -1;
         }
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
-        try {
+        try (Connection con1 = DatabaseConnection.getConnection()){
             ps = con1.prepareStatement("insert into bank_item (id,cid,itemid,count) values (?,?,?,?)");
             ps.setLong(1, item.getId());
             ps.setInt(2, item.getCid());
@@ -156,9 +154,8 @@ public class BankItemManager
     
     public int delete(final long id) {
         int ret = -1;
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
-        try {
+        try(Connection con1 = DatabaseConnection.getConnection()) {
             ps = con1.prepareStatement("delete from bank_item where id = ?");
             ps.setLong(1, id);
             ret = ps.executeUpdate();

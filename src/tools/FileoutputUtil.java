@@ -35,8 +35,8 @@ public class FileoutputUtil
     public static String Donator_Log = "logs\\Shadier_Merchant.txt";
     public static String Hacker_Log = "logs\\Log_Hacker.txt";
     public static String Movement_Log = "logs\\Log_Movement.txt";
-    public static String Client_Error_2 = "logs/Client/用戶端_報錯_非38.txt";
-    public static String Client_Error = "logs/Client/用戶端_報錯.txt";
+    public static String Client_Error_2 = "logs/Client/用戶端_报錯_非38.txt";
+    public static String Client_Error = "logs/Client/用戶端_报錯.txt";
     public static String CommandEx_Log = "logs/Except/Log_Command_Except.txt";
     private static final SimpleDateFormat sdf;
     private static final SimpleDateFormat sdfGMT;

@@ -38,6 +38,7 @@ import tools.MaplePacketCreator;
 import server.Timer.EventTimer;
 import javax.script.ScriptException;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import tools.FilePrinter;
 import client.MapleClient;
@@ -75,7 +76,7 @@ public class EventInstanceManager
         this.chars = new LinkedList<MapleCharacter>();
         this.dced = new LinkedList<Integer>();
         this.mobs = new LinkedList<MapleMonster>();
-        this.killCount = new HashMap<Integer, Integer>();
+        this.killCount = new ConcurrentHashMap<Integer, Integer>();
         this.props = new Properties();
         this.timeStarted = 0L;
         this.eventTime = 0L;
@@ -797,17 +798,28 @@ public class EventInstanceManager
     }
     
     public void setProperty(final String key, final String value) {
+        this.wL.lock();
+        try {
         if (this.disposed) {
             return;
         }
         this.props.setProperty(key, value);
+        }finally {
+            this.wL.unlock();
+        }
     }
     
     public final Object setProperty(final String key, final String value, final boolean prev) {
-        if (this.disposed) {
-            return null;
+        this.wL.lock();
+        try {
+            if (this.disposed) {
+                return null;
+            }
+            return this.props.setProperty(key, value);
+        }finally {
+            this.wL.unlock();
         }
-        return this.props.setProperty(key, value);
+
     }
     
     public final String getProperty(final String key) {

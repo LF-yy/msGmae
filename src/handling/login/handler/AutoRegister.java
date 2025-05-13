@@ -29,7 +29,7 @@ public class AutoRegister
         }
         catch (SQLException ex) {
             System.err.println("[getAccountExists]" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return accountExists;
     }
@@ -65,7 +65,7 @@ public class AutoRegister
                     }
                     catch (SQLException ex) {
                         System.err.println("createAccount" + (Object)ex);
-                        FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                        FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
                         return;
                     }
                 }
@@ -74,7 +74,7 @@ public class AutoRegister
         }
         catch (SQLException ex2) {
             System.err.println("[createAccount]" + (Object)ex2);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex2);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex2);
         }
     }
     

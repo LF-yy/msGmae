@@ -43,8 +43,8 @@ public class GuildHandler
         }
         catch (Exception e) {
             System.out.println("公会的錯誤:" + (Object)e);
-            FileoutputUtil.logToFile("logs/公会存檔保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getClient().getAccountName() + " 账号ID " + c.getClient().getAccID() + " 角色名 " + c.getName() + " 角色ID " + c.getId());
-            FileoutputUtil.outError("logs/公会存檔保存数据異常.txt", (Throwable)e);
+            FileoutputUtil.logToFile("logs/公会存檔保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + c.getClient().getAccountName() + " 账号ID " + c.getClient().getAccID() + " 角色名 " + c.getName() + " 角色ID " + c.getId());
+            FileoutputUtil.outError("logs/公会存檔保存数据异常.txt", (Throwable)e);
         }
     }
     
@@ -71,7 +71,7 @@ public class GuildHandler
                     return;
                 }
                 if (c.getPlayer().getMeso() < cost) {
-                    c.getPlayer().dropMessage(1, "你沒有足夠的金币建立公会。目前建立公会需要: " + cost + " 的金币。");
+                    c.getPlayer().dropMessage(1, "你没有足夠的金币建立公会。目前建立公会需要: " + cost + " 的金币。");
                     return;
                 }
                 final String guildName = slea.readMapleAsciiString();
@@ -92,7 +92,7 @@ public class GuildHandler
                 c.sendPacket(MaplePacketCreator.showGuildInfo(c.getPlayer()));
                 Guild.gainGP(c.getPlayer().getGuildId(), 500);
                 Guild.setGuildMemberOnline(c.getPlayer().getMGC(), true, c.getChannel());
-                c.getPlayer().dropMessage(1, "恭喜你成功创建一個公会.");
+                c.getPlayer().dropMessage(1, "恭喜你成功创建一个公会.");
                 respawnPlayer(c.getPlayer());
                 break;
             }
@@ -131,7 +131,7 @@ public class GuildHandler
                         itr2.remove();
                         final int s = Guild.addGuildMember(c.getPlayer().getMGC());
                         if (s == 0) {
-                            c.getPlayer().dropMessage(1, "你想要加入的公会已經滿了.");
+                            c.getPlayer().dropMessage(1, "你想要加入的公会已经满了.");
                             c.getPlayer().setGuildId(0);
                             return;
                         }
@@ -156,7 +156,7 @@ public class GuildHandler
                     return;
                 }
                 if (c.getPlayer().getMapId() == 990001000) {
-                    c.getPlayer().dropMessage(5, "無法在當前地图退出工会。");
+                    c.getPlayer().dropMessage(5, "无法在當前地图退出工会。");
                     return;
                 }
                 Guild.leaveGuild(c.getPlayer().getMGC());
@@ -171,7 +171,7 @@ public class GuildHandler
                 if (ch >= 1) {
                     victim = ChannelServer.getInstance(ch).getPlayerStorage().getCharacterByName(name);
                     if (victim != null && victim.getMapId() == 990001000) {
-                        c.getPlayer().dropMessage(5, "當前無法驅除" + victim.getName() + "工会。");
+                        c.getPlayer().dropMessage(5, "當前无法驅除" + victim.getName() + "工会。");
                         return;
                     }
                 }
@@ -206,7 +206,7 @@ public class GuildHandler
                     return;
                 }
                 if (c.getPlayer().getMeso() < 1000000) {
-                    c.getPlayer().dropMessage(1, "你的金币不夠,無法創建公会徽章");
+                    c.getPlayer().dropMessage(1, "你的金币不夠,无法創建公会徽章");
                     return;
                 }
                 final short bg = slea.readShort();

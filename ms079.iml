@@ -42,5 +42,17 @@
     <orderEntry type="library" name="commons-pool2-2.4.2" level="project" />
     <orderEntry type="library" name="bms.server" level="project" />
     <orderEntry type="library" name="bms.server (2)" level="project" />
+    <orderEntry type="library" name="Server" level="project" />
+    <orderEntry type="library" name="Server (2)" level="application" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/Server.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="Server (3)" level="project" />
   </component>
 </module>

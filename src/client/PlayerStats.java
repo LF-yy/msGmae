@@ -281,7 +281,9 @@ public class PlayerStats implements Serializable
     
     public final short getHp() {
         return this.hp;
-    }    public final int getHphd() {
+    }
+
+    public final int getHphd() {
         return this.hphd;
     }
     
@@ -3359,7 +3361,56 @@ public class PlayerStats implements Serializable
     public final byte passive_mastery() {
         return this.passive_mastery;
     }
-    
+    //1. 战士职业
+    //战士职业的伤害计算主要依赖于力量（STR）和敏捷（DEX），武器类型也会影响最终伤害值：
+    //
+    //双手剑：(力量×1.15 + 敏捷/4) / 25 × 武器攻击力24。
+
+    //单手剑：(力量×1.10 + 敏捷/4) / 25 × 武器攻击力24。
+    //单手斧：(力量×1.10 + 敏捷/4) / 25 × 武器攻击力24
+
+    //双手斧：(力量×1.20 + 敏捷/4) / 25 × 武器攻击力24。
+
+    //
+    //2. 弓箭手职业
+    //弓箭手职业的伤害计算主要依赖于敏捷（DEX）和力量（STR）：
+    //
+    //弓：(敏捷×0.85 + 力量/4) / 25 × 武器攻击力24。
+    //
+    //弩：(敏捷×0.90 + 力量/4) / 25 × 武器攻击力24。
+    //
+    //3. 盗贼职业
+    //盗贼职业的伤害计算主要依赖于幸运（LUK）和力量（STR）、敏捷（DEX）：
+    //
+    //短剑/小手：(幸运×0.9 + (力量+敏捷)/4) / 25 × 武器攻击力24。
+    //
+    //标飞：(幸运×0.9 + 敏捷/4) / 25 × (拳套攻击力 + 飞标攻击力)24。
+    //
+    //4. 魔法师职业
+    //魔法师职业的伤害计算主要依赖于魔法攻击力和智力（INT）：
+    //
+    //魔法伤害：(魔法攻击力×0.8 + 运气/4) / 25 × 技能攻击力24。
+    //
+    //长杖/短杖：武器系数为1.0，伤害公式为：(智力×4 + 运气) × 魔力总值 / 100 × 武器系数13。
+    //
+    //5. 海盗职业
+    //海盗职业的伤害计算因武器类型不同而有所差异：
+    //
+    //拳套：武器系数为1.75，伤害公式为：(力量×1.25 + 敏捷/4) / 25 × 武器攻击力36。
+    //
+    //枪/矛：武器系数为1.49，伤害公式为：(力量×1.25 + 敏捷/4) / 25 × 武器攻击力36。
+    //
+    //6. 通用公式
+    //在《冒险岛2.0》版本中，攻击力的计算公式进一步简化：
+    //
+    //攻击力上限 = 武器系数 × (主属性×4 + 副属性×1) × 攻击力或魔法力 / 10036。
+    //
+    //攻击力下限 = 攻击力上限 × 熟练度36。
+    //
+    //7. 熟练度与武器系数
+    //熟练度：影响伤害的稳定性，基础熟练度因职业而异（物理近战系20%，物理远程系15%，魔法系25%）36。
+    //
+    //武器系数：不同武器的系数不同，例如拳套为1.75，枪/矛为1.49，长杖/短杖为1.0036。
     public final float calculateMaxBaseDamage(final int matk, final int watk) {
         MapleCharacter chra = (MapleCharacter)this.chr.get();
         if (chra == null) {
@@ -3368,8 +3419,7 @@ public class PlayerStats implements Serializable
         float maxbasedamage;
         if (watk == 0) {
             maxbasedamage = 1.0f;
-        }
-        else {
+        }else {
             final IItem weapon_item = chra.getInventory(MapleInventoryType.EQUIPPED).getItem((short)(-11));
             final int job = chra.getJob();
             final MapleWeaponType weapon = (weapon_item == null) ? MapleWeaponType.没有武器 : GameConstants.getWeaponType(weapon_item.getItemId());

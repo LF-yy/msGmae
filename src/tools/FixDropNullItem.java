@@ -43,8 +43,8 @@ public class FixDropNullItem
             con.close();
         }
         catch (SQLException e) {
-            System.err.println("無法載入掉落物");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            System.err.println("无法載入掉落物");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
         return dropid;
     }
@@ -62,7 +62,7 @@ public class FixDropNullItem
             final ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 if (!ii.itemExists(itemId)) {
-                    System.out.println("道具: " + MapleItemInformationProvider.getInstance().getName(itemId) + " 道具ID: " + itemId + " 怪物ID: " + rs.getInt("dropperid") + " 不存在，已從資料庫移除");
+                    System.out.println("道具: " + MapleItemInformationProvider.getInstance().getName(itemId) + " 道具ID: " + itemId + " 怪物ID: " + rs.getInt("dropperid") + " 不存在，已從资料库移除");
                     try {
                         final PreparedStatement pp = con.prepareStatement("Delete From drop_data WHERE itemid = ?");
                         pp.setInt(1, itemId);
@@ -80,12 +80,12 @@ public class FixDropNullItem
         }
         catch (SQLException e) {
             System.out.println("處理掉落物失敗, 道具ID:" + itemId);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
         }
     }
     
     public static void main(final String[] args) {
-        System.out.println("請輸入種類，0為降逆排列 1為升冪排列");
+        System.out.println("请輸入種類，0为降逆排列 1为升冪排列");
         int type = 0;
         try {
             final BufferedReader br = new BufferedReader((Reader)new InputStreamReader(System.in));
@@ -102,7 +102,7 @@ public class FixDropNullItem
         MapleItemInformationProvider.getInstance().load();
         System.out.println("正在讀取掉落物品......");
         final List<Integer> list = i.loadFromDB(type);
-        System.out.println("正在處理不存在之掉落物......， 種類為 : " + type);
+        System.out.println("正在處理不存在之掉落物......， 種類为 : " + type);
         final Iterator<Integer> iterator = list.iterator();
         while (iterator.hasNext()) {
             final int ii = (int)Integer.valueOf(iterator.next());

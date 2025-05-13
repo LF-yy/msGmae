@@ -46,36 +46,72 @@ import java.io.Serializable;
 
 public class ChannelServer implements Serializable
 {
+    // 表示玩家是否处于离线挂机状态
     public static boolean 离线挂机;
+    // 服务器开始运行的时间戳
     public static long serverStartTime;
+    // 配置对象，用于服务器配置管理
     private static Config cf;
+    // 服务器端口
     private short port;
+    // 经验率，玩家获得经验的倍数
     private float expRate = 1.0F;
+    // 金币率，玩家获得金币的倍数
     private float mesoRate = 1.0F;
+    // 掉落率，怪物掉落物品概率的倍数
     private float dropRate = 1.0F;
+    // 默认服务器端口
     private static final short DEFAULT_PORT;
+    // 通道号，标识服务器的频道
     public int channel;
+    // 正在运行的商人ID
     private int running_MerchantID;
+    // 正在运行的玩家商店ID
     private int running_PlayerShopID;
+    // 套接字信息，用于网络连接
     private String socket;
+    // 关闭服务器的状态
     private boolean shutdown;
+    // 服务器关闭完成的状态
     private boolean finishedShutdown;
+    // 喇叭静音状态
     private boolean MegaphoneMuteState;
+    // 玩家存储，用于管理在线玩家
     private PlayerStorage players;
+    // 服务器连接对象，用于处理客户端连接
     private ServerConnection acceptor;
+    // 地图工厂，用于创建和管理地图实例
     private final MapleMapFactory mapFactory;
+    // 事件脚本管理器，用于管理游戏内事件
     private EventScriptManager eventSM;
+    // 通道服务器实例映射，用于管理所有频道服务器实例
     private static final Map<Integer, ChannelServer> instances;
+    // 组队副本映射，用于管理所有类型的组队副本
     private final Map<MapleSquadType, MapleSquad> mapleSquads;
+    // 商人映射，用于管理所有雇佣商人
     private final Map<Integer, HiredMerchant> merchants;
+    // 玩家商店映射，用于管理所有玩家商店
     private final Map<Integer, MaplePlayerShop> playershops;
+    // 玩家NPC映射，用于管理所有玩家创建的NPC
     private final Map<Integer, PlayerNPC> playerNPCs;
+    // 商人锁，用于同步商人操作
     private final ReentrantReadWriteLock merchLock;
+    // 组队副本锁，用于同步组队副本操作
     private final ReentrantReadWriteLock squadLock;
+    // 事件地图ID，标识当前激活的事件地图
     private int eventmap;
+    // 事件映射，用于管理所有类型的事件
     private final Map<MapleEventType, MapleEvent> events;
+    // 离线人偶列表，用于管理所有离线玩家的人偶
     public static ArrayList<离线人偶> clones;
+    // 实例ID，用于唯一标识每个服务器实例
     private int instanceId = 0;
+
+    /**
+     * 获取当前实例的ID
+     *
+     * @return 实例ID
+     */
     public int getInstanceId() {
         return this.instanceId;
     }
@@ -176,24 +212,39 @@ public class ChannelServer implements Serializable
         this.setFinishShutdown();
     }
     
+    /**
+     * 关闭所有商家的店铺
+     *
+     * 此方法遍历所有雇佣的商家，并要求它们关闭店铺然后从商家列表中移除这些商家
+     * 使用写锁确保在关闭和移除商家的过程中其他线程不会读取或修改商家列表
+     */
     public void closeAllMerchants() {
+        // 初始化返回值，用于记录关闭的商家数量
         int ret = 0;
+        // 记录开始时间，用于计算操作耗时
         final long Start = System.currentTimeMillis();
+        // 获取写锁，确保在操作过程中其他线程不会访问商家列表
         this.merchLock.writeLock().lock();
         try {
+            // 遍历商家列表的迭代器
             final Iterator<Map.Entry<Integer, HiredMerchant>> hmit = this.merchants.entrySet().iterator();
             while (hmit.hasNext()) {
+                // 调用每个商家的关闭店铺方法，并移除商家列表中的该商家
                 ((HiredMerchant)(hmit.next()).getValue()).closeShop(true, false);
                 hmit.remove();
+                // 增加关闭的商家数量计数
                 ++ret;
             }
         }
         catch (Exception e) {
+            // 异常处理：输出关闭店铺过程中发生的异常信息
             System.out.println("关闭雇佣商店出现错误" + (Object)e);
         }
         finally {
+            // 释放写锁
             this.merchLock.writeLock().unlock();
         }
+        // 输出关闭店铺操作的总结信息，包括频道号、关闭的商家数量和操作耗时
         System.out.println("频道 " + this.channel + " 共保存雇佣商店: " + ret + " | 耗时: " + (System.currentTimeMillis() - Start) + " 毫秒");
     }
 
@@ -360,6 +411,14 @@ public class ChannelServer implements Serializable
         LoginServer.addChannel(channel);
     }
     
+    /**
+     * 获取所有实例的不可修改集合
+     *
+     * 此方法提供了一个安全的方式来访问所有ChannelServer的实例它返回一个不可修改的集合，
+     * 防止外部代码意外修改实例集合
+     *
+     * @return Collection<ChannelServer> 所有ChannelServer实例的不可修改集合
+     */
     public static Collection<ChannelServer> getAllInstances() {
         return Collections.unmodifiableCollection((Collection<? extends ChannelServer>)ChannelServer.instances.values());
     }
@@ -435,28 +494,47 @@ public class ChannelServer implements Serializable
         return ret;
     }
     
+    /**
+     * 关闭所有商家的店铺
+     * 此方法用于关闭当前管理的所有雇佣商家的店铺，并将它们从所在的地图中移除
+     * 使用写锁确保在关闭店铺期间，其他操作不会对商家数据进行修改
+     *
+     * @return 成功关闭的店铺数量
+     */
     public final int closeAllMerchant() {
         int ret = 0;
+        // 加锁，确保线程安全
         this.merchLock.writeLock().lock();
         try {
+            // 遍历当前管理的所有商家
             final Iterator<Entry<Integer, HiredMerchant>> merchants_ = this.merchants.entrySet().iterator();
             while (merchants_.hasNext()) {
+                // 获取当前遍历到的商家
                 final HiredMerchant hm = (HiredMerchant)((Entry<Integer, HiredMerchant>)merchants_.next()).getValue();
+                // 关闭商家的店铺
                 hm.closeShop(true, false);
+                // 从商家所在地图中移除
                 hm.getMap().removeMapObject((MapleMapObject)hm);
+                // 从管理列表中移除
                 merchants_.remove();
+                // 计数增加
                 ++ret;
             }
         }
+        // 无论如何都要释放锁
         finally {
             this.merchLock.writeLock().unlock();
         }
+        // 遍历特定范围的商家地图ID，关闭并移除所有雇佣商家
         for (int i = 910000001; i <= 910000022; ++i) {
             for (final MapleMapObject mmo : this.mapFactory.getMap(i).getAllHiredMerchantsThreadsafe()) {
+                // 关闭商家的店铺
                 ((HiredMerchant)mmo).closeShop(true, false);
+                // 计数增加
                 ++ret;
             }
         }
+        // 返回成功关闭的店铺数量
         return ret;
     }
     
@@ -474,32 +552,64 @@ public class ChannelServer implements Serializable
         return runningmer;
     }
     
+    /**
+     * 添加商家
+     *
+     * 此方法用于向系统中添加一个新的商家对象在执行此操作之前，它会获取写锁以确保线程安全
+     * 在尝试添加商家时，如果发生异常，此方法将释放写锁以避免死锁
+     *
+     * @param hMerchant 要添加的商家对象，不能为空
+     * @return 返回分配给商家的ID，表示商家已成功添加到系统中
+     */
     public final int addMerchant(final HiredMerchant hMerchant) {
+        // 获取写锁，确保在添加商家时线程安全
         this.merchLock.writeLock().lock();
         int runningmer = 0;
         try {
+            // 获取当前的商家ID，并将新的商家添加到商家集合中
             runningmer = this.running_MerchantID;
             this.merchants.put(Integer.valueOf(this.running_MerchantID), hMerchant);
+            // 更新下一个商家ID
             ++this.running_MerchantID;
         }
         finally {
+            // 无论是否发生异常，都释放写锁
             this.merchLock.writeLock().unlock();
         }
+        // 返回分配给商家的ID
         return runningmer;
     }
     
+    /**
+     * 移除商户
+     *
+     * 此方法用于从系统中移除一个已雇佣的商户在执行此操作时，需要持有写锁
+     * 以确保数据一致性，防止在移除操作过程中其他操作对商户数据进行修改
+     *
+     * @param hMerchant 要移除的商户对象，包含商户的相关信息，特别是商户的商店ID
+     */
     public void removeMerchant(final HiredMerchant hMerchant) {
+        // 获取写锁，确保在移除商户的过程中其他操作不会对商户数据进行修改
         this.merchLock.writeLock().lock();
         try {
+            // 从商户集合中移除指定商店ID对应的商户对象
             this.merchants.remove((Object)Integer.valueOf(hMerchant.getStoreId()));
         }
         finally {
+            // 释放写锁，确保资源可用性，避免死锁和资源泄露
             this.merchLock.writeLock().unlock();
         }
     }
-    
+    /**
+     * 检查是否存在指定账户ID的商人
+     * 此方法使用读锁来防止数据在检查期间被修改，确保数据一致性
+     *
+     * @param accid 要检查的商人账户ID
+     * @return 如果存在具有指定账户ID的商人，则返回true；否则返回false
+     */
     public final boolean containsMerchant(final int accid) {
         boolean contains = false;
+        // 获取读锁以确保数据一致性
         this.merchLock.readLock().lock();
         try {
             final Iterator itr = this.merchants.values().iterator();
@@ -510,14 +620,24 @@ public class ChannelServer implements Serializable
                 }
             }
         }
+        // 释放读锁
         finally {
             this.merchLock.readLock().unlock();
         }
         return contains;
     }
-    
+
+    /**
+     * 搜索拥有特定物品的商人
+     * 此方法遍历所有商人，查找其是否有匹配的物品，如果有，则将商人添加到结果列表中
+     * 使用读锁来防止数据在搜索期间被修改，确保搜索结果的准确性
+     *
+     * @param itemSearch 要搜索的物品ID
+     * @return 包含匹配物品的商人列表
+     */
     public final List<HiredMerchant> searchMerchant(final int itemSearch) {
         final List<HiredMerchant> list = new LinkedList<HiredMerchant>();
+        // 获取读锁以确保数据一致性
         this.merchLock.readLock().lock();
         try {
             for (final HiredMerchant hm : this.merchants.values()) {
@@ -526,6 +646,7 @@ public class ChannelServer implements Serializable
                 }
             }
         }
+        // 释放读锁
         finally {
             this.merchLock.readLock().unlock();
         }
@@ -594,7 +715,7 @@ public class ChannelServer implements Serializable
     
     public void setFinishShutdown() {
         this.finishedShutdown = true;
-        System.out.println("[頻道" + this.getChannel() + "] 已經关闭完成.");
+        System.out.println("[頻道" + this.getChannel() + "] 已经关闭完成.");
     }
     
     public final boolean isAdminOnly() {
@@ -658,8 +779,8 @@ public class ChannelServer implements Serializable
                 }
             }
             catch (Exception e) {
-                FileoutputUtil.logToFile("logs/saveAll存檔保存数据異常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + chr.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + chr.getClient().getAccountName() + " 账号ID " + chr.getClient().getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
-                FileoutputUtil.outError("logs/saveAll存檔保存数据異常.txt", (Throwable)e);
+                FileoutputUtil.logToFile("logs/saveAll存檔保存数据异常.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + chr.getClient().getSession().remoteAddress().toString().split(":")[0] + " 账号 " + chr.getClient().getAccountName() + " 账号ID " + chr.getClient().getAccID() + " 角色名 " + chr.getName() + " 角色ID " + chr.getId());
+                FileoutputUtil.outError("logs/saveAll存檔保存数据异常.txt", (Throwable)e);
             }
         }
     }

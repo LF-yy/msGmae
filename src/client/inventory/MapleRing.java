@@ -54,7 +54,7 @@ public class MapleRing implements Serializable
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleRing.txt", (Throwable)ex, "loadFromDB");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             return null;
         }
     }
@@ -79,7 +79,7 @@ public class MapleRing implements Serializable
             ps.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -178,7 +178,7 @@ public class MapleRing implements Serializable
         }
         catch (SQLException ex) {
             FilePrinter.printError("MapleRing.txt", (Throwable)ex, "removeRingFromDB");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
 

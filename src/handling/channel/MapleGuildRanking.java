@@ -1368,7 +1368,7 @@ public class MapleGuildRanking
             rs.close();
         }
         catch (SQLException e) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
             System.err.println("未能顯示职业" + type + "排行");
         }
     }

@@ -115,6 +115,46 @@ public class NPCConversationManager extends AbstractPlayerInteraction
         this.iv = iv;
         this.wh = wh;
     }
+
+    public void 全服发送(int type,int count){
+        for (ChannelServer cserv1 : ChannelServer.getAllInstances()) {
+            for (MapleCharacter mch : cserv1.getPlayerStorage().getAllCharacters()) {
+
+                switch (type) {
+                    case 1:
+                       // 类型 = "点券";
+                        mch.modifyCSPoints(1, count, true);
+                        break;
+                    case 2:
+                        //类型 = "抵用券";
+                        mch.modifyCSPoints(2, count, true);
+                        break;
+                    case 3:
+                       // 类型 = "金币";
+                        mch.gainMeso(count, true);
+                        break;
+                    case 4:
+                        //类型 = "经验";
+                        mch.gainExp(count, false, false, false);
+                        break;
+                    case 5:
+                        //类型 = "人气";
+                        mch.addFame(count);
+                        break;
+                    case 6:
+                        //类型 = "豆豆";
+                        mch.gainBeans(count);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    public List<String> getLtDiabloEquipmentsName(){
+        return Start.ltDiabloEquipments.stream().map(LtDiabloEquipments::getEntryName).collect(Collectors.toList());
+    }
     public int 获取师徒增伤(){
       return Start.masterApprenticeGain.get(c.getPlayer().getId())!=null ? Start.masterApprenticeGain.get(c.getPlayer().getId()) : 0;
     }
@@ -173,9 +213,8 @@ public class NPCConversationManager extends AbstractPlayerInteraction
             c.getPlayer().getStat().setMaxHphd(c.getPlayer().getStat().getMaxHphd() + hphd);
         }
     }
-
     public List<Integer> getUserSkills(){
-       return c.getPlayer().getSkills().keySet().stream().filter(skill ->
+        return c.getPlayer().getSkills().keySet().stream().filter(skill ->
                {
                    ISkill skill1 = SkillFactory.getSkill(skill.getId());
                    if(skill1!=null && skill.getMaxLevel() >0){
@@ -380,18 +419,18 @@ public class NPCConversationManager extends AbstractPlayerInteraction
     }
 
 
-    //召唤兽
-    public void callUserMapleMonster(int mobId) {
-        MapleMonster mainb = MapleLifeFactory.getMonster(mobId);
-        if(mainb != null) {
-            mainb.setPosition(new Point(c.getPlayer().getPosition().x - 200, c.getPlayer().getPosition().y));
-            mainb.setFake(true);
-            mainb.setOwner(c.getPlayer().getId());
-            mainb.setDuration(600000L);
-            c.getPlayer().getMap().spawnFakeMonster(mainb);
-            c.getPlayer().getMap().setHaveStone(true);
-        }
-    }
+//    //召唤兽
+//    public void callUserMapleMonster(int mobId) {
+//        MapleMonster mainb = MapleLifeFactory.getMonster(mobId);
+//        if(mainb != null) {
+//            mainb.setPosition(new Point(c.getPlayer().getPosition().x - 200, c.getPlayer().getPosition().y));
+//            mainb.setFake(true);
+//            mainb.setOwner(c.getPlayer().getId());
+//            mainb.setDuration(600000L);
+//            c.getPlayer().getMap().spawnFakeMonster(mainb);
+//            c.getPlayer().getMap().setHaveStone(true);
+//        }
+//    }
 
     /**
      * 开启暗黑模式
@@ -476,6 +515,35 @@ public class NPCConversationManager extends AbstractPlayerInteraction
                 //e.printStackTrace();
                 System.out.println("商城物品检查异常");
             }
+        }else if (type == 5){
+            CloneTimer.getInstance().schedule((Runnable)new Runnable() {
+                @Override
+                public void run() {
+                    List<Map<String,Object>> list = new ArrayList<>();
+                    MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
+                    try {
+                        List<Pair<Integer, String>> allItems = MapleItemInformationProvider.getInstance().getAllItems();
+                        for (Pair<Integer, String> pair : allItems) {
+                            int itemId = pair.getLeft();
+                            if (GameConstants.isPet(itemId)) {
+
+                            } else if (!ii.itemExists(itemId)) {
+                                //物品不存在删除爆率
+                            } else {
+                                Map<String,Object> map = new HashMap<>();
+                                map.put("itemid", pair.getLeft());
+                                map.put("name", pair.getRight());
+                                list.add(map);
+                            }
+                        }
+                        if(ListUtil.isNotEmpty(list)){
+                            Start.setLtItemAll(list);
+                        }
+                    } catch (Exception e) {
+                        System.out.println("全局物品丢弃异常");
+                    }
+                }
+            }, (long)(500));
         }else{
 
             try {
@@ -1345,10 +1413,11 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 c.getPlayer().dropMessage(1, "该地图已经有人在吸怪了.");
             } else {
                 //先清除地图所有怪物
-                //c.getPlayer().setLastRes(null);
                 c.getPlayer().getMap().killAllMonsters(true);
                 UserAttraction userAttraction = new UserAttraction(c.getChannel(), player.getMapId(), c.getPlayer().getPosition());
                 Start.吸怪集合.put(player.getId(), userAttraction);
+                Start.吸怪角色.put(c.getChannel()+"-"+mapId, player.getId());
+                //System.out.println(c.getChannel()+"-"+mapId+"======"+player.getId());
                 c.getPlayer().startMobVac(userAttraction);
                 //开启吸怪();
             }
@@ -1469,7 +1538,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             ps.close();
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
         }
     }
 
@@ -1517,7 +1586,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
             return count;
         }
         catch (Exception Ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)Ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)Ex);
             return -1;
         }
     }
@@ -1915,7 +1984,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void sendStorage() {
         if (this.getPlayer().hasBlockedInventory2(true)) {
-            this.c.getPlayer().dropMessage(1, "系統錯誤，請联繫管理员。");
+            this.c.getPlayer().dropMessage(1, "系统錯誤，请联繫管理员。");
             this.c.sendPacket(MaplePacketCreator.enableActions());
             return;
         }
@@ -2473,7 +2542,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         catch (SQLException ex) {
             System.err.println("Error gaining mesos in hired merchant" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         this.c.getPlayer().gainMeso((int)mesos, true);
     }
@@ -2501,7 +2570,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         catch (SQLException ex) {
             System.err.println("Error gaining mesos in hired merchant" + (Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return mesos;
     }
@@ -2938,8 +3007,8 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 else {
                     NPCConversationManager.this.setQuestRecord((Object)NPCConversationManager.this.getPlayer(), 160001, "2");
                     NPCConversationManager.this.setQuestRecord((Object)chr, 160001, "2");
-                    NPCConversationManager.this.sendNPCText(NPCConversationManager.this.getPlayer().getName() + " 和 " + chr.getName() + "， 我希望你們兩個能在此時此刻永遠愛著對方！", 9201002);
-                    NPCConversationManager.this.getMap().startExtendedMapEffect("那麼現在請新娘親吻 " + NPCConversationManager.this.getPlayer().getName() + "！", 5120006);
+                    NPCConversationManager.this.sendNPCText(NPCConversationManager.this.getPlayer().getName() + " 和 " + chr.getName() + "， 我希望你們兩个能在此時此刻永遠愛著對方！", 9201002);
+                    NPCConversationManager.this.getMap().startExtendedMapEffect("那麼現在请新娘親吻 " + NPCConversationManager.this.getPlayer().getName() + "！", 5120006);
                     if (chr.getGuildId() > 0) {
                         Guild.guildPacket(chr.getGuildId(), MaplePacketCreator.sendMarriage(false, chr.getName()));
                     }
@@ -2980,7 +3049,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 if (c.getPlayer() != null) {
                     c.sendPacket(MaplePacketCreator.stopClock());
                     c.getPlayer().changeMap(warpMap, warpMap.getPortal(0));
-                    c.getPlayer().dropMessage(6, "已經到達目的地了!");
+                    c.getPlayer().dropMessage(6, "已经到達目的地了!");
                 }
             }
         }, (long)(1000 * time));
@@ -3045,7 +3114,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         catch (Exception ex) {
             FilePrinter.printError("NPCConversationManager.txt", (Throwable)ex, "ReceiveMedal(" + name + ")");
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         final IItem toDrop = ii.randomizeStats((Equip)ii.getEquipById(item));
         toDrop.setGMLog(this.getPlayer().getName() + " 領取勳章");
@@ -3104,7 +3173,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         if (cantHair.size() > 0 && this.c.getPlayer().isAdmin()) {
             final StringBuilder sb = new StringBuilder("正在讀取的发型裏有");
-            sb.append(cantHair.size()).append("個发型客戶端不支持顯示，已經被清除：");
+            sb.append(cantHair.size()).append("个发型客戶端不支持顯示，已经被清除：");
             for (int i = 0; i < cantHair.size(); ++i) {
                 sb.append((Object)cantHair.get(i));
                 if (i < cantHair.size() - 1) {
@@ -3137,7 +3206,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
         }
         if (cantFace.size() > 0 && this.c.getPlayer().isAdmin()) {
             final StringBuilder sb = new StringBuilder("正在讀取的脸型裏有");
-            sb.append(cantFace.size()).append("個脸型客戶端不支持顯示，已經被清除：");
+            sb.append(cantFace.size()).append("个脸型客戶端不支持顯示，已经被清除：");
             for (int i = 0; i < cantFace.size(); ++i) {
                 sb.append((Object)cantFace.get(i));
                 if (i < cantFace.size() - 1) {
@@ -3172,7 +3241,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 //                if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0))) {
 //                    itemId = de.itemId;
 //                    if (num == 0) {
-//                        name.append("當前怪物 #o" + mobId + "# 的爆率為:\r\n");
+//                        name.append("當前怪物 #o" + mobId + "# 的爆率为:\r\n");
 //                        name.append("--------------------------------------\r\n");
 //                    }
 //                    if (ii.itemExists(itemId)) {
@@ -3191,7 +3260,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 //                return name.toString();
 //            }
 //        }
-//        return "沒有當前怪物的爆率数据。";
+//        return "没有當前怪物的爆率数据。";
 //    }
     public String checkDrop(int mobId) {
         List<MonsterDropEntry> ranks = MapleMonsterInformationProvider.getInstance().retrieveDrop(mobId);
@@ -3369,7 +3438,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 if (de.chance > 0 && (de.questid <= 0 || (de.questid > 0 && MapleQuest.getInstance((int)de.questid).getName().length() > 0))) {
                     itemId = de.itemId;
                     if (num == 0) {
-                        name.append("當前怪物 #o" + mobId + "# 的爆率為:\r\n");
+                        name.append("當前怪物 #o" + mobId + "# 的爆率为:\r\n");
                         name.append("--------------------------------------\r\n");
                     }
                     String namez = "#z" + itemId + "#";
@@ -3386,7 +3455,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 return name.toString();
             }
         }
-        return "沒有當前怪物的爆率数据。";
+        return "没有當前怪物的爆率数据。";
     }
 
 
@@ -3436,7 +3505,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 return name.toString();
             }
         }
-        return "該怪物查無任何掉寶数据。";
+        return "该怪物查無任何掉寶数据。";
     }
     
     public void gainBeans(final int s) {
@@ -3446,13 +3515,13 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void openBeans() {
         this.c.getSession().write((Object)MaplePacketCreator.openBeans(this.getPlayer().getBeans(), 0));
-        this.c.getPlayer().dropMessage(5, "按住左右鍵可以調整力道,建議調好角度一路給他打,不要按暫停若九宮格卡住沒反應請離開在近來");
+        this.c.getPlayer().dropMessage(5, "按住左右鍵可以調整力道,建議調好角度一路給他打,不要按暫停若九宮格卡住没反應请離開在近來");
     }
     
     public void setMonsterRiding(final int itemid) {
         final short src = this.getClient().getPlayer().haveItemPos(itemid);
         if (src == 100) {
-            this.c.getPlayer().dropMessage(5, "你沒有當前坐騎。");
+            this.c.getPlayer().dropMessage(5, "你没有當前坐騎。");
         }
         else {
             MapleInventoryManipulator.equip(this.c, src, (short)(-18));
@@ -3485,7 +3554,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
                 c.getPlayer().modifyCSPoints(point, -5, true);
             }
             else {
-                c.getPlayer().dropMessage(1, "點數不足，無法查詢！");
+                c.getPlayer().dropMessage(1, "點數不足，无法查詢！");
                 if (NPCScriptManager.getInstance().getCM(c) != null) {
                     NPCScriptManager.getInstance().dispose(c);
                     c.sendPacket(MaplePacketCreator.enableActions());
@@ -3507,10 +3576,10 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     
     public void checkMobs(MapleCharacter chr) {
         if (this.getMap().getAllMonstersThreadsafe().size() <= 0) {
-            this.sendOk("#地图上沒有怪物哦!!。");
+            this.sendOk("#地图上没有怪物哦!!。");
             this.dispose();
         }
-        String msg = "玩家 #b" + chr.getName() + "#k 此地图怪物掉寶查詢:\r\n#r(若有任何掉寶問題,請至社團BUG區回報怪物名稱和代码)\r\n#d";
+        String msg = "玩家 #b" + chr.getName() + "#k 此地图怪物掉寶查詢:\r\n#r(若有任何掉寶問題,请至社團BUG區回报怪物名稱和代码)\r\n#d";
         for (final Object monsterid : this.getMap().getAllUniqueMonsters()) {
             msg = msg + "#L" + monsterid + "##o" + monsterid + "# 代码:" + monsterid + " (查看)#l\r\n";
         }
@@ -3520,7 +3589,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
     public void getMobs(final int itemid) {
         final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
         final List<Integer> mobs = MapleMonsterInformationProvider.getInstance().getMobByItem(itemid);
-        String text = "#d這些怪物会掉落您查詢的物品#k: \r\n\r\n";
+        String text = "#d这些怪物会掉落您查詢的物品#k: \r\n\r\n";
         for (int i = 0; i < mobs.size(); ++i) {
             int quest = 0;
             if (mi.getDropQuest((int)Integer.valueOf(mobs.get(i))) > 0) {
@@ -3536,7 +3605,7 @@ public void 学习领域技能(int characterid,int skillid,String skillName,int 
 //
 //        final MapleMonsterInformationProvider mi = MapleMonsterInformationProvider.getInstance();
 //        final List<Integer> mobs = MapleMonsterInformationProvider.getInstance().getMobByItem(itemid);
-//        String text = "#d這些怪物会掉落您查詢的物品#k: \r\n\r\n";
+//        String text = "#d这些怪物会掉落您查詢的物品#k: \r\n\r\n";
 //        for (int i = 0; i < mobs.size(); ++i) {
 //            int quest = 0;
 //            if (mi.getDropQuest((int)Integer.valueOf(mobs.get(i))) > 0) {

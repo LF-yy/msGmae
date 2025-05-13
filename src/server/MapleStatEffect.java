@@ -997,7 +997,7 @@ public class MapleStatEffect implements Serializable
                 }
             }
             else {
-                applyto.dropMessage(5, "無法使用時空門，村莊不可容納。");
+                applyto.dropMessage(5, "无法使用時空門，村莊不可容納。");
             }
         }else if (this.getFieldSkillsStatus(applyfrom.getId(),this.sourceid)) {
             //光环处理

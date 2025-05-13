@@ -159,7 +159,7 @@ public enum ItemLoader
             con.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
         return items;
     }
@@ -170,7 +170,7 @@ public enum ItemLoader
             con.close();
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
@@ -294,7 +294,7 @@ public enum ItemLoader
         }
         catch (SQLException ex) {
             //System.out.println((Object)ex);
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             FileoutputUtil.log("logs/物品保存异常.txt", "错误的编码:"+index+"----"+itemId);
         }
     }
@@ -353,7 +353,7 @@ public enum ItemLoader
             }
             catch (SQLException ex) {
                 Logger.getLogger(ItemLoader.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
-                FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+                FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
             }
         }
         return false;

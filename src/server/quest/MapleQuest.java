@@ -174,7 +174,7 @@ public class MapleQuest implements Serializable
             psp.close();
         }
         catch (SQLException e) {
-            FileoutputUtil.outputFileError("logs/資料庫異常.txt", (Throwable)e);
+            FileoutputUtil.outputFileError("logs/资料库异常.txt", (Throwable)e);
             ////e.printStackTrace();
         }
     }
@@ -303,12 +303,12 @@ public class MapleQuest implements Serializable
     
     public void complete(final MapleCharacter c, final int npc, final Integer selection) {
         if (!this.canHold(c)) {
-            c.dropMessage(1, "您的背包空間不足，無法完成任務。");
+            c.dropMessage(1, "您的背包空間不足，无法完成任務。");
             return;
         }
         if (this.id == 2337) {
             if (!this.canHold(c)) {
-                c.dropMessage(1, "您的背包空間不足，無法完成任務。");
+                c.dropMessage(1, "您的背包空間不足，无法完成任務。");
                 return;
             }
             if (!c.haveItem(1142188, 1, false, true)) {

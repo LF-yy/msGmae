@@ -60,7 +60,7 @@ public class merchant_main
             return;
         }
         this.setClose(true);
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+        try (Connection con = DBConPool.getConnection()) {
             con.setAutoCommit(false);
             PreparedStatement ps = con.prepareStatement("Truncate Table merchant");
             ps.executeUpdate();
@@ -77,7 +77,6 @@ public class merchant_main
                 }
             }
             ps.close();
-            //this.goods_list.clear();
             PreparedStatement ps2 = con.prepareStatement("Truncate Table merchantEquip");
             ps2.executeUpdate();
             for (int j = 0; j < this.eq_list.size(); ++j) {

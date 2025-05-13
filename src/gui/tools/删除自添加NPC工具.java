@@ -139,8 +139,8 @@ public class 删除自添加NPC工具 extends JFrame
         for (int i = ((DefaultTableModel)(DefaultTableModel)this.自添加NPC.getModel()).getRowCount() - 1; i >= 0; --i) {
             ((DefaultTableModel)(DefaultTableModel)this.自添加NPC.getModel()).removeRow(i);
         }
+        Connection con = DatabaseConnection.getConnection();
         try {
-            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = null;
             ResultSet rs = null;
             ps = con.prepareStatement("SELECT * FROM wz_customlife");
@@ -151,6 +151,12 @@ public class 删除自添加NPC工具 extends JFrame
         }
         catch (SQLException ex) {
             Logger.getLogger(删除自添加NPC工具.class.getName()).log(Level.SEVERE, null, (Throwable)ex);
+        }finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+
+            }
         }
     }
 }

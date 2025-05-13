@@ -72,14 +72,14 @@ public class SpeedRunner
             }
         }
         catch (SQLException ex) {
-            FileoutputUtil.outError("logs/資料庫異常.txt", (Throwable)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
         }
     }
     
     public final Pair<StringBuilder, Map<Integer, String>> addSpeedRunData(final StringBuilder ret, final Map<Integer, String> rett, final String members, final String leader, final int rank, final String timestring) {
         final StringBuilder rettt = new StringBuilder();
         final String[] membrz = members.split(",");
-        rettt.append("#b該遠征队 ").append(leader).append("'成功挑戰排名為 ").append(rank).append(".#k\r\n\r\n");
+        rettt.append("#b该遠征队 ").append(leader).append("'成功挑戰排名为 ").append(rank).append(".#k\r\n\r\n");
         for (int i = 0; i < membrz.length; ++i) {
             rettt.append("#r#e");
             rettt.append(i + 1);

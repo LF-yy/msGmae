@@ -19,6 +19,16 @@ public class LtMonsterSkill implements Serializable {
     //'攻击编号'")
     private Integer attackId;
     private Long skillcd;
+    //是否致命攻击
+    private Boolean isDeadlyAttack;
+
+    public Boolean getDeadlyAttack() {
+        return isDeadlyAttack;
+    }
+
+    public void setDeadlyAttack(Boolean deadlyAttack) {
+        isDeadlyAttack = deadlyAttack;
+    }
 
     public Long getSkillcd() {
         return skillcd;

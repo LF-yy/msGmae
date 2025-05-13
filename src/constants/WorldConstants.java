@@ -96,7 +96,7 @@ public class WorldConstants
         WorldConstants.FLAG = 3;
         PET_VAC_RANGE = 350;
         WorldConstants.CHANNEL_COUNT = 2;
-        WorldConstants.WORLD_TIP = "请享受冒险岛的冒险之旅吧!";//請享受冒險島的冒險之旅吧!
+        WorldConstants.WORLD_TIP = "请享受冒险岛的冒险之旅吧!";//请享受冒險島的冒險之旅吧!
         WorldConstants.SCROLL_MESSAGE = "";
         WorldConstants.AVAILABLE = true;
         recommendedmsg = "";

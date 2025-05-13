@@ -29,6 +29,8 @@ import client.MapleCharacter;
 import server.MapleSquad;
 import tools.FileoutputUtil;
 import server.Timer.EventTimer;
+
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import javax.script.ScriptException;
 import tools.FilePrinter;
@@ -45,32 +47,68 @@ public class EventManager
     private static int[] eventChannel;
     private Invocable iv;
     private int channel;
-    private Map<String, EventInstanceManager> instances = new WeakHashMap<>();
+    private Map<String, EventInstanceManager> instances = new ConcurrentHashMap<>();
     private Properties props = new Properties();
     private String name;
     private MapleClient c;
-    
+    private static final String ERROR_LOG_FILE = "EventManager.txt";
     public EventManager(final ChannelServer cserv, final Invocable iv, final String name) {
         this.iv = iv;
         this.channel = cserv.getChannel();
         this.name = name;
     }
 
+    /**
+     * 取消事件调度的方法
+     *
+     * 本方法尝试调用一个名为"cancelSchedule"的函数来取消事件的调度，并清理所有已创建的事件实例
+     * 如果调用"cancelSchedule"函数或清理事件实例时发生错误，则会捕获异常并打印错误信息
+     */
     public void cancel() {
+        if (this.instances == null) {
+            logError("Instances map is null, skipping cleanup.");
+            return;
+        }
+
         try {
+            // 调用取消调度函数
             this.iv.invokeFunction("cancelSchedule", new Object[] { null });
-            for (Map.Entry<String, EventInstanceManager> stringEventInstanceManagerEntry : this.instances.entrySet()) {
-                if (stringEventInstanceManagerEntry.getValue() != null) {
-                    ((EventInstanceManager)stringEventInstanceManagerEntry.getValue()).dispose();
+
+            // 遍历所有事件实例并清理
+            for (Map.Entry<String, EventInstanceManager> entry : this.instances.entrySet()) {
+                if (entry != null && entry.getValue() != null) {
+                    try {
+                        entry.getValue().dispose();
+                    } catch (Exception e) {
+                        logError("Failed to dispose event instance: " + entry.getKey(), e);
+                    }
                 }
             }
-        }
-        catch (ScriptException | NoSuchMethodException ex3) {
-            System.err.println("Event name : " + this.name + ", method Name : cancelSchedule:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : cancelSchedule:\n" + (Object)ex3);
+        } catch (ScriptException e) {
+            logError("Script execution failed while calling 'cancelSchedule'", e);
+        } catch (NoSuchMethodException e) {
+            logError("Method 'cancelSchedule' not found", e);
         }
     }
-    
+    private void logError(String message, Exception e) {
+        // 打印错误信息到标准错误输出
+        System.err.println(message + "\n" + e.getMessage());
+        // 记录堆栈信息到日志文件
+        FilePrinter.printError(ERROR_LOG_FILE, message + "\n" + getStackTrace(e));
+ 
+    }
+
+    private void logError(String message) {
+        System.err.println(message);
+        FilePrinter.printError(ERROR_LOG_FILE, message);
+    }
+    private String getStackTrace(Exception e) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : e.getStackTrace()) {
+            sb.append(element.toString()).append("\n");
+        }
+        return sb.toString();
+    }
     public ScheduledFuture<?> schedule( String methodName,  long delay) {
         return EventTimer.getInstance().schedule((Runnable)new Runnable() {
             @Override
@@ -80,7 +118,7 @@ public class EventManager
                 }
                 catch (ScriptException | NoSuchMethodException ex3) {
                     //服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
-                    FilePrinter.printError("EventManager.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
+                    FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                 }
             }
         }, delay);
@@ -95,7 +133,7 @@ public class EventManager
                 }
                 catch (ScriptException | NoSuchMethodException ex3) {
                     //服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
-                    FilePrinter.printError("EventManager.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
+                    FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FileoutputUtil.log("logs\\Log_Script_Except.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                 }
             }
@@ -111,7 +149,7 @@ public class EventManager
                 }
                 catch (ScriptException | NoSuchMethodException ex3) {
                     //服务端输出信息.println_err("Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
-                    FilePrinter.printError("EventManager.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
+                    FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                     FileoutputUtil.log("logs\\Log_Script_Except.txt", "Event name : " + name + ", method Name : " + methodName + ":\n" + (Object)ex3);
                 }
             }
@@ -186,7 +224,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
         }
     }
     
@@ -199,7 +237,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
         }
     }
     
@@ -211,7 +249,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup:\n" + (Object)ex3);
         }
     }
     
@@ -226,7 +264,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-Guild:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-Guild:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-Guild:\n" + (Object)ex3);
         }
     }
     
@@ -238,7 +276,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-CharID:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-CharID:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-CharID:\n" + (Object)ex3);
         }
     }
     
@@ -250,7 +288,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-character:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-character:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-character:\n" + (Object)ex3);
         }
     }
     
@@ -262,7 +300,7 @@ public class EventManager
         }
         catch (ScriptException ex) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-partyid:\n" + (Object)ex);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-partyid:\n" + (Object)ex);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-partyid:\n" + (Object)ex);
         }
         catch (NoSuchMethodException ex2) {
             this.startInstance_NoID(party, map, (Exception)ex2);
@@ -281,7 +319,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-party:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-party:\n" + (Object)ex3 + "\n" + (Object)((old == null) ? "no old exception" : old));
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-party:\n" + (Object)ex3 + "\n" + (Object)((old == null) ? "no old exception" : old));
         }
     }
     
@@ -292,7 +330,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-leader:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-leader:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-leader:\n" + (Object)ex3);
         }
     }
     
@@ -327,7 +365,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
         }
     }
     
@@ -431,7 +469,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             System.out.println("Event name" + this.getName() + ", Instance name : " + this.name + ", method Name : " + methodName + ":\n" + (Object)ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-squad:\n" + (Object)ex3);
         }
     }
     
@@ -528,7 +566,7 @@ public class EventManager
         }
         catch (ScriptException | NoSuchMethodException ex3) {
             //服务端输出信息.println_err("Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
-            FilePrinter.printError("EventManager.txt", "Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
+            FilePrinter.printError(ERROR_LOG_FILE, "Event name : " + this.name + ", method Name : setup-character:\n" + ex3);
         }
     }
 

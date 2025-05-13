@@ -28,10 +28,9 @@ public class BossRankManager2
     
     public Map<String, BossRankInfo2> getInfoMap(final int cid) {
         final Map<String, BossRankInfo2> info_map = new HashMap<String, BossRankInfo2>();
-        Connection con1 = DatabaseConnection.getConnection();
         PreparedStatement ps = null;
         ResultSet rs = null;
-        try {
+        try (Connection con1 = DatabaseConnection.getConnection()){
             ps = con1.prepareStatement("select * from bossrank2 where cid = ?");
             ps.setInt(1, cid);
             rs = ps.executeQuery();

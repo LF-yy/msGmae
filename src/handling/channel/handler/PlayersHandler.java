@@ -83,7 +83,7 @@ public class PlayersHandler
         if (target != null) {
             if (target.getId() == chr.getId()) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + chr.getName() + "(" + chr.getId() + ") 修改名聲封包，使用時封鎖。加自己名聲");
-                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理员永久停權。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系统] " + chr.getName() + " 因为修改封包而被管理员永久停權。"));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + chr.getName() + "(" + chr.getId() + ") 修改名聲封包，使用時封鎖。加自己名聲"));
                 //chr.ban("修改封包", true, true, false);
                 //chr.getClient().getSession().close();
@@ -91,7 +91,7 @@ public class PlayersHandler
             }
             if (chr.getLevel() < 15) {
                 FileoutputUtil.logToFile("logs/Hack/Ban/修改封包.txt", "\r\n " + FileoutputUtil.NowTime() + " 玩家：" + chr.getName() + "(" + chr.getId() + ")(等級:" + (int)chr.getLevel() + ") 修改名聲封包，使用時封鎖。十五等以下加名聲");
-                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系統] " + chr.getName() + " 因為修改封包而被管理员永久停權。"));
+                //Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(6, "[封鎖系统] " + chr.getName() + " 因为修改封包而被管理员永久停權。"));
                 Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  " + chr.getName() + "(" + chr.getId() + ")(等級:" + (int)chr.getLevel() + ") 修改名聲封包，使用時封鎖。十五等以下加名聲"));
                 //chr.ban("修改封包", true, true, false);
                 //chr.getClient().getSession().close();
@@ -123,32 +123,11 @@ public class PlayersHandler
     }
 
     public static void ChatRoomHandler(final LittleEndianAccessor slea, final MapleClient c) {
-        //4人组队爆率加成机制
-        boolean rand = false;
-        double coefficient = 1;
-        final int cMap = c.getPlayer().getMapId();
-        if (Objects.nonNull(c.getPlayer().getParty()) && c.getPlayer().getParty().getMembers().size()>=4) {
-            for (final MaplePartyCharacter cc : c.getPlayer().getParty().getMembers()) {
-                if (cMap == cc.getMapid()) {
-                    rand = true;
-                } else {
-                    rand = false;
-                }
-            }
-        }
-        if (rand){
-            coefficient = LtMS.ConfigValuesMap.get("4人组队爆率加成") / 100.0;
-        }
-        double jiac = 1;
-        if (LtMS.ConfigValuesMap.get("开启破功爆率加成")>0) {
-            //破功爆率加成机制
-            int 获得破功 = c.getPlayer().取破攻等级();
-            jiac = (获得破功 / LtMS.ConfigValuesMap.get("破功爆率加成计算"));
-        }
+
         double lastDrop = (c.getPlayer().getStat().realDropBuff - 100.0 <= 0.0) ? 100.0 : (c.getPlayer().getStat().realDropBuff - 100.0);
         DecimalFormat df = new DecimalFormat("#.00");
         String formatExp = df.format(c.getPlayer().getEXPMod() * 100 * c.getChannelServer().getExpRate() * c.getPlayer().getExpRateChr() * (c.getPlayer().getItemExpm()/100) * Math.round(c.getPlayer().getStat().expBuff / 100.0) *(c.getPlayer().getFairyExp()/100 +1)  );
-        String formatDrop = df.format(coefficient  * c.getPlayer().getDropMod() * c.getPlayer().getDropm() * c.getPlayer().getDropRateChr() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm());// +  jiac
+        String formatDrop = ""+ (c.getPlayer().getDropMod() * c.getPlayer().getDropm() * c.getPlayer().getDropRateChr() * (c.getPlayer().getStat().dropBuff / 100.0) * c.getChannelServer().getDropRate()* (lastDrop / 100.0) * 100 + c.getPlayer().getItemDropm());// +  jiac
         String speciesDrop = df.format((c.getPlayer().getStat().mesoBuff / 100.0) * 100 * c.getChannelServer().getMesoRate() * c.getPlayer().getMesoRateChr());
         c.getPlayer().saveToDB(false, false, true);
         NPCScriptManager.getInstance().dispose(c);
@@ -355,13 +334,13 @@ public class PlayersHandler
             item.setFlag((byte)(item.getFlag() - ItemFlag.LOCK.getValue()));
             add = true;
             c.getPlayer().reloadC();
-            c.getPlayer().dropMessage(1, "已經解鎖！");
+            c.getPlayer().dropMessage(1, "已经解鎖！");
         }
         else if (ItemFlag.UNTRADEABLE.check((int)item.getFlag())) {
             item.setFlag((byte)(item.getFlag() - ItemFlag.UNTRADEABLE.getValue()));
             add = true;
             c.getPlayer().reloadC();
-            c.getPlayer().dropMessage(1, "已經解鎖！");
+            c.getPlayer().dropMessage(1, "已经解鎖！");
         }
         if (add) {
             eqs.put(item, type);
@@ -406,7 +385,7 @@ public class PlayersHandler
             }
             else {
                 if (c.getPlayer().haveItem(newItemId)) {
-                    c.getPlayer().dropMessage("請先將身上的戒指丟棄唷。");
+                    c.getPlayer().dropMessage("请先將身上的戒指丟棄唷。");
                     c.sendPacket(MaplePacketCreator.enableActions());
                     return;
                 }
@@ -517,7 +496,7 @@ public class PlayersHandler
         byte slot = 0;
         if (isItem) {
             if (!chr.getCheatTracker().canLieDetector()) {
-                chr.dropMessage(1, "您已使用過一次測謊儀。暫時無法使用測謊儀道具。");
+                chr.dropMessage(1, "您已使用過一次測謊儀。暫時无法使用測謊儀道具。");
                 c.getSession().writeAndFlush((Object)MaplePacketCreator.enableActions());
                 return;
             }
@@ -534,7 +513,7 @@ public class PlayersHandler
             return;
         }
         if ((FieldLimitType.PotionUse.check(chr.getMap().getFieldLimit()) && isItem) || chr.getMap().getReturnMapId() == chr.getMapId()) {
-            chr.dropMessage(5, "當前地图無法使用測謊儀。");
+            chr.dropMessage(5, "當前地图无法使用測謊儀。");
             c.getSession().writeAndFlush((Object)MaplePacketCreator.enableActions());
             return;
         }
@@ -545,7 +524,7 @@ public class PlayersHandler
             return;
         }
         if (search_chr.getEventInstance() != null || search_chr.getMapId() == 180000001) {
-            chr.dropMessage(5, "當前地图無法使用測謊儀。");
+            chr.dropMessage(5, "當前地图无法使用測謊儀。");
             c.getSession().writeAndFlush((Object)MaplePacketCreator.enableActions());
             return;
         }
@@ -598,7 +577,7 @@ public class PlayersHandler
         else {
             final MapleCharacter search_chr = c.getPlayer().getMap().getCharacterByName(ld.getTester());
             if (search_chr != null && search_chr.getId() != c.getPlayer().getId()) {
-                search_chr.dropMessage(1, c.getPlayer().getName() + " 沒有通過測謊儀檢測。");
+                search_chr.dropMessage(1, c.getPlayer().getName() + " 没有通過測謊儀檢測。");
             }
             ld.end();
             c.getPlayer().getClient().getSession().writeAndFlush((Object)MaplePacketCreator.LieDetectorResponse((byte)7, (byte)0));
