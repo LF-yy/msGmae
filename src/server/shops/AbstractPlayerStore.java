@@ -6,11 +6,10 @@ import handling.world.World.Find;
 import server.maps.MapleMapObjectType;
 import client.MapleClient;
 import tools.packet.PlayerShopPacket;
+
+import java.sql.*;
 import java.util.Iterator;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
+
 import tools.FileoutputUtil;
 import tools.FilePrinter;
 import client.inventory.ItemLoader;
@@ -27,49 +26,126 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicInteger;
 import server.maps.AbstractMapleMapObject;
 
-public abstract class AbstractPlayerStore extends AbstractMapleMapObject implements IMaplePlayerShop
-{
-    protected boolean isOpened;
-    protected boolean available;
-    protected boolean canShop;
-    protected String ownerName;
-    protected String des;
-    protected String pass;
-    protected int ownerId;
-    protected int ownerAccount;
-    protected int itemId;
-    protected int channel;
-    protected int map;
-    protected AtomicInteger meso;
-    protected WeakReference<MapleCharacter>[] chrs;
-    protected List<String> visitors;
-    protected List<BoughtItem> bought;
-    protected List<MaplePlayerShopItem> items;
-    protected List<Pair<String, Byte>> messages;
+public abstract class AbstractPlayerStore extends AbstractMapleMapObject implements IMaplePlayerShop {
+/**
+ * 表示商店是否已开启
+ */
+protected boolean isOpened;
+/**
+ * 表示商店是否可用
+ */
+protected boolean available;
+/**
+ * 表示是否可以购物
+ */
+protected boolean canShop;
+/**
+ * 商店所有者的名称
+ */
+protected String ownerName;
+/**
+ * 商店的描述信息
+ */
+protected String des;
+/**
+ * 商店的密码
+ */
+protected String pass;
+/**
+ * 商店所有者的ID
+ */
+protected int ownerId;
+/**
+ * 商店所有者的账号ID
+ */
+protected int ownerAccount;
+/**
+ * 商店物品的ID
+ */
+protected int itemId;
+/**
+ * 商店的频道ID
+ */
+protected int channel;
+/**
+ * 商店所在地图的ID
+ */
+protected int map;
+/**
+ * 商店中meso（游戏货币）的数量，使用AtomicInteger保证线程安全
+ */
+protected AtomicInteger meso;
+/**
+ * 商店中角色的弱引用数组，用于节省内存
+ */
+protected WeakReference<MapleCharacter>[] chrs;
+/**
+ * 记录访问过商店的玩家名称列表
+ */
+protected List<String> visitors;
+/**
+ * 记录购买的物品列表
+ */
+protected List<BoughtItem> bought;
+/**
+ * 商店中出售的物品列表
+ */
+protected List<MaplePlayerShopItem> items;
+/**
+ * 商店内玩家发送的消息列表，存储为字符串和字节对
+ */
+protected List<Pair<String, Byte>> messages;
+
     
-    public AbstractPlayerStore(final MapleCharacter owner, final int itemId, final String desc, final String pass, final int slots) {
-        this.isOpened = false;
-        this.available = false;
-        this.canShop = false;
-        this.meso = new AtomicInteger(0);
-        this.visitors = new LinkedList<String>();
-        this.bought = new LinkedList<BoughtItem>();
-        this.items = new LinkedList<MaplePlayerShopItem>();
-        this.messages = new LinkedList<Pair<String, Byte>>();
-        this.setPosition(owner.getPosition());
-        this.ownerName = owner.getName();
-        this.ownerId = owner.getId();
-        this.ownerAccount = owner.getAccountID();
-        this.itemId = itemId;
-        this.des = desc;
-        this.pass = pass;
-        this.map = owner.getMapId();
-        this.channel = owner.getClient().getChannel();
-        this.chrs = (WeakReference<MapleCharacter>[])new WeakReference[slots];
-        for (int i = 0; i < this.chrs.length; ++i) {
-            this.chrs[i] = new WeakReference<MapleCharacter>(null);
-        }
+ /**
+ * AbstractPlayerStore类代表一个抽象的玩家商店，提供了基本的商店管理和交互功能
+ * 该类继承了MaplePlayerShop类，并实现了Serializable接口以支持对象的序列化
+ *
+ * @param owner 商店的拥有者
+ * @param itemId 商店物品的ID
+ * @param desc 商店的描述信息
+ * @param pass 商店的密码
+ * @param slots 商店的槽位数量
+ */
+public AbstractPlayerStore(final MapleCharacter owner, final int itemId, final String desc, final String pass, final int slots) {
+    // 初始化商店状态为未开启、不可用、不可购物
+    this.isOpened = false;
+    this.available = false;
+    this.canShop = false;
+
+    // 初始化商店的meso数量为0
+    this.meso = new AtomicInteger(0);
+
+    // 初始化商店的访客列表、已售商品列表、商品列表和消息列表
+    this.visitors = new LinkedList<String>();
+    this.bought = new LinkedList<BoughtItem>();
+    this.items = new LinkedList<MaplePlayerShopItem>();
+    this.messages = new LinkedList<Pair<String, Byte>>();
+
+    // 设置商店的位置为拥有者的当前位置
+    this.setPosition(owner.getPosition());
+
+    // 初始化商店的拥有者信息
+    this.ownerName = owner.getName();
+    this.ownerId = owner.getId();
+    this.ownerAccount = owner.getAccountID();
+
+    // 初始化商店物品的ID、描述信息和密码
+    this.itemId = itemId;
+    this.des = desc;
+    this.pass = pass;
+
+    // 获取拥有者所在地图和频道的信息
+    this.map = owner.getMapId();
+    this.channel = owner.getClient().getChannel();
+
+    // 初始化商店的槽位数组
+    this.chrs = (WeakReference<MapleCharacter>[])new WeakReference[slots];
+    for (int i = 0; i < this.chrs.length; ++i) {
+        this.chrs[i] = new WeakReference<MapleCharacter>(null);
     }
+}
+
     
     @Override
     public int getMaxSize() {
@@ -181,7 +257,78 @@ public abstract class AbstractPlayerStore extends AbstractMapleMapObject impleme
             return false;
         }
     }
-    
+
+    public boolean saveItemsNew() {
+        System.out.println("saveItemsNew");
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            PreparedStatement ps = con.prepareStatement("DELETE FROM hiredmerch WHERE accountid = ? OR characterid = ?");
+            ps.setInt(1, this.ownerAccount);
+            ps.setInt(2, this.ownerId);
+            ps.execute();
+            ps.close();
+            ps = con.prepareStatement("INSERT INTO hiredmerch (characterid, accountid, Mesos, time) VALUES (?, ?, ?, ?)", 1);
+            ps.setInt(1, this.ownerId);
+            ps.setInt(2, this.ownerAccount);
+            ps.setInt(3, this.meso.get());
+            ps.setLong(4, System.currentTimeMillis());
+            ps.executeUpdate();
+             ResultSet rs = ps.getGeneratedKeys();
+            if (!rs.next()) {
+                rs.close();
+                ps.close();
+                System.out.println("[SaveItems] 保存精灵商店出錯 - 1");
+                throw new RuntimeException("Error, adding merchant to DB");
+            }
+             int packageid = rs.getInt(1);
+            rs.close();
+            ps.close();
+            //记录雇佣商店
+            ps = con.prepareStatement("DELETE FROM hiredmerchantshop WHERE accid = ? OR charid = ?");
+            ps.setInt(1, this.ownerAccount);
+            ps.setInt(2, this.ownerId);
+            ps.execute();
+            ps.close();
+            ps = con.prepareStatement("INSERT INTO hiredmerchantshop VALUES (DEFAULT,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);//(id,channelid, mapid, charid,itemid,desc, x,y,opened,accid,createdate)
+            ps.setInt(1, this.channel);
+            ps.setInt(2, this.map);
+            ps.setInt(3, this.ownerId);
+            ps.setInt(4, this.itemId);
+            ps.setString(5, this.des);
+            ps.setInt(6, this.getPosition().x);
+            ps.setInt(7, this.getPosition().y);
+            ps.setInt(8, 1);
+            ps.setTimestamp(9,  new Timestamp(System.currentTimeMillis()));
+            ps.setInt(10, this.ownerAccount);
+            ps.executeUpdate();
+            rs.close();
+            ps.close();
+
+             List<Pair<IItem, MapleInventoryType>> iters = new ArrayList<Pair<IItem, MapleInventoryType>>();
+            for ( MaplePlayerShopItem pItems : this.items) {
+                if (pItems.item != null) {
+                    if (pItems.bundles <= 0) {
+                        continue;
+                    }
+                    if (pItems.item.getQuantity() <= 0 && !GameConstants.isRechargable(pItems.item.getItemId())) {
+                        continue;
+                    }
+                     IItem item = pItems.item.copy();
+                    item.setQuantity((short)(item.getQuantity() * pItems.bundles));
+                    iters.add(new Pair<IItem, MapleInventoryType>(item, GameConstants.getInventoryType(item.getItemId())));
+                }
+            }
+            ItemLoader.HIRED_MERCHANT.saveItemsShop(iters, packageid, this.ownerAccount);
+            return true;
+        }
+        catch (SQLException se) {
+            System.out.println("[SaveItems] 保存精灵商店出錯 - 2");
+            FilePrinter.printError("AbstractPlayerStore.txt", (Throwable)se, "saveItems");
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)se);
+            return false;
+        }
+    }
+
+
     public MapleCharacter getVisitor(final int num) {
         return (MapleCharacter)this.chrs[num].get();
     }

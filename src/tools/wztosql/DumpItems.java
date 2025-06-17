@@ -77,8 +77,6 @@ public class DumpItems
                     this.dumpItems(psa, psr, ps, pse);
                 }
                 catch (Exception e) {
-                    //System.out.println(this.id + " quest.");
-                   // //e.printStackTrace();
                     this.hadError = true;
                 }
                 finally {

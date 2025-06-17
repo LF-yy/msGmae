@@ -506,17 +506,22 @@ public class LtDiabloEquipments {
     /**
      * 组装词条
      */
-    public static String assembleEntry(int level){
+    public static String assembleEntry(int level,MapleCharacter chr){
         List<LtDiabloEquipments> list = GetRedisDataUtil.getLtDiabloEquipments();
         List<String> matchedEntryNames = new ArrayList<>();
         if(ListUtil.isEmpty(list)){
             return null;
         }
         for (LtDiabloEquipments ltDiabloEquipments : list) {
-
+            if(!chr.isOpenEnableDarkMode()){
+                if(Start.sendMsgList.contains(ltDiabloEquipments.getEntryName())){
+                    //有词条的但不在特殊地图则跳过
+                    continue;
+                }
+            }
             int randomNum  =  Randomizer.nextInt(1000000);
                        // 如果满足条件，记录 entryName
-            if ( randomNum >= ltDiabloEquipments.getProbabilityMin() && randomNum <= (ltDiabloEquipments.getProbabilityMax()+ltDiabloEquipments.level)) {
+            if ( randomNum >= ltDiabloEquipments.getProbabilityMin() && randomNum <= (ltDiabloEquipments.getProbabilityMax()+ltDiabloEquipments.level)*LtMS.ConfigValuesMap.get("概率")) {
                 matchedEntryNames.add(ltDiabloEquipments.entryName);
                 if(ltDiabloEquipments.getSkillType() == 4){
                     break;
@@ -584,17 +589,13 @@ public class LtDiabloEquipments {
                         c.getPlayer().LtDiabloEquipmentsList.add(ltDiabloEquipments);
                         //将可是放技能加载到个人数据里
                     }else if(ltDiabloEquipments.getSkillType() == 5){
-//                        System.out.println("1");
                         ASkill aSkill = Start.ltASkill.get(ltDiabloEquipments.skillId);
                         if(aSkill!=null){
-//                            System.out.println("2");
                             damage +=  (ltDiabloEquipments.getSkillDamage()/100.0);
                             aSkill.setDamage(damage);
                             aSkill.setAttackCount(ltDiabloEquipments.getSkillDs());
                             aSkill.setMobCount(ltDiabloEquipments.getSkillSl());
                             c.getPlayer().setUserASkill(ltDiabloEquipments.skillId,aSkill);
-//                            System.out.println(ltDiabloEquipments.skillId+" "+aSkill.getDamage());
-
                         }
                     }else{
                         c.getPlayer().triggeredEquipmentsList.add(ltDiabloEquipments);
@@ -623,10 +624,8 @@ public class LtDiabloEquipments {
                         c.getPlayer().LtDiabloEquipmentsList.add(ltDiabloEquipments);
                         //将可是放技能加载到个人数据里
                     }else if(ltDiabloEquipments.getSkillType() == 5){
-                       // System.out.println("1");
                         ASkill aSkill = Start.ltASkill.get(ltDiabloEquipments.skillId);
                         if(aSkill!=null){
-                         //   System.out.println("2");
                             double damage =  (ltDiabloEquipments.getSkillDamage()/100.0+1);
                             if (damage > Short.MAX_VALUE){
                                 damage = Short.MAX_VALUE;
@@ -635,7 +634,6 @@ public class LtDiabloEquipments {
                             aSkill.setAttackCount(ltDiabloEquipments.getSkillDs());
                             aSkill.setMobCount(ltDiabloEquipments.getSkillSl());
                             c.getPlayer().setUserASkill(ltDiabloEquipments.skillId,aSkill);
-                           // System.out.println(ltDiabloEquipments.skillId+" "+aSkill.getDamage());
                         }
                     }else if(ltDiabloEquipments.getSkillType() == 6){
                         c.getPlayer().shieldEnhancementEquipmentsList.add(ltDiabloEquipments);
@@ -650,7 +648,7 @@ public class LtDiabloEquipments {
     /**
      * 加载词条数据数据到redis中
      */
-    public static synchronized void setLtDiabloEquipments() {
+    public static  void setLtDiabloEquipments() {
         List<LtDiabloEquipments> sss = new ArrayList<>();
         Start.sendMsgList.clear();
         PreparedStatement ps = null;

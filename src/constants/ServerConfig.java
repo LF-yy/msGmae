@@ -68,66 +68,76 @@ public class ServerConfig
     public static boolean isPvPChannel(final int ch) {
         return ServerConfig.pvp && ch == ServerConfig.pvpch;
     }
-    public static void loadChannelExpRateMap() {
-        Map<Integer, Float> ret = new HashMap();
-        String list = ServerProperties.getProperty("server.settings.ChannelExpRateMap", "-1");
-        if (list.equals("-1")) {
-            list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
-            ServerProperties.setProperty("server.settings.ChannelExpRateMap", list);
-        }
+    private static final String DEFAULT_CHANNEL_EXP_RATE_MAP =
+    "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n" +
+    "|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
 
-        list = list.replace(" ", "");
-        list = list.replace("/", "");
-        list = list.replace("\n", "");
-        list = list.replace("\r", "");
-        String[] var2 = list.split("\\|");
-        int var3 = var2.length;
+public static void loadChannelExpRateMap() {
+    Map<Integer, Float> ret = new HashMap<>();
+    String list = ServerProperties.getProperty("server.settings.ChannelExpRateMap", "-1");
 
-        for(int var4 = 0; var4 < var3; ++var4) {
-            String str = var2[var4];
-            if (!str.equals("")) {
-                String[] a = str.split(":");
-                if (a.length >= 2) {
-                    int channel = Integer.parseInt(a[0]);
-                    float rate = Float.parseFloat(a[1]);
-                    ret.put(channel, rate);
-                }
+    if ("-1".equals(list)) {
+        list = DEFAULT_CHANNEL_EXP_RATE_MAP;
+        ServerProperties.setProperty("server.settings.ChannelExpRateMap", list);
+    }
+
+    // 移除空白字符和换行符
+    list = list.replaceAll("[\\s/ ]+", "");
+
+    for (String str : list.split("\\|")) {
+        if (str.isEmpty()) continue;
+
+        String[] a = str.split(":");
+        if (a.length >= 2) {
+            try {
+                int channel = Integer.parseInt(a[0]);
+                float rate = Float.parseFloat(a[1]);
+                ret.put(channel, rate);
+            } catch (NumberFormatException e) {
+                // 记录错误日志，避免程序崩溃
+                System.err.println("Invalid format in ChannelExpRateMap: " + str);
             }
         }
-
-        channelExpRateMap.clear();
-        channelExpRateMap = ret;
     }
+
+    // 避免直接替换引用，保证线程安全（假设 channelExpRateMap 是线程安全结构）
+    channelExpRateMap.clear();
+    channelExpRateMap.putAll(ret);
+}
+
     public static void loadChannelMesoRateMap() {
-        Map<Integer, Float> ret = new HashMap();
-        String list = ServerProperties.getProperty("server.settings.ChannelMesoRateMap", "-1");
-        if (list.equals("-1")) {
-            list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
-            ServerProperties.setProperty("server.settings.ChannelMesoRateMap", list);
-        }
+    Map<Integer, Float> ret = new HashMap<>();
+    String list = ServerProperties.getProperty("server.settings.ChannelMesoRateMap", "-1");
+    if (list.equals("-1")) {
+        list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
+        ServerProperties.setProperty("server.settings.ChannelMesoRateMap", list);
+    }
 
-        list = list.replace(" ", "");
-        list = list.replace("/", "");
-        list = list.replace("\n", "");
-        list = list.replace("\r", "");
-        String[] var2 = list.split("\\|");
-        int var3 = var2.length;
+    // 合并多个 replace 为一次正则替换
+    list = list.replaceAll("[ /\\r\\n]", "");
 
-        for(int var4 = 0; var4 < var3; ++var4) {
-            String str = var2[var4];
-            if (!str.equals("")) {
-                String[] a = str.split(":");
-                if (a.length >= 2) {
+    String[] var2 = list.split("\\|");
+    for (String str : var2) {
+        if (!str.isEmpty()) {
+            String[] a = str.split(":");
+            if (a.length >= 2) {
+                try {
                     int channel = Integer.parseInt(a[0]);
                     float rate = Float.parseFloat(a[1]);
                     ret.put(channel, rate);
+                } catch (NumberFormatException e) {
+                    // 可选：记录日志
+                    // Logger.warn("Invalid entry in ChannelMesoRateMap: " + str);
                 }
             }
         }
-
-        channelMesoRateMap.clear();
-        channelMesoRateMap = ret;
     }
+
+    // 使用 putAll 替代 clear + 赋值，避免并发问题
+    channelMesoRateMap.clear();
+    channelMesoRateMap.putAll(ret);
+}
+
     public static float getMyChannelExpRate(int channel) {
         if (channelExpRateMap.get(channel) != null) {
             return (Float)channelExpRateMap.get(channel);
@@ -146,35 +156,37 @@ public class ServerConfig
     }
 
     public static void loadChannelDropRateMap() {
-        Map<Integer, Float> ret = new HashMap();
-        String list = ServerProperties.getProperty("server.settings.ChannelDropRateMap", "-1");
-        if (list.equals("-1")) {
-            list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
-            ServerProperties.setProperty("server.settings.ChannelDropRateMap", list);
-        }
+    Map<Integer, Float> ret = new HashMap<>();
+    String list = ServerProperties.getProperty("server.settings.ChannelDropRateMap", "-1");
 
-        list = list.replace(" ", "");
-        list = list.replace("/", "");
-        list = list.replace("\n", "");
-        list = list.replace("\r", "");
-        String[] var2 = list.split("\\|");
-        int var3 = var2.length;
+    if (list.equals("-1")) {
+        list = "|1:1.0|2:1.0|3:1.0|4:1.0|5:1.0|6:1.0|7:1.0|8:1.0|9:1.0|10:1.0|\n|11:1.0|12:1.0|13:1.0|14:1.0|15:1.0|16:1.0|17:1.0|18:1.0|19:1.0|20:1.0|";
+        ServerProperties.setProperty("server.settings.ChannelDropRateMap", list);
+    }
 
-        for(int var4 = 0; var4 < var3; ++var4) {
-            String str = var2[var4];
-            if (!str.equals("")) {
-                String[] a = str.split(":");
-                if (a.length >= 2) {
+    // 合并替换操作
+    list = list.replaceAll("[\\s/]", "");
+
+    String[] var2 = list.split("\\|");
+    for (String str : var2) {
+        if (!str.isEmpty()) {
+            String[] a = str.split(":", 2); // 最多分割成两部分
+            if (a.length == 2 && !a[0].isEmpty() && !a[1].isEmpty()) {
+                try {
                     int channel = Integer.parseInt(a[0]);
                     float rate = Float.parseFloat(a[1]);
                     ret.put(channel, rate);
+                } catch (NumberFormatException ignored) {
+                    // 忽略非法条目，可根据需要记录日志
                 }
             }
         }
-
-        channelDropRateMap.clear();
-        channelDropRateMap = ret;
     }
+
+    channelDropRateMap.clear();
+    channelDropRateMap = ret;
+}
+
 
     public static float getMyChannelDropRate(int channel) {
         if (channelDropRateMap.get(channel) != null) {
@@ -185,36 +197,42 @@ public class ServerConfig
         }
     }
 
-    public static void loadChannelNeedItemMap() {
-        Map<Integer, Integer> ret = new HashMap();
-        String list = ServerProperties.getProperty("server.settings.ChannelNeedItemMap", "-1");
-        if (list.equals("-1")) {
-            list = "|11:4110002|12:4110003|";
-            ServerProperties.setProperty("server.settings.ChannelNeedItemMap", list);
-        }
+    private static final String DEFAULT_CHANNEL_NEED_ITEM_MAP = "|11:4110002|12:4110003|";
 
-        list = list.replace(" ", "");
-        list = list.replace("/", "");
-        list = list.replace("\n", "");
-        list = list.replace("\r", "");
-        String[] var2 = list.split("\\|");
-        int var3 = var2.length;
+public static void loadChannelNeedItemMap() {
+    String list = ServerProperties.getProperty("server.settings.ChannelNeedItemMap", "-1");
 
-        for(int var4 = 0; var4 < var3; ++var4) {
-            String str = var2[var4];
-            if (!str.equals("")) {
-                String[] a = str.split(":");
-                if (a.length >= 2) {
-                    int channel = Integer.parseInt(a[0]);
-                    int itemId = Integer.parseInt(a[1]);
+    if ("-1".equals(list)) {
+        list = DEFAULT_CHANNEL_NEED_ITEM_MAP;
+        ServerProperties.setProperty("server.settings.ChannelNeedItemMap", list);
+    }
+
+    // 合并多余 replace 为一个正则替换
+    list = list.replaceAll("[\\s/]+", "");
+
+    Map<Integer, Integer> ret = new HashMap<>();
+    String[] entries = list.split("\\|");
+
+    for (String entry : entries) {
+        if (!entry.isEmpty()) {
+            String[] parts = entry.split(":");
+            if (parts.length >= 2) {
+                try {
+                    int channel = Integer.parseInt(parts[0]);
+                    int itemId = Integer.parseInt(parts[1]);
                     ret.put(channel, itemId);
+                } catch (NumberFormatException e) {
+                    // 可选：打印日志提示配置错误
+                    System.err.println("Invalid format in ChannelNeedItemMap: " + entry);
                 }
             }
         }
-
-        channelNeedItemMap.clear();
-        channelNeedItemMap = ret;
     }
+
+    channelNeedItemMap.clear();
+    channelNeedItemMap.putAll(ret);
+}
+
 
     public static void loadCashInventoryBanItemList() {
         ArrayList<Integer> ret = new ArrayList();
@@ -446,7 +464,7 @@ public class ServerConfig
         ServerConfig.MesoRate = 1;
         ServerConfig.DropRate = 2;
         ServerConfig.CashRate = 1;
-        ServerConfig.双倍线路 = Arrays.asList(5,6);
+        ServerConfig.双倍线路 = Arrays.asList(10);
         ServerConfig.ipStr = ServerConfig.IP.split("\\.");
         Gateway_IP = new byte[] { (byte)Integer.parseInt(ServerConfig.ipStr[0]), (byte)Integer.parseInt(ServerConfig.ipStr[1]), (byte)Integer.parseInt(ServerConfig.ipStr[2]), (byte)Integer.parseInt(ServerConfig.ipStr[3]) };
         Gateway_IP2 = new byte[] { (byte)Integer.parseInt(ServerConfig.ipStr[0]), (byte)Integer.parseInt(ServerConfig.ipStr[1]), (byte)Integer.parseInt(ServerConfig.ipStr[2]), (byte)Integer.parseInt(ServerConfig.ipStr[3]) };

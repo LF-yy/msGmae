@@ -259,8 +259,6 @@ public class InterServerHandler
         boolean allowLogin = false;
         if (state == 1 || state == 6 || state == 0) {
             allowLogin = !World.isCharacterListConnected(c.loadCharacterNames(c.getWorld()));
-
-            System.out.println("16");
         }
         if (!allowLogin) {
             c.setPlayer(null);
@@ -318,8 +316,6 @@ public class InterServerHandler
                     c.getPlayer().dropMessage(1, "该频道需要持有道具 [" + MapleItemInformationProvider.getInstance().getName(itemId) + "] \r\n才可进入！\r\n已将您传送到其他频道！");
                     c.getPlayer().changeChannel(newChannel);
                 }
-
-                System.out.println("22");
                 return;
             }
 
@@ -452,8 +448,6 @@ public class InterServerHandler
         if (!player.getBackupInventory() && (Integer) LtMS.ConfigValuesMap.get("自动备份玩家背包开关") > 0 && player.getBossLog("自动备份背包") <= 0) {
             if (World.backupInventoryItems(player.getId())) {
                 player.setBossLog("自动备份背包");
-            } else {
-                //服务端输出信息.println_err("【错误】角色id" + player.getId() + "自动备份背包失败！");
             }
         }
 

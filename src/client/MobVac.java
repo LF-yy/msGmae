@@ -31,29 +31,33 @@ public class MobVac  extends Thread{
             int ID = c.getPlayer().getId();
             channel = c.getChannel();
             while (!Thread.interrupted()) {
+                Thread.sleep(1000L);
                 if(c.getPlayer()!=null){
                     if (!c.isLoggedIn()){
                         NPCConversationManager.gain关闭吸怪(ID);
                         map.killAllMonsters(true);
                         Start.吸怪角色.remove(channel+"-"+map.getId());
+                        c.getPlayer().stopMobVac();
                         Thread.currentThread().interrupt();
-                        return;
+                        break;
                     }
                     if (c.getPlayer().getMapId() != mapId){
                         NPCConversationManager.gain关闭吸怪(ID);
                         map.killAllMonsters(true);
                         Start.吸怪角色.remove(channel+"-"+map.getId());
+                        c.getPlayer().stopMobVac();
+                        // 设置当前线程的中断状态为true，用于后续的线程中断检查和处理
                         Thread.currentThread().interrupt();
-                        return;
+                        break;
                     }
                 }else{
                     NPCConversationManager.gain关闭吸怪(ID);
                     map.killAllMonsters(true);
                     Start.吸怪角色.remove(channel+"-"+map.getId());
+                    c.getPlayer().stopMobVac();
                     Thread.currentThread().interrupt();
-                    return;
+                    break;
                 }
-                Thread.sleep(1000L);
             }
         }
         catch (Exception e) {

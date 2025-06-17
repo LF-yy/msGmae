@@ -1,11 +1,11 @@
 package client.inventory;
 
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.Connection;
-import java.util.Iterator;
 import java.sql.SQLException;
 
 import client.MapleCharacter;
@@ -14,11 +14,7 @@ import handling.channel.ChannelServer;
 import tools.FileoutputUtil;
 import constants.GameConstants;
 import database.DBConPool;
-import java.util.LinkedHashMap;
 import tools.Pair;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.List;
 
 public enum ItemLoader
 {
@@ -121,6 +117,7 @@ public enum ItemLoader
                         equip.setEquipLevel(rs.getByte("itemlevel"));
                         equip.setDaKongFuMo(rs.getString("mxmxd_dakong_fumo"));
                         equip.setPotentials(rs.getString("snail_potentials"));
+                        equip.setInventoryequipmentid(rs.getLong("inventoryequipmentid"));
                         if (equip.getUniqueId() > -1 && GameConstants.isEffectRing(rs.getInt("itemid"))) {
                             final MapleRing ring = MapleRing.loadFromDb(equip.getUniqueId(), mit.equals((Object)MapleInventoryType.EQUIPPED));
                             if (ring != null) {
@@ -129,8 +126,7 @@ public enum ItemLoader
                         }
                     }
                     items.put(Long.valueOf(rs.getLong("inventoryitemid")), new Pair<IItem, MapleInventoryType>(equip.copy(), mit));
-                }
-                else {
+                } else {
                     final Item item = new Item(rs.getInt("itemid"), rs.getShort("position"), rs.getShort("quantity"), rs.getByte("flag"));
                     item.setUniqueId(rs.getInt("uniqueid"));
                     item.setOwner(rs.getString("owner"));
@@ -156,7 +152,6 @@ public enum ItemLoader
             }
             rs.close();
             ps.close();
-            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
@@ -167,7 +162,6 @@ public enum ItemLoader
     public void saveItems(final List<Pair<IItem, MapleInventoryType>> items, final Integer... id) throws SQLException {
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             this.saveItems(items, con, id);
-            con.close();
         }
         catch (SQLException ex) {
             FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
@@ -225,6 +219,7 @@ public enum ItemLoader
             PreparedStatement pse = con.prepareStatement("INSERT INTO " + this.table_equip + " VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 1);
 
             for (final Pair<IItem, MapleInventoryType> pair : items) {
+                long indexId = 0;
                 final IItem item = (IItem)pair.getLeft();
                 final MapleInventoryType mit = (MapleInventoryType)pair.getRight();
                 int k = 1;
@@ -245,15 +240,14 @@ public enum ItemLoader
                 ps.setString(k + 10, item.getGiftFrom());
                 ps.setLong(k + 11, item.getEquipOnlyId());
                 ps.executeUpdate();
-                if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
-                    try (final ResultSet rs = ps.getGeneratedKeys()) {
-                        if (!rs.next()) {
-                            throw new RuntimeException("物品数据插入失败");
-                        }
-                        pse.setLong(1, rs.getLong(1));
-                        index = rs.getLong(1);
-                        itemId = item.getItemId();
+                try ( ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        pair.getLeft().setInventoryId(rs.getLong(1));
+                        indexId = rs.getLong(1);
                     }
+                }
+                if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
+                    pse.setLong(1, indexId);
                     final IEquip equip = (IEquip)item;
                     pse.setInt(2, (int)equip.getUpgradeSlots());
                     pse.setInt(3, (int)equip.getLevel());
@@ -319,7 +313,7 @@ public enum ItemLoader
                 }
             }
             query.append(")");
-            PreparedStatement ps = con.prepareStatement("delete from inventoryequipment where inventoryitemid in("+query.toString()+")");
+            PreparedStatement ps = con.prepareStatement("delete from hiredmerchequipment where inventoryitemid in("+query.toString()+")");
             ps.setInt(1, this.value);
             for (int j = 0; j < lulz.size(); ++j) {
                 ps.setInt(j + 2, (int)Integer.valueOf(lulz.get(j)));
@@ -599,6 +593,142 @@ public enum ItemLoader
                 FileoutputUtil.outError("logs/资料库异常.txt", var13);
                 return null;
             }
+        }
+    }
+
+
+
+    public void saveItemsShop( List<Pair<IItem, MapleInventoryType>> items,  Integer... id) throws SQLException {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+            this.saveItemsShop(items, con, id);
+        }
+        catch (SQLException ex) {
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
+        }
+    }
+
+    public void saveItemsShop( List<Pair<IItem, MapleInventoryType>> items, Connection con,  Integer... id) throws SQLException {
+        long index = 0;
+        int itemId = 0;
+        try {
+             List<Integer> lulz = Arrays.asList(id);
+            if (lulz.size() != this.arg.size()) {
+                return;
+            }
+            //itemDelete(con, id);
+
+             StringBuilder query = new StringBuilder();
+            query.append("DELETE FROM `");
+            query.append(this.table);
+            query.append("` WHERE `type` = ? AND (`");
+            query.append((String)this.arg.get(0));
+            query.append("` = ?");
+            if (this.arg.size() > 1) {
+                for (int i = 1; i < this.arg.size(); ++i) {
+                    query.append(" OR `");
+                    query.append((String)this.arg.get(i));
+                    query.append("` = ?");
+                }
+            }
+            query.append(")");
+            PreparedStatement ps = con.prepareStatement(query.toString());
+            ps.setInt(1, this.value);
+            for (int j = 0; j < lulz.size(); ++j) {
+                ps.setInt(j + 2, (int)Integer.valueOf(lulz.get(j)));
+            }
+            ps.executeUpdate();
+            ps.close();
+            if (items == null) {
+                return;
+            }
+             StringBuilder query_2 = new StringBuilder("INSERT INTO `");
+            query_2.append(this.table);
+            query_2.append("` (");
+            query_2.append("");
+            for ( String g : this.arg) {
+                query_2.append(g);
+                query_2.append(", ");
+            }
+            query_2.append("itemid, inventorytype, position, quantity, owner, GM_Log, uniqueid, expiredate, flag, `type`, sender, equipOnlyId,uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?");
+            for (final String g : this.arg) {
+                query_2.append(", ?");
+            }
+            query_2.append(")");
+            ps = con.prepareStatement(query_2.toString(), 1);
+            PreparedStatement pse = con.prepareStatement("INSERT INTO " + this.table_equip + " VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)", 1);
+
+            for ( Pair<IItem, MapleInventoryType> pair : items) {
+                 IItem item = (IItem)pair.getLeft();
+                 MapleInventoryType mit = (MapleInventoryType)pair.getRight();
+                int k = 1;
+                for (int x = 0; x < lulz.size(); ++x) {
+                    ps.setInt(k, (int)Integer.valueOf(lulz.get(x)));
+                    ++k;
+                }
+                ps.setInt(k, item.getItemId());
+                ps.setInt(k + 1, (int)mit.getType());
+                ps.setInt(k + 2, (int)item.getPosition());
+                ps.setInt(k + 3, (int)item.getQuantity());
+                ps.setString(k + 4, item.getOwner());
+                ps.setString(k + 5, item.getGMLog());
+                ps.setInt(k + 6, item.getUniqueId());
+                ps.setLong(k + 7, item.getExpiration());
+                ps.setByte(k + 8, item.getFlag());
+                ps.setByte(k + 9, (byte)this.value);
+                ps.setString(k + 10, item.getGiftFrom());
+                ps.setLong(k + 11, item.getEquipOnlyId());
+                ps.setString(k + 12, item.getUUID());
+                ps.executeUpdate();
+                if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
+                    try (final ResultSet rs = ps.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            pse.setLong(1, rs.getLong(1));
+                        }
+
+                    }
+                    final IEquip equip = (IEquip)item;
+                    pse.setInt(2, (int)equip.getUpgradeSlots());
+                    pse.setInt(3, (int)equip.getLevel());
+                    pse.setInt(4, (int)equip.getStr());
+                    pse.setInt(5, (int)equip.getDex());
+                    pse.setInt(6, (int)equip.getInt());
+                    pse.setInt(7, (int)equip.getLuk());
+                    pse.setInt(8, (int)equip.getHp());
+                    pse.setInt(9, (int)equip.getMp());
+                    pse.setInt(10, (int)equip.getWatk());
+                    pse.setInt(11, (int)equip.getMatk());
+                    pse.setInt(12, (int)equip.getWdef());
+                    pse.setInt(13, (int)equip.getMdef());
+                    pse.setInt(14, (int)equip.getAcc());
+                    pse.setInt(15, (int)equip.getAvoid());
+                    pse.setInt(16, (int)equip.getHands());
+                    pse.setInt(17, (int)equip.getSpeed());
+                    pse.setInt(18, (int)equip.getJump());
+                    pse.setInt(19, (int)equip.getViciousHammer());
+                    pse.setInt(20, equip.getItemEXP());
+                    pse.setInt(21, equip.getDurability());
+                   pse.setByte(22, equip.getEnhance());
+                    pse.setInt(23, (int)equip.getPotential1());
+                    pse.setInt(24, (int)equip.getPotential2());
+                    pse.setInt(25, (int)equip.getPotential3());
+                    pse.setInt(26, (int)equip.getHpR());
+                    pse.setInt(27, (int)equip.getMpR());
+                    pse.setInt(28, (int)equip.getHpRR());
+                    pse.setInt(29, (int)equip.getMpRR());
+                    pse.setInt(30, equip.getEquipLevel());
+                    pse.setString(31, equip.getDaKongFuMo());
+                    pse.setString(32, equip.getPotentials());
+                    pse.setString(33, item.getUUID());
+                    pse.executeUpdate();
+                }
+            }
+            pse.close();
+            ps.close();
+        }
+        catch (SQLException ex) {
+            //System.out.println((Object)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
+            FileoutputUtil.log("logs/物品保存异常.txt", "错误的编码:"+index+"----"+itemId);
         }
     }
 }

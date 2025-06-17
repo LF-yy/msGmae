@@ -1,23 +1,30 @@
 package server.shops;
 
+import client.inventory.*;
+import database.DBConPool;
+import server.MerchItemPackage;
 import server.maps.MapleMapObjectType;
 import server.maps.MapleMapObject;
+import tools.Pair;
 import tools.packet.PlayerShopPacket;
-import client.inventory.IItem;
 import handling.channel.ChannelServer;
 import tools.FileoutputUtil;
 import constants.ServerConfig;
 import server.MapleItemInformationProvider;
 import constants.GameConstants;
 import server.MapleInventoryManipulator;
-import client.inventory.ItemFlag;
 import tools.MaplePacketCreator;
 import client.MapleClient;
-import java.util.Iterator;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
 import server.Timer.EtcTimer;
-import java.util.LinkedList;
 import client.MapleCharacter;
-import java.util.List;
+
 import java.util.concurrent.ScheduledFuture;
 
 public class HiredMerchant extends AbstractPlayerStore
@@ -126,8 +133,9 @@ public class HiredMerchant extends AbstractPlayerStore
             // 扣除玩家的金币
             c.getPlayer().gainMeso(-pItem.price * quantity, false);
 
-            // TODO: 购买完成后移除数据库对应物品
-
+            // 购买完成后移除数据库对应物品
+            //同步移除数据库物品
+            buyItemsShop( shopItem,c,quantity,pItem.uuid);
             // 通知商人商品已被购买
             final MapleCharacter Owner = this.getMCOwnerWorld();
             if (Owner != null) {
@@ -166,7 +174,7 @@ public class HiredMerchant extends AbstractPlayerStore
                 this.schedule.cancel(false);
             }
             if (saveItems) {
-                this.saveItems();
+                this.saveItemsNew();
                 this.items.clear();
             }
             if (remove) {
@@ -228,4 +236,199 @@ public class HiredMerchant extends AbstractPlayerStore
     public void sendVisitor(final MapleClient c) {
         c.sendPacket(PlayerShopPacket.MerchantVisitorView(this.visitors));
     }
+
+
+
+
+    public synchronized void buyItemsShop(IItem items, MapleClient c,int quantity,String uuid)   {
+        System.out.println("HiredMerchant购买物品");
+        long index = 0;
+        try (Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
+            MapleInventoryType mit =  GameConstants.getInventoryType(items.getItemId());
+            if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
+                System.out.println(quantity + "  " + items.getItemId()+ "  " + items.getInventoryId()+  "  " + this.ownerAccount+ "  " + this.ownerId);
+
+                PreparedStatement ps1 = con.prepareStatement("delete from hiredmerchitems where  accountid = ? and itemid = ? and uuid = ?");
+            ps1.setInt(1, this.ownerAccount);
+            ps1.setInt(2, items.getItemId());
+            ps1.setString(3, uuid);
+            ps1.executeUpdate();
+            ps1.close();
+
+                PreparedStatement ps2 = con.prepareStatement("delete from hiredmerchequipment where  uuid = ?");
+                ps2.setString(1, uuid);
+                ps2.executeUpdate();
+                ps2.close();
+
+                PreparedStatement ps3 = con.prepareStatement("update hiredmerch set Mesos = ? where characterid = ? and  accountid = ?", 1);
+                ps3.setInt(1, this.meso.get());
+                ps3.setInt(2, this.ownerId);
+                ps3.setInt(3, this.ownerAccount);
+                ps3.executeUpdate();
+                ps3.close();
+            }else{
+                System.out.println(quantity + "  " + items.getItemId()+ "  " + items.getInventoryId()+  "  " + this.ownerAccount+ "  " + this.ownerId);
+                PreparedStatement ps4 = con.prepareStatement("update hiredmerchitems set quantity = quantity - ?  where  accountid = ? and itemid = ? and uuid = ?");
+                ps4.setInt(1, quantity);
+                ps4.setInt(2, this.ownerAccount);
+                ps4.setInt(3, items.getItemId());
+                ps4.setString(4, uuid);
+                ps4.executeUpdate();
+                ps4.close();
+
+                PreparedStatement ps5 = con.prepareStatement("update hiredmerch set Mesos = ? where characterid = ? and  accountid = ?", 1);
+                ps5.setInt(1, this.meso.get());
+                ps5.setInt(2, this.ownerId);
+                ps5.setInt(3, this.ownerAccount);
+                ps5.executeUpdate();
+                ps5.close();
+            }
+        }
+        catch (SQLException ex) {
+            //System.out.println((Object)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
+            FileoutputUtil.log("logs/雇佣商店数据库移除异常.txt", "错误的编码:"+this.ownerAccount+"----"+items.getItemId());
+        }
+    }
+
+    public synchronized void deleteItemsShop(int item, MapleClient c,String uuid)   {
+        MaplePlayerShopItem items = (MaplePlayerShopItem)this.items.get(item);
+        long index = 0;
+        try (Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
+
+            PreparedStatement ps = con.prepareStatement("delete from hiredmerchitems where  accountid = ? and itemid = ? and uuid = ?");
+            ps.setInt(1, this.ownerAccount);
+            ps.setInt(2, items.item.getItemId());
+            ps.setString(3, uuid);
+            ps.executeUpdate();
+            ps.close();
+
+            MapleInventoryType mit =  GameConstants.getInventoryType(items.item.getItemId());
+
+            if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
+                PreparedStatement pss = con.prepareStatement("delete from hiredmerchequipment where  uuid = ?");
+                pss.setString(1, uuid);
+                pss.executeUpdate();
+                pss.close();
+            }
+
+            PreparedStatement ps1 = con.prepareStatement("update hiredmerch set Mesos = ? where characterid = ? and  accountid = ?", 1);
+            ps1.setInt(1, this.meso.get());
+            ps1.setInt(2, this.ownerId);
+            ps1.setInt(3, this.ownerAccount);
+            ps1.executeUpdate();
+            ps1.close();
+        }
+        catch (SQLException ex) {
+            //System.out.println((Object)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
+            FileoutputUtil.log("logs/雇佣商店数据库移除异常.txt", "错误的编码:"+c.getAccountName()+"----"+items.item.getItemId());
+        }
+    }
+
+    public void addItemsShop(IItem items, MapleClient c,String cleanKey)   {
+        System.out.println("添加物品到数据库");
+        int pid = loadPackageId(c.getPlayer().getId(), c.getAccID());
+        long indexId = 0;
+        try(Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection()) {
+            PreparedStatement ps = con.prepareStatement("INSERT INTO  hiredmerchitems (characterid,accountid,packageid,itemid, inventorytype, position, quantity, owner, GM_Log, uniqueid, expiredate, flag, `type`, sender, equipOnlyId,uuid) VALUES (?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)", 1);
+            PreparedStatement pse = con.prepareStatement("INSERT INTO hiredmerchequipment VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)", 1);
+            MapleInventoryType mit =  GameConstants.getInventoryType(items.getItemId());
+            items.setUUID(cleanKey);
+            ps.setInt(1 ,c.getPlayer().getId());
+
+            ps.setInt(2, c.getAccID());
+            ps.setInt(3,pid);
+
+            ps.setInt(4, items.getItemId());
+            ps.setInt(5, (int)mit.getType());
+            ps.setInt(6, (int)items.getPosition());
+            ps.setInt(7, (int)items.getQuantity());
+            ps.setString(8, items.getOwner());
+            ps.setString(9, items.getGMLog());
+            ps.setInt(10, items.getUniqueId());
+            ps.setLong(11, items.getExpiration());
+            ps.setByte(12, items.getFlag());
+            ps.setByte(13, (byte)5);
+            ps.setString(14, items.getGiftFrom());
+            ps.setInt(15, (int)items.getEquipOnlyId());
+            ps.setString(16, cleanKey);
+            ps.executeUpdate();
+            try (final ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    items.setInventoryId(rs.getLong(1));
+                    indexId = rs.getLong(1);
+                }
+            }
+            if (mit.equals((Object)MapleInventoryType.EQUIP) || mit.equals((Object)MapleInventoryType.EQUIPPED)) {
+
+                final IEquip equip = (IEquip)items;
+                pse.setLong(1, indexId);
+                pse.setInt(2, (int)equip.getUpgradeSlots());
+                pse.setInt(3, (int)equip.getLevel());
+                pse.setInt(4, (int)equip.getStr());
+                pse.setInt(5, (int)equip.getDex());
+                pse.setInt(6, (int)equip.getInt());
+                pse.setInt(7, (int)equip.getLuk());
+                pse.setInt(8, (int)equip.getHp());
+                pse.setInt(9, (int)equip.getMp());
+                pse.setInt(10, (int)equip.getWatk());
+                pse.setInt(11, (int)equip.getMatk());
+                pse.setInt(12, (int)equip.getWdef());
+                pse.setInt(13, (int)equip.getMdef());
+                pse.setInt(14, (int)equip.getAcc());
+                pse.setInt(15, (int)equip.getAvoid());
+                pse.setInt(16, (int)equip.getHands());
+                pse.setInt(17, (int)equip.getSpeed());
+                pse.setInt(18, (int)equip.getJump());
+                pse.setInt(19, (int)equip.getViciousHammer());
+                pse.setInt(20, equip.getItemEXP());
+                pse.setInt(21, equip.getDurability());
+                pse.setByte(22, equip.getEnhance());
+                pse.setInt(23, (int)equip.getPotential1());
+                pse.setInt(24, (int)equip.getPotential2());
+                pse.setInt(25, (int)equip.getPotential3());
+                pse.setInt(26, (int)equip.getHpR());
+                pse.setInt(27, (int)equip.getMpR());
+                pse.setInt(28, (int)equip.getHpRR());
+                pse.setInt(29, (int)equip.getMpRR());
+                pse.setInt(30, equip.getEquipLevel());
+                pse.setString(31, equip.getDaKongFuMo());
+                pse.setString(32, equip.getPotentials());
+                pse.setString(33,cleanKey);
+                pse.executeUpdate();
+            }
+            pse.close();
+            ps.close();
+        }
+        catch (SQLException ex) {
+            //System.out.println((Object)ex);
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)ex);
+            FileoutputUtil.log("logs/物品保存异常.txt", "错误的编码:"+itemId);
+        }
+    }
+
+    private static Integer loadPackageId(final int charid, final int accountid) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
+             final PreparedStatement ps = con.prepareStatement("SELECT * from hiredmerch where characterid = ? OR accountid = ?")) {
+            ps.setInt(1, charid);
+            ps.setInt(2, accountid);
+            final ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                ps.close();
+                rs.close();
+                return null;
+            }
+            int packageId = rs.getInt("PackageId");
+            ps.close();
+            rs.close();
+            return packageId;
+        }
+        catch (SQLException e) {
+            //e.printStackTrace();
+            FileoutputUtil.outError("logs/资料库异常.txt", (Throwable)e);
+            return null;
+        }
+    }
+
 }

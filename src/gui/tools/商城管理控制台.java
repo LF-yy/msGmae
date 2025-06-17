@@ -138,7 +138,6 @@ public class 商城管理控制台 extends javax.swing.JFrame {
                 } else {
                     类型 = "点/抵用券";
                 }
-//                System.out.println( MapleItemInformationProvider.getInstance().getName(1302000));
                 ((DefaultTableModel) charTable.getModel()).insertRow(charTable.getRowCount(), new Object[]{
                     rs.getInt("serial"),
                     rs.getInt("itemid"),
@@ -596,14 +595,14 @@ con.close();
                     ps.setInt(2, ret);
                     ps.execute();
                 } catch (SQLException e) {
-                    System.out.println("xxxxxxxx:" + e);
+                    System.out.println(":" + e);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException e) {
-                        System.out.println("xxxxxxxxzzzzzzz:" + e);
+                        System.out.println(":" + e);
                     }
                 }
             }

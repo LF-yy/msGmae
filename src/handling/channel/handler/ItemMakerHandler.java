@@ -151,7 +151,7 @@ public class ItemMakerHandler
 
                     //暗黑破坏神词条
                     if(LtMS.ConfigValuesMap.get("暗黑破坏神制作道具")>=1) {
-                        String s = LtDiabloEquipments.assembleEntry(MapleItemInformationProvider.getInstance().getReqLevel( toGive.getItemId()));
+                        String s = LtDiabloEquipments.assembleEntry(MapleItemInformationProvider.getInstance().getReqLevel( toGive.getItemId()),c.getPlayer());
                         if (!StringUtils.isEmpty(s)) {
                             toGive.setOwner(s);
                             if (Start.sendMsgList.contains(s)) {

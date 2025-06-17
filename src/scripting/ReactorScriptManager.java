@@ -110,7 +110,7 @@ public class ReactorScriptManager extends AbstractScriptManager
         return ret;
     }
 
-    public synchronized void clearDrops() {
+    public  void clearDrops() {
         this.drops.clear();
     }
 

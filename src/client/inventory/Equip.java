@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 public class Equip extends Item implements IEquip, Serializable
 {
+    private long inventoryequipmentid;
     private byte upgradeSlots;
     private byte level;
     private byte vicioushammer;
@@ -82,6 +83,7 @@ public class Equip extends Item implements IEquip, Serializable
         this.itemEXP = 0;
         this.durability = -1;
         this.incSkill = -1;
+        this.inventoryequipmentid = 0L;
     }
     
     public Equip(final int id, final short position, final int uniqueid, final byte flag) {
@@ -159,6 +161,7 @@ public class Equip extends Item implements IEquip, Serializable
         ret.incSkill = this.incSkill;
         ret.hpRR = this.hpRR;
         ret.mpRR = this.mpRR;
+        ret.setUUID(this.getUUID());
         ret.setGiftFrom(this.getGiftFrom());
         ret.setOwner(this.getOwner());
         ret.setQuantity(this.getQuantity());
@@ -167,6 +170,7 @@ public class Equip extends Item implements IEquip, Serializable
         ret.setEquipOnlyId(this.getEquipOnlyId());
         ret.setDaKongFuMo(this.getDaKongFuMo());
         ret.setPotentials(this.getPotentials());
+        ret.setInventoryequipmentid(this.getInventoryequipmentid());
         return ret;
     }
     
@@ -194,7 +198,11 @@ public class Equip extends Item implements IEquip, Serializable
     public short getInt() {
         return this._int;
     }
-    
+
+    public void setInventoryequipmentid(long inventoryequipmentid) {
+        this.inventoryequipmentid = inventoryequipmentid;
+    }
+
     @Override
     public short getLuk() {
         return this.luk;
@@ -270,6 +278,12 @@ public class Equip extends Item implements IEquip, Serializable
     public void setMpRR(int mp) {
         this.mpRR = mp;
     }
+
+    @Override
+    public long getInventoryequipmentid() {
+        return this.inventoryequipmentid;
+    }
+
 
     public void setStr(short str) {
         if (str < 0) {

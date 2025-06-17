@@ -4,11 +4,6 @@ import java.io.File;
 
 public class EncodingDetect
 {
-    public static void main(final String[] args) {
-        final String file = "test.txt";
-        final String encode = getJavaEncode(file);
-        //System.out.println(encode);
-    }
     
     public static String getJavaEncode(final String filePath) {
         return getJavaEncode(new File(filePath));

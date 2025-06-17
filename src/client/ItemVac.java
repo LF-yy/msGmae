@@ -26,7 +26,7 @@ public class ItemVac extends Thread
         this.c = chr.getClient();
     }
     
-    public synchronized void addObject(final MapleMapObject ob) {
+    public  void addObject(final MapleMapObject ob) {
         final MapleMapItem mapitem = (MapleMapItem)ob;
         final Lock lock = mapitem.getLock();
         lock.lock();
@@ -47,7 +47,7 @@ public class ItemVac extends Thread
     }
     
     @Override
-    public synchronized void run() {
+    public  void run() {
         try {
             while (!Thread.interrupted()) {
                 if (!c.isLoggedIn()){

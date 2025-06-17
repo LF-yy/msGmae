@@ -27,30 +27,6 @@ public class BytesEncodingDetect extends Encoding
         this.JPFreq = new int[94][94];
         this.initialize_frequencies();
     }
-
-    public static void main(final String[] argc) {
-        int result = BytesEncodingDetect.OTHER;
-        final BytesEncodingDetect sinodetector = new BytesEncodingDetect();
-        for (int i = 0; i < argc.length; ++i) {
-            if (argc[i].startsWith("http://")) {
-                try {
-                    result = sinodetector.detectEncoding(new URL(argc[i]));
-                }
-                catch (Exception e) {
-                    System.err.println("Bad URL " + e.toString());
-                }
-            }
-            else {
-                if (argc[i].equals((Object)"-d")) {
-                    sinodetector.debug = true;
-                    continue;
-                }
-                result = sinodetector.detectEncoding(new File(argc[i]));
-            }
-            System.out.println(BytesEncodingDetect.nicename[result]);
-        }
-    }
-
     public int detectEncoding(final URL testurl) {
         final byte[] rawtext = new byte[10000];
         int bytesread = 0;

@@ -595,24 +595,24 @@ public class MapleMonster extends AbstractLoadedMapleLife
 
                 double lastexp = attacker.getStat().realExpBuff - 100.0 <= 0.0 ? 100.0 : attacker.getStat().realExpBuff - 100.0;
                 exp = (int)((double)exp * attacker.getEXPMod() * (double)attacker.getExpRateChr() * (double)((int)(lastexp / 100.0)));
-                    if (attacker.getLevel() < 10) {
-                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
-                    }
-                    else if (attacker.getLevel() >= 10 && attacker.getLevel() < 30) {
-                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
-                    }
-                    else if (attacker.getLevel() >= 30 && attacker.getLevel() < 60) {
-                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
-                    }
-                    else if (attacker.getLevel() >= 60 && attacker.getLevel() < 90) {
-                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
-                    }
-                    else if (attacker.getLevel() >= 90 && attacker.getLevel() < 120) {
-                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
-                    }
-                    else {
+//                    if (attacker.getLevel() < 10) {
+//                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
+//                    }
+//                    else if (attacker.getLevel() >= 10 && attacker.getLevel() < 30) {
+//                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
+//                    }
+//                    else if (attacker.getLevel() >= 30 && attacker.getLevel() < 60) {
+//                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
+//                    }
+//                    else if (attacker.getLevel() >= 60 && attacker.getLevel() < 90) {
+//                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
+//                    }
+//                    else if (attacker.getLevel() >= 90 && attacker.getLevel() < 120) {
+//                        exp = (int)(1 * exp * ChannelServer.getInstance(this.map.getChannel()).getExpRate());
+//                    }
+//                    else {
                         exp *= ChannelServer.getInstance(this.map.getChannel()).getExpRate();
-                    }
+//                    }
 
                 int classBonusExp;
                 if (attacker.getExpm() > 1.0) {

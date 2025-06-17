@@ -55,12 +55,6 @@ public class TestURL {
         URL url = new URL("");
         URLConnection uc = url.openConnection();
         InputStream in = uc.getInputStream();
-
-        int c;
-        while((c = in.read()) != -1) {
-            System.out.print(c);
-        }
-
         in.close();
     }
 
@@ -68,23 +62,12 @@ public class TestURL {
         URL url = new URL("");
         Reader reader = new InputStreamReader(new BufferedInputStream(url.openStream()));
 
-        int c;
-        while((c = reader.read()) != -1) {
-            System.out.print((char)c);
-        }
-
         reader.close();
     }
 
     public static void test() throws IOException {
         URL url = new URL("");
         InputStream in = url.openStream();
-
-        int c;
-        while((c = in.read()) != -1) {
-            System.out.print(c);
-        }
-
         in.close();
     }
 

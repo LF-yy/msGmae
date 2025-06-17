@@ -210,8 +210,6 @@ public class MapleClient
                 }
             }
             ps.close();
-                    con.close();
-
         }
         catch (SQLException e) {
             System.err.println("error loading characters internal" + (Object)e);
@@ -668,21 +666,21 @@ ps.close();
     public void disconnect(final boolean RemoveInChannelServer, final boolean fromCS, final boolean shutdown) {
         try {
             if (this.player != null) {
-                final MapleMap map = this.player.getMap();
-                final MapleParty party = this.player.getParty();
-                final boolean clone = this.player.isClone();
-                final String namez = this.player.getName();
-                final boolean hidden = this.player.isHidden();
-                final int gmLevel = this.player.getGMLevel();
-                final int idz = this.player.getId();
-                final int messengerid = (this.player.getMessenger() == null) ? 0 : this.player.getMessenger().getId();
-                final int gid = this.player.getGuildId();
-                final int fid = this.player.getFamilyId();
-                final BuddyList bl = this.player.getBuddylist();
-                final MaplePartyCharacter chrp = new MaplePartyCharacter(this.player);
-                final MapleMessengerCharacter chrm = new MapleMessengerCharacter(this.player);
-                final MapleGuildCharacter chrg = this.player.getMGC();
-                final MapleFamilyCharacter chrf = this.player.getMFC();
+                 MapleMap map = this.player.getMap();
+                 MapleParty party = this.player.getParty();
+                 boolean clone = this.player.isClone();
+                 String namez = this.player.getName();
+                 boolean hidden = this.player.isHidden();
+                 int gmLevel = this.player.getGMLevel();
+                 int idz = this.player.getId();
+                 int messengerid = (this.player.getMessenger() == null) ? 0 : this.player.getMessenger().getId();
+                 int gid = this.player.getGuildId();
+                 int fid = this.player.getFamilyId();
+                 BuddyList bl = this.player.getBuddylist();
+                 MaplePartyCharacter chrp = new MaplePartyCharacter(this.player);
+                 MapleMessengerCharacter chrm = new MapleMessengerCharacter(this.player);
+                 MapleGuildCharacter chrg = this.player.getMGC();
+                 MapleFamilyCharacter chrf = this.player.getMFC();
                 this.removalTask(shutdown);
                 try {
                     this.player.saveToDB(true, fromCS);
@@ -741,6 +739,12 @@ ps.close();
                     }
                     finally {
                         if (RemoveInChannelServer && ch != null) {
+                            // 关闭与服务器连接的客户端会话
+                            // 该操作通常在客户端不再需要与服务器保持连接时执行，例如退出登录或关闭应用程序时
+                            // 目的是释放系统资源，提升系统性能
+                            this.disconnect(false, false, true);
+                            this.getSession().close();
+                            System.out.println("注销玩家：" + namez);
                             ch.removePlayer(idz, namez);
                         }
                         this.player = null;
@@ -775,6 +779,12 @@ ps.close();
                     }
                     finally {
                         if ((RemoveInChannelServer && ch2 > 0) || (RemoveInChannelServer && ch2 == -10)) {
+                            // 关闭与服务器连接的客户端会话
+                            // 该操作通常在客户端不再需要与服务器保持连接时执行，例如退出登录或关闭应用程序时
+                            // 目的是释放系统资源，提升系统性能
+                            this.disconnect(false, false, true);
+                            this.getSession().close();
+                            System.out.println("注销玩家：" + namez);
                             CashShopServer.getPlayerStorage().deregisterPlayer(idz, namez);
                         }
                         this.player = null;
@@ -1431,7 +1441,7 @@ ps.close();
     }
     
     public final Set<String> getMacs() {
-        return Collections.unmodifiableSet((Set<? extends String>)this.macs);
+        return this.macs;
     }
     
     public boolean isBannedMac(final String mac) {

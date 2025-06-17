@@ -278,44 +278,7 @@ public class NPCHandler
         final MapleStorage storage = chr.getStorage();
         switch (mode) {
             case 4: {
-                //取出仓库
-//                final byte type = slea.readByte();
-//                final byte slot = storage.getSlot(MapleInventoryType.getByType(type), slea.readByte());
-//                final IItem item = storage.takeOut(slot);
-//                if (!c.getPlayer().CanStorage()) {
-//                    c.getPlayer().dropMessage(1, "操作过快请稍后在尝试。");
-//                    storage.store(item);
-//                    break;
-//                }
-//                if (item == null) {
-//                    c.sendPacket(MaplePacketCreator.enableActions());
-//                    break;
-//                }
-//                if (!MapleInventoryManipulator.checkSpace(c, item.getItemId(), (int)item.getQuantity(), item.getOwner())) {
-//                    storage.store(item);
-//                    chr.saveToDB(false, false);
-//                    chr.dropMessage(1, "你的物品栏已经满了..");
-//                    break;
-//                }
-//                if (chr.getMapId() == 910000000 && chr.getMeso() < 1000) {
-//                    storage.store(item);
-//                    chr.saveToDB(false, false);
-//                    chr.dropMessage(1, "你没有足夠的金币放仓库道具。");
-//                    break;
-//                }
-//                if (item.getQuantity() < 1) {
-//                    return;
-//                }
-//                if (chr.getMapId() == 910000000) {
-//                    chr.gainMeso(-1000, false, true, false);
-//                }
-//                MapleInventoryManipulator.addFromDrop(c, item, false);
-//                storage.saveToDB();
-//                storage.sendTakenOut(c, GameConstants.getInventoryType(item.getItemId()));
-//                //todo 添加额外的一张记录表 实时同步对比,以新记录表的数据为基准,将多余的物品删除,并记录日志 修复仓库复制问题
-//                FileoutputUtil.logToFile("logs/Data/仓库操作.txt", "\r\n " + FileoutputUtil.NowTime() + " IP: " + c.getSession().remoteAddress().toString().split(":")[0] + " 账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作拿出物品:" + item.getItemId() + " 数量：" + (int)item.getQuantity());
-//                Broadcast.broadcastGMMessage(MaplePacketCreator.serverNotice(6, "[GM密语]  账号: " + c.getAccountName() + " 玩家: " + c.getPlayer().getName() + " 使用了仓库操作拿出物品:" + item.getItemId() + " 数量：" + (int)item.getQuantity()));
-//                break;
+
                 if (chr.getInventory(MapleInventoryType.USE).isFull(2)
                         || chr.getInventory(MapleInventoryType.EQUIP).isFull(2)
                         || chr.getInventory(MapleInventoryType.SETUP).isFull(2)

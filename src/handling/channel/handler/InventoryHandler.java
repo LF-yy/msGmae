@@ -1064,6 +1064,12 @@ public class InventoryHandler
         IItem toUse = chr.getInventory(MapleInventoryType.USE).getItem((short)slot);
         long expiration_days = 0L;
         int mountid = 0;
+        if(Objects.nonNull(LtMS.ConfigValuesMap.get("能手册"+itemId)) && LtMS.ConfigValuesMap.get("能手册"+itemId)>0){
+            c.sendPacket(MaplePacketCreator.enableActions());
+            NPCScriptManager.getInstance().dispose(c);
+            NPCScriptManager.getInstance().startItem(c, 1204033, itemId);
+            return ;
+        }
         if (toUse != null && toUse.getQuantity() >= 1 && toUse.getItemId() == itemId) {
             switch (toUse.getItemId()) {
                 case 2430007: {

@@ -141,40 +141,61 @@ public class World
         return durationMonsterList;
     }
 
-    public static void monitorDurationMonster(int sec) {
-        EventTimer.getInstance().register(new Runnable() {
-            public void run() {
-                try {
-                    if (!World.durationMonsterList.isEmpty()) {
-                        for(int i = 0; i < World.durationMonsterList.size(); ++i) {
-                            MapleMonster mob = (MapleMonster)World.durationMonsterList.get(i);
-                            if (mob == null) {
-                                World.durationMonsterList.remove(i);
-                                --i;
-                            } else if (mob.getLastDuration() <= 0L) {
-                                MapleMap map = mob.getMap();
-                                mob.setHp(0L);
-                                if (map != null) {
-                                    mob.getMap().killMonster(mob, true);
-                                    if (!map.haveMonster(9900000) && !map.haveMonster(9900001) && !map.haveMonster(9900002)) {
-                                        map.setHaveStone(false);
-                                        map.setStoneLevel(0);
-                                    }
+    /**
+ * 监控持续时间内的怪物状态
+ * 该方法用于定期检查世界中的持续时间怪物列表，如果怪物的持续时间结束，则将其从列表中移除并进行处理
+ * 主要功能包括：
+ * 1. 移除空指针的怪物
+ * 2. 处理持续时间结束的怪物，将其生命值设置为0并从地图中移除
+ * 3. 根据地图中的特定怪物情况，更新地图的状态
+ *
+ * @param sec 检查间隔时间，单位为秒
+ */
+public static void monitorDurationMonster(int sec) {
+    // 注册一个定时任务，按照指定的间隔时间执行
+    EventTimer.getInstance().register(new Runnable() {
+        public void run() {
+            try {
+                // 检查怪物列表是否为空
+                if (!World.durationMonsterList.isEmpty()) {
+                    // 遍历怪物列表
+                    for(int i = 0; i < World.durationMonsterList.size(); ++i) {
+                        // 获取当前遍历的怪物
+                        MapleMonster mob = (MapleMonster)World.durationMonsterList.get(i);
+                        // 如果怪物为null，则从列表中移除并调整索引
+                        if (mob == null) {
+                            World.durationMonsterList.remove(i);
+                            --i;
+                        } else if (mob.getLastDuration() <= 0L) {
+                            // 获取怪物所在地图
+                            MapleMap map = mob.getMap();
+                            // 将怪物的生命值设置为0
+                            mob.setHp(0L);
+                            // 如果地图不为空，执行杀死怪物的操作
+                            if (map != null) {
+                                map.killMonster(mob, true);
+                                // 检查地图中是否还有特定的怪物，如果没有，则更新地图状态
+                                if (!map.haveMonster(9900000) && !map.haveMonster(9900001) && !map.haveMonster(9900002)) {
+                                    map.setHaveStone(false);
+                                    map.setStoneLevel(0);
                                 }
-
-                                World.durationMonsterList.remove(i);
-                                --i;
                             }
+
+                            // 从列表中移除处理完毕的怪物并调整索引
+                            World.durationMonsterList.remove(i);
+                            --i;
                         }
                     }
-                } catch (Exception var4) {
-                    //服务端输出信息.println_err("【错误】monitorDurationMonster执行错误，错误原因：" + var4);
-                    var4.printStackTrace();
                 }
-
+            } catch (Exception var4) {
+                // 输出错误信息
+                //服务端输出信息.println_err("【错误】monitorDurationMonster执行错误，错误原因：" + var4);
+                var4.printStackTrace();
             }
-        }, (long)(sec * 1000), (long)(sec * 1000));
-    }
+        }
+    }, (long)(sec * 1000), (long)(sec * 1000));
+}
+
     public static List<CheaterData> getCheaters() {
         final List<CheaterData> allCheaters = new ArrayList<CheaterData>();
         for (final ChannelServer cs : ChannelServer.getAllInstances()) {

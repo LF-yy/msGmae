@@ -133,8 +133,6 @@ public class LtMS extends JFrame {
      * Creates new form KinMS
      */
     public static LtMS getInstance() {
-
-// 重定向System.out和System.err
         return instance;
     }
 
@@ -5482,16 +5480,28 @@ public class LtMS extends JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         int n = JOptionPane.showConfirmDialog(this, "服务端主控制台一旦退出就会停服！\r\n确定要退出？", "警告", JOptionPane.YES_NO_OPTION);
         if (n == JOptionPane.YES_OPTION) {
-            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
-                cserv.closeAllMerchant();//保存雇佣
+
+//            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                cserv.closeAllMerchant();//保存雇佣
+//            }
+//            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
+//                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
+//                    chr.getClient().getPlayer().saveData = 0;
+//                    chr.saveToDB(false, false);//保存角色
+//                }
+//            }
+            if (ts == null && (t == null || !t.isAlive())) {
+                t = new Thread(ShutdownServer.getInstance());
+                ts = EventTimer.getInstance().register(new Runnable() {
+                    @Override
+                    public void run() {
+                            ShutdownServer.getInstance();
+                            t.start();
+                            ts.cancel(false);
+                    }
+                }, 1);
             }
-            for (ChannelServer cserv : ChannelServer.getAllInstances()) {
-                for (MapleCharacter chr : cserv.getPlayerStorage().getAllCharacters()) {
-                    chr.getClient().getPlayer().saveData = 0;
-                    chr.saveToDB(false, false);//保存角色
-                }
-            }
-            System.exit(0);
+
         }
         return;
     }//GEN-LAST:event_formWindowClosing

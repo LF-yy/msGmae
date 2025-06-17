@@ -3797,9 +3797,6 @@ public class MaplePacketCreator
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(formatNumberWithUnit(111111));
-    }
     public static byte[] 勳章(MapleCharacter chr) {
         final MaplePacketLittleEndianWriter mplew = new MaplePacketLittleEndianWriter();
         mplew.writeShort((int)SendPacketOpcode.GUILD_OPERATION.getValue());

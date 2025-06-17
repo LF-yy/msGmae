@@ -3622,7 +3622,7 @@ public class 账号管理工具 extends javax.swing.JFrame {
             try {
                 con = DatabaseConnection.getConnection();
             } catch (Exception ex) {
-                System.out.println(ex);
+                System.out.println("[信息]:数据库连接失败"+ex);
                 return;
             }
             try {

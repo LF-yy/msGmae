@@ -198,7 +198,7 @@ public class Start
 
     public static List<Integer> BUFFSkill = Arrays.asList(1001,1002,1005,1001003,1101004,1101005,1101006,1101007,1111002,1121000,1121002,1121010,1201004,1201005,1201007,1211003,1211004,1211005,1211006,1211007,1211008,1221000,1221002,1221003,1221004,1301004,1301005,1301006,1301007,1311005,1311008,1321000,1321002,1321007,2001002,2001003,2101001,2111005,2121000,2121005,2201001,2211005,2221000,2221005,2301003,2301004,2311003,2321000,3001003,3101002,3101004,3110000,3121000,3121002,3121006,3121008,3201002,3201004,3210000,3221000,3221002,3221005,3221006,4101003,4111002,4121000,4121006,4201002,4201003,4211005,4221000,5000000,5101005,5121000,5121009,5201001,5221000,5221010,20001001,20001002,20001005,21001003,21100005,21101003,21111001,21111005,21120007,21121000,21121003,21121008);
 
-    public static List<String> 授权IP = Arrays.asList("160.202.231.123","1.15.43.65","175.24.182.189","202.189.5.75","106.54.24.67","159.75.177.122","58.220.33.222","27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23","61.160.247.86");//
+    public static List<String> 授权IP = Arrays.asList("61.147.93.251","223.111.202.250","58.220.33.121,160.202.231.123","1.15.43.65","175.24.182.189","202.189.5.75","106.54.24.67","159.75.177.122","58.220.33.222","27.25.141.183","222.186.34.45","101.34.216.55","111.229.164.192","110.41.70.201","180.97.189.26","103.91.211.216","103.91.211.234","110.41.70.201","222.186.134.23","61.160.247.86");//
     public static int 计数器 = 0;
     public static int 删除标记 = 0;
     public static List<Integer> 坐骑 = Arrays.asList(1902001,1912000,1902018,1912011,1902031,1912024,1902035,1912028,1902007,1912005,1902042,1912035,1902002,1902000);
@@ -446,10 +446,6 @@ public class Start
             //读取技能范围检测();
         System.out.println("读取技能PVP伤害数据");
             读取技能PVP伤害();
-        System.out.println("读取玩家个人信息设置");
-            读取技个人信息设置();
-        //System.out.println("重置仙人数据");
-            重置仙人数据();
         System.out.println("根据配置决定是否开启重要道具掉落广播");
         WorldConstants.importantItemsBroadcast = (Integer)LtMS.ConfigValuesMap.get("重要道具掉落广播") > 0;
 
@@ -480,8 +476,8 @@ public class Start
             //ZaiXian(1);
         System.out.println("初始化野外BOSS");
             World.outsideBoss(1);
-        System.out.println("从数据库加载世界BOSS数据");
-             WorldBoss.loadFromDB();
+        //System.out.println("从数据库加载世界BOSS数据");
+             //WorldBoss.loadFromDB();
         System.out.println("定时保存技能皮肤映射");
            // AutoSaveSkillSkinMap(30);
         System.out.println("特定功能的时间设置");
@@ -672,7 +668,7 @@ public class Start
 
 
         int ret =0;
-        String[] macs = {"0a82ee645b0d25e84538f880786cded498760166","eacb06b904cfdf2609c63e552d727a79dca358e4","fc3fe16273e5feb8acdd116c4fd7e8fc969bd692","ef85414aa691668fed9cdcb48dead5f0d8d2a422",
+        String[] macs = {"3327641dcfbf46f775aa75657a8e52d71dcb2595","0a82ee645b0d25e84538f880786cded498760166","eacb06b904cfdf2609c63e552d727a79dca358e4","fc3fe16273e5feb8acdd116c4fd7e8fc969bd692","ef85414aa691668fed9cdcb48dead5f0d8d2a422",
                 "fbdd68311756574a1590b60ed213b5ebef0f5dec","b675a9627e710594bce3bf0ba50ff751b57c5ede",
                 "ca8dc472950604e891460041a1e8c4c89731be1a","422269a6582809acfd5cfc4b888f3739d9ff891e",
                 "0d323e40c2fc6f9136a15ed9c929cb2077493af0","addc0a7ca7b60e5e37195a8040ac0978658fee63"};//
@@ -1929,13 +1925,13 @@ public class Start
         }
     }
 
-    public synchronized Map getCrackStage(){
+    public  Map getCrackStage(){
        return crackStage;
     }
-    public synchronized void setCrackStage(String str,Integer index){
+    public  void setCrackStage(String str,Integer index){
         crackStage.put(str,index);
     }
-    public static synchronized  void GetSuitDamTable() {
+    public static   void GetSuitDamTable() {
         //todu 改成清除redis缓存
         Start.套装加成表.clear();
         PreparedStatement ps = null;
@@ -1995,7 +1991,7 @@ public class Start
         }
     }
 
-    public static  synchronized void GetSuitDamTableNew() {
+    public static  void GetSuitDamTableNew() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try (Connection con = DatabaseConnection.getConnection()){
@@ -2013,7 +2009,7 @@ public class Start
             System.out.println("个人赋能加成表出错：" + ex.getMessage());
         }
     }
-    public static synchronized  void getDsTableInfo() {
+    public static   void getDsTableInfo() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try (Connection con = DatabaseConnection.getConnection()){
@@ -2032,7 +2028,7 @@ public class Start
             System.out.println("段伤表加载失败：" + ex.getMessage());
         }
     }
-    public static  synchronized void getDropCoefficient() {
+    public static   void getDropCoefficient() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try (Connection con = DatabaseConnection.getConnection()){
@@ -2051,7 +2047,7 @@ public class Start
             System.out.println("地图爆率降值加载失败：" + ex.getMessage());
         }
     }
-    public static  synchronized void getJobDamage() {
+    public static   void getJobDamage() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2071,7 +2067,7 @@ public class Start
             System.out.println("职业伤害加载失败：" + ex.getMessage());
         }
     }
-    public static  synchronized void getCharactersHphd() {
+    public static   void getCharactersHphd() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2091,7 +2087,7 @@ public class Start
             System.out.println("角色护盾加载失败：" + ex.getMessage());
         }
     }
-    public static  synchronized void updateOrInsertShield(int charactersid, int numb) {
+    public static   void updateOrInsertShield(int charactersid, int numb) {
         Connection conn = null;
         PreparedStatement checkStmt = null;
         PreparedStatement updateStmt = null;
@@ -2140,7 +2136,7 @@ public class Start
             }
         }
     }
-    public static synchronized void getMobDamage() {
+    public static  void getMobDamage() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2161,7 +2157,7 @@ public class Start
         }
     }
 
-    public static synchronized  void GetLtInitializationSkills() {
+    public static  void GetLtInitializationSkills() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -2183,7 +2179,7 @@ public class Start
             System.out.println("加载初始化技能等级表出错：" + ex.getMessage());
         }
     }
-    public static synchronized  void GetSuitSystem() {
+    public static  void GetSuitSystem() {
         if (suitSystems.size()>0) {
             suitSystems = new ArrayList<>();
         }
@@ -2225,7 +2221,7 @@ public class Start
         }
     }
 
-    public static synchronized  void GetFieldSkills() {
+    public static  void GetFieldSkills() {
         if (fieldSkills.size()>0) {
             fieldSkills = new ArrayList<>();
         }
@@ -2266,7 +2262,7 @@ public class Start
         }
     }
 
-    public static synchronized  void GetSuperSkills() {
+    public static  void GetSuperSkills() {
         if (superSkills.size()>0) {
             superSkills = new ArrayList<>();
         }
@@ -2313,7 +2309,7 @@ public class Start
      * 师傅增伤表,1个出师的徒弟=1%伤害
      * @return
      */
-    public static synchronized void 师傅增伤( ) {
+    public static  void 师傅增伤( ) {
         masterApprenticeGain.clear();
         Connection con = DBConPool.getConnection();
         PreparedStatement ps = null;
@@ -2331,7 +2327,7 @@ public class Start
             //服务端输出信息.println_err("【错误】执行 师傅增伤() 命令失败，代码位置：Start，错误原因：" + var5);
         }
     }
-    public static synchronized  void GetBreakthroughMechanism() {
+    public static  void GetBreakthroughMechanism() {
           List<BreakthroughMechanism>  breakthroughMechanismList = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2371,7 +2367,7 @@ public class Start
             System.out.println("境界系统加载异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void getNotParticipatingRecycling(){
+    public static  void getNotParticipatingRecycling(){
         List<Integer> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2390,7 +2386,7 @@ public class Start
         }
     }
 
-    public static synchronized  void 清理物品表(){
+    public static  void 清理物品表(){
         try {
             Connection con = DatabaseConnection.getConnection();
 
@@ -2439,7 +2435,7 @@ public class Start
     }
 
 
-    public static synchronized  void getleveladdharm(){
+    public static  void getleveladdharm(){
         List<Leveladdharm> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2459,7 +2455,7 @@ public class Start
             System.out.println("getleveladdharm出错：" + ex.getMessage());
         }
     }
-    public static synchronized void getAdditionalDamage(){
+    public static  void getAdditionalDamage(){
         List<LttItemAdditionalDamage> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2479,7 +2475,7 @@ public class Start
             System.out.println("getleveladdharm出错：" + ex.getMessage());
         }
     }
-    public static synchronized  void getMobInfo() {
+    public static  void getMobInfo() {
           List<MobInfo>  mobInfoList = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2514,7 +2510,7 @@ public class Start
     }
 
 
-    public static synchronized  void getMobUnhurt() {
+    public static  void getMobUnhurt() {
         mobUnhurtList.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2533,7 +2529,7 @@ public class Start
         }
     }
 
-    public static synchronized  Map<String,List<Integer>> getLtFlyingUp(int level) {
+    public static  Map<String,List<Integer>> getLtFlyingUp(int level) {
         List<LtFlyingUpMaterialScience> collect = ltFlyingUpMaterialScience.stream().filter(lf -> level >= lf.getMin() && level <= lf.getMax()).collect(Collectors.toList());
         if(collect!=null && collect.size()>0){
             Map<String,List<Integer>> map = new ConcurrentHashMap<>();
@@ -2543,7 +2539,7 @@ public class Start
         }
         return null;
     }
-    public static synchronized  void getLtFlyingUpMaterialScience() {
+    public static  void getLtFlyingUpMaterialScience() {
         ltFlyingUpMaterialScience.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2565,7 +2561,7 @@ public class Start
     /**
      * 全局爆率
      */
-    public static synchronized  void setGlobaldrops() {
+    public static  void setGlobaldrops() {
         globaldrops.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2601,7 +2597,7 @@ public class Start
      *   `questid` int(11) NOT NULL DEFAULT '0',
      *   `chance` int(11) NOT NULL DEFAULT '0',
      */
-    public static synchronized void setLtDiabloEquipments() {
+    public static  void setLtDiabloEquipments() {
         LtDiabloEquipments.setLtDiabloEquipments();
     }
     /**
@@ -2614,7 +2610,7 @@ public class Start
      *   `questid` int(11) NOT NULL DEFAULT '0',
      *   `chance` int(11) NOT NULL DEFAULT '0',
      */
-    public static synchronized void setdrops() {
+    public static  void setdrops() {
         drops.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2628,7 +2624,11 @@ public class Start
                         rs.getInt("itemid"),
                         rs.getInt("chance"),
                         rs.getInt("minimum_quantity"),
-                        rs.getInt("maximum_quantity")));
+                        rs.getInt("maximum_quantity"),
+                        rs.getString("droppername"),
+                        rs.getString("itemname")
+                        )
+                );
             }
             rs.close();
             ps.close();
@@ -2648,7 +2648,7 @@ public class Start
     /**
      * 怪物自定义伤害加成
      */
-    public static synchronized void ltMonsterCustomizeDamageAddition() {
+    public static  void ltMonsterCustomizeDamageAddition() {
         ltMonsterCustomizeMap.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2669,7 +2669,7 @@ public class Start
     /**
      * 怪物等级伤害加成
      */
-    public static synchronized void ltMonsterLevelDamageAddition() {
+    public static  void ltMonsterLevelDamageAddition() {
         ltMonsterLevelMap.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2690,7 +2690,7 @@ public class Start
     /**
      * 怪物可用额度
      */
-    public static synchronized void getltMonstervalue() {
+    public static  void getltMonstervalue() {
         ltMonsterValueMap.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2721,7 +2721,7 @@ public class Start
     /**
      * 怪物可用额度
      */
-    public static synchronized int setltMonstervalue(int mobId , int exposureValue) {
+    public static int setltMonstervalue(int mobId , int exposureValue) {
         PreparedStatement ps = null;
         int number = 0;
         try {
@@ -2742,7 +2742,7 @@ public class Start
     /**
      * 角色爆出额度记录
      */
-    public static synchronized void setltMonstervalueRecord(int chrId , int mobId , String mobName , int exposureValue) {
+    public static  void setltMonstervalueRecord(int chrId , int mobId , String mobName , int exposureValue) {
         PreparedStatement ps = null;
         try {
             Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
@@ -2762,14 +2762,15 @@ public class Start
     /**
      * 角色爆出额度记录
      */
-    public static synchronized void setLtItemAll(List<Map<String,Object>> list) {
+    public static  void setLtItemAll(List<Map<String,Object>> list) {
         PreparedStatement ps = null;
         try (Connection con = DBConPool.getInstance().getDataSource().getConnection()){
             for (Map<String, Object> stringObjectMap : list) {
-                ps = con.prepareStatement("insert into lt_item_all (item_id,item_name,sox) values (?,?,?)");
+                ps = con.prepareStatement("insert into lt_item_all (item_id,item_name,sox,level) values (?,?,?,?)");
                 ps.setInt(1, (int)stringObjectMap.get("itemid"));
                 ps.setString(2, (String)stringObjectMap.get("name"));
                 ps.setInt(3, Math.abs((int)stringObjectMap.get("itemid")/100000));
+                ps.setInt(4, (int)stringObjectMap.get("level"));
                 ps.executeUpdate();
                 ps.close();
             }
@@ -2787,7 +2788,7 @@ public class Start
      *   `questid` int(11) NOT NULL DEFAULT '0',
      *   `chance` int(11) NOT NULL DEFAULT '0',
      */
-    public static synchronized void setdropsTwo() {
+    public static  void setdropsTwo() {
         dropsTwo.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2864,7 +2865,7 @@ public class Start
      *
      * 获取巅峰等级信息
      */
-    public static synchronized  void getLtPeakLevel() {
+    public static  void getLtPeakLevel() {
         ltPeakLevelMap.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2946,7 +2947,7 @@ public class Start
      *
      * 获取抽奖物品配置
      */
-    public static synchronized  void setLtMxdPrize() {
+    public static  void setLtMxdPrize() {
         ltMxdPrize.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -2978,7 +2979,7 @@ public class Start
     /**
      * 获取战令列表
      */
-    public static synchronized  void setLtZlTask() {
+    public static  void setLtZlTask() {
         ltZlTask.clear();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -3009,7 +3010,7 @@ public class Start
     /**
      * 查账户是否存在
      */
-    public static  synchronized boolean gatEwayAccountExists(String account) {
+    public static boolean gatEwayAccountExists(String account) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try (Connection  con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
@@ -3030,7 +3031,7 @@ public class Start
     /**
      * 添加QQ账户
      */
-    public static synchronized  void addEwayAccount(String account) {
+    public static  void addEwayAccount(String account) {
         PreparedStatement ps = null;
         try (Connection  con = (Connection) DBConPool.getInstance().getDataSource().getConnection()){
             ps = con.prepareStatement("INSERT INTO qq_membersinfo (qq) VALUES (?)");
@@ -3045,7 +3046,7 @@ public class Start
     /**
      * 全局爆率
      */
-    public static synchronized  void setLtSkillWucdTable() {
+    public static  void setLtSkillWucdTable() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -3063,7 +3064,7 @@ public class Start
             System.out.println("无CD技能加载异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void GetFuMoInfo() {
+    public static  void GetFuMoInfo() {
         FuMoInfoMap.clear();
         //服务端输出信息.println_out("○ 开始加载镶嵌装备效果");
 
@@ -3145,7 +3146,7 @@ public class Start
 
     }
 
-    public static synchronized  void loadPotentialMap() {
+    public static  void loadPotentialMap() {
         potentialListMap.clear();
         //服务端输出信息.println_out("○ 开始加载潜能列表");
 
@@ -3227,7 +3228,7 @@ public class Start
 
     }
 
-    public static synchronized  void GetfiveTurn() {
+    public static  void GetfiveTurn() {
      List<FiveTurn> list = new ArrayList<>();
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -3252,7 +3253,7 @@ public class Start
         }
     }
 
-    public static synchronized  void saveAttackInfo(AttackInfo info) {
+    public static  void saveAttackInfo(AttackInfo info) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
@@ -3284,7 +3285,7 @@ public class Start
         }
     }
     // 查询所有 LtMonsterSkill 记录
-    public synchronized static void findLtMonsterSkill() {
+    public static void findLtMonsterSkill() {
         List<LtMonsterSkill> skillList = new ArrayList<>();
         String sql = "SELECT id, type, monsterid, skillid, level, attackid ,skillcd,deadly_attack FROM lt_monster_skill";
 
@@ -3316,7 +3317,7 @@ public class Start
 
     }
 
-    public static synchronized  void getAttackInfo( ) {
+    public static  void getAttackInfo( ) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<AttackInfo> list = new ArrayList<>();
@@ -3350,7 +3351,7 @@ public class Start
             System.out.println("技能封包保存异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void getLtMobSpawnBoss( ) {
+    public static  void getLtMobSpawnBoss( ) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<LtMobSpawnBoss> list = new ArrayList<>();
@@ -3381,7 +3382,7 @@ public class Start
             System.out.println("读取野外BOSS刷新异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void getLtCopyMap( ) {
+    public static  void getLtCopyMap( ) {
         PreparedStatement ps = null;
         ltCopyList.clear();
         ResultSet rs = null;
@@ -3408,7 +3409,7 @@ public class Start
             System.out.println("读取野外BOSS刷新异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void getLtMonsterPosition( ) {
+    public static  void getLtMonsterPosition( ) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<LtMonsterPosition> list = new ArrayList<>();
@@ -3436,7 +3437,7 @@ public class Start
             System.out.println("读取怪物刷新异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void setLtMonsterPosition(List<LtMonsterPosition> list) {
+    public static  void setLtMonsterPosition(List<LtMonsterPosition> list) {
         try {
             PreparedStatement ps = null;
         Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
@@ -3456,7 +3457,7 @@ public class Start
             System.out.println("读取怪物刷新异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void setLtMonsterPositionAll(List<LtMonsterPosition> list) {
+    public static  void setLtMonsterPositionAll(List<LtMonsterPosition> list) {
         try {
             PreparedStatement ps = null;
         Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
@@ -3479,7 +3480,7 @@ public class Start
         }
     }
 
-    public static synchronized  void getASkill() {
+    public static  void getASkill() {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<ASkill> list = new ArrayList<>();
@@ -3516,7 +3517,7 @@ public class Start
             System.out.println("读取怪物刷新异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void setASkill(List<ASkill> list) {
+    public static  void setASkill(List<ASkill> list) {
         try {
             PreparedStatement ps = null;
         Connection con = (Connection) DBConPool.getInstance().getDataSource().getConnection();
@@ -3543,7 +3544,7 @@ public class Start
             System.out.println("技能插入异常：" + ex.getMessage());
         }
     }
-    public static synchronized  void getLtCopyMapMonster( ) {
+    public static  void getLtCopyMapMonster( ) {
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<LtCopyMapMonster> list = new ArrayList<>();
@@ -3704,7 +3705,7 @@ public class Start
             DBConPool.cleanUP(rs, ps, con);
         }
     }
-    public static synchronized void giveDarkMapList(int mapId,String eventStr,int channelId) {
+    public static  void giveDarkMapList(int mapId,String eventStr,int channelId) {
         Map<String, List<Integer>> stringListMap = Start.darkMap.get(channelId);
         List<Integer> integers = stringListMap.get(eventStr);
         if (ListUtil.isNotEmpty(integers)){
@@ -3716,7 +3717,7 @@ public class Start
             Start.darkMap.get(channelId).put(eventStr,list);
         }
     }
-    public static synchronized void deleteDarkMapList(String eventStr,int channelId) {
+    public static  void deleteDarkMapList(String eventStr,int channelId) {
         Start.darkMap.get(channelId).put(eventStr,new ArrayList<>());
     }
     private static void 清空弹夹() {
@@ -3882,83 +3883,6 @@ public class Start
         }
     }
 
-    public static void 读取技个人信息设置() {
-        try {
-            Connection con = DBConPool.getConnection();
-            Throwable var1 = null;
-
-            try {
-                PreparedStatement ps = con.prepareStatement("SELECT name, val FROM jiezoudashi");
-                Throwable var3 = null;
-
-                try {
-                    ResultSet rs = ps.executeQuery();
-                    Throwable var5 = null;
-
-                    try {
-                        while(rs.next()) {
-                            String name = rs.getString("name");
-                            int val = rs.getInt("val");
-                            个人信息设置.put(name, val);
-                        }
-                    } catch (Throwable var53) {
-                        var5 = var53;
-                        throw var53;
-                    } finally {
-                        if (rs != null) {
-                            if (var5 != null) {
-                                try {
-                                    rs.close();
-                                } catch (Throwable var52) {
-                                    var5.addSuppressed(var52);
-                                }
-                            } else {
-                                rs.close();
-                            }
-                        }
-
-                    }
-
-                    DBConPool.close(ps);
-                } catch (Throwable var55) {
-                    var3 = var55;
-                    throw var55;
-                } finally {
-                    if (ps != null) {
-                        if (var3 != null) {
-                            try {
-                                ps.close();
-                            } catch (Throwable var51) {
-                                var3.addSuppressed(var51);
-                            }
-                        } else {
-                            ps.close();
-                        }
-                    }
-
-                }
-            } catch (Throwable var57) {
-                var1 = var57;
-                throw var57;
-            } finally {
-                if (con != null) {
-                    if (var1 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var50) {
-                            var1.addSuppressed(var50);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
-
-            }
-        } catch (SQLException var59) {
-            //服务端输出信息.println_err("读取个人信息设置错误：" + var59.getMessage());
-        }
-
-    }
 
     public static void checkCPU(int seconds) {
         //服务端输出信息.println_out("【读取中】 加载CPU优化线程:::");
@@ -5021,190 +4945,6 @@ public class Start
         }
 
     }
-    public static void 重置仙人数据() {
-        int ID = 0;
-
-        try {
-            Connection con = DBConPool.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT `id` FROM characters  ORDER BY `id` DESC LIMIT 1");
-            ResultSet rs = ps.executeQuery();
-            Throwable var4 = null;
-
-            try {
-                if (rs.next()) {
-                    String SN = rs.getString("id");
-                    int sns = Integer.parseInt(SN);
-                    ++sns;
-                    ID = sns;
-                }
-            } catch (Throwable var15) {
-                var4 = var15;
-                throw var15;
-            } finally {
-                if (rs != null) {
-                    if (var4 != null) {
-                        try {
-                            rs.close();
-                        } catch (Throwable var14) {
-                            var4.addSuppressed(var14);
-                        }
-                    } else {
-                        rs.close();
-                    }
-                }
-
-            }
-
-            DBConPool.close(ps);
-        } catch (SQLException var17) {
-        }
-
-        for(int i = 0; i <= ID; ++i) {
-            if (个人信息设置.get("仙人模式" + i + "") == null) {
-                学习仙人模式("仙人模式" + i, 1);
-            }
-
-            if (个人信息设置.get("BUFF增益" + i + "") == null) {
-                学习仙人模式("BUFF增益" + i, 1);
-            }
-
-            if (个人信息设置.get("硬化皮肤" + i + "") == null) {
-                学习仙人模式("硬化皮肤" + i, 1);
-            }
-
-            if (个人信息设置.get("聪明睿智" + i + "") == null) {
-                学习仙人模式("聪明睿智" + i, 1);
-            }
-
-            if (个人信息设置.get("物理攻击力" + i + "") == null) {
-                学习仙人模式("物理攻击力" + i, 1);
-            }
-
-            if (个人信息设置.get("魔法攻击力" + i + "") == null) {
-                学习仙人模式("魔法攻击力" + i, 1);
-            }
-
-            if (个人信息设置.get("物理狂暴力" + i + "") == null) {
-                学习仙人模式("物理狂暴力" + i, 1);
-            }
-
-            if (个人信息设置.get("魔法狂暴力" + i + "") == null) {
-                学习仙人模式("魔法狂暴力" + i, 1);
-            }
-
-            if (个人信息设置.get("物理吸收力" + i + "") == null) {
-                学习仙人模式("物理吸收力" + i, 1);
-            }
-
-            if (个人信息设置.get("魔法吸收力" + i + "") == null) {
-                学习仙人模式("魔法吸收力" + i, 1);
-            }
-        }
-
-        读取技个人信息设置();
-    }
-
-    public static void 学习仙人模式(String a, int b) {
-        int ID = 0;
-
-        Connection con;
-        Throwable var6;
-        try {
-            con = DBConPool.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT `id` FROM jiezoudashi  ORDER BY `id` DESC LIMIT 1");
-            ResultSet rs = ps.executeQuery();
-            var6 = null;
-
-            try {
-                if (rs.next()) {
-                    String SN = rs.getString("id");
-                    int sns = Integer.parseInt(SN);
-                    ++sns;
-                    ID = sns;
-                }
-            } catch (Throwable var62) {
-                var6 = var62;
-                throw var62;
-            } finally {
-                if (rs != null) {
-                    if (var6 != null) {
-                        try {
-                            rs.close();
-                        } catch (Throwable var57) {
-                            var6.addSuppressed(var57);
-                        }
-                    } else {
-                        rs.close();
-                    }
-                }
-
-            }
-
-            DBConPool.close(ps);
-        } catch (SQLException var64) {
-        }
-
-        try {
-            con = DBConPool.getConnection();
-            Throwable var65 = null;
-
-            try {
-                PreparedStatement ps = con.prepareStatement("INSERT INTO jiezoudashi ( id,name,Val ) VALUES ( ? ,?,?)");
-                var6 = null;
-
-                try {
-                    ps.setInt(1, ID);
-                    ps.setString(2, a);
-                    ps.setInt(3, b);
-                    ps.executeUpdate();
-                    DBConPool.close(ps);
-                    ////服务端输出信息.println_err("[服务端]" + FileoutputUtil.CurrentReadable_Time() + " : 数据补充 " + a);
-                } catch (Throwable var56) {
-                    var6 = var56;
-                    throw var56;
-                } finally {
-                    if (ps != null) {
-                        if (var6 != null) {
-                            try {
-                                ps.close();
-                            } catch (Throwable var55) {
-                                var6.addSuppressed(var55);
-                            }
-                        } else {
-                            ps.close();
-                        }
-                    }
-
-                }
-            } catch (Throwable var59) {
-                var65 = var59;
-                throw var59;
-            } finally {
-                if (con != null) {
-                    if (var65 != null) {
-                        try {
-                            con.close();
-                        } catch (Throwable var54) {
-                            var65.addSuppressed(var54);
-                        }
-                    } else {
-                        con.close();
-                    }
-                }
-
-            }
-        } catch (SQLException var61) {
-        }
-
-    }
-
-
-
-
-
-
-
-
 
 
 

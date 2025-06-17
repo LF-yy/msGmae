@@ -190,6 +190,7 @@ public class MobSkill
         } else if ((Integer)LtMS.ConfigValuesMap.get("VIP无敌开关") > 0 && player.haveItem((Integer)LtMS.ConfigValuesMap.get("VIP无敌道具ID"))) {
             return;
         }
+
         try {
             MapleDisease disease = null;
             final Map<MonsterStatus, Integer> stats = new EnumMap<MonsterStatus, Integer>(MonsterStatus.class);

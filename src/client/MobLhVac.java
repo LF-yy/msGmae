@@ -33,7 +33,7 @@ public class MobLhVac extends Thread{
     public void run() {
         int rateByStone = 0;
         long lastTime = 0;
-        List<Integer> mobList = Collections.synchronizedList(new ArrayList<>());
+        List<Integer> mobList = new ArrayList<>();
         int userId = c.getPlayer().getId();
         final MapleMap mapleMap = ChannelServer.getInstance(c.getChannel()).getMapFactory().getMap(c.getPlayer().getMapId());
 

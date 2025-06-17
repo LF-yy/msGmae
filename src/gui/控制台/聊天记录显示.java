@@ -24,12 +24,6 @@ public class 聊天记录显示 extends JFrame {
         this.setIconImage(icon.getImage());
         this.setTitle("玩家聊天记录信息");
         this.initComponents();
-        PrintStream var10002 = System.out;
-//        SnailMS.getInstance();
-//        new GUIPrintStream(var10002, SnailMS.标准输出);
-//        var10002 = System.out;
-//        SnailMS.getInstance();
-//        new GUIPrintStream(var10002, SnailMS.错误输出);
     }
 
     public static final Start getInstance() {

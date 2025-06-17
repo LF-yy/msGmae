@@ -1155,8 +1155,8 @@ public class MapleMap {
                     if (curChar != null) {
                         curChar.setBossLog(mobid + "", 1, 1);
                         curChar.setBossLog(mobid + "", 0, 1);
-                        chr.setBossLog("击杀"+mobid + "", 1, 1);
-                        chr.setBossLog("击杀"+mobid + "", 0, 1);
+                        curChar.setBossLog("击杀"+mobid + "", 1, 1);
+                        curChar.setBossLog("击杀"+mobid + "", 0, 1);
                         curChar.打Boss数量++;
                         name.append(curChar.getName()).append(",");
                     }
@@ -2697,16 +2697,16 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
                 equip.setWatk(itemInfos.getWatk());
                 equip.setWdef(itemInfos.getWdef());
                 equip.setMdef(itemInfos.getMdef());
-                equip.setUpgradeSlots((byte) (itemInfos.getUpgradeSlots()+Randomizer.nextInt(5)));
+                equip.setUpgradeSlots((byte) (itemInfos.getUpgradeSlots()+Randomizer.nextInt(10)));
             }
             idrop = equip.copy();
             if (LtMS.ConfigValuesMap.get("暗黑破坏神之冒险之神") >= 1) {
-                String s = LtDiabloEquipments.assembleEntry(MapleItemInformationProvider.getInstance().getReqLevel( idrop.getItemId()));
+                String s = LtDiabloEquipments.assembleEntry(MapleItemInformationProvider.getInstance().getReqLevel( idrop.getItemId()),chr);
                 if (!StringUtils.isEmpty(s)) {
                     idrop.setOwner(s);
                     if (Start.sendMsgList.contains(s)) {
                         Broadcast.broadcastMessage(MaplePacketCreator.getGachaponMega("[稀有词条]", " : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！", (IItem) idrop, (byte) 1, chr.getClient().getChannel()));
-                        //Bot.sendGroupMessage("[稀有词条] : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！");
+                        Bot.sendGroupMessage("[稀有词条] : 恭喜 [" + chr.getName() + "] 获得了稀有词条["+s+"]！");
                     }
                 }
             }
@@ -2731,7 +2731,7 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
         this.activateItemReactors(mdrop, chr.getClient());
     }
 
-    private static boolean extracted(int idrop, MapleCharacter chr,int quantity) {
+    private  boolean extracted(int idrop, MapleCharacter chr,int quantity) {
         int zudui = 0;
         if (chr.getParty() != null) {
             zudui = chr.getParty().getMembers().size();
@@ -2776,7 +2776,7 @@ public void sendSkill(MapleCharacter chr,final MapleStatEffect effect){
         return false;
     }
 
-    private static void 宠物吸物吸金(MapleCharacter owner, MapleMapItem mdrop) {
+    private  void 宠物吸物吸金(MapleCharacter owner, MapleMapItem mdrop) {
         boolean 吸物状态 = false;
         int 宠物数据库ID = 0;
         if (owner.getId() == mdrop.character_ownerid) {

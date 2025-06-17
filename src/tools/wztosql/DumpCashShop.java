@@ -122,9 +122,6 @@ public class DumpCashShop
                     if (MapleItemInformationProvider.getInstance().getInventoryTypeCS(itemId) == MapleInventoryType.EQUIP && period > 0) {
                         check = true;
                     }
-                    if (check) {
-                        System.out.println(MapleItemInformationProvider.getInstance().getName(itemId));
-                    }
                     else {
                         final PreparedStatement ps = con.prepareStatement("INSERT INTO cashshop_modified_items (serial, showup,itemid,priority,period,gender,count,meso,discount_price,mark, unk_1, unk_2, unk_3, name) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         ps.setInt(1, sn);

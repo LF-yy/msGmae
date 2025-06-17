@@ -316,14 +316,14 @@ public class 活动魔族攻城
                     ps.execute();
                 }
                 catch (SQLException e) {
-                    System.out.println("xxxxxxxx:" + (Object)e);
+                    System.out.println(":" + (Object)e);
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     }
                     catch (SQLException e2) {
-                        System.out.println("xxxxxxxxzzzzzzz:" + (Object)e2);
+                        System.out.println(":" + (Object)e2);
                     }
                 }
                 finally {
@@ -333,7 +333,7 @@ public class 活动魔族攻城
                         }
                     }
                     catch (SQLException e2) {
-                        System.out.println("xxxxxxxxzzzzzzz:" + (Object)e2);
+                        System.out.println(":" + (Object)e2);
                     }
                 }
             }
