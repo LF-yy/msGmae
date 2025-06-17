@@ -219,7 +219,7 @@ public class PlayerStats implements Serializable
     public final boolean setHp(final int newhp) {
         return this.setHp(newhp, false);
     }
-    public final synchronized void setHphd(final int newhp) {
+    public final  void setHphd(final int newhp) {
         int thp = newhp;
         if (thp < 0) {
             thp = 0;

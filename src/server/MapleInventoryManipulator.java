@@ -1956,6 +1956,11 @@ public class MapleInventoryManipulator
                 c.sendPacket(MaplePacketCreator.enableActions());
                 return false;
             }
+        if(quantity>LtMS.ConfigValuesMap.get("丢出物品数量限制")){
+            c.getPlayer().dropMessage(1, "丢弃物品数量不能超过"+LtMS.ConfigValuesMap.get("丢出物品数量限制")+"个。");
+            c.sendPacket(MaplePacketCreator.enableActions());
+            return false;
+        }
         final int 丢出物品开关 = (int)Integer.valueOf(LtMS.ConfigValuesMap.get((Object)"丢出物品开关"));
         if (丢出物品开关 == 0) {
             c.getPlayer().dropMessage(1, "管理员从后台关闭了物品丢出功能。");

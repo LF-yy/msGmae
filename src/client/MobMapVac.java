@@ -38,7 +38,7 @@ public class MobMapVac extends Thread{
 
 
     @Override
-    public synchronized void run() {
+    public  void run() {
         try {
             long l = System.currentTimeMillis();
             long time = 0L;
@@ -46,7 +46,6 @@ public class MobMapVac extends Thread{
             while (!Thread.interrupted()) {
                 if (map.getCharacters().size() == 0) {
                     map.killAllMonsters(true);
-                    //System.out.println("没有角色");
                     break;
                 }
 
@@ -96,7 +95,7 @@ public class MobMapVac extends Thread{
                                         shanghai  = Math.ceil(l2) +"";
                                     }
                                     World.Broadcast.broadcastMessage(MaplePacketCreator.serverNotice(0, adress + ": " + c.getPlayer().getName() + " " + value + mobName + ",用时" + (time / 1000) + "秒==>秒伤:"+shanghai));
-                            break;
+                                    break;
                         }
                     }
                 }else{

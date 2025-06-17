@@ -30,6 +30,7 @@ import java.util.HashMap;
 
 import abc.离线人偶;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import server.life.PlayerNPC;
 import server.shops.MaplePlayerShop;
@@ -127,9 +128,9 @@ public class ChannelServer implements Serializable
         this.finishedShutdown = false;
         this.MegaphoneMuteState = false;
         this.mapleSquads = new ConcurrentEnumMap<MapleSquadType, MapleSquad>(MapleSquadType.class);
-        this.merchants = new HashMap<Integer, HiredMerchant>();
-        this.playershops = new HashMap<Integer, MaplePlayerShop>();
-        this.playerNPCs = new HashMap<Integer, PlayerNPC>();
+        this.merchants = new ConcurrentHashMap<>();
+        this.playershops = new ConcurrentHashMap<Integer, MaplePlayerShop>();
+        this.playerNPCs = new ConcurrentHashMap<Integer, PlayerNPC>();
         this.merchLock = new ReentrantReadWriteLock();
         this.squadLock = new ReentrantReadWriteLock();
         this.eventmap = -1;

@@ -411,6 +411,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         //怪物必中,无MISS
         if(damage<=0){
             damage =1;
+           // chr.dropMessage(5, "必中"+damage+"伤害");
         }
         int oid = 0;
         int monsteridfrom = 0;
@@ -427,6 +428,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             return;
         }
         if (chr.isGM() && chr.isInvincible()) {
+            chr.dropMessage(5, "无敌");
             return;
         }
         boolean flag = false;
@@ -440,11 +442,9 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             oid = slea.readInt();
             attacker = chr.getMap().getMonsterByOid(oid);
             direction = slea.readByte();
-            if (attacker == null) {
-                return;
-            }
-            //怪物攻击触发技能 改造
-            final long now = System.currentTimeMillis();
+            if (attacker != null) {
+                //怪物攻击触发技能 改造
+                final long now = System.currentTimeMillis();
 
                 if (type != -1 && monsteridfrom != 0 && attacker.getStats().isBoss()) {
                     List<LtMonsterSkill> ltMonsterSkills = Start.ltMonsterSkillAttackSkill.get(monsteridfrom);
@@ -456,7 +456,7 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                             if (skill != null && damage > 0) {
                                 final long ls = c.getPlayer().getLastSkillUsed(skill.getSkillId());
                                 if (ls == 0L || (now - ls > collect.get(0).getSkillcd())) {
-                                    if (collect.get(0).getDeadlyAttack()!=null && collect.get(0).getDeadlyAttack()) {
+                                    if (collect.get(0).getDeadlyAttack() != null && collect.get(0).getDeadlyAttack()) {
                                         isDeadlyAttack = true;
                                         mpattack = stats.getMp() - 1;
                                     }
@@ -467,30 +467,30 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                             attacker.setMp(attacker.getMp() - 100);
                         }
                     } else {
-                        if(LtMS.ConfigValuesMap.get("怪物攻击触发技能") >0) {
-                        final MobAttackInfo attackInfo = MobAttackInfoFactory.getInstance().getMobAttackInfo(attacker, (int) type);
-                        if (attackInfo != null) {
-                            if (attackInfo.isDeadlyAttack()) {
-                                isDeadlyAttack = true;
-                                mpattack = stats.getMp() - 1;
-                            } else {
-                                mpattack += attackInfo.getMpBurn();
+                        if (LtMS.ConfigValuesMap.get("怪物攻击触发技能") > 0) {
+                            final MobAttackInfo attackInfo = MobAttackInfoFactory.getInstance().getMobAttackInfo(attacker, (int) type);
+                            if (attackInfo != null) {
+                                if (attackInfo.isDeadlyAttack()) {
+                                    isDeadlyAttack = true;
+                                    mpattack = stats.getMp() - 1;
+                                } else {
+                                    mpattack += attackInfo.getMpBurn();
+                                }
+                                MobSkill skill = MobSkillFactory.getMobSkill(attackInfo.getDiseaseSkill(), attackInfo.getDiseaseLevel());
+                                if (skill != null) {
+                                    final long ls = c.getPlayer().getLastSkillUsed(skill.getSkillId());
+                                    if ((damage > 0) && (now - ls > 60000L)) {
+                                        c.getPlayer().setUsedSkills(skill.getSkillId(), now, 60000L);
+                                        skill.applyEffect(chr, attacker, false);
+                                    }
+                                }
+                                attacker.setMp(attacker.getMp() - attackInfo.getMpCon());
                             }
-                            MobSkill skill = MobSkillFactory.getMobSkill(attackInfo.getDiseaseSkill(), attackInfo.getDiseaseLevel());
-                            if (skill != null) {
-                            final long ls = c.getPlayer().getLastSkillUsed(skill.getSkillId());
-                            if ( (damage > 0) && (now - ls > 60000L)) {
-                                c.getPlayer().setUsedSkills(skill.getSkillId(), now, 60000L);
-                                skill.applyEffect(chr, attacker, false);
-                            }
-                        }
-                            attacker.setMp(attacker.getMp() - attackInfo.getMpCon());
                         }
                     }
                 }
             }
         }
-
 
 
         if (damage == -1) {
@@ -535,7 +535,8 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
                 damage = (int) (damage + Start.ltMonsterCustomizeMap.get(monsteridfrom));
             }
             if(chr.isOpenEnableDarkMode()){
-                damage *= chr.裂隙层数/100.00;
+                damage += damage*(chr.裂隙层数/100.00);
+                //chr.dropMessage(5, "裂隙层数伤害加成后"+damage+"伤害");
             }
             if( damage<0 ){
                 damage = Integer.MAX_VALUE;
@@ -1073,6 +1074,9 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         if(chr.getUserASkill()!=null && chr.getUserASkill().size()>0 && Objects.nonNull(effect) && chr.getUserASkill().get(effect.getSourceId())!=null){
             DamageParse.计算伤害(chr,effect,chr.getUserASkill().get(effect.getSourceId()),attack);
         }
+
+        //伤害计算
+        DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.closeRangeAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, energy, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk, attack.charge), chr.getPosition());
         if (LtMS.ConfigValuesMap.get("攻击日志") >0) {
             try {
@@ -1080,8 +1084,6 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             } catch (Exception e) {
             }
         }
-        //伤害计算
-        DamageParse.applyAttack(attack, skill, c.getPlayer(), attackCount, maxdamage, effect, mirror ? AttackType.NON_RANGED_WITH_MIRROR : AttackType.NON_RANGED);
         //触发超级技能特效技能
         List<SuperSkills> superSkills = Start.superSkillsMap.get(chr.getId());
 //        List<SuperSkills> diabloEquipmentsSkillslIST = Start.diabloEquipmentsSkillsMap.get(chr.getId());
@@ -1351,6 +1353,12 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         if(chr.getUserASkill()!=null && chr.getUserASkill().size()>0 && Objects.nonNull(effect) && chr.getUserASkill().get(effect.getSourceId())!=null){
             DamageParse.计算伤害(chr,effect,chr.getUserASkill().get(effect.getSourceId()),attack);
         }
+
+//        System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
+//        System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
+//        System.out.println("段数:"+ effect.getAttackCount());
+//        System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
+        DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.rangedAttack(chr.getId(), attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, visProjectile, attack.allDamage, attack.position, (int)chr.getLevel(), chr.getStat().passive_mastery(), attack.unk), chr.getPosition());
         if (LtMS.ConfigValuesMap.get("攻击日志") >0) {
             try {
@@ -1358,11 +1366,6 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             } catch (Exception e) {
             }
         }
-//        System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
-//        System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
-//        System.out.println("段数:"+ effect.getAttackCount());
-//        System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
-        DamageParse.applyAttack(attack, skill, chr, bulletCount, basedamage, effect, (ShadowPartner != null) ? AttackType.RANGED_WITH_SHADOWPARTNER : AttackType.RANGED);
         //触发特效技能
         List<SuperSkills> superSkills = Start.superSkillsMap.get(chr.getId());
         if (ListUtil.isNotEmpty(c.getPlayer().triggeredEquipmentsList) && skill !=null) {
@@ -1486,6 +1489,12 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             });
             DamageParse.计算伤害(chr,effect,chr.getUserASkill().get(effect.getSourceId()),attack);
         }
+
+//        System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
+//        System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
+//        System.out.println("段数:"+ effect.getAttackCount());
+//        System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
+        DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
         chr.getMap().broadcastMessage(chr, MaplePacketCreator.magicAttack(chr.getId(), (int)attack.tbyte, attack.skill, skillLevel, attack.display, attack.animation, attack.speed, attack.allDamage, attack.charge, (int)chr.getLevel(), attack.unk), chr.getPosition());
         if (LtMS.ConfigValuesMap.get("攻击日志") >0) {
             try {
@@ -1493,11 +1502,6 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
             } catch (Exception e) {
             }
         }
-//        System.out.println("最大伤害:"+chr.getClient().getPlayer().getStat().damage);
-//        System.out.println("技能百分比:"+((double)effect.getDamage() / 100.0));
-//        System.out.println("段数:"+ effect.getAttackCount());
-//        System.out.println("预计伤害:"+(double)chr.getClient().getPlayer().getStat().damage*((double)effect.getDamage() / 100.0)* effect.getAttackCount());
-        DamageParse.applyAttackMagic(attack, skill, c.getPlayer(), effect);
         //触发特效技能
         if (ListUtil.isNotEmpty(c.getPlayer().triggeredEquipmentsList) && skill !=null) {
             for (LtDiabloEquipments ltDiabloEquipments : c.getPlayer().triggeredEquipmentsList) {
@@ -1761,10 +1765,10 @@ public static  void UseChair(int itemId, MapleClient c, MapleCharacter chr) {
         if (chr == null) {
             return;
         }
-//        if(LtMS.ConfigValuesMap.get("过图存档开关")>0 && System.currentTimeMillis() - chr.getSaveTime() > LtMS.ConfigValuesMap.get("过图存档时间间隔")){
-//            chr.saveToDB(false, false);
-//            chr.setSaveTime(System.currentTimeMillis());
-//        }
+        if(LtMS.ConfigValuesMap.get("过图存档开关")>0 && System.currentTimeMillis() - chr.getSaveTime() > LtMS.ConfigValuesMap.get("过图存档时间间隔")){
+            chr.saveToDB(false, false);
+            chr.setSaveTime(System.currentTimeMillis());
+        }
         if (slea.available() != 0L) {
             slea.readByte();
             final int targetid = slea.readInt();

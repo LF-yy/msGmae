@@ -55,8 +55,9 @@ public class merchant_main
         return this.eq_list;
     }
     
-    public synchronized void save_data() {
+    public  void save_data() {
         if (this.isClose()) {
+            System.err.println("关闭失败:线程阻塞");
             return;
         }
         this.setClose(true);
@@ -129,7 +130,7 @@ public class merchant_main
         }
     }
     
-    public synchronized void load_data() {
+    public  void load_data() {
         this.setClose(true);
         try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
             final PreparedStatement ps = con.prepareStatement("select * from merchant");
@@ -162,7 +163,7 @@ public class merchant_main
         this.close = close;
     }
     
-    public synchronized List<Integer> getOnlygoods_list() {
+    public  List<Integer> getOnlygoods_list() {
         final List<goods_model> w_list = this.goods_list;
         final ArrayList only_list = new ArrayList();
         for (int i = 0; i < w_list.size(); ++i) {
@@ -189,7 +190,7 @@ public class merchant_main
         return (List<Integer>)only_list;
     }
     
-    public synchronized List<Integer> getOnlyeq_list() {
+    public  List<Integer> getOnlyeq_list() {
         final List<eqs_model> w_list = this.eq_list;
         final ArrayList only_list = new ArrayList();
         for (int i = 0; i < w_list.size(); ++i) {

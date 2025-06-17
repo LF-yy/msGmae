@@ -153,6 +153,7 @@ public class MapleServerHandler extends ChannelInboundHandlerAdapter
             final MapleClient client = (MapleClient)ctx.channel().attr((AttributeKey)MapleClient.CLIENT_KEY).get();
             if (client != null) {
                 try {
+                    System.out.println("斷開连接：" + client.getAccountName());
                     client.disconnect(true, this.channel == -10);
                     if (this.channel == 0) {
                         client.setCanloginpw(false);
@@ -898,6 +899,7 @@ public void channelRead(final ChannelHandlerContext ctx, final Object message) {
                 HiredMerchantHandler.UseHiredMerchant(slea, c);
                 break;
             }
+            //取回雇佣商店物品
             case MERCH_ITEM_STORE: {
                 HiredMerchantHandler.MerchantItemStore(slea, c);
             }

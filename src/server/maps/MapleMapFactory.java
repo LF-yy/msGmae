@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import bean.LtMobSpawnBoss;
@@ -40,8 +41,8 @@ public class MapleMapFactory
     private int channel;
     private int 怪物刷新时间;
     private static boolean changed;
-    private static Map<Integer, ArrayList<Integer>> mobInMapId = new HashMap();
-    private static Map<Integer, String> mapnames = new HashMap();
+    private static Map<Integer, ArrayList<Integer>> mobInMapId = new ConcurrentHashMap();
+    private static Map<Integer, String> mapnames = new ConcurrentHashMap();
 
     public Map<Integer, MapleMap> getMaps() {
         return maps;
@@ -57,10 +58,10 @@ public class MapleMapFactory
         return mapRealName;
     }
     public MapleMapFactory() {
-        this.maps = new HashMap<Integer, MapleMap>();
-        this.instanceMap = new HashMap<Integer, MapleMap>();
+        this.maps = new ConcurrentHashMap<>();
+        this.instanceMap = new ConcurrentHashMap<Integer, MapleMap>();
         this.lock = new ReentrantLock(true);
-        this.DeStorymaps = new HashMap<Integer, Integer>();
+        this.DeStorymaps = new ConcurrentHashMap<Integer, Integer>();
         this.怪物刷新时间 = 1;
     }
     public static boolean addMobInMapId(int mobId, int mapId) {

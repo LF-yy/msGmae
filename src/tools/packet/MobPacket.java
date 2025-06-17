@@ -334,14 +334,14 @@ public class MobPacket
 //     if (Objects.isNull(userAttraction)) {
 //          userAttraction = NPCConversationManager.getAttractLhList(life.getMap().getChannel(), life.getMap().getId());
 //     }
-        if(ListUtil.isNotEmpty(Start.mobInfoMap.get(life.getId()))){
-            life.setHp(Start.mobInfoMap.get(life.getId()).get(0).getHp());
-            life.setMp(Start.mobInfoMap.get(life.getId()).get(0).getMp());
-            life.getStats().setHp(Start.mobInfoMap.get(life.getId()).get(0).getHp());
-            life.getStats().setMp(Start.mobInfoMap.get(life.getId()).get(0).getMp());
-            life.getStats().setLevel((short)Start.mobInfoMap.get(life.getId()).get(0).getLevel());
-            life.getStats().setBoss(Start.mobInfoMap.get(life.getId()).get(0).getBoss());
-        }
+//        if(ListUtil.isNotEmpty(Start.mobInfoMap.get(life.getId()))){
+//            life.setHp(Start.mobInfoMap.get(life.getId()).get(0).getHp());
+//            life.setMp(Start.mobInfoMap.get(life.getId()).get(0).getMp());
+//            life.getStats().setHp(Start.mobInfoMap.get(life.getId()).get(0).getHp());
+//            life.getStats().setMp(Start.mobInfoMap.get(life.getId()).get(0).getMp());
+//            life.getStats().setLevel((short)Start.mobInfoMap.get(life.getId()).get(0).getLevel());
+//            life.getStats().setBoss(Start.mobInfoMap.get(life.getId()).get(0).getBoss());
+//        }
 
 
 

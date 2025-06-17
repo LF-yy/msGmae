@@ -463,14 +463,14 @@ public class 商店管理控制台 extends javax.swing.JFrame {
                     ps.setInt(3, ret);
                     ps.execute();
                 } catch (SQLException e) {
-                    System.out.println("xxxxxxxx:" + e);
+                    System.out.println(":" + e);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException e) {
-                        System.out.println("xxxxxxxxzzzzzzz:" + e);
+                        System.out.println(":" + e);
                     }
                 }
             }
@@ -543,14 +543,14 @@ public class 商店管理控制台 extends javax.swing.JFrame {
                     ps.setInt(2, ret);
                     ps.execute();
                 } catch (SQLException e) {
-                    System.out.println("xxxxxxxx:" + e);
+                    System.out.println(":" + e);
                 } finally {
                     try {
                         if (ps != null) {
                             ps.close();
                         }
                     } catch (SQLException e) {
-                        System.out.println("xxxxxxxxzzzzzzz:" + e);
+                        System.out.println(":" + e);
                     }
                 }
             }

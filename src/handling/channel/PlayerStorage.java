@@ -102,14 +102,26 @@ public class PlayerStorage
         }
     }
     
+    /**
+     * 从系统中注销玩家
+     *
+     * 该方法主要用于在玩家退出游戏或特定情况下，将玩家从内存中的映射中移除
+     * 以确保服务器的性能和资源得到优化使用此外，它还会调用另一个方法来强制注销玩家
+     *
+     * @param chr 要注销的玩家对象，包含玩家的相关信息，如ID和名称
+     */
     public void deregisterPlayer(MapleCharacter chr) {
+        // 锁定写锁以确保线程安全，在并发操作中防止数据不一致
         this.writeLock.lock();
         try {
             this.idToChar.remove((Object)Integer.valueOf(chr.getId()));
         }
         finally {
+            // 无论try块中发生什么，最终都会执行这步，释放写锁
+
             this.writeLock.unlock();
         }
+        // 调用Find类中的方法，强制注销玩家，这可能是为了处理特殊情况或确保玩家数据的一致性
         Find.forceDeregister(chr.getId(), chr.getName());
     }
     
@@ -130,6 +142,7 @@ public class PlayerStorage
     public void deregisterPlayer(final int idz, final String namez) {
         this.writeLock.lock();
         try {
+
             this.idToChar.remove((Object)Integer.valueOf(idz));
         }
         finally {
@@ -377,29 +390,51 @@ public class PlayerStorage
         }
     }
     
-    public void deregisterPendingClient(final int charid) {
-        this.writeLock3.lock();
-        try {
-            this.PendingClient.remove((Object)Integer.valueOf(charid));
-        }
-        finally {
-            this.writeLock3.unlock();
-        }
+    /**
+ * 取消注册等待中的客户端
+ * 此方法用于从等待客户端列表中移除指定的客户端ID，以取消其等待状态
+ * 使用写锁来确保线程安全，在并发环境下只有一个线程可以执行此操作
+ *
+ * @param charid 客户端ID，用于标识等待中的客户端
+ */
+public void deregisterPendingClient(final int charid) {
+    // 获取写锁，确保线程安全
+    this.writeLock3.lock();
+    try {
+        // 从等待客户端列表中移除指定的客户端ID
+        this.PendingClient.remove((Object)Integer.valueOf(charid));
     }
+    finally {
+        // 释放写锁，确保其他线程可以进行操作
+        this.writeLock3.unlock();
+    }
+}
+
     
-    public void deregisterPendingPlayerByAccountId(final int accountId) {
-        this.writeLock2.lock();
-        try {
-            for (final CharacterTransfer transfer : this.PendingCharacter.values()) {
-                if (transfer.accountid == accountId) {
-                    this.PendingCharacter.remove((Object)Integer.valueOf(transfer.characterid));
-                }
+    /**
+ * 根据账号ID注销待处理的玩家
+ * 本方法主要用于在特定情况下，从待处理队列中移除属于特定账号的所有玩家角色
+ *
+ * @param accountId 账号ID，用于标识待注销的玩家所属的账号
+ */
+public void deregisterPendingPlayerByAccountId(final int accountId) {
+    // 加锁以确保线程安全，在操作共享资源前获取写锁
+    this.writeLock2.lock();
+    try {
+        // 遍历所有待处理的角色，寻找与给定账号ID匹配的角色
+        for (final CharacterTransfer transfer : this.PendingCharacter.values()) {
+            // 如果找到匹配的账号ID，从待处理队列中移除对应角色
+            if (transfer.accountid == accountId) {
+                this.PendingCharacter.remove((Object)Integer.valueOf(transfer.characterid));
             }
         }
-        finally {
-            this.writeLock2.unlock();
-        }
     }
+    // 无论如何，最终都需要释放锁，以保证其他线程可以进行操作
+    finally {
+        this.writeLock2.unlock();
+    }
+}
+
     
     public class PersistingTask implements Runnable
     {

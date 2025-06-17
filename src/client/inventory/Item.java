@@ -22,6 +22,7 @@ public class Item implements IItem, Serializable
     private int price = 0;
     private String mxmxdDaKongFuMo = "";
     private String potentials = "";
+    private String UUID = "";
     public String getDaKongFuMo() {
         return this.mxmxdDaKongFuMo;
     }
@@ -72,6 +73,8 @@ public class Item implements IItem, Serializable
         ret.expiration = this.expiration;
         ret.giftFrom = this.giftFrom;
         ret.equipOnlyId = this.equipOnlyId;
+        ret.inventoryitemid = this.inventoryitemid;
+        ret.UUID = this.UUID;
         return ret;
     }
     
@@ -101,6 +104,8 @@ public class Item implements IItem, Serializable
         ret.giftFrom = this.giftFrom;
         ret.quantity = this.quantity;
         ret.equipOnlyId = this.equipOnlyId;
+        ret.inventoryitemid = this.inventoryitemid;
+        ret.UUID = this.UUID;
         return ret;
     }
     
@@ -233,7 +238,17 @@ public class Item implements IItem, Serializable
     public void setInventoryId(final long ui) {
         this.inventoryitemid = ui;
     }
-    
+
+    @Override
+    public void setUUID(String p0) {
+        this.UUID = p0;
+    }
+
+    @Override
+    public String getUUID() {
+        return this.UUID;
+    }
+
     @Override
     public final MaplePet getPet() {
         return this.pet;

@@ -8,7 +8,8 @@ public class MonsterDropEntry
     public int chance;
     public int Minimum;
     public int Maximum;
-    //final int dropperid,
+    public String droppername;
+    public String itemname;
     public MonsterDropEntry( final int itemId, final int chance, final int Minimum, final int Maximum, final short questid) {
         //this.dropperid = dropperid;
         this.itemId = itemId;
@@ -24,6 +25,16 @@ public class MonsterDropEntry
         this.chance = chance;
         this.Minimum = minimum;
         this.Maximum = maximum;
+    }
+    public MonsterDropEntry(short questid, int dropperid, int itemId, int chance, int minimum, int maximum,String droppername,String itemname) {
+        this.questid = questid;
+        this.dropperid = dropperid;
+        this.itemId = itemId;
+        this.chance = chance;
+        this.Minimum = minimum;
+        this.Maximum = maximum;
+        this.droppername = droppername;
+        this.itemname = itemname;
     }
   public int getDropperid() {
       return dropperid;

@@ -3,6 +3,7 @@ package handling.channel.handler;
 import java.util.Map;
 import java.util.ArrayList;
 
+import database.DatabaseConnection;
 import gui.LtMS;
 import tools.Pair;
 import java.util.List;
@@ -118,6 +119,7 @@ public class HiredMerchantHandler
                     if (pack == null) {
                         c.sendPacket(PlayerShopPacket.merchItemStore((byte)37));
                         c.getPlayer().setConversation(0);
+                        c.getPlayer().关闭雇佣商店 = 0L;
                     }
                     else if (c.getPlayer().getMeso() + pack.getMesos() >= Integer.MAX_VALUE) {
                         c.getPlayer().dropMessage(1, "您的钱領取過後將会過多，请先將多餘的钱放置仓库!");
@@ -168,7 +170,8 @@ public class HiredMerchantHandler
                 }
                 final MerchItemPackage pack2 = loadItemFromDatabase(c.getPlayer().getId(), c.getPlayer().getAccountID());
                 if (pack2 == null) {
-                    c.getPlayer().dropMessage(1, "未知的錯誤.");
+                    c.getPlayer().关闭雇佣商店 = 0L;
+                    c.getPlayer().dropMessage(1, "雇佣商店无物品.");
                     return;
                 }
                 if (!check(c.getPlayer(), pack2)) {
@@ -182,11 +185,15 @@ public class HiredMerchantHandler
                         MapleInventoryManipulator.addFromDrop(c, item3, true);
                         output2 = output2 + item3.getItemId() + "(" + (int)item3.getQuantity() + "), ";
                     }
+                    //移除记录
+
                     c.sendPacket(PlayerShopPacket.merchItem_Message((byte)29));
                     if (ServerConfig.LOG_MRECHANT) {
                         FileoutputUtil.logToFile("logs/Data/精灵商人領回.txt", FileoutputUtil.NowTime() + "账号角色名字:" + c.getAccountName() + " " + c.getPlayer().getName() + " 從精灵商人取回金币: " + pack2.getMesos() + " 和" + pack2.getItems().size() + "件物品[" + output2 + "]\r\n");
                     }
+
                     c.getPlayer().setConversation(0);
+                    c.getPlayer().关闭雇佣商店 = 0L;
                     break;
                 }
                 c.getPlayer().dropMessage(1, "發生未知的錯誤.");
@@ -194,6 +201,7 @@ public class HiredMerchantHandler
             }
             case 27: {
                 c.getPlayer().setConversation(0);
+                c.getPlayer().关闭雇佣商店 = 0L;
                 break;
             }
         }
@@ -249,13 +257,36 @@ public class HiredMerchantHandler
     }
     
     private static boolean deletePackage(final int charid, final int accid, final int packageid) {
-        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection();
-             final PreparedStatement ps = con.prepareStatement("DELETE from hiredmerch where characterid = ? OR accountid = ? OR packageid = ?")) {
+        try (Connection con = (Connection)DBConPool.getInstance().getDataSource().getConnection()) {
+             PreparedStatement ps = con.prepareStatement("DELETE from hiredmerch where characterid = ? OR accountid = ? OR packageid = ?");
             ps.setInt(1, charid);
             ps.setInt(2, accid);
             ps.setInt(3, packageid);
             ps.execute();
-            ItemLoader.HIRED_MERCHANT.saveItems(null, Integer.valueOf(packageid));
+            ps = con.prepareStatement("DELETE from hiredmerchantshop where charid = ? OR accid = ? ");
+            ps.setInt(1, charid);
+            ps.setInt(2, accid);
+            ps.execute();
+
+            try (PreparedStatement ps1 = con.prepareStatement("SELECT uuid FROM hiredmerchitems where characterid = ? OR accountid = ? ")) {
+                ps1.setInt(1, charid);
+                ps1.setInt(2, accid);
+                try (ResultSet rs = ps1.executeQuery()) {
+                    while (rs.next()) {
+                        ps = con.prepareStatement("DELETE from hiredmerchequipment where uuid = ? ");
+                        ps.setLong(1, rs.getLong("uuid"));
+                        ps.execute();
+                    }
+                }
+            } catch (SQLException ex) {
+                System.err.println("移除雇佣商店装备属性失败：" + ex.getMessage());
+            }
+            ps = con.prepareStatement("DELETE from hiredmerchitems where characterid = ? OR accountid = ? ");
+            ps.setInt(1, charid);
+            ps.setInt(2, accid);
+            ps.execute();
+            ps.close();
+           // ItemLoader.HIRED_MERCHANT.saveItems(null, Integer.valueOf(packageid));
             return true;
         }
         catch (SQLException e) {

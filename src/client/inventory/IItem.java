@@ -42,7 +42,9 @@ public interface IItem extends Comparable<IItem>
     void setEquipOnlyId(final long p0);
     
     void setInventoryId(final long p0);
-    
+    void setUUID( String p0);
+    String getUUID();
+
     void setPosition(final short p0);
     
     void setExpiration(final long p0);

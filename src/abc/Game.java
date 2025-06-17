@@ -468,10 +468,6 @@ public class Game
         }
     }
     
-    public static void 说明() {
-       // System.out.println("");
-    }
-    
     private static String 获取网络时间(final String webUrl) {
         try {
             final URL url = new URL(webUrl);

@@ -182,7 +182,7 @@ public class DatabaseConnection
         lock = new ReentrantLock();
         DatabaseConnection.propsInited = false;
         DatabaseConnection.dbProps = new Properties();
-        DatabaseConnection.connectionTimeOut = 300000L;
+        DatabaseConnection.connectionTimeOut = 100000L;
         CloseSQLConnections = new Runnable() {
             @Override
             public void run() {

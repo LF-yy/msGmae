@@ -35,12 +35,6 @@ public class 脚本更新器 extends JFrame {
         this.setIconImage(icon.getImage());
         this.setTitle("在线更新程序");
         this.initComponents();
-        PrintStream var10002 = System.out;
-//        SnailMS.getInstance();
-//        new GUIPrintStream(var10002, SnailMS.标准输出);
-        var10002 = System.out;
-//        SnailMS.getInstance();
-//        new GUIPrintStream(var10002, SnailMS.错误输出);
         this.显示.setText("正在准备更新程序...");
         (new Thread() {
             public void run() {

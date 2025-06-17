@@ -16,13 +16,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PackageOfEquipments {
     private static final PackageOfEquipments packageOfEquipments = new PackageOfEquipments();
-    private static List<MyPackage> packageList = Collections.synchronizedList(new ArrayList<>());
+//    private static List<MyPackage> packageList = Collections.synchronizedList(new ArrayList<>());
+    private static List<MyPackage> packageList = new CopyOnWriteArrayList<>();
 
     public PackageOfEquipments() {
     }
@@ -31,71 +32,6 @@ public class PackageOfEquipments {
         return packageOfEquipments;
     }
 
-//    public void loadFromDB() {
-//        try {
-//            Connection con = DBConPool.getConnection();
-//            Throwable var2 = null;
-//
-//            try {
-//                //服务端输出信息.println_out("【套装系统】开始从数据库读取套装信息...");
-//                PreparedStatement ps = con.prepareStatement("SELECT * FROM snail_package_equipments");
-//                ResultSet rs = ps.executeQuery();
-//                int count = 0;
-//                ArrayList<MyPackage> packageList0 = new ArrayList<>();
-//
-//                while(true) {
-//                    String itemString0;
-//                    do {
-//                        do {
-//                            if (!rs.next()) {
-//                                packageList.clear();
-//                                packageList = packageList0;
-//                                //服务端输出信息.println_out("【套装系统】读取完毕，共读取" + count + "组套装。");
-//                                return;
-//                            }
-//
-//                            itemString0 = rs.getString("itemids");
-//                        } while(itemString0.contains("ID"));
-//                    } while(itemString0.contains("道具"));
-//
-//                    String[] itemString = itemString0.split(",");
-//                    ArrayList<Integer> itemIdList = new ArrayList();
-//                    String[] var10 = itemString;
-//                    int var11 = itemString.length;
-//
-//                    for(int var12 = 0; var12 < var11; ++var12) {
-//                        String a = var10[var12];
-//                        if (!a.equals("") && Integer.parseInt(a) > 0) {
-//                            itemIdList.add(Integer.parseInt(a));
-//                        }
-//                    }
-//
-//                    MyPackage myPackage = new MyPackage(itemIdList, rs.getShort("str"), rs.getShort("dex"), rs.getShort("_int"), rs.getShort("luk"), rs.getShort("all_ap"), rs.getShort("watk"), rs.getShort("matk"), rs.getShort("wdef"), rs.getShort("mdef"), rs.getShort("acc"), rs.getShort("avoid"), rs.getShort("maxhp"), rs.getShort("maxmp"), rs.getShort("speed"), rs.getShort("jump"), rs.getShort("str_percent"), rs.getShort("dex_percent"), rs.getShort("_int_percent"), rs.getShort("luk_percent"), rs.getShort("all_ap_percent"), rs.getShort("watk_percent"), rs.getShort("matk_percent"), rs.getShort("wdef_percent"), rs.getShort("mdef_percent"), rs.getShort("acc_percent"), rs.getShort("avoid_percent"), rs.getShort("maxhp_percent"), rs.getShort("maxmp_percent"), rs.getShort("normal_damage_percent"), rs.getShort("boss_damage_percent"), rs.getShort("total_damage_percent"));
-//                    packageList0.add(myPackage);
-//                    ++count;
-//                }
-//            } catch (Throwable var22) {
-//                var2 = var22;
-//                throw var22;
-//            } finally {
-//                if (con != null) {
-//                    if (var2 != null) {
-//                        try {
-//                            con.close();
-//                        } catch (Throwable var21) {
-//                            var2.addSuppressed(var21);
-//                        }
-//                    } else {
-//                        con.close();
-//                    }
-//                }
-//
-//            }
-//        } catch (SQLException var24) {
-//            //服务端输出信息.println_err("【错误】：loadFromDB错误，错误原因：" + var24);
-//            var24.printStackTrace();
-//        }
-//    }
 public void loadFromDB() {
     Connection con = null;
     PreparedStatement ps = null;

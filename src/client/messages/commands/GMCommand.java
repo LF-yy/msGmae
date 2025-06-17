@@ -4146,6 +4146,29 @@ public class GMCommand
         }
     }
     
+    public static class 关闭并保存所有雇佣商店 extends CommandExecute
+    {
+        @Override
+        public boolean execute(final MapleClient c, final String[] splitted) {
+            int ret = 0;
+            for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                ret += cserv.closeAllMerchant();
+            }
+            System.out.println("共储存了 " + ret + " 个精灵商人");
+            ret = 0;
+            for (final ChannelServer cserv : ChannelServer.getAllInstances()) {
+                ret += cserv.closeAllPlayerShop();
+            }
+            merchant_main.getInstance().save_data();
+            System.out.println("共储存了 " + ret + " 个人雇佣商店");
+            return true;
+        }
+        
+        @Override
+        public String getMessage() {
+            return new StringBuilder().append("!关闭所有雇佣  - 关闭所有雇佣商店").toString();
+        }
+    }
     public static class 保存交易行 extends CommandExecute
     {
         @Override
@@ -4160,7 +4183,7 @@ public class GMCommand
             }
             return true;
         }
-        
+
         @Override
         public String getMessage() {
             return new StringBuilder().append("!保存交易行  - 保存交易行数据").toString();

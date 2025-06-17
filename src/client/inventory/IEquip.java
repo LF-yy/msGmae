@@ -77,6 +77,7 @@ public interface IEquip extends IItem
     void setHpRR(int var1);
 
     void setMpRR(int var1);
+    long getInventoryequipmentid();
 
     public enum ScrollResult
     {

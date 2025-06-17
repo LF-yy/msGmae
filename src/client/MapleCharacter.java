@@ -33,7 +33,6 @@ import io.netty.channel.Channel;
 import snail.*;
 import tools.*;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 import client.inventory.MapleRing.RingComparator;
@@ -97,7 +96,6 @@ import java.lang.ref.WeakReference;
 
 import server.movement.LifeMovementFragment;
 import util.ListUtil;
-import util.NumberUtils;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.awt.Point;
@@ -317,8 +315,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public static int 记录当前血量;
     public static int 角色无敌指数;
     public static int 地图记录;
-    private static String[] ariantroomleader ;
-    private static int[] ariantroomslot ;
+//    private static String[] ariantroomleader ;
+//    private static int[] ariantroomslot ;
     /**
      * 吸怪怪值
      */
@@ -333,7 +331,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     public static int 登陆验证;
     public int 鱼来鱼往;
     public long 蓄力一击;
-    public long 越战越勇;
+    public long 关闭雇佣商店;
     public long prevTimestamp1;
     public long 持续对话NPC;
     public long 宠物捡物冷却;
@@ -479,14 +477,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
 
     public static ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
-    private static List<PackageOfEquipments.MyPackage> packageList = Collections.synchronizedList(new ArrayList());
-    private ScheduledFuture<?> 仙人模式线程;
-    private ScheduledFuture<?> 仙人模式BUFF线程;
-    private ScheduledFuture<?> 物理攻击力线程;
+//    private static List<PackageOfEquipments.MyPackage> packageList = Collections.synchronizedList(new ArrayList());
+    private static List<PackageOfEquipments.MyPackage> packageList = new CopyOnWriteArrayList<>();
+//    private ScheduledFuture<?> 仙人模式线程;
+//    private ScheduledFuture<?> 仙人模式BUFF线程;
+//    private ScheduledFuture<?> 物理攻击力线程;
     public int 修仙;
-    private ScheduledFuture<?> 魔法攻击力线程;
-    private ScheduledFuture<?> 硬化皮肤线程;
-    private ScheduledFuture<?> 修炼BUFF增益线程;
+//    private ScheduledFuture<?> 魔法攻击力线程;
+//    private ScheduledFuture<?> 硬化皮肤线程;
+//    private ScheduledFuture<?> 修炼BUFF增益线程;
     int a;
     public int b;
     int c;
@@ -611,7 +610,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return openEnableDarkMode;
     }
 
-    public synchronized void setOpenEnableDarkMode(boolean openEnableDarkMode) {
+    public  void setOpenEnableDarkMode(boolean openEnableDarkMode) {
         this.openEnableDarkMode = openEnableDarkMode;
     }
 
@@ -791,7 +790,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.isbanned = false;
         this.鱼来鱼往 = 0;
         this.蓄力一击 = 0L;
-        this.越战越勇 = 0L;
+        this.关闭雇佣商店 = 0L;
         this.prevTimestamp1 = 0L;
         this.持续对话NPC = 0L;
         this.宠物捡物冷却 = 0L;
@@ -813,13 +812,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.属性攻击累计伤害次数 = 0;
         this.属性攻击累计伤害 = 0L;
         this.龙之献祭攻击次数 = 0;
-        this.仙人模式线程 = null;
-        this.仙人模式BUFF线程 = null;
-        this.物理攻击力线程 = null;
-        this.修仙 = 0;
-        this.魔法攻击力线程 = null;
-        this.硬化皮肤线程 = null;
-        this.修炼BUFF增益线程 = null;
+//        this.仙人模式线程 = null;
+//        this.仙人模式BUFF线程 = null;
+//        this.物理攻击力线程 = null;
+//        this.修仙 = 0;
+//        this.魔法攻击力线程 = null;
+//        this.硬化皮肤线程 = null;
+//        this.修炼BUFF增益线程 = null;
         this.a = 0;
         this.b = 0;
         this.c = 0;
@@ -1073,16 +1072,16 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.魔法无效时间 = 魔法无效时间;
     }
 
-    public synchronized int getCorona() {
+    public  int getCorona() {
         return corona;
     }
-    public synchronized void setCoronaJan(int corona) {
+    public  void setCoronaJan(int corona) {
         this.corona -= corona;
     }
-    public synchronized void setCoronaJa(int corona) {
+    public  void setCoronaJa(int corona) {
         this.corona += corona;
     }
-    public synchronized void setCorona(int corona) {
+    public  void setCorona(int corona) {
         this.corona = this.corona - corona;
     }
     public void set最高伤害(long corona) {
@@ -3731,7 +3730,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             }
         }
         if (!find) {
-            //System.out.println("No matching monsters found for effect with source ID: "+ effect.getSourceId());
+            //System.out.println("没有找到与指定效果源ID匹配的怪兽 ID: "+ effect.getSourceId());
         }
     }
     
@@ -4626,6 +4625,9 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
                         }else{
                             this.changeSkillLevel(skil, (byte)0, (byte)skil.getMasterLevel());
                         }
+                    }else if (skil != null && getMasterLevel(skil) <= 0 && skil.getMasterLevel() > 0) {
+                        // 为符合条件的技能设置玩家的技能等级和大师等级
+                        changeSkillLevel(skil, (byte) 0, (byte) 10); //usually 10 master
                     }
                 }
             }
@@ -4708,7 +4710,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         if (skill == null) {
             return;
         }
-        System.out.println("更改技能级别");
         this.client.sendPacket(MaplePacketCreator.updateSkill(skill.getId(), (int)newLevel, (int)newMasterlevel, -1L));
         if (newLevel == 0 && newMasterlevel == 0) {
             if (this.skills.containsKey((Object)skill)) {
@@ -7908,13 +7909,13 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return this.套装伤害加成;
     }
     
-    public synchronized int getBossLog(final String boss) {
+    public  int getBossLog(final String boss) {
         return this.getBossLog(boss, 0);
     }
-    public synchronized int getBossLog1(final String boss) {
+    public  int getBossLog1(final String boss) {
         return this.getBossLog1(boss, 0);
     }
-    public synchronized int getBossLog(final String boss, final int type) {
+    public  int getBossLog(final String boss, final int type) {
         try( Connection con = DatabaseConnection.getConnection()) {
             int count = 0;
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog WHERE characterid = ? AND bossid = ? and type = ?");
@@ -7948,7 +7949,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-    public synchronized int getBossLog1(final String boss, final int type) {
+    public  int getBossLog1(final String boss, final int type) {
         try (Connection con = DBConPool.getConnection()){
             int count = 0;
             PreparedStatement ps = con.prepareStatement("SELECT * FROM bosslog2 WHERE characterid = ? AND bossid = ? and type = ?");
@@ -7982,23 +7983,23 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             return -1;
         }
     }
-    public synchronized void setBossLog(final String boss) {
+    public  void setBossLog(final String boss) {
         this.setBossLog(boss, 0);
     }
-    public synchronized void setBossLog1(final String boss, final int type) {
+    public  void setBossLog1(final String boss, final int type) {
         this.setBossLog1(boss, type, 1);
     }
 
-    public synchronized void setBossLog1(final String boss) {
+    public  void setBossLog1(final String boss) {
         this.setBossLog1(boss, 0);
     }
-    public synchronized void setBossLog(final String boss, final int type) {
+    public  void setBossLog(final String boss, final int type) {
         this.setBossLog(boss, type, 1);
     }
 
 
 
-    public synchronized void setBossLog(final String boss, final int type, final int count) {
+    public  void setBossLog(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog(boss, type);
         try {
             final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog SET count = ?,  time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ? and type = ?");
@@ -8014,7 +8015,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-    public synchronized void setBossLog1(final String boss, final int type, final int count) {
+    public  void setBossLog1(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog1(boss, type);
         try {
             final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?,  time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ? and type = ?");
@@ -8030,7 +8031,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
 
-    public synchronized boolean setBossLog1y(final String boss, final int type, final int count) {
+    public  boolean setBossLog1y(final String boss, final int type, final int count) {
         final int bossCount = this.getBossLog1(boss, type);
         try {
             final PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("UPDATE bosslog2 SET count = ?,  time = CURRENT_TIMESTAMP() WHERE characterid = ? AND bossid = ? and type = ?");
@@ -10033,14 +10034,26 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         this.client.sendPacket(MaplePacketCreator.englishQuizMsg(msg));
     }
     
-    public void fakeRelog() {
-        final int chan = this.client.getChannel();
-        this.client.sendPacket(MaplePacketCreator.getCharInfo(this));
-        final MapleMap mapp = this.getMap();
-        mapp.removePlayer(this);
-        mapp.addPlayer(this);
-        this.ForcechangeChannel(chan);
-    }
+    /**
+ * 模拟玩家重新登录的游戏过程
+ * 此方法用于在不实际断开连接的情况下，刷新玩家的在线状态和地图信息
+ * 它通过模拟重新登录的过程，更新玩家所在的频道和地图数据
+ */
+public void fakeRelog() {
+    // 获取当前客户端所在的频道
+    final int chan = this.client.getChannel();
+    // 发送玩家角色信息的数据包，以更新客户端的信息显示
+    this.client.sendPacket(MaplePacketCreator.getCharInfo(this));
+    // 获取当前玩家所在的游戏地图
+    final MapleMap mapp = this.getMap();
+    // 从当前地图中移除玩家，以模拟玩家下线的过程
+    mapp.removePlayer(this);
+    // 将玩家重新添加到地图中，完成上线模拟
+    mapp.addPlayer(this);
+    // 强制玩家切换到之前记录的频道，以确保玩家的频道信息更新
+    this.ForcechangeChannel(chan);
+}
+
     
     public String getcharmessage() {
         return this.charmessage;
@@ -12178,7 +12191,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         }
     }
     //核心充值副表,爆现金金额需要核对.
-    public synchronized void getLtDonate() {
+    public  void getLtDonate() {
         //todu 优先读取缓存
         ResultSet rs;
         int money =0;
@@ -13815,8 +13828,8 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
     }
     
     static {
-        MapleCharacter.ariantroomleader = new String[3];
-        MapleCharacter.ariantroomslot = new int[3];
+//        MapleCharacter.ariantroomleader = new String[3];
+//        MapleCharacter.ariantroomslot = new int[3];
         MapleCharacter.记录当前血量 = 0;
         MapleCharacter.角色无敌指数 = 0;
         MapleCharacter.地图记录 = 0;
@@ -15501,506 +15514,6 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
         return ret;
     }
 
-    public void 关闭仙人模式() {
-        this.dropMessage(5, "仙人模式 - 关闭");
-        this.关闭仙人模式信息();
-        if (this.仙人模式线程 != null) {
-            this.仙人模式线程.cancel(false);
-            this.仙人模式线程 = null;
-        }
-
-        if (this.仙人模式BUFF线程 != null) {
-            this.仙人模式BUFF线程.cancel(false);
-            this.仙人模式BUFF线程 = null;
-        }
-
-        this.保护线程();
-    }
-
-    public void 开启仙人模式信息() {
-        PreparedStatement ps1 = null;
-        ResultSet rs = null;
-
-        try (Connection con = DBConPool.getConnection()){
-            ps1 = con.prepareStatement("SELECT * FROM jiezoudashi ");
-            rs = ps1.executeQuery();
-            if (rs.next()) {
-                String sqlString2 = null;
-                sqlString2 = "update jiezoudashi set Val= 0 where Name = '仙人模式" + this.id + "'";
-                PreparedStatement dropperid = con.prepareStatement(sqlString2);
-                dropperid.executeUpdate(sqlString2);
-                Start.读取技个人信息设置();
-            }
-
-            DBConPool.close(ps1);
-        } catch (SQLException var6) {
-        }
-
-    }
-
-    public void 关闭仙人模式信息() {
-        PreparedStatement ps1 = null;
-        ResultSet rs = null;
-
-        try (Connection con = DBConPool.getConnection()){
-            ps1 = con.prepareStatement("SELECT * FROM jiezoudashi ");
-            rs = ps1.executeQuery();
-            if (rs.next()) {
-                String sqlString2 = null;
-                sqlString2 = "update jiezoudashi set Val= 1 where Name = '仙人模式" + this.id + "'";
-                PreparedStatement dropperid = con.prepareStatement(sqlString2);
-                dropperid.executeUpdate(sqlString2);
-                Start.读取技个人信息设置();
-            }
-        } catch (SQLException var6) {
-        }
-
-    }
-
-    public void 仙人模式() {
-        this.保护线程();
-        if (this.仙人模式线程 == null) {
-            this.开启仙人模式信息();
-            this.仙人模式BUFF();
-            this.dropMessage(5, "仙人模式 - 开启");
-            int 契合 = (Integer)Start.个人信息设置.get("BUFF增益" + this.id + "");
-            if (契合 > 50 && 契合 <= 100) {
-                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
-                    public void run() {
-                        if (MapleCharacter.this.getMp() > 0) {
-                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.15));
-                        } else {
-                            MapleCharacter.this.关闭仙人模式();
-                        }
-
-                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.15));
-                    }
-                }, 5000L);
-            } else if (契合 > 100 && 契合 <= 150) {
-                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
-                    public void run() {
-                        if (MapleCharacter.this.getMp() > 0) {
-                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.15));
-                        } else {
-                            MapleCharacter.this.关闭仙人模式();
-                        }
-
-                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.15));
-                    }
-                }, 4000L);
-            } else if (契合 > 150) {
-                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
-                    public void run() {
-                        if (MapleCharacter.this.getMp() > 0) {
-                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.2));
-                        } else {
-                            MapleCharacter.this.关闭仙人模式();
-                        }
-
-                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.2));
-                    }
-                }, 4000L);
-            } else {
-                this.仙人模式线程 = BuffTimer.getInstance().register(new Runnable() {
-                    public void run() {
-                        if (MapleCharacter.this.getMp() > 0) {
-                            MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.1));
-                        } else {
-                            MapleCharacter.this.关闭仙人模式();
-                        }
-
-                        MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.1));
-                    }
-                }, 5000L);
-            }
-        } else {
-            this.仙人模式线程.cancel(false);
-            this.仙人模式线程 = null;
-        }
-
-    }
-
-    public void 仙人模式BUFF() {
-        if (this.仙人模式BUFF线程 == null) {
-            int 间隔 = (int)((double)((Integer)Start.个人信息设置.get("聪明睿智" + this.id + "") * (Integer)Start.个人信息设置.get("BUFF增益" + this.id + "")) * 1.0E-4);
-            if (间隔 > 10000) {
-                间隔 = 10000;
-            }
-
-            this.仙人模式BUFF线程 = BuffTimer.getInstance().register(new Runnable() {
-                public void run() {
-                    int 值 = (Integer)Start.个人信息设置.get("BUFF增益" + MapleCharacter.this.id + "");
-                    int buff = 2022359;
-                    double a;
-                    if (值 < 90) {
-                        a = Math.ceil(Math.random() * 8.0);
-                        buff = (int)((double)buff + a);
-                    } else if (值 >= 90 && 值 < 180) {
-                        a = Math.ceil(Math.random() * 17.0);
-                        buff = (int)((double)buff + a);
-                    } else if (值 >= 180 && 值 < 270) {
-                        a = Math.ceil(Math.random() * 26.0);
-                        buff = (int)((double)buff + a);
-                    } else if (值 >= 270 && 值 < 360) {
-                        a = Math.ceil(Math.random() * 35.0);
-                        buff = (int)((double)buff + a);
-                    } else if (值 >= 360 && 值 < 450) {
-                        a = Math.ceil(Math.random() * 44.0);
-                        buff = (int)((double)buff + a);
-                    } else if (值 >= 450 && 值 < 540) {
-                        a = Math.ceil(Math.random() * 53.0);
-                        buff = (int)((double)buff + a);
-                    } else if (值 >= 540) {
-                        a = Math.ceil(Math.random() * 62.0);
-                        buff = (int)((double)buff + a);
-                    }
-
-                    MapleItemInformationProvider.getInstance().getItemEffect(buff).applyTo(MapleCharacter.this.client.getPlayer());
-                }
-            }, (long)(20000 - 间隔));
-        } else {
-            this.仙人模式BUFF线程.cancel(false);
-            this.仙人模式BUFF线程 = null;
-        }
-
-    }
-
-    public void 修炼物理攻击力() {
-        this.保护线程();
-        if (this.getExp() < this.level * 10000) {
-            this.dropMessage(1, "经验不足够修炼");
-        } else if (this.魔法攻击力线程 != null) {
-            this.dropMessage(1, "无法同时修炼");
-        } else {
-            if (Game.主城(this.getMapId())) {
-                if (this.物理攻击力线程 == null) {
-                    this.dropMessage(1, "修炼物理攻击力开启");
-                    this.物理攻击力线程 = BuffTimer.getInstance().register(new Runnable() {
-                        public void run() {
-                            if (MapleCharacter.this.修仙 > 0) {
-                                if (Game.主城(MapleCharacter.this.getMapId())) {
-                                    if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 10000) {
-                                        MapleCharacter.this.gainExp(-MapleCharacter.this.level * 10000, true, true, false);
-                                        MapleCharacter.this.增加修炼("物理攻击力" + MapleCharacter.this.id);
-                                        MapleCharacter.this.dropMessage(5, "物理攻击力 + 1");
-                                    } else {
-                                        MapleCharacter.this.物理攻击力线程.cancel(false);
-                                        MapleCharacter.this.物理攻击力线程 = null;
-                                        MapleCharacter.this.修仙 = 0;
-                                        MapleCharacter.this.dropMessage(1, "修炼物理攻击力关闭,经验不足");
-                                    }
-                                } else {
-                                    MapleCharacter.this.物理攻击力线程.cancel(false);
-                                    MapleCharacter.this.物理攻击力线程 = null;
-                                    MapleCharacter.this.修仙 = 0;
-                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
-                                }
-                            } else {
-                                ++MapleCharacter.this.修仙;
-                            }
-
-                        }
-                    }, 30000L);
-                } else {
-                    this.物理攻击力线程.cancel(false);
-                    this.物理攻击力线程 = null;
-                    this.修仙 = 0;
-                    this.dropMessage(1, "修炼物理攻击力关闭");
-                }
-            } else {
-                this.物理攻击力线程.cancel(false);
-                this.物理攻击力线程 = null;
-                this.修仙 = 0;
-                this.dropMessage(1, "安全区内才可以修炼。");
-            }
-
-        }
-    }
-
-    public void 修炼魔法攻击力() {
-        this.保护线程();
-        if (this.getExp() < this.level * 10000) {
-            this.dropMessage(1, "经验不足够修炼");
-        } else if (this.物理攻击力线程 != null) {
-            this.dropMessage(1, "无法同时修炼");
-        } else {
-            if (Game.主城(this.getMapId())) {
-                if (this.魔法攻击力线程 == null) {
-                    this.dropMessage(1, "修炼魔法攻击力开启");
-                    this.魔法攻击力线程 = BuffTimer.getInstance().register(new Runnable() {
-                        public void run() {
-                            if (MapleCharacter.this.修仙 > 0) {
-                                if (Game.主城(MapleCharacter.this.getMapId())) {
-                                    if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 10000) {
-                                        MapleCharacter.this.gainExp(-MapleCharacter.this.level * 10000, true, true, false);
-                                        MapleCharacter.this.增加修炼("魔法攻击力" + MapleCharacter.this.id);
-                                        MapleCharacter.this.dropMessage(5, "魔法攻击力 + 1");
-                                    } else {
-                                        MapleCharacter.this.物理攻击力线程.cancel(false);
-                                        MapleCharacter.this.物理攻击力线程 = null;
-                                        MapleCharacter.this.修仙 = 0;
-                                        MapleCharacter.this.dropMessage(1, "修炼魔法攻击力关闭,经验不足");
-                                    }
-                                } else {
-                                    MapleCharacter.this.物理攻击力线程.cancel(false);
-                                    MapleCharacter.this.物理攻击力线程 = null;
-                                    MapleCharacter.this.修仙 = 0;
-                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
-                                }
-                            } else {
-                                ++MapleCharacter.this.修仙;
-                            }
-
-                        }
-                    }, 30000L);
-                } else {
-                    this.魔法攻击力线程.cancel(false);
-                    this.魔法攻击力线程 = null;
-                    this.修仙 = 0;
-                    this.dropMessage(1, "修炼魔法攻击力关闭");
-                }
-            } else {
-                this.物理攻击力线程.cancel(false);
-                this.物理攻击力线程 = null;
-                this.修仙 = 0;
-                this.dropMessage(1, "安全区内才可以修炼。");
-            }
-
-        }
-    }
-
-    public void 修炼硬化皮肤() {
-        this.保护线程();
-        if (this.getExp() < this.level * 10000) {
-            this.dropMessage(1, "经验不足够修炼");
-        } else if (this.物理攻击力线程 != null) {
-            this.dropMessage(1, "无法同时修炼");
-        } else if (this.魔法攻击力线程 != null) {
-            this.dropMessage(1, "无法同时修炼");
-        } else {
-            if (Game.主城(this.getMapId())) {
-                if (this.硬化皮肤线程 == null) {
-                    this.dropMessage(1, "修炼硬化皮肤开启");
-                    this.硬化皮肤线程 = BuffTimer.getInstance().register(new Runnable() {
-                        public void run() {
-                            if (MapleCharacter.this.修仙 > 0) {
-                                if (Game.主城(MapleCharacter.this.getMapId())) {
-                                    if ((double)MapleCharacter.this.getHp() > (double)MapleCharacter.this.stats.getMaxHp() * 0.3) {
-                                        if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 30000) {
-                                            MapleCharacter.this.gainExp(-MapleCharacter.this.level * 30000, true, true, false);
-                                            MapleCharacter.this.增加修炼("硬化皮肤" + MapleCharacter.this.id);
-                                            MapleCharacter.this.dropMessage(5, "硬化皮肤 + 1");
-                                            MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.3));
-                                        } else {
-                                            MapleCharacter.this.硬化皮肤线程.cancel(false);
-                                            MapleCharacter.this.硬化皮肤线程 = null;
-                                            MapleCharacter.this.修仙 = 0;
-                                            MapleCharacter.this.dropMessage(1, "修炼硬化皮肤关闭,经验不足");
-                                        }
-                                    } else {
-                                        MapleCharacter.this.硬化皮肤线程.cancel(false);
-                                        MapleCharacter.this.硬化皮肤线程 = null;
-                                        MapleCharacter.this.修仙 = 0;
-                                        MapleCharacter.this.dropMessage(1, "状态不健康。");
-                                    }
-                                } else {
-                                    MapleCharacter.this.硬化皮肤线程.cancel(false);
-                                    MapleCharacter.this.硬化皮肤线程 = null;
-                                    MapleCharacter.this.修仙 = 0;
-                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
-                                }
-                            } else {
-                                ++MapleCharacter.this.修仙;
-                            }
-
-                        }
-                    }, 60000L);
-                } else {
-                    this.硬化皮肤线程.cancel(false);
-                    this.硬化皮肤线程 = null;
-                    this.修仙 = 0;
-                    this.dropMessage(1, "修炼硬化皮肤关闭");
-                }
-            } else {
-                this.硬化皮肤线程.cancel(false);
-                this.硬化皮肤线程 = null;
-                this.修仙 = 0;
-                this.dropMessage(1, "安全区内才可以修炼。");
-            }
-
-        }
-    }
-
-    public void 修炼BUFF增益() {
-        this.保护线程();
-        if (this.getExp() < this.level * 15000) {
-            this.dropMessage(1, "经验不足够修炼");
-        } else if (this.魔法攻击力线程 != null) {
-            this.dropMessage(1, "无法同时修炼");
-        } else if (this.物理攻击力线程 != null) {
-            this.dropMessage(1, "无法同时修炼");
-        } else {
-            if (Game.主城(this.getMapId())) {
-                if (this.修炼BUFF增益线程 == null) {
-                    this.dropMessage(1, "修炼契合力开启");
-                    this.修炼BUFF增益线程 = BuffTimer.getInstance().register(new Runnable() {
-                        public void run() {
-                            if (MapleCharacter.this.修仙 > 0) {
-                                if (Game.主城(MapleCharacter.this.getMapId())) {
-                                    if ((double)MapleCharacter.this.getMp() > (double)MapleCharacter.this.stats.getMaxMp() * 0.05 && (double)MapleCharacter.this.getHp() > (double)MapleCharacter.this.stats.getMaxHp() * 0.05) {
-                                        int 程度 = MapleCharacter.this.判断修炼("BUFF增益" + MapleCharacter.this.id);
-                                        int 经验xx;
-                                        byte 成功;
-                                        double 概率;
-                                        if (程度 <= 50) {
-                                            经验xx = 15000;
-                                            成功 = 50;
-                                            if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验xx) {
-                                                概率 = Math.ceil(Math.random() * 100.0);
-                                                MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.05));
-                                                MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.05));
-                                                MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验xx, true, true, false);
-                                                if (概率 <= (double)成功) {
-                                                    MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
-                                                    MapleCharacter.this.dropMessage(5, "契合力 + 1");
-                                                } else {
-                                                    MapleCharacter.this.dropMessage(5, "契合力提升失败");
-                                                }
-                                            } else {
-                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                MapleCharacter.this.修仙 = 0;
-                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
-                                            }
-                                        } else if (程度 > 50 && 程度 <= 100) {
-                                            int 经验x = 30000;
-                                            成功 = 40;
-                                            if (MapleCharacter.this.haveItem(4031216, 200)) {
-                                                if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验x) {
-                                                    概率 = Math.ceil(Math.random() * 100.0);
-                                                    MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.05));
-                                                    MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.05));
-                                                    MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验x, true, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4031216), 4031216,  200, true, false);
-                                                    if (概率 <= (double)成功) {
-                                                        MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
-                                                        MapleCharacter.this.dropMessage(5, "契合力 + 1");
-                                                    } else {
-                                                        MapleCharacter.this.dropMessage(5, "契合力提升失败");
-                                                    }
-                                                } else {
-                                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                    MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                    MapleCharacter.this.修仙 = 0;
-                                                    MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
-                                                }
-                                            } else {
-                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                MapleCharacter.this.修仙 = 0;
-                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭\r\n需要；\r\n蝙蝠怪的灵魂石*200");
-                                            }
-                                        } else if (程度 > 101 && 程度 <= 150) {
-                                            int 经验 = '\uea60';
-                                            成功 = 30;
-                                            if (MapleCharacter.this.haveItem(4031216, 200) && MapleCharacter.this.haveItem(4005004, 1)) {
-                                                if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验) {
-                                                    概率 = Math.ceil(Math.random() * 100.0);
-                                                    MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.1));
-                                                    MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.1));
-                                                    MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验, true, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4031216), 4031216, 200, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005004), 4005004, 1, true, false);
-                                                    if (概率 <= (double)成功) {
-                                                        MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
-                                                        MapleCharacter.this.dropMessage(5, "契合力 + 1");
-                                                    } else {
-                                                        MapleCharacter.this.dropMessage(5, "契合力提升失败");
-                                                    }
-                                                } else {
-                                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                    MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                    MapleCharacter.this.修仙 = 0;
-                                                    MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
-                                                }
-                                            } else {
-                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                MapleCharacter.this.修仙 = 0;
-                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭\r\n需要；\r\n蝙蝠怪的灵魂石*200\r\n黑暗水晶*1");
-                                            }
-                                        } else if (程度 > 151 && 程度 <= 200) {
-                                            经验xx = 100000;
-                                            成功 = 30;
-                                            if (MapleCharacter.this.haveItem(4005004, 1) && MapleCharacter.this.haveItem(4005000, 5) && MapleCharacter.this.haveItem(4005001, 5) && MapleCharacter.this.haveItem(4005002, 5) && MapleCharacter.this.haveItem(4005003, 5)) {
-                                                if (MapleCharacter.this.getExp() > MapleCharacter.this.level * 经验xx) {
-                                                    概率 = Math.ceil(Math.random() * 100.0);
-                                                    MapleCharacter.this.addMP((int)((double)(-MapleCharacter.this.stats.getMaxMp()) * 0.1));
-                                                    MapleCharacter.this.addHP((int)((double)(-MapleCharacter.this.stats.getMaxHp()) * 0.1));
-                                                    MapleCharacter.this.gainExp(-MapleCharacter.this.level * 经验xx, true, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005000), 4005000, 5, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005001), 4005001, 5, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005002), 4005002, 5, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005003), 4005003, 5, true, false);
-                                                    MapleInventoryManipulator.removeById(MapleCharacter.this.client, GameConstants.getInventoryType(4005004), 4005004, 1, true, false);
-                                                    if (概率 <= (double)成功) {
-                                                        MapleCharacter.this.增加修炼("BUFF增益" + MapleCharacter.this.id);
-                                                        MapleCharacter.this.dropMessage(5, "契合力 + 1");
-                                                    } else {
-                                                        MapleCharacter.this.dropMessage(5, "契合力提升失败");
-                                                    }
-                                                } else {
-                                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                    MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                    MapleCharacter.this.修仙 = 0;
-                                                    MapleCharacter.this.dropMessage(1, "修炼契合力关闭,经验不足");
-                                                }
-                                            } else {
-                                                MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                                MapleCharacter.this.修炼BUFF增益线程 = null;
-                                                MapleCharacter.this.修仙 = 0;
-                                                MapleCharacter.this.dropMessage(1, "修炼契合力关闭\r\n需要；\r\n黑暗水晶*1\r\n力量水晶*5\r\n敏捷水晶*5\r\n智慧水晶*5\r\n幸运水晶*5");
-                                            }
-                                        } else {
-                                            MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                            MapleCharacter.this.修炼BUFF增益线程 = null;
-                                            MapleCharacter.this.修仙 = 0;
-                                            MapleCharacter.this.dropMessage(1, "暂未开通更高契合修为");
-                                        }
-                                    } else {
-                                        MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                        MapleCharacter.this.修炼BUFF增益线程 = null;
-                                        MapleCharacter.this.修仙 = 0;
-                                        MapleCharacter.this.dropMessage(1, "修炼契合力关闭,状态不健康");
-                                    }
-                                } else {
-                                    MapleCharacter.this.修炼BUFF增益线程.cancel(false);
-                                    MapleCharacter.this.修炼BUFF增益线程 = null;
-                                    MapleCharacter.this.修仙 = 0;
-                                    MapleCharacter.this.dropMessage(1, "安全区内才可以修炼。");
-                                }
-                            } else {
-                                ++MapleCharacter.this.修仙;
-                            }
-
-                        }
-                    }, 120000L);
-                } else {
-                    this.修炼BUFF增益线程.cancel(false);
-                    this.修炼BUFF增益线程 = null;
-                    this.修仙 = 0;
-                    this.dropMessage(1, "修炼契合力关闭");
-                }
-            } else {
-                this.物理攻击力线程.cancel(false);
-                this.物理攻击力线程 = null;
-                this.修仙 = 0;
-                this.dropMessage(1, "安全区内才可以修炼。");
-            }
-
-        }
-    }
-
     public final void 召唤假人(int a) {
         if (!this.clone) {
             for(int i = 0; i < this.clones.length; ++i) {
@@ -16593,13 +16106,15 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject implements Se
             LtPeakLevel ltPeakLevel = Start.ltPeakLevelMap.get(this.getId());
             if(Objects.nonNull(ltPeakLevel) && now_exp >= ltPeakLevel.getLevel_ex()){
                 this.exp_reserve -= ltPeakLevel.getLevel_ex();
-                Start.upsertLtPeakLevel(this.getId(),ltPeakLevel.getLevel()+1,(long)(ltPeakLevel.getLevel_ex()*1.5));
+                Start.upsertLtPeakLevel(this.getId(),ltPeakLevel.getLevel()+1,(long)(ltPeakLevel.getLevel_ex()*1.1));
                 Broadcast.broadcastSmega(MaplePacketCreator.serverNotice(9, this.getClient().getChannel(), "[巅峰等级] : 恭喜 [" + this.getName() + "] 经过不懈努力将巅峰等级提升到了"+ltPeakLevel.getLevel()+"级!!!"));
                 if(ltPeakLevel.getLevel()/50 ==0) {
                     Bot.sendGroupMessage("[巅峰等级] : 恭喜 [" + this.getName() + "] 经过不懈努力将巅峰等级提升到了" + ltPeakLevel.getLevel() + "级!!!");
                 }
-                this.setRemainingAp((short) CommandProcessorUtil.getOptionalIntArg(Objects.nonNull(LtMS.ConfigValuesMap.get("巅峰等级属性点")) ? new String[LtMS.ConfigValuesMap.get("巅峰等级属性点")]  : new String[5], 1, 1));
+                this.remainingAp += Objects.nonNull(LtMS.ConfigValuesMap.get("巅峰等级属性点")) ? LtMS.ConfigValuesMap.get("巅峰等级属性点") : 5;
                 this.getClient().sendPacket(MaplePacketCreator.updateAp(this, false));
+            }else{
+
             }
         }
     }

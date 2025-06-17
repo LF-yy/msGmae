@@ -1210,31 +1210,31 @@ public class PlayerCommand
 //                        }
 //                    }
 //                }
-            IMaplePlayerShop merchant = c.getPlayer().getPlayerShop();
-            if (merchant instanceof HiredMerchant) {
-                HiredMerchant hiredMerchant = (HiredMerchant) merchant;
-                if (hiredMerchant != null && hiredMerchant.getShopType() == 1 && hiredMerchant.isOwner(c.getPlayer()) && hiredMerchant.isAvailable()) {
-                    closeHiredMerchant(hiredMerchant, c.getPlayer());
-                    return true;
-                }
-            }
-
-            for (ChannelServer cs : ChannelServer.getAllInstances()) {
-                for (MapleMap map : cs.getMapFactory().getAllMapThreadSafe()) {
-                    if (MapConstants.isMarket(map.getId())) {
-                        for (MapleMapObject obj : map.getAllMerchant()) {
-                            if (obj instanceof HiredMerchant) {
-                                HiredMerchant hiredMerchant = (HiredMerchant) obj;
-                                if (hiredMerchant != null && hiredMerchant.getShopType() == 1 && hiredMerchant.isOwner(c.getPlayer()) && hiredMerchant.isAvailable()) {
-                                    closeHiredMerchant(hiredMerchant, c.getPlayer());
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-                c.getPlayer().dropMessage(1, "没有找到你的雇佣商店。");
+//            IMaplePlayerShop merchant = c.getPlayer().getPlayerShop();
+//            if (merchant instanceof HiredMerchant) {
+//                HiredMerchant hiredMerchant = (HiredMerchant) merchant;
+//                if (hiredMerchant != null && hiredMerchant.getShopType() == 1 && hiredMerchant.isOwner(c.getPlayer()) && hiredMerchant.isAvailable()) {
+//                    closeHiredMerchant(hiredMerchant, c.getPlayer());
+//                    return true;
+//                }
+//            }
+//
+//            for (ChannelServer cs : ChannelServer.getAllInstances()) {
+//                for (MapleMap map : cs.getMapFactory().getAllMapThreadSafe()) {
+//                    if (MapConstants.isMarket(map.getId())) {
+//                        for (MapleMapObject obj : map.getAllMerchant()) {
+//                            if (obj instanceof HiredMerchant) {
+//                                HiredMerchant hiredMerchant = (HiredMerchant) obj;
+//                                if (hiredMerchant != null && hiredMerchant.getShopType() == 1 && hiredMerchant.isOwner(c.getPlayer()) && hiredMerchant.isAvailable()) {
+//                                    closeHiredMerchant(hiredMerchant, c.getPlayer());
+//                                    return true;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//                c.getPlayer().dropMessage(1, "没有找到你的雇佣商店。");
                 return false;
         }
 

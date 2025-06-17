@@ -25,21 +25,17 @@ public class 提取类名称 {
             BeanInfo bi = Introspector.getBeanInfo(Book.class);
             PropertyDescriptor[] pds = bi.getPropertyDescriptors();
             MethodDescriptor[] mds = bi.getMethodDescriptors();
-          //  System.out.println("------------propertities-------------");
 
             int i;
             String methodName;
             for(i = 0; i < pds.length; ++i) {
                 methodName = pds[i].getName();
-                System.out.println(methodName);
             }
 
-           // System.out.println("------------methods-------------");
 
             for(i = 0; i < mds.length; ++i) {
                 methodName = mds[i].getName();
                 Method method = mds[i].getMethod();
-                System.out.println(methodName);
                 Class<?>[] parameterTypes = method.getParameterTypes();
                 Class[] var7 = parameterTypes;
                 int var8 = parameterTypes.length;
@@ -47,7 +43,6 @@ public class 提取类名称 {
                 for(int var9 = 0; var9 < var8; ++var9) {
                     Class<?> clas = var7[var9];
                     String parameterName = clas.getName();
-                    System.out.println("参数名称:" + parameterName);
                 }
             }
         } catch (IntrospectionException var12) {

@@ -30,9 +30,9 @@ public class ServerConnection {
     // 服务器引导对象，用于配置和启动服务器
     private ServerBootstrap boot;
     // 主事件循环组，处理连接请求
-    private final EventLoopGroup bossGroup;
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     // 工作事件循环组，处理数据读写
-    private final EventLoopGroup workerGroup;
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
     // 服务器通道，用于网络通信
     private Channel channel;
 
@@ -41,8 +41,9 @@ public class ServerConnection {
      *
      * @param port 服务器端口
      */
-    public ServerConnection(final int port) {
-        this(port, -1, -1);
+    public ServerConnection( int port) {
+//        this(port, -1, -1);
+        this.port = port;
     }
 
     /**
@@ -52,11 +53,7 @@ public class ServerConnection {
      * @param world  世界ID
      * @param channels 频道数量
      */
-    public ServerConnection(final int port, final int world, final int channels) {
-        this.world = -1;
-        this.channels = -1;
-        this.bossGroup = new NioEventLoopGroup(1);
-        this.workerGroup = new NioEventLoopGroup();
+    public ServerConnection( int port,  int world,  int channels) {
         this.port = port;
         this.world = world;
         this.channels = channels;

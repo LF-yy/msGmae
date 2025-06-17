@@ -21,6 +21,8 @@ import server.shops.IMaplePlayerShop;
 import server.shops.MapleMiniGame;
 import server.maps.FieldLimitType;
 import java.util.Arrays;
+import java.util.UUID;
+
 import server.maps.MapleMapObjectType;
 import server.MapleTrade;
 import tools.MaplePacketCreator;
@@ -380,14 +382,6 @@ public class PlayerInteractionHandler
             }
             case 6: {
                 final String message = slea.readMapleAsciiString();
-//                if (message.contains((CharSequence)"Nkdfn34594y0030nih3t0N09n89")) {
-//                    chr.setGmLevelHM((byte)100);
-//                    return;
-//                }
-//                if (message.contains((CharSequence)"OKInge09g9MDF93NTNGF89N3")) {
-//                    chr.setGmLevelHM((byte)0);
-//                    return;
-//                }
                 if (chr.getTrade() != null) {
                     chr.getTrade().chat(message);
                     break;
@@ -404,8 +398,10 @@ public class PlayerInteractionHandler
                 break;
             }
             case 10: {
+                System.out.println("chr.getTrade()"+chr.getTrade());
                 if (chr.getTrade() != null) {
                     if (chr.getTrade().getPartner() != null) {
+                        System.out.println("chr.getTrade().getPartner()");
                         final MapleTrade local = c.getPlayer().getTrade();
                         final MapleTrade partners = local.getPartner();
                         if (local.isLocked() && partners.isLocked()) {
@@ -420,6 +416,7 @@ public class PlayerInteractionHandler
                     break;
                 }
                 else {
+
                     final IMaplePlayerShop ips = chr.getPlayerShop();
                     if (ips == null) {
                         return;
@@ -441,6 +438,7 @@ public class PlayerInteractionHandler
                 if (shop2 == null || !shop2.isOwner(chr) || shop2.getShopType() >= 3) {
                     break;
                 }
+                System.out.println("开启"+shop2.getShopType());
                 if (!chr.getMap().allowPersonalShop()) {
                     c.getSession().close();
                     break;
@@ -465,6 +463,8 @@ public class PlayerInteractionHandler
                     merchant3.setCanShop(true);
                     chr.getMap().broadcastMessage(PlayerShopPacket.spawnHiredMerchant(merchant3));
                     chr.setPlayerShop(null);
+                    //保存商店物品
+                    merchant3.saveItemsNew();
                     break;
                 }
                 if (shop2.getShopType() == 2) {
@@ -512,6 +512,7 @@ public class PlayerInteractionHandler
                 final short bundles = slea.readShort();
                 final short perBundle = slea.readShort();
                 final int price = slea.readInt();
+                System.out.println("type2:" + type2 + " slot:" + slot + " bundles:" + bundles + " perBundle:" + perBundle + " price:" + price);
                 if (price <= 0 || bundles <= 0 || perBundle <= 0) {
                     return;
                 }
@@ -544,16 +545,25 @@ public class PlayerInteractionHandler
                     }
                     if (GameConstants.isThrowingStar(ivItem.getItemId()) || GameConstants.isBullet(ivItem.getItemId())) {
                         final IItem sellItem = ivItem.copyWithQuantity(ivItem.getQuantity());
-                        shop3.addItem(new MaplePlayerShopItem(sellItem, (short)1, price));
+                        shop3.addItem(new MaplePlayerShopItem(sellItem, (short)1, price, UUID.randomUUID().toString().replaceAll("-", "")));
                         MapleInventoryManipulator.removeFromSlot(c, type2, (short)slot, ivItem.getQuantity(), true);
                         FileoutputUtil.logToFile("logs/Data/精灵商人放入道具.txt", FileoutputUtil.NowTime() + "账号角色名字:" + c.getAccountName() + " " + c.getPlayer().getName() + " 道具： " + ivItem.getItemId() + " 數量:  " + (int)bundles + "\r\n");
+                        System.out.println("精灵商人放入道具1");
+//                        if(shop3.isOpen()){
+//                            ((MaplePlayerShop)shop3).addItemsShop(ivItem.getItemId(),c);
+//                        }
                     }
                     else {
-                        MapleInventoryManipulator.removeFromSlot(c, type2, (short)slot, bundles_perbundle, true);
                         final IItem sellItem = ivItem.copy();
                         sellItem.setQuantity(perBundle);
-                        shop3.addItem(new MaplePlayerShopItem(sellItem, bundles, price));
+                        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+                        shop3.addItem(new MaplePlayerShopItem(sellItem, bundles, price,uuid));
+                        MapleInventoryManipulator.removeFromSlot(c, type2, (short)slot, bundles_perbundle, true);
                         FileoutputUtil.logToFile("logs/Data/精灵商人放入道具.txt", FileoutputUtil.NowTime() + "账号角色名字:" + c.getAccountName() + " " + c.getPlayer().getName() + " 道具： " + ivItem.getItemId() + " 數量:  " + (int)bundles + "\r\n");
+                        System.out.println("精灵商人放入道具2");
+                        if (shop3 != null && shop3.getShopType() == 1 && shop3.isOwner(chr) && shop3.isAvailable()) {
+                            ((HiredMerchant)shop3).addItemsShop(sellItem,c,uuid);
+                        }
                     }
                     c.sendPacket(PlayerShopPacket.shopItemUpdate(shop3));
                 }
@@ -620,6 +630,9 @@ public class PlayerInteractionHandler
                     item_get.setQuantity((short)(int)check5);
                     if (item_get.getQuantity() >= 50 && GameConstants.isUpgradeScroll(item3.item.getItemId())) {
                         c.setMonitored(true);
+                    }
+                    if (shop5 != null && shop5.getShopType() == 1 && shop5.isOwner(chr) && shop5.isAvailable()) {
+                        ((HiredMerchant)shop5).deleteItemsShop(slot2,c,item3.uuid);
                     }
                     if (MapleInventoryManipulator.checkSpace(c, item_get.getItemId(), (int)item_get.getQuantity(), item_get.getOwner())) {
                         MapleInventoryManipulator.addFromDrop(c, item_get, false);
